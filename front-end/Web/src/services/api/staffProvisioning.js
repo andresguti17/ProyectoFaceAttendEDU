@@ -178,10 +178,15 @@ export async function cohortsForCourseCode(courseCode) {
             p,
         ])
     );
+    const courseProgramId = course?.programId ?? course?.program_id ?? null;
     return (Array.isArray(cohorts) ? cohorts : [])
         .filter((c) => {
             const id = c?.cohortId ?? c?.cohort_id ?? null;
-            return id != null && cohortIds.has(id) && c?.status !== false;
+            const programId = c?.programId ?? c?.program_id ?? null;
+            // Una ficha del mismo programa del curso es elegible aunque aún no
+            // tenga horarios vinculados a ese curso.
+            const belongs = cohortIds.has(id) || (courseProgramId != null && programId === courseProgramId);
+            return id != null && belongs && c?.status !== false;
         })
         .map((c) => {
             const cohortId = c?.cohortId ?? c?.cohort_id ?? null;
