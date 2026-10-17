@@ -66,6 +66,23 @@ export function setActiveSchool(schoolId) {
 
 export const getActiveSchool = () => activeSchoolId;
 
+/**
+ * GET /users exige identity.person:write; sin ese permiso el backend responde
+ * 403. La regla se aplica aquí —no en cada caller— para que ningún Storage
+ * dispare la petición con un rol que no puede verla (Instructor/Aprendiz):
+ * listUsers() devuelve vacío sin salir a la red.
+ */
+let usersListAllowed = false;
+
+export function setUsersListAllowed(allowed) {
+    const next = Boolean(allowed);
+    if (next === usersListAllowed) return;
+    usersListAllowed = next;
+    // El permiso cambió: la lista y el mapa derivado ya no son válidos.
+    cache.delete("users");
+    cache.delete("userByPersonMap");
+}
+
 /** Ids de los programas de la sede activa; vacío cuando no hay sede. */
 const schoolProgramIds = () =>
     memo("schoolProgramIds", async () =>
@@ -84,7 +101,11 @@ export const listPersons = () =>
     memo("persons", () => fetchAllPages(endpoints.identity.persons, {}, { by: "page" }));
 
 export const listUsers = () =>
-    memo("users", () => fetchAllPages(endpoints.identity.users, {}, { by: "page" }));
+    memo("users", () =>
+        usersListAllowed
+            ? fetchAllPages(endpoints.identity.users, {}, { by: "page" })
+            : Promise.resolve([])
+    );
 
 export const listActors = () =>
     memo("actors", () =>

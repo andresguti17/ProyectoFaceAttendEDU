@@ -15,7 +15,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import { resetReferenceData, setActiveSchool } from "../services/api/referenceData";
+import { resetReferenceData, setActiveSchool, setUsersListAllowed } from "../services/api/referenceData";
 import { useAuth } from "./AuthContext";
 
 import {
@@ -285,6 +285,9 @@ export function AppDataProvider({ children }) {
         // La sede del usuario acota todas las cargas de abajo. Debe fijarse ANTES
         // de pedir nada: setActiveSchool limpia la caché si la sede cambió.
         setActiveSchool(user.schoolId ?? null);
+        // /users exige identity.person:write (solo administración): se prohibe
+        // la petición ANTES de que ningún Storage la dispare con Instructor/Aprendiz.
+        setUsersListAllowed(user?.role === "admin");
 
         let cancelled = false;
         // loadStudents() va aparte: agrega la asistencia de CADA estudiante en
@@ -296,8 +299,13 @@ export function AppDataProvider({ children }) {
         // allSettled en vez de all: si UNA carga falla (p. ej. /cohorts), las
         // demás (usuarios, ambientes, cursos...) sí se muestran; antes un solo
         // rechazo descartaba todo y el Inicio del docente quedaba vacío.
+        //
+        // /users exige identity.person:write: solo administración puede pedirlo.
+        // Instructor y Aprendiz recibían 403 y el banner de error aparecía en
+        // todas sus pantallas, así que para esos roles la carga ni se lanza.
+        const canListUsers = user?.role === "admin";
         Promise.allSettled([
-            loadUsers(),
+            canListUsers ? loadUsers() : Promise.resolve([]),
             loadEnvironments(),
             loadFichas(),
             loadCourses(),
