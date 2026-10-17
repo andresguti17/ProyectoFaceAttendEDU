@@ -124,3 +124,22 @@ describe('request — respuestas del servicio de biometría (FastAPI)', () => {
     });
   });
 });
+
+describe('request — responseType text', () => {
+  test('devuelve el cuerpo tal cual, sin interpretarlo como JSON', async () => {
+    const csv = 'scope,id,present\nTOTAL,,13';
+    global.fetch.mockResolvedValue({ ok: true, status: 200, text: async () => csv, json: async () => { throw new Error('not json'); } });
+
+    await expect(
+      request({ method: GET, url: 'api/v1/attendance-reports', params: { format: 'csv' }, responseType: 'text' }),
+    ).resolves.toBe(csv);
+  });
+
+  test('un error sigue llegando como ApiError con el detalle del JSON', async () => {
+    global.fetch.mockResolvedValue(respond(403, { message: 'Forbidden: outside your scope' }));
+
+    await expect(
+      request({ method: GET, url: 'api/v1/attendance-reports', params: { format: 'csv' }, responseType: 'text' }),
+    ).rejects.toMatchObject({ status: 403, detail: 'Forbidden: outside your scope' });
+  });
+});

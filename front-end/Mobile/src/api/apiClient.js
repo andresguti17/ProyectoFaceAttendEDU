@@ -187,24 +187,25 @@ function unwrapPage(payload) {
 // así un fallo no queda "cacheado" para la próxima petición.
 const inFlightGets = new Map();
 
-export function request({ method, url, data = null, params = null, requiresAuth = true, timeoutMs = TIMEOUT }) {
+// responseType 'text' devuelve el cuerpo tal cual (p. ej. un CSV); por defecto se interpreta JSON.
+export function request({ method, url, data = null, params = null, requiresAuth = true, timeoutMs = TIMEOUT, responseType = 'json' }) {
   if (method !== 'GET') {
-    return performRequest({ method, url, data, params, requiresAuth, timeoutMs });
+    return performRequest({ method, url, data, params, requiresAuth, timeoutMs, responseType });
   }
 
   const rewritten = rewriteUserRoleQuery(url, params);
-  const key = `${buildUrl(rewritten.url)}?${JSON.stringify(rewritten.params || {})}`;
+  const key = `${responseType}:${buildUrl(rewritten.url)}?${JSON.stringify(rewritten.params || {})}`;
   const pending = inFlightGets.get(key);
   if (pending) return pending;
 
-  const promise = performRequest({ method, url, data, params, requiresAuth, timeoutMs }).finally(() => {
+  const promise = performRequest({ method, url, data, params, requiresAuth, timeoutMs, responseType }).finally(() => {
     inFlightGets.delete(key);
   });
   inFlightGets.set(key, promise);
   return promise;
 }
 
-async function performRequest({ method, url, data = null, params = null, requiresAuth = true, timeoutMs = TIMEOUT }) {
+async function performRequest({ method, url, data = null, params = null, requiresAuth = true, timeoutMs = TIMEOUT, responseType = 'json' }) {
   const rewritten = rewriteUserRoleQuery(url, params);
   let fullUrl = buildUrl(rewritten.url);
   params = rewritten.params;
@@ -235,10 +236,14 @@ async function performRequest({ method, url, data = null, params = null, require
     clearTimeout(timeoutId);
 
     let result;
-    try {
-      result = await response.json();
-    } catch {
-      result = null;
+    if (responseType === 'text' && response.ok) {
+      result = await response.text();
+    } else {
+      try {
+        result = await response.json();
+      } catch {
+        result = null;
+      }
     }
 
     if (!response.ok) {
@@ -251,7 +256,7 @@ async function performRequest({ method, url, data = null, params = null, require
 
     // Respuesta válida: rearma el aviso de sesión caducada para el próximo login.
     sessionExpiredNotified = false;
-    return unwrapPage(result);
+    return responseType === 'text' ? result : unwrapPage(result);
   } catch (error) {
     clearTimeout(timeoutId);
 
