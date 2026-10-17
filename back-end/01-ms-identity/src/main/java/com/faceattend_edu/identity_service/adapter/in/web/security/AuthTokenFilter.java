@@ -186,8 +186,15 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Una cuenta ajena exige alcance; la propia no — y el guard de academic
+        // resuelve la persona del llamante justo con esa auto-llamada: sin esta
+        // excepción la resolución de alcance (→ academic-actors → identity
+        // users/{id}) se llama a sí misma hasta agotar timeouts (503).
+        Matcher userItemPath = USER_ITEM.matcher(path);
+        boolean ownUserItem = userItemPath.matches() && userItemPath.group(1).equalsIgnoreCase(caller);
         if (request.getMethod().equalsIgnoreCase("GET")
-                && (path.startsWith("/api/v1/persons") || path.startsWith("/api/v1/users"))
+                && (path.startsWith("/api/v1/persons") || path.equals("/api/v1/users")
+                        || (userItemPath.matches() && !ownUserItem))
                 && !applyPersonScope(request, response, path, caller, roles, rawToken)) {
             return;
         }
