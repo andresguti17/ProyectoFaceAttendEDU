@@ -8,10 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AuthTokenFilterTest {
 
     @Test
-    void assigningOrRevokingAUserRoleRequiresSuperAdmin() {
-        assertTrue(AuthTokenFilter.requiresSuperAdminRole("POST", "/api/v1/users/u-1/roles"));
-        assertTrue(AuthTokenFilter.requiresSuperAdminRole("DELETE", "/api/v1/users/u-1/roles/3"));
-        assertTrue(AuthTokenFilter.requiresSuperAdminRole("POST", "/users/u-1/roles"));
+    void assigningAUserRoleIsCheckedPerRoleInTheController() {
+        assertFalse(AuthTokenFilter.requiresSuperAdminRole("POST", "/api/v1/users/u-1/roles"));
+        assertFalse(AuthTokenFilter.requiresSuperAdminRole("DELETE", "/api/v1/users/u-1/roles/3"));
     }
 
     @Test

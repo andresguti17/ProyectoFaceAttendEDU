@@ -49,8 +49,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     private static final Pattern USER_ROLES_PATH = Pattern.compile(".*/users/([^/]+)/roles.*");
 
-    /** POST/DELETE on a user's own role assignment — grants or revokes what a user IS. */
-    private static final Pattern ROLE_ASSIGNMENT_PATH = Pattern.compile("^(/api/v1)?/users/[^/]+/roles(/\\d+)?$");
     /** Any write on the role catalog itself, including a role's permission set. */
     private static final Pattern ROLE_CATALOG_WRITE_PATH = Pattern.compile("^(/api/v1)?/roles(/.*)?$");
     /** Any write on the permission catalog — what a permission even means. */
@@ -206,8 +204,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
      */
     static boolean requiresSuperAdminRole(String method, String path) {
         if (method.equalsIgnoreCase("GET")) return false;
-        return ROLE_ASSIGNMENT_PATH.matcher(path).matches()
-                || ROLE_CATALOG_WRITE_PATH.matcher(path).matches()
+        return ROLE_CATALOG_WRITE_PATH.matcher(path).matches()
                 || PERMISSION_CATALOG_WRITE_PATH.matcher(path).matches();
     }
 

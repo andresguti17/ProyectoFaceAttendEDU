@@ -3,7 +3,9 @@ package com.faceattend_edu.authorization_service.infrastructure.web.controller;
 import com.faceattend_edu.authorization_service.domain.model.Role;
 import com.faceattend_edu.authorization_service.domain.port.in.AssignRoleToUserUseCase;
 import com.faceattend_edu.authorization_service.domain.port.in.CheckPermissionUseCase;
+import com.faceattend_edu.authorization_service.domain.port.out.RoleRepository;
 import com.faceattend_edu.authorization_service.domain.port.out.UserRoleRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import com.faceattend_edu.authorization_service.infrastructure.web.dto.AssignRoleRequest;
 import com.faceattend_edu.authorization_service.infrastructure.web.dto.RoleResponse;
 import com.faceattend_edu.authorization_service.infrastructure.web.mapper.RoleWebMapper;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -25,21 +28,40 @@ public class UserRoleController {
     /** Keeps the query string inside every sane URL limit and bounds the IN clause. */
     private static final int MAX_BATCH_USERS = 300;
 
+    private static final Set<String> PRIVILEGED_ROLE_NAMES = Set.of("Super Administrador", "Administrador");
+
     private final AssignRoleToUserUseCase assignRoleToUserUseCase;
     private final CheckPermissionUseCase checkPermissionUseCase;
     private final UserRoleRepository userRoleRepository;
+    private final RoleRepository roleRepository;
     private final RoleWebMapper roleWebMapper;
 
     @PostMapping({"/api/v1/users/{userId}/roles", "/users/{userId}/roles"})
-    public ResponseEntity<Void> assignRole(@PathVariable UUID userId, @Valid @RequestBody AssignRoleRequest req) {
+    public ResponseEntity<Void> assignRole(@PathVariable UUID userId, @Valid @RequestBody AssignRoleRequest req,
+                                           HttpServletRequest request) {
+        if (!mayChangeRole(req.getRoleId(), request)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         assignRoleToUserUseCase.assignRoleToUser(userId, req.getRoleId());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @DeleteMapping({"/api/v1/users/{userId}/roles/{roleId}", "/users/{userId}/roles/{roleId}"})
-    public ResponseEntity<Void> removeRole(@PathVariable UUID userId, @PathVariable Integer roleId) {
+    public ResponseEntity<Void> removeRole(@PathVariable UUID userId, @PathVariable Integer roleId,
+                                           HttpServletRequest request) {
+        if (!mayChangeRole(roleId, request)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         assignRoleToUserUseCase.removeRoleFromUser(userId, roleId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Administrador de sede asigna roles operativos (estudiante, instructor) y solo
+     * Super Administrador puede tocar los roles que dan acceso global o de sede.
+     */
+    private boolean mayChangeRole(Integer roleId, HttpServletRequest request) {
+        boolean privileged = roleRepository.findById(roleId)
+                .map(role -> PRIVILEGED_ROLE_NAMES.contains(role.getRoleName()))
+                .orElse(false);
+        if (!privileged) return true;
+        return request.getAttribute("X-User-Roles") instanceof List<?> roles && roles.contains("Super Administrador");
     }
 
     @GetMapping({"/api/v1/users/{userId}/roles", "/users/{userId}/roles"})
