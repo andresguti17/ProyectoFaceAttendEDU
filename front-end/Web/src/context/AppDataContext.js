@@ -279,6 +279,7 @@ export function AppDataProvider({ children }) {
             // referencia para que el próximo login vuelva a consultar.
             // El estado cargado se reemplaza entero al iniciar sesión.
             resetReferenceData();
+            setLoadError(null);
             return undefined;
         }
 
