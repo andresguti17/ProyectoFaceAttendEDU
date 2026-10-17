@@ -12,6 +12,19 @@ import {backendGet} from '../api/backend';
 import ENV from '../config/env';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {removeToken} from '../storage/TokenStorage';
+import {loadStudentProfileSections, loadTeacherProfileSections} from '../services/profileData';
+import {getDayLabel, resolveLocale} from './useDisplayingAttendanceViewModel';
+
+const EMPTY_SECTIONS = {
+    courses: [],
+    attendanceStats: null,
+    justifications: [],
+    teacherSchedules: [],
+    teacherCourseStats: [],
+};
+
+// Misma regla de roles que ProfileScreen usa para mostrar cada sección.
+const roleIncludes = (role, ...names) => names.some((n) => (role || '').toLowerCase().includes(n));
 
 export function useProfileViewModel({ onLogout } = {}) {
     const navigation = useNavigation();
@@ -22,6 +35,7 @@ export function useProfileViewModel({ onLogout } = {}) {
     const updateKey = useLanguageRefresh();
     const [isLoading, setIsLoading] = useState(false);
     const [schoolInfo, setSchoolInfo] = useState(null);
+    const [sections, setSections] = useState(EMPTY_SECTIONS);
     const [userInfo, setUserInfo] = useState({
         personId: null,
         name: '',
@@ -75,6 +89,7 @@ export function useProfileViewModel({ onLogout } = {}) {
             }
 
             let schoolName = '';
+            let academicActorId = null;
             let actorCode = '';
             let joinDate = '';
             let loadedSchoolInfo = null;
@@ -82,6 +97,7 @@ export function useProfileViewModel({ onLogout } = {}) {
                 try {
                     const actors = await ActorService.getByPerson(person.person_id);
                     const actor = actors?.[0] || null;
+                    academicActorId = actor?.academicActorId || null;
                     actorCode = actor?.actorCode || '';
                     joinDate = formatJoinDate(actor?.startedOn || userCreatedAt);
                     const schoolId = actor?.schoolId || null;
@@ -134,6 +150,16 @@ export function useProfileViewModel({ onLogout } = {}) {
                 employeeId: person?.document_number || '',
                 actorCode,
             });
+
+            if (roleIncludes(role, 'estudiante', 'student', 'aprendiz')) {
+                setSections({...EMPTY_SECTIONS, ...(await loadStudentProfileSections(academicActorId))});
+            } else if (roleIncludes(role, 'docente', 'teacher', 'instructor')) {
+                const locale = resolveLocale(i18n.language);
+                const dayLabel = (day) => getDayLabel(day, locale);
+                setSections({...EMPTY_SECTIONS, ...(await loadTeacherProfileSections(academicActorId, dayLabel))});
+            } else {
+                setSections(EMPTY_SECTIONS);
+            }
         } catch (error) {
             console.error('Error cargando datos de usuario:', error);
         }
@@ -178,12 +204,9 @@ export function useProfileViewModel({ onLogout } = {}) {
         performLogout,
         toggleTheme,
         reload: loadUserData,
-        courses: [],
-        attendanceStats: null,
-        justifications: [],
+        ...sections,
+        // Sin backend de dispositivos IoT: la sección queda oculta.
         iotDevices: [],
-        teacherSchedules: [],
-        teacherCourseStats: [],
         schoolInfo,
     };
 }

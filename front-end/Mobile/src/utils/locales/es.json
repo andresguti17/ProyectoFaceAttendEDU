@@ -736,6 +736,7 @@
     "address": "Dirección",
     "actorCode": "Código",
     "approved": "Aprobado",
+    "rejected": "Rechazado",
     "attendanceStats": "Estadísticas de asistencia",
     "classes": "Clases",
     "courseAttendance": "Asistencia del curso",
