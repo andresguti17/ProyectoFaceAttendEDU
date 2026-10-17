@@ -90,6 +90,18 @@ export const getToken = async () => {
   }
 };
 
+/** Sesión guardada completa ({ token, savedAt, expiresAt, email }) o null si no hay. */
+export const getSession = async () => {
+  try {
+    const raw = await readPayload();
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    return data?.token ? data : null;
+  } catch {
+    return null;
+  }
+};
+
 export const removeToken = async () => {
   try {
     await clearPayload();

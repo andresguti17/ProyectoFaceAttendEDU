@@ -1,4 +1,4 @@
-import { getToken } from '../storage/TokenStorage';
+import { getToken, getSession, saveToken } from '../storage/TokenStorage';
 import ENV from '../config/env';
 import { httpErrorMessage, noSessionMessage, timeoutMessage } from './httpErrors';
 
@@ -63,6 +63,50 @@ export function onSessionExpired(handler) {
  */
 function isCredentialFlow(url) {
   return url.includes('/api/v1/auth/');
+}
+
+// ── Renovación de la sesión ─────────────────────────────────
+// La sesión opaca vence a las 8 h desde que se abrió (session_timeout_minutes)
+// y una sesión ya vencida no se puede renovar: se rota antes, cuando tiene más
+// de una hora, para que quien sigue usando la app no vuelva al login. El backend
+// solo deja ganar una rotación por sesión, así que todas las peticiones en curso
+// comparten la misma.
+const REFRESH_ENDPOINT = 'api/v1/auth/refresh';
+export const SESSION_REFRESH_AFTER_MS = 60 * 60 * 1000;
+let refreshInFlight = null;
+
+export function refreshSession() {
+  if (!refreshInFlight) {
+    refreshInFlight = (async () => {
+      const session = await getSession();
+      if (!session?.token) throw new ApiError(401, noSessionMessage(), null);
+      const data = await performRequest({
+        method: 'POST',
+        url: REFRESH_ENDPOINT,
+        data: { sessionId: session.token },
+        requiresAuth: false,
+      });
+      if (!data?.sessionId) throw new ApiError(502, httpErrorMessage(502), data);
+      await saveToken(String(data.sessionId), session.email);
+      return String(data.sessionId);
+    })().finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
+}
+
+async function refreshIfStale(fullUrl) {
+  if (isCredentialFlow(fullUrl)) return;
+  try {
+    const session = await getSession();
+    if (!session?.token || !session.savedAt) return;
+    if (Date.now() - session.savedAt < SESSION_REFRESH_AFTER_MS) return;
+    await refreshSession();
+  } catch {
+    // Se sigue con la sesión actual: si ya no vale, el 401 de la propia
+    // petición cierra la sesión como siempre.
+  }
 }
 
 /** Texto técnico del backend. FastAPI usa { detail: string | [{loc, msg}] } en lugar de { message }. */
@@ -216,6 +260,8 @@ async function performRequest({ method, url, data = null, params = null, require
       .join('&');
     if (query) fullUrl += `?${query}`;
   }
+
+  await refreshIfStale(fullUrl);
 
   const options = {
     method,
