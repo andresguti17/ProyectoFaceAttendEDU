@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,6 +27,16 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
 
     @Query("select count(u) from UserJpaEntity u where u.deletedAt is null")
     long countActive();
+
+    /**
+     * School-scoped roster: same soft-delete rule as findAllActive, restricted to the
+     * persons the caller is allowed to see (CallerScopeResolver via AuthTokenFilter).
+     */
+    @Query("select u from UserJpaEntity u where u.deletedAt is null and u.person.personId in :personIds")
+    Page<UserJpaEntity> findAllActiveInPersons(@Param("personIds") Collection<UUID> personIds, Pageable pageable);
+
+    @Query("select count(u) from UserJpaEntity u where u.deletedAt is null and u.person.personId in :personIds")
+    long countActiveInPersons(@Param("personIds") Collection<UUID> personIds);
 
     /**
      * Email lookup used by login. Soft-deleted users and persons are excluded so the result

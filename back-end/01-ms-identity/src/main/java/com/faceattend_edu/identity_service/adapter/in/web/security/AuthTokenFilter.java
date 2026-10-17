@@ -186,7 +186,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (request.getMethod().equalsIgnoreCase("GET") && path.startsWith("/api/v1/persons")
+        if (request.getMethod().equalsIgnoreCase("GET")
+                && (path.startsWith("/api/v1/persons") || path.startsWith("/api/v1/users"))
                 && !applyPersonScope(request, response, path, caller, roles, rawToken)) {
             return;
         }
@@ -265,6 +266,18 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         if (item.matches() && !scope.allows(UUID.fromString(item.group(1)))) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: person outside your scope", path);
             return false;
+        }
+        Matcher userItem = USER_ITEM.matcher(path);
+        if (userItem.matches() && !userItem.group(1).equalsIgnoreCase(caller)) {
+            // Una cuenta ajena se ve solo si su persona cae en el alcance del llamante.
+            LoadUserPort port = loadUserPort.getIfAvailable();
+            User target = port == null ? null : port.loadUser(UUID.fromString(userItem.group(1)));
+            UUID personId = target == null || target.getPersonId() == null ? null
+                    : target.getPersonId().getPersonId();
+            if (personId == null || !scope.allows(personId)) {
+                deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: user outside your scope", path);
+                return false;
+            }
         }
         request.setAttribute(PERSON_SCOPE_ATTRIBUTE, scope.personIds());
         return true;

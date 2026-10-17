@@ -4,6 +4,7 @@ import com.faceattend_edu.identity_service.adapter.in.web.dto.CreateUserRequest;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.PageResponse;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.UserDto;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserWebMapper;
+import com.faceattend_edu.identity_service.adapter.in.web.security.AuthTokenFilter;
 import com.faceattend_edu.identity_service.application.port.in.ActivateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ChangeUserStatusUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase;
@@ -16,8 +17,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -45,9 +48,23 @@ public class UserController {
     @GetMapping
     public ResponseEntity<PageResponse<UserDto>> listUsers(
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer limit) {
+            @RequestParam(defaultValue = "20") Integer limit,
+            HttpServletRequest request) {
         int safePage = PageResponse.safePage(page);
         int safeLimit = PageResponse.safeLimit(limit);
+        if (request.getAttribute(AuthTokenFilter.PERSON_SCOPE_ATTRIBUTE) instanceof Set<?> scope) {
+            // Administrador de sede: solo cuentas de personas de su propia sede. El
+            // filtro ya resolvió el alcance; aquí se pagina en SQL sobre ese subconjunto.
+            Set<UUID> personIds = scope.stream().map(id -> (UUID) id).collect(Collectors.toSet());
+            if (personIds.isEmpty()) {
+                return ResponseEntity.ok(PageResponse.ofSlice(List.of(), safePage, safeLimit, 0));
+            }
+            List<UserDto> scoped = listUsersUseCase.listUsers(safePage - 1, safeLimit, personIds).stream()
+                    .map(userWebMapper::toDto)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(
+                    PageResponse.ofSlice(scoped, safePage, safeLimit, listUsersUseCase.countUsers(personIds)));
+        }
         List<UserDto> slice = listUsersUseCase.listUsers(safePage - 1, safeLimit).stream()
                 .map(userWebMapper::toDto)
                 .collect(Collectors.toList());

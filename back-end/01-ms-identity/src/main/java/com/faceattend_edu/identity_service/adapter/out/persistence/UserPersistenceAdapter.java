@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -68,6 +69,18 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, Updat
     @Override
     public long countUsers() {
         return repository.countActive();
+    }
+
+    @Override
+    public List<User> listUsers(int pageIndex, int limit, Set<UUID> personIds) {
+        return repository.findAllActiveInPersons(personIds, PageRequest.of(pageIndex, limit, Sort.by("userId")))
+                .map(mapper::toDomain)
+                .getContent();
+    }
+
+    @Override
+    public long countUsers(Set<UUID> personIds) {
+        return repository.countActiveInPersons(personIds);
     }
 
     @Override
