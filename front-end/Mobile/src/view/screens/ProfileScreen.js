@@ -108,7 +108,8 @@ const AttendanceStatsCard = ({ stats, colors, t }) => {
 const JustificationCard = ({ item, colors, t }) => {
     const styles = useMemo(() => createProfileStyles(colors), [colors]);
     const isPending = item?.approval === 'Pending';
-    const statusColor = isPending ? colors.warning : colors.success;
+    const isRejected = item?.approval === 'Rejected';
+    const statusColor = isPending ? colors.warning : isRejected ? colors.danger : colors.success;
 
     return (
         <View style={[styles.infoFieldContainerProfile, {
@@ -125,7 +126,9 @@ const JustificationCard = ({ item, colors, t }) => {
             <Text style={[styles.infoFieldLabelProfile, { color: statusColor, marginTop: 4 }]}>
                 {isPending
                     ? t('profile.pending', 'Pendiente')
-                    : t('profile.approved', 'Aprobada')}
+                    : isRejected
+                        ? t('profile.rejected', 'Rechazada')
+                        : t('profile.approved', 'Aprobada')}
             </Text>
         </View>
     );

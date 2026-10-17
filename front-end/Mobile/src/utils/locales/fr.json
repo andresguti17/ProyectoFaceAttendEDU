@@ -738,6 +738,7 @@
     "address": "Adresse",
     "actorCode": "Code",
     "approved": "Approuvé",
+    "rejected": "Rejeté",
     "attendanceStats": "Statistiques de présence",
     "classes": "Cours",
     "courseAttendance": "Présence au cours",
