@@ -27,7 +27,7 @@ class CallerScopeResolverTest {
      * 5 administrador de la sede 100 (SCHOOL_ADMIN).
      */
     private static final Map<String, List<Map<?, ?>>> BACKEND = Map.of(
-            "/api/v1/academic-actors?limit=2000", List.of(
+            "/api/v1/academic-actors?limit=100&offset=0", List.of(
                     Map.of("academicActorId", 1, "personId", TEACHER.toString(), "schoolId", 100),
                     Map.of("academicActorId", 2, "personId", STUDENT.toString(), "schoolId", 100),
                     Map.of("academicActorId", 3, "personId", OTHER_STUDENT.toString(), "schoolId", 200),

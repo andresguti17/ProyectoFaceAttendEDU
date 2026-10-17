@@ -21,6 +21,8 @@ import (
 
 const actorScopeKey = "actorScope"
 
+const actorPageSize = 100
+
 const (
 	superAdminRole  = "Super Administrador"
 	schoolAdminRole = "Administrador"
@@ -72,8 +74,21 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 		PersonID        string `json:"personId"`
 		SchoolID        *int64 `json:"schoolId"`
 	}
-	if _, err := getJSONStrict(ctx, cfg, cfg.AcademicURL+"/api/v1/academic-actors?limit=2000", token, &actors); err != nil {
+	// The academic service caps each page at actorPageSize, so the full list is walked page by page.
+	for offset := 0; ; offset += actorPageSize {
+		var page []struct {
+			AcademicActorID int64  `json:"academicActorId"`
+			PersonID        string `json:"personId"`
+			SchoolID        *int64 `json:"schoolId"`
+		}
+		pageURL := fmt.Sprintf("%s/api/v1/academic-actors?limit=%d&offset=%d", cfg.AcademicURL, actorPageSize, offset)
+		if _, err := getJSONStrict(ctx, cfg, pageURL, token, &page); err != nil {
 		return nil, err
+	}
+		actors = append(actors, page...)
+		if len(page) < actorPageSize {
+			break
+		}
 	}
 	scope := map[int64]bool{}
 	var own []int64

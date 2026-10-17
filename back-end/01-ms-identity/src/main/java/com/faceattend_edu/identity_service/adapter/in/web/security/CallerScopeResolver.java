@@ -40,6 +40,7 @@ public class CallerScopeResolver {
     static final String SUPER_ADMIN_ROLE = "Super Administrador";
     static final String SCHOOL_ADMIN_ROLE = "Administrador";
     private static final long TTL_MS = 60_000;
+    private static final int ACTOR_PAGE_SIZE = 100;
     private static final Scope ALL = new Scope(null);
 
     private record Cached(Scope scope, long expiresAt) {}
@@ -77,7 +78,7 @@ public class CallerScopeResolver {
         UUID ownPerson = user.getPersonId().getPersonId();
         persons.add(ownPerson);
 
-        List<Map<?, ?>> actors = getList(academicUrl + "/api/v1/academic-actors?limit=2000", token);
+        List<Map<?, ?>> actors = allAcademicActors(token);
         Map<String, String> personByActor = new HashMap<>();
         Set<String> ownActors = new HashSet<>();
         for (Map<?, ?> actor : actors) {
@@ -142,6 +143,16 @@ public class CallerScopeResolver {
     }
 
     @SuppressWarnings("unchecked")
+    /** The academic service caps every page at ACTOR_PAGE_SIZE, so the full list is walked page by page. */
+    private List<Map<?, ?>> allAcademicActors(String token) {
+        List<Map<?, ?>> all = new java.util.ArrayList<>();
+        for (int offset = 0; ; offset += ACTOR_PAGE_SIZE) {
+            List<Map<?, ?>> page = getList(academicUrl + "/api/v1/academic-actors?limit=" + ACTOR_PAGE_SIZE + "&offset=" + offset, token);
+            all.addAll(page);
+            if (page.size() < ACTOR_PAGE_SIZE) return all;
+        }
+    }
+
     protected List<Map<?, ?>> getList(String url, String token) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);

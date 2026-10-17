@@ -24,6 +24,7 @@ export class ScopeError extends Error {
 const REVIEW_PERMISSION = 'biometric.case:review';
 const SUPER_ADMIN_ROLE = 'Super Administrador';
 const CACHE_TTL_MS = 30_000;
+const ACTOR_PAGE_SIZE = 100;
 
 const personCache = new Map<string, { personId: string; expiresAt: number }>();
 const reviewerCache = new Map<string, number>();
@@ -71,10 +72,15 @@ async function resolveOwnSchoolPersonIds(
   if (cached && cached.expiresAt > now) return cached.personIds;
 
   const ownPerson = await resolveOwnPersonId(userId, token, identityUrl);
-  let actors: Array<{ personId?: string; schoolId?: number }>;
+  const actors: Array<{ personId?: string; schoolId?: number }> = [];
   try {
-    const res = await getJson(`${academicUrl}/api/v1/academic-actors?limit=2000`, token);
-    actors = res.status === 200 && Array.isArray(res.body) ? res.body : [];
+    // The academic service caps each page at 100, so the full list is walked page by page.
+    for (let offset = 0; ; offset += ACTOR_PAGE_SIZE) {
+      const res = await getJson(`${academicUrl}/api/v1/academic-actors?limit=${ACTOR_PAGE_SIZE}&offset=${offset}`, token);
+      const page: Array<{ personId?: string; schoolId?: number }> = res.status === 200 && Array.isArray(res.body) ? res.body : [];
+      actors.push(...page);
+      if (page.length < ACTOR_PAGE_SIZE) break;
+    }
   } catch {
     throw new ScopeError(503, 'Cannot resolve the school scope');
   }

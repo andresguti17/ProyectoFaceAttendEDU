@@ -73,7 +73,7 @@ class ActorScopeTest {
     void instructorScopeIsOwnActorsPlusActiveStudentsOfTaughtCohorts() {
         Map<String, Object> backend = Map.of(
                 "/api/v1/users/u-1", Map.of("personId", "p-1"),
-                "/api/v1/academic-actors?limit=2000", List.of(
+                "/api/v1/academic-actors?limit=100&offset=0", List.of(
                         Map.of("academicActorId", 1, "personId", "p-1"),
                         Map.of("academicActorId", 2, "personId", "p-2")),
                 "/api/v1/schedule-blocks?instructorActorId=1", List.of(Map.of("cohortId", 7)),
@@ -106,7 +106,7 @@ class ActorScopeTest {
     void schoolAdminScopeIsLimitedToOwnSchool() {
         Map<String, Object> backend = Map.of(
                 "/api/v1/users/u-admin", Map.of("personId", "p-admin"),
-                "/api/v1/academic-actors?limit=2000", List.of(
+                "/api/v1/academic-actors?limit=100&offset=0", List.of(
                         Map.of("academicActorId", 1, "personId", "p-admin", "schoolId", 100),
                         Map.of("academicActorId", 2, "personId", "p-2", "schoolId", 100),
                         Map.of("academicActorId", 3, "personId", "p-3", "schoolId", 200)));
