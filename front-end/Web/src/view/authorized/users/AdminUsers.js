@@ -28,6 +28,7 @@ import ImportStudentsModal from "../../components/users/ImportStudentsModal";
 import StudentDetailModal from "../../components/users/StudentDetailModal";
 import { UsersFilterBar, UsersTable } from "./sections";
 import { COLUMNS, ROLE_VARIANT, createCompactRowConfig } from "./columns/usersColumns";
+import { academicApi } from "../../../services/api/academicApi";
 
 // ── AdminUsers Component ──────────────────────────────────
 
@@ -152,12 +153,37 @@ export function AdminUsers({ section, vm: vmProp }) {
         return "default";
     }, [roleFilter]);
     
+    // Nombre de cada colegio (sede) para la columna cuando mira el Super Admin.
+    const [schoolNames, setSchoolNames] = React.useState(() => new Map());
+    React.useEffect(() => {
+        if (!permissions.isSuperAdmin) return undefined;
+        let cancelled = false;
+        academicApi.listSchools().then(
+            (list) => {
+                if (cancelled) return;
+                const rows = Array.isArray(list) ? list : list?.content ?? list?.data ?? [];
+                setSchoolNames(new Map(rows.map((s) => [String(s.schoolId), s.name ?? s.code ?? ""])));
+            },
+            () => {
+                if (!cancelled) setSchoolNames(new Map());
+            }
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [permissions.isSuperAdmin]);
+
+    // Qué muestra la columna de programa: colegio (Super Admin), ficha (administrador de sede).
+    const programMode = permissions.isSuperAdmin ? "colegio" : "ficha";
+
     const renderContext = useMemo(() => ({
         t,
         c,
         roleVariant,
         courses: appData.courses,
-    }), [t, c, roleVariant, appData.courses]);
+        programMode,
+        schoolNames,
+    }), [t, c, roleVariant, appData.courses, programMode, schoolNames]);
     
     // Contexto para visibilidad de columnas
     const visibilityContext = useMemo(() => ({
