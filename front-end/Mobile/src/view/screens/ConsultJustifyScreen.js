@@ -4,7 +4,9 @@ import {
     FlatList,
     Image,
     KeyboardAvoidingView,
+    Modal,
     Platform,
+    Pressable,
     SafeAreaView,
     ScrollView,
     Text,
@@ -35,6 +37,10 @@ export default function ValidJustificationsScreen() {
         retry,
         handleBack,
         getEstadoColor,
+        getEstadoLabel,
+        selectedItem,
+        openDetail,
+        closeDetail,
     } = useValidJustificationsViewModel();
 
     // Tarjeta con borde propio: evita que "flote" sin definición cuando
@@ -48,31 +54,39 @@ export default function ValidJustificationsScreen() {
         },
     ];
 
+    const cardA11y = (item) => ({
+        onPress: () => openDetail(item),
+        activeOpacity: 0.8,
+        accessibilityRole: 'button',
+        accessibilityLabel: `${item.fecha} · ${item.motivo} · ${getEstadoLabel(item.estado)}`,
+        accessibilityHint: t('consultJustify.viewDetail'),
+    });
+
     const renderInasistenciaItem = ({ item }) => (
-        <View style={cardStyle}>
+        <TouchableOpacity style={cardStyle} {...cardA11y(item)}>
             <View style={styles.cardHeader}>
                 <Text style={[styles.cardDate, { color: colors.text }]}>{item.fecha}</Text>
                 <View style={[styles.statusBadge, { backgroundColor: getEstadoColor(item.estado) }]}>
-                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{t(`attendance.${item.estado}`)}</Text>
+                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{getEstadoLabel(item.estado)}</Text>
                 </View>
             </View>
             <Text style={[styles.cardReason, { color: colors.textSecondary }]}>{item.motivo}</Text>
-        </View>
+        </TouchableOpacity>
     );
 
     const renderRetardoItem = ({ item }) => (
-        <View style={cardStyle}>
+        <TouchableOpacity style={cardStyle} {...cardA11y(item)}>
             <View style={styles.cardHeader}>
                 <View style={styles.dateTimeContainer}>
                     <Text style={[styles.cardDate, { color: colors.text }]}>{item.fecha}</Text>
                     <Text style={[styles.cardTime, { color: colors.textSecondary }]}>{item.hora}</Text>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: getEstadoColor(item.estado) }]}>
-                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{t(`attendance.${item.estado}`)}</Text>
+                    <Text style={[styles.statusText, { color: colors.onPrimary }]}>{getEstadoLabel(item.estado)}</Text>
                 </View>
             </View>
             <Text style={[styles.cardReason, { color: colors.textSecondary }]}>{item.motivo}</Text>
-        </View>
+        </TouchableOpacity>
     );
 
     return (
@@ -258,6 +272,40 @@ export default function ValidJustificationsScreen() {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            {/* Detalle: el aprendiz ve el resultado y el comentario del revisor (ERF 6.2 / 6.3) */}
+            <Modal visible={!!selectedItem} transparent animationType="slide" onRequestClose={closeDetail}>
+                <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' }}>
+                    <Pressable style={{ flex: 1 }} onPress={closeDetail} accessibilityLabel={t('common.close')} />
+                    {!!selectedItem && (
+                        <View style={{ backgroundColor: colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, borderWidth: 1, borderColor: colors.border }}>
+                            <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 12 }} accessibilityRole="header">
+                                {t('consultJustify.detailTitle')}
+                            </Text>
+                            <View style={[styles.statusBadge, { backgroundColor: getEstadoColor(selectedItem.estado), alignSelf: 'flex-start', marginBottom: 12 }]}>
+                                <Text style={[styles.statusText, { color: colors.onPrimary }]}>{getEstadoLabel(selectedItem.estado)}</Text>
+                            </View>
+                            <Text style={{ color: colors.textSecondary }}>{t('consultJustify.case')}</Text>
+                            <Text style={{ color: colors.text, marginBottom: 10 }}>{selectedItem.motivo}</Text>
+                            <Text style={{ color: colors.textSecondary }}>{t('consultJustify.submittedAt')}</Text>
+                            <Text style={{ color: colors.text, marginBottom: 10 }}>{selectedItem.fecha}</Text>
+                            <Text style={{ color: colors.textSecondary }}>{t('consultJustify.descriptionTitle')}</Text>
+                            <Text style={{ color: colors.text, marginBottom: 10 }}>{selectedItem.description || '—'}</Text>
+                            {selectedItem.estado !== 'pending' && (
+                                <>
+                                    <Text style={{ color: colors.textSecondary }}>
+                                        {selectedItem.estado === 'rejected' ? t('consultJustify.rejectionReason') : t('consultJustify.reviewerNotes')}
+                                    </Text>
+                                    <Text style={{ color: selectedItem.estado === 'rejected' ? colors.danger : colors.text, marginBottom: 16 }}>
+                                        {selectedItem.reviewerNotes || t('consultJustify.noReviewerNotes')}
+                                    </Text>
+                                </>
+                            )}
+                            <PrimaryButton title={t('common.close')} onPress={closeDetail} />
+                        </View>
+                    )}
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }

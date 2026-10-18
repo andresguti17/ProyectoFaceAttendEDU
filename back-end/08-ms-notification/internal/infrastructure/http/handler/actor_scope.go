@@ -75,43 +75,56 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 		PersonID        string `json:"personId"`
 		SchoolID        *int64 `json:"schoolId"`
 	}
-	// The academic service caps each page at actorPageSize, so the full list is walked page by page.
-	for offset := 0; ; offset += actorPageSize {
-		var page []struct {
-			AcademicActorID int64  `json:"academicActorId"`
-			PersonID        string `json:"personId"`
-			SchoolID        *int64 `json:"schoolId"`
-		}
-		pageURL := fmt.Sprintf("%s/api/v1/academic-actors?limit=%d&offset=%d", cfg.AcademicURL, actorPageSize, offset)
-		if _, err := getJSONStrict(ctx, cfg, pageURL, token, &page); err != nil {
-		return nil, err
+	if user.PersonID == "" {
+		return map[int64]bool{}, nil
 	}
-		actors = append(actors, page...)
-		if len(page) < actorPageSize {
-			break
-		}
+	// ?personId= filtra en academic: el actor del llamante sin recorrer el listado capado.
+	if _, err := getJSONStrict(ctx, cfg, cfg.AcademicURL+"/api/v1/academic-actors?personId="+url.QueryEscape(user.PersonID), token, &actors); err != nil {
+		return nil, err
 	}
 	scope := map[int64]bool{}
 	var own []int64
 	for _, a := range actors {
-		if user.PersonID != "" && strings.EqualFold(a.PersonID, user.PersonID) {
+		if strings.EqualFold(a.PersonID, user.PersonID) {
 			scope[a.AcademicActorID] = true
 			own = append(own, a.AcademicActorID)
 		}
 	}
 
 	if isSchoolAdmin {
+		// Administrador de sede: la sede se deduce del listado completo, recorrido por páginas.
+		var all []struct {
+			AcademicActorID int64  `json:"academicActorId"`
+			PersonID        string `json:"personId"`
+			SchoolID        *int64 `json:"schoolId"`
+		}
+		for offset := 0; ; offset += actorPageSize {
+			var page []struct {
+				AcademicActorID int64  `json:"academicActorId"`
+				PersonID        string `json:"personId"`
+				SchoolID        *int64 `json:"schoolId"`
+			}
+			pageURL := fmt.Sprintf("%s/api/v1/academic-actors?limit=%d&offset=%d", cfg.AcademicURL, actorPageSize, offset)
+			if _, err := getJSONStrict(ctx, cfg, pageURL, token, &page); err != nil {
+				return nil, err
+			}
+			all = append(all, page...)
+			if len(page) < actorPageSize {
+				break
+			}
+		}
+
 		// Administrador de sede: solo los actores de su propia sede, nunca los
 		// de otras instituciones (a diferencia de Super Administrador = nil).
 		ownSchools := map[int64]bool{}
-		for _, a := range actors {
+		for _, a := range all {
 			if scope[a.AcademicActorID] && a.SchoolID != nil {
 				ownSchools[*a.SchoolID] = true
 			}
 		}
 		adminScope := map[int64]bool{}
 		if len(ownSchools) > 0 {
-			for _, a := range actors {
+			for _, a := range all {
 				if a.SchoolID != nil && ownSchools[*a.SchoolID] {
 					adminScope[a.AcademicActorID] = true
 				}

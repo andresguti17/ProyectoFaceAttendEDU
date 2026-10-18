@@ -1,6 +1,8 @@
 package com.faceattend_edu.attendance_service.infrastructure.web.controller;
 
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
+import com.faceattend_edu.attendance_service.domain.model.AttendanceRecordFilter;
+import com.faceattend_edu.attendance_service.domain.model.AttendanceRecordSlice;
 import com.faceattend_edu.attendance_service.domain.port.in.*;
 import com.faceattend_edu.attendance_service.infrastructure.web.dto.*;
 import com.faceattend_edu.attendance_service.infrastructure.web.mapper.AttendanceRecordWebMapper;
@@ -22,6 +24,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 /**
@@ -189,36 +192,38 @@ class AttendanceRecordControllerTest {
         @DisplayName("Should list all attendance records")
         void shouldListRecords() {
             // Arrange
-            when(listUseCase.list()).thenReturn(Arrays.asList(sampleRecord));
+            when(listUseCase.search(any(), eq(0), eq(100))).thenReturn(new AttendanceRecordSlice(List.of(sampleRecord), 81000));
             when(mapper.toResponse(any())).thenReturn(sampleResponse);
 
             // Act
             var response = controller.list(null, null, null, null, null);
 
-            // Assert
+            // Assert: sin filtros ni limit ya no devuelve la tabla entera (OutOfMemoryError con ~81k filas)
             assertEquals(200, response.getStatusCode().value());
             assertFalse(response.getBody().isEmpty());
+            assertEquals("81000", response.getHeaders().getFirst("X-Total-Count"));
         }
 
         @Test
         @DisplayName("Should filter records by status")
         void shouldFilterByStatus() {
             // Arrange
-            when(listUseCase.list()).thenReturn(Arrays.asList(sampleRecord));
+            when(listUseCase.search(any(), eq(0), eq(100))).thenReturn(new AttendanceRecordSlice(List.of(sampleRecord), 1));
             when(mapper.toResponse(any())).thenReturn(sampleResponse);
 
             // Act
             var response = controller.list(null, null, "Present", null, null);
 
-            // Assert
+            // Assert: el estado viaja a la consulta SQL
             assertEquals(200, response.getStatusCode().value());
+            verify(listUseCase).search(eq(new AttendanceRecordFilter(null, null, "Present", null)), eq(0), eq(100));
         }
 
         @Test
         @DisplayName("Should paginate records with limit and offset")
         void shouldPaginateRecords() {
             // Arrange
-            when(listUseCase.list()).thenReturn(Arrays.asList(sampleRecord, sampleRecord, sampleRecord));
+            when(listUseCase.search(any(), eq(1), eq(2))).thenReturn(new AttendanceRecordSlice(List.of(sampleRecord, sampleRecord), 3));
             when(mapper.toResponse(any())).thenReturn(sampleResponse);
 
             // Act
@@ -228,6 +233,22 @@ class AttendanceRecordControllerTest {
             assertEquals(200, response.getStatusCode().value());
             assertEquals(2, response.getBody().size());
             assertEquals("3", response.getHeaders().getFirst("X-Total-Count"));
+        }
+
+        @Test
+        @DisplayName("Should return every record of an actor when no limit is given")
+        void shouldListAllRecordsOfAnActorWithoutLimit() {
+            // Arrange
+            when(listUseCase.search(any(), eq(0), isNull())).thenReturn(new AttendanceRecordSlice(List.of(sampleRecord), 1));
+            when(mapper.toResponse(any())).thenReturn(sampleResponse);
+
+            // Act
+            var response = controller.list(null, 7L, null, null, null);
+
+            // Assert: con filtro y sin limit se conserva el contrato de lista completa sin cabecera
+            assertEquals(1, response.getBody().size());
+            assertNull(response.getHeaders().getFirst("X-Total-Count"));
+            verify(listUseCase).search(eq(new AttendanceRecordFilter(null, 7L, null, null)), eq(0), isNull());
         }
     }
 

@@ -1,6 +1,8 @@
 package com.faceattend_edu.attendance_service.infrastructure.persistence.repository;
 
 import com.faceattend_edu.attendance_service.infrastructure.persistence.entity.AttendanceRecordJpaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +15,35 @@ public interface AttendanceRecordJpaRepository extends JpaRepository<AttendanceR
     Optional<AttendanceRecordJpaEntity> findByClassSessionIdAndAcademicActorId(Long classSessionId, Long academicActorId);
     List<AttendanceRecordJpaEntity> findByClassSessionId(Long classSessionId);
     List<AttendanceRecordJpaEntity> findByAcademicActorId(Long academicActorId);
+
+    /**
+     * Listado filtrado y paginado en SQL (índices uq_attendance_session_actor e
+     * idx_attendance_actor). Traer los ~81k registros con findAll y filtrar en Java
+     * agotaba el heap (OutOfMemoryError). Igual que countByGroups, cada filtro se
+     * activa con su bandera y el valor de un filtro apagado es de relleno.
+     */
+    @Query(value = """
+            select r from AttendanceRecordJpaEntity r
+             where r.deletedAt is null
+               and (:bySession = false or r.classSessionId = :sessionId)
+               and (:byActor = false or r.academicActorId = :actorId)
+               and (:byStatus = false or r.attendanceStatus = :status)
+               and (:byScope = false or r.academicActorId in :scopeIds)
+             order by r.attendanceRecordId
+            """,
+            countQuery = """
+            select count(r) from AttendanceRecordJpaEntity r
+             where r.deletedAt is null
+               and (:bySession = false or r.classSessionId = :sessionId)
+               and (:byActor = false or r.academicActorId = :actorId)
+               and (:byStatus = false or r.attendanceStatus = :status)
+               and (:byScope = false or r.academicActorId in :scopeIds)
+            """)
+    Page<AttendanceRecordJpaEntity> search(@Param("bySession") boolean bySession, @Param("sessionId") long sessionId,
+                                           @Param("byActor") boolean byActor, @Param("actorId") long actorId,
+                                           @Param("byStatus") boolean byStatus, @Param("status") String status,
+                                           @Param("byScope") boolean byScope, @Param("scopeIds") Collection<Long> scopeIds,
+                                           Pageable pageable);
 
     /**
      * Conteo por actor y estado, agregado en SQL. Es lo que permite que una vista

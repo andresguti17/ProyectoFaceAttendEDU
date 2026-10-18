@@ -71,7 +71,11 @@ export const JustificationService = {
 
   approve: async (id, reviewerId, notes = null) => review(id, 'Approved', reviewerId, notes),
 
-  reject: async (id, reviewerId, notes = null) => review(id, 'Rejected', reviewerId, notes),
+  // ERF 6.2: el rechazo exige comentario; se corta aquí para que ningún llamador lo omita.
+  reject: async (id, reviewerId, notes = null) => {
+    if (!notes?.trim()) throw new Error('REJECTION_NOTES_REQUIRED');
+    return review(id, 'Rejected', reviewerId, notes.trim());
+  },
 
   delete: async (id) => request({ method: DELETE, url: `${BASE()}${ENDPOINT}/${id}`, requiresAuth: false }),
 

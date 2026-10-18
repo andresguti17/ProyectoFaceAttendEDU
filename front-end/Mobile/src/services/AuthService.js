@@ -1,9 +1,9 @@
-import { request, GET, POST } from '../api/apiClient';
+import { request, GET, POST, refreshSession } from '../api/apiClient';
 import { toSnakeDeep } from '../api/backend';
 import AuthResponse from '../models/identity/AuthResponse';
 import AuthRequest from '../models/identity/AuthRequest';
 import AppUser from '../models/identity/AppUser';
-import { saveToken } from '../view/storage/TokenStorage';
+import { saveToken } from '../storage/TokenStorage';
 import { VerificationService } from './verificationService';
 import { PasswordService } from './passwordService';
 import i18n from '../utils/i18n';
@@ -188,10 +188,8 @@ export const AuthService = {
     return AppUser.fromApi(toSnakeDeep(data));
   },
 
-  refreshToken: async () => {
-    // The backend issues opaque session ids without refresh rotation.
-    throw authError('SESSION_NOT_RENEWABLE', 'authErrors.sessionNotRenewable');
-  },
+  // Rota la sesión opaca (POST /api/v1/auth/refresh) y guarda el sessionId nuevo.
+  refreshToken: async () => refreshSession(),
 
   logout: async (sessionId) => {
     if (!sessionId) return;

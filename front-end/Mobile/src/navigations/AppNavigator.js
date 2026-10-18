@@ -3,7 +3,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../utils/i18n';
-import {getToken, removeToken} from '../view/storage/TokenStorage';
+import {getToken, removeToken} from '../storage/TokenStorage';
 import {onSessionExpired, request} from '../api/apiClient';
 import {useUser} from '../utils/UserContext';
 import HomesScreen from '../view/screens/login/Login';
@@ -33,7 +33,6 @@ import SchoolsScreen from "../view/screens/SchoolsScreen";
 import RegisterFace from "../view/screens/RegisterFace";
 import MyCoursesScreen from "../view/screens/MyCoursesScreen";
 import BiometricCasesScreen from "../view/screens/BiometricCasesScreen";
-import {SuccessScreen} from "../view/components/auth/SuccessScreen";
 
 const Stack = createStackNavigator();
 
@@ -133,7 +132,7 @@ export default function App() {
     const handleLogout = async () => {
         try {
             try {
-                const { getToken } = require('../view/storage/TokenStorage');
+                const { getToken } = require('../storage/TokenStorage');
                 const { AuthService } = require('../services/AuthService');
                 const sessionId = await getToken();
                 await AuthService.logout(sessionId);
@@ -264,7 +263,6 @@ export default function App() {
                         )}
                         <Stack.Screen name="PendingJustificationScreen" component={PendingJustificationScreen}/>
                         <Stack.Screen name="RegisterFace" component={RegisterFace} />
-                        <Stack.Screen name="SuccessScreen" component={SuccessScreen}/>
                     </>
                 )}
             </Stack.Navigator>

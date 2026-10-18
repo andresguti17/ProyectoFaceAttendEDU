@@ -8,7 +8,7 @@ Archivo clave en este proyecto:
 
 Qué incluye y por qué:
 - Configuración de la base URL y headers por defecto.
-- Interceptores para adjuntar el token desde `view/storage/TokenStorage.js`.
+- Interceptores para adjuntar el token desde `storage/TokenStorage.js`.
 - Manejadores comunes de errores (transformación de mensajes de error legibles para `services`).
 
 Cómo se usa:

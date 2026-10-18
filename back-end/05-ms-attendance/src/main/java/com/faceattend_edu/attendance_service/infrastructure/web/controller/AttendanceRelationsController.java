@@ -1,5 +1,8 @@
 package com.faceattend_edu.attendance_service.infrastructure.web.controller;
 
+import com.faceattend_edu.attendance_service.domain.exception.EntityNotFoundException;
+import com.faceattend_edu.attendance_service.domain.model.AttendanceRecordFilter;
+import com.faceattend_edu.attendance_service.domain.port.in.GetAttendanceRecordUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.ListAttendanceRecordsUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.ListJustificationsUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.ListSupportingDocumentsUseCase;
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 public class AttendanceRelationsController {
 
     private final ListAttendanceRecordsUseCase listRecordsUseCase;
+    private final GetAttendanceRecordUseCase getRecordUseCase;
     private final ListJustificationsUseCase listJustificationsUseCase;
     private final ListSupportingDocumentsUseCase listDocumentsUseCase;
     private final AttendanceRecordWebMapper recordMapper;
@@ -30,17 +34,15 @@ public class AttendanceRelationsController {
 
     @GetMapping("/api/v1/class-sessions/{id}/attendance")
     public ResponseEntity<List<AttendanceRecordResponse>> bySession(@PathVariable Long id) {
-        return ResponseEntity.ok(listRecordsUseCase.listBySession(id).stream()
-                .filter(r -> ActorScope.allows(r.getAcademicActorId()))
-                .map(recordMapper::toResponse).collect(Collectors.toList()));
+        return ResponseEntity.ok(listRecordsUseCase.search(AttendanceRecordFilter.bySession(id, ActorScope.actorIds()), 0, null)
+                .items().stream().map(recordMapper::toResponse).collect(Collectors.toList()));
     }
 
     @GetMapping("/api/v1/academic-actors/{actorId}/attendance")
     public ResponseEntity<List<AttendanceRecordResponse>> byActor(@PathVariable Long actorId) {
         ActorScope.require(actorId);
-        return ResponseEntity.ok(listRecordsUseCase.listByActor(actorId).stream()
-                .filter(r -> ActorScope.allows(r.getAcademicActorId()))
-                .map(recordMapper::toResponse).collect(Collectors.toList()));
+        return ResponseEntity.ok(listRecordsUseCase.search(AttendanceRecordFilter.byActor(actorId), 0, null)
+                .items().stream().map(recordMapper::toResponse).collect(Collectors.toList()));
     }
 
     @GetMapping("/api/v1/attendance/{id}/justification")
@@ -66,9 +68,12 @@ public class AttendanceRelationsController {
 
     private void requireRecord(Long attendanceRecordId) {
         if (!ActorScope.restricted()) return;
-        Long actorId = listRecordsUseCase.list().stream()
-                .filter(r -> r.getAttendanceRecordId().equals(attendanceRecordId))
-                .findFirst().map(r -> r.getAcademicActorId()).orElse(null);
+        Long actorId = null;
+        try {
+            if (attendanceRecordId != null) actorId = getRecordUseCase.getById(attendanceRecordId).getAcademicActorId();
+        } catch (EntityNotFoundException e) {
+            // registro inexistente: igual que antes, fuera de alcance (403)
+        }
         ActorScope.require(actorId);
     }
 }

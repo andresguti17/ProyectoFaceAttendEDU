@@ -4,14 +4,17 @@ import com.faceattend_edu.attendance_service.domain.exception.EntityNotFoundExce
 import com.faceattend_edu.attendance_service.domain.exception.ValidationException;
 import com.faceattend_edu.attendance_service.domain.model.Justification;
 import com.faceattend_edu.attendance_service.domain.port.in.ReviewJustificationUseCase;
+import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
 import com.faceattend_edu.attendance_service.domain.port.out.JustificationRepository;
 import com.faceattend_edu.attendance_service.domain.port.out.JustificationTypeRepository;
 import com.faceattend_edu.attendance_service.domain.port.out.SupportingDocumentRepository;
+import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,6 +29,10 @@ public class ReviewJustificationUseCaseImpl implements ReviewJustificationUseCas
     private final JustificationRepository repository;
     private final JustificationTypeRepository typeRepository;
     private final SupportingDocumentRepository documentRepository;
+    private final AttendanceRecordRepository recordRepository;
+    private final DomainEventPublisher eventPublisher;
+    /** Tópico del catálogo de eventos (fae-docs 09-microservices/event-catalog.md). */
+    static final String TOPIC = "attendance.justification.events";
     private static final Set<String> ALLOWED = Set.of("Approved","Rejected","Pending");
 
     @Override @Transactional
@@ -36,15 +43,33 @@ public class ReviewJustificationUseCaseImpl implements ReviewJustificationUseCas
         if (!"Pending".equals(j.getReviewStatus())) {
             throw new ValidationException("Justification already " + j.getReviewStatus() + "; a resolved justification cannot be reviewed again");
         }
+        // ERF 6.2: el aprendiz debe saber por qué se rechazó.
+        if ("Rejected".equals(reviewStatus) && (resolutionNotes == null || resolutionNotes.isBlank())) {
+            throw new ValidationException("resolutionNotes is required to reject a justification");
+        }
         if ("Approved".equals(reviewStatus) && requiresAttachment(j) && documentRepository.findByJustificationId(id).isEmpty()) {
             throw new ValidationException("This justification type requires at least one supporting document before it can be approved");
         }
         j.setReviewStatus(reviewStatus);
         j.setReviewedBy(reviewedBy);
-        j.setReviewedAt(Instant.now());
+        // Microsegundos: es la precisión de la columna, así la fecha del evento coincide con la guardada.
+        j.setReviewedAt(Instant.now().truncatedTo(ChronoUnit.MICROS));
         j.setResolutionNotes(resolutionNotes);
         j.touchUpdated();
-        return repository.save(j);
+        Justification saved = repository.save(j);
+        publishReviewed(saved);
+        return saved;
+    }
+
+    /** ERF 6.3: Notification avisa al aprendiz (actor del registro) del resultado. */
+    private void publishReviewed(Justification j) {
+        Long actorId = recordRepository.findById(j.getAttendanceRecordId())
+                .map(r -> r.getAcademicActorId()).orElse(null);
+        String payload = String.format(
+                "{\"eventType\":\"JustificationReviewed\",\"version\":1,\"justificationId\":%d,\"attendanceRecordId\":%d,"
+                        + "\"academicActorId\":%s,\"status\":\"%s\",\"reviewedAt\":\"%s\"}",
+                j.getJustificationId(), j.getAttendanceRecordId(), actorId, j.getReviewStatus(), j.getReviewedAt());
+        eventPublisher.publishAfterCommit(TOPIC, String.valueOf(j.getJustificationId()), payload);
     }
 
     private boolean requiresAttachment(Justification j) {

@@ -56,7 +56,14 @@ func scopedBackends(t *testing.T) AuthConfig {
 		}
 		_, _ = w.Write([]byte(`{"personId":"p-1"}`))
 	})
-	mux.HandleFunc("/api/v1/academic-actors", write(`[{"academicActorId":1,"personId":"p-1"},{"academicActorId":2,"personId":"p-2"},{"academicActorId":9,"personId":"p-9"}]`))
+	// Emula el tope de 100 filas de academic: sin ?personId el actor del instructor no viene.
+	mux.HandleFunc("/api/v1/academic-actors", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("personId") == "p-1" {
+			_, _ = w.Write([]byte(`[{"academicActorId":1,"personId":"p-1"}]`))
+			return
+		}
+		_, _ = w.Write([]byte(`[{"academicActorId":2,"personId":"p-2"},{"academicActorId":9,"personId":"p-9"}]`))
+	})
 	mux.HandleFunc("/api/v1/schedule-blocks", write(`[{"cohortId":7}]`))
 	mux.HandleFunc("/api/v1/cohorts/7/enrollments", write(`[{"academicActorId":2,"enrollmentStatus":"Active"}]`))
 	srv := httptest.NewServer(mux)

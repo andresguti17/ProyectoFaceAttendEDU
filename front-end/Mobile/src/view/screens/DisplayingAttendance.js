@@ -111,6 +111,15 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
                                colors={colors}/>
                     <DetailRow label={t("attendance.schedule")}
                                value={`${item.hora_inicio} – ${item.hora_fin}`} colors={colors}/>
+                    {/* ERF 7.4: estado de la justificación del retardo o la inasistencia */}
+                    {item.estado !== "presente" && (
+                        <DetailRow label={t("attendance.approvalStatus")}
+                                   value={item.justificacion
+                                       ? t(approvalTokens(colors, item.justificacion.estado).label)
+                                       : t("attendance.noJustification")}
+                                   valueColor={item.justificacion ? approvalTokens(colors, item.justificacion.estado).color : colors.textMuted}
+                                   colors={colors}/>
+                    )}
 
                     {/* Materia */}
                     <SectionLabel text={t("attendance.sectionCourse")} colors={colors}/>
@@ -246,8 +255,6 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
 
                             <DetailRow label={t("attendance.justificationText")}
                                        value={item.justificacion.texto} colors={colors}/>
-                            <DetailRow label={t("attendance.reviewedBy")}
-                                       value={item.justificacion.revisado_por} colors={colors}/>
                             <DetailRow label={t("attendance.reviewedAt")}
                                        value={item.justificacion.revisado_en} colors={colors}/>
                         </>
@@ -408,13 +415,19 @@ export default function DisplayingAttendance() {
         t,                      // <--- Obtenemos t
         locale,
         isAdmin,
+        isStaff,
         isDark,
         colors,
         updateKey,
         searchText,
         setSearchText,
-        selectedDate,
-        setSelectedDate,
+        fromDate,
+        setFromDate,
+        toDate,
+        setToDate,
+        setPickedDate,
+        statusFilter,
+        setStatusFilter,
         showPicker,
         showIOSModal,
         setShowIOSModal,
@@ -448,7 +461,7 @@ export default function DisplayingAttendance() {
 
                 {/* Filtros */}
                 <View style={styles.filtersRow}>
-                    {isAdmin && (
+                    {isStaff && (
                         <View style={[styles.searchBox, {
                             backgroundColor: colors.inputBackground,
                             borderColor: searchText ? colors.primary : (colors.separator),
@@ -470,22 +483,52 @@ export default function DisplayingAttendance() {
                             )}
                         </View>
                     )}
+                </View>
 
-                    <TouchableOpacity onPress={handleOpenPicker} style={[styles.dateButton, {
-                        flex: isAdmin ? 1.2 : 1,
-                        backgroundColor: colors.inputBackground,
-                        borderColor: selectedDate ? colors.primary : (colors.separator),
-                    }]}>
-                        <Text style={[styles.dateText, {color: selectedDate ? colors.text : colors.textMuted}]}
-                              numberOfLines={1}>
-                            {formatDateDisplay(selectedDate, t, locale)}
-                        </Text>
-                        {selectedDate && (
-                            <TouchableOpacity onPress={() => setSelectedDate(null)}>
-                                <Text style={[styles.clearText, {color: colors.danger}]}>✕</Text>
-                            </TouchableOpacity>
-                        )}
-                    </TouchableOpacity>
+                {/* Rango de fechas (inclusivo) */}
+                <View style={[styles.filtersRow, {marginTop: 0}]}>
+                    {[
+                        ["from", fromDate, setFromDate, "attendance.fromDate"],
+                        ["to", toDate, setToDate, "attendance.toDate"],
+                    ].map(([target, value, setValue, placeholderKey]) => (
+                        <TouchableOpacity key={target} onPress={() => handleOpenPicker(target)}
+                                          accessibilityRole="button" accessibilityLabel={t(placeholderKey)}
+                                          style={[styles.dateButton, {
+                                              backgroundColor: colors.inputBackground,
+                                              borderColor: value ? colors.primary : (colors.separator),
+                                          }]}>
+                            <Text style={[styles.dateText, {color: value ? colors.text : colors.textMuted}]}
+                                  numberOfLines={1}>
+                                {value ? formatDateDisplay(value, t, locale) : t(placeholderKey)}
+                            </Text>
+                            {value && (
+                                <TouchableOpacity onPress={() => setValue(null)}>
+                                    <Text style={[styles.clearText, {color: colors.danger}]}>✕</Text>
+                                </TouchableOpacity>
+                            )}
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                {/* Estado */}
+                <View style={[styles.filtersRow, {marginTop: 0, flexWrap: "wrap"}]} accessibilityRole="radiogroup">
+                    {[["", "attendance.filterAll"], ["presente", "attendance.present"], ["tarde", "attendance.late"], ["ausente", "attendance.absent"]]
+                        .map(([value, labelKey]) => {
+                            const selected = statusFilter === value;
+                            return (
+                                <TouchableOpacity key={labelKey} onPress={() => setStatusFilter(value)}
+                                                  accessibilityRole="radio" accessibilityState={{selected}}
+                                                  style={{
+                                                      paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16, borderWidth: 1,
+                                                      borderColor: selected ? colors.primary : colors.separator,
+                                                      backgroundColor: selected ? colors.primary : colors.inputBackground,
+                                                  }}>
+                                    <Text style={{color: selected ? colors.onPrimary : colors.text, fontSize: 13}}>
+                                        {t(labelKey)}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
                 </View>
 
                 {/* DateTimePicker Android */}
@@ -510,7 +553,7 @@ export default function DisplayingAttendance() {
                                 }]}>{t("common.cancel")}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => {
-                                setSelectedDate(tempDate);
+                                setPickedDate(tempDate);
                                 setShowIOSModal(false);
                             }}>
                                 <Text style={[styles.iosActionText, {
@@ -553,7 +596,7 @@ export default function DisplayingAttendance() {
                     style={styles.listStyle}
                     contentContainerStyle={styles.listContent}
                     renderItem={({item}) =>
-                        isAdmin
+                        isStaff
                             ? <TeacherCard item={item} colors={colors} t={t} isDark={isDark} onInfo={openDetail}/>
                             : <MyAttendanceCard item={item} colors={colors} t={t} isDark={isDark} onInfo={openDetail}/>
                     }
@@ -572,7 +615,7 @@ export default function DisplayingAttendance() {
             <BottomBar/>
 
             {/* Modales */}
-            {isAdmin ? (
+            {isStaff ? (
                 <TeacherDetailModal item={detailItem} visible={showDetailModal} onClose={closeDetail} colors={colors}
                                     t={t} isDark={isDark}/>
             ) : (

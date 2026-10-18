@@ -12,7 +12,7 @@ export default function NewsScreen() {
     const {t, i18n} = useTranslation();
     const {colors} = useTheme();
     const styles = useMemo(() => createNewsStyles(colors), [colors]);
-    const {userRole, updateKey, alerts, loading, error, resolvingId, canResolve, resolve, reload} = useNewsViewModel();
+    const {userRole, updateKey, alerts, loading, error, resolvingId, canResolve, resolve, reload, canOpen, openAlert} = useNewsViewModel();
 
     const formatDate = (iso) => (iso ? new Date(iso).toLocaleString(i18n.language) : '—');
 
@@ -39,7 +39,9 @@ export default function NewsScreen() {
                                 <Text style={{color: colors.textSecondary, textAlign: 'center', marginTop: 30}}>{t('news.empty')}</Text>
                             )}
                             {alerts.map((alert) => (
-                                <View key={alert.id} style={{
+                                <TouchableOpacity key={alert.id} disabled={!canOpen(alert)} onPress={() => openAlert(alert)} activeOpacity={0.8}
+                                                  accessibilityRole={canOpen(alert) ? 'button' : undefined}
+                                                  accessibilityHint={canOpen(alert) ? t('consultJustify.viewDetail') : undefined} style={{
                                     backgroundColor: colors.card, borderRadius: 12, padding: 14, marginBottom: 10,
                                     borderLeftWidth: 4, borderLeftColor: alert.resolved ? colors.success : colors.warning,
                                 }}>
@@ -61,7 +63,10 @@ export default function NewsScreen() {
                                                 )
                                         )}
                                     </View>
-                                </View>
+                                    {canOpen(alert) && (
+                                        <Text style={{color: colors.primary, marginTop: 6, fontWeight: '600'}}>{t('consultJustify.viewDetail')}</Text>
+                                    )}
+                                </TouchableOpacity>
                             ))}
                         </View>
                     )}

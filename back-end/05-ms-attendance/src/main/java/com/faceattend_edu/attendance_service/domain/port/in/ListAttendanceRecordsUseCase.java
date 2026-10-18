@@ -1,10 +1,8 @@
 package com.faceattend_edu.attendance_service.domain.port.in;
 
-import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
-import java.util.List;
+import com.faceattend_edu.attendance_service.domain.model.AttendanceRecordFilter;
+import com.faceattend_edu.attendance_service.domain.model.AttendanceRecordSlice;
 
 public interface ListAttendanceRecordsUseCase {
-    List<AttendanceRecord> list();
-    List<AttendanceRecord> listBySession(Long sessionId);
-    List<AttendanceRecord> listByActor(Long actorId);
+    AttendanceRecordSlice search(AttendanceRecordFilter filter, int offset, Integer limit);
 }

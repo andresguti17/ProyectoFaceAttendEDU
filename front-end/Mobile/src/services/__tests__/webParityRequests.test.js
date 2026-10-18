@@ -21,7 +21,7 @@ import {
   AcademicConfigService,
 } from '../index';
 
-jest.mock('../../view/storage/TokenStorage', () => ({
+jest.mock('../../storage/TokenStorage', () => ({
   getToken: jest.fn(async () => 'session-token'),
   saveToken: jest.fn(),
 }));
@@ -388,6 +388,15 @@ describe('las peticiones existentes no cambian', () => {
     await ActorService.getBySchool(3);
 
     expect(lastCall()).toMatchObject({ method: 'GET', url: `${BASE}/api/v1/schools/3/actors` });
+  });
+
+  test('ActorService.getByPerson filtra por personId en el servidor (el listado se corta en 100)', async () => {
+    mockResponse([{ academicActorId: 1602, personId: 'p-9', actorTypeId: 2 }]);
+
+    const actors = await ActorService.getByPerson('p-9');
+
+    expect(lastCall()).toMatchObject({ method: 'GET', url: `${BASE}/api/v1/academic-actors?personId=p-9` });
+    expect(actors.map((a) => a.academicActorId)).toEqual([1602]);
   });
 
   test('SessionService.getByUserId sigue usando el filtro legacy por query', async () => {

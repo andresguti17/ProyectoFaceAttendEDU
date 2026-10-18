@@ -8,6 +8,26 @@ import ENV from '../config/env';
 import {getCurrentUserRole} from '../services/UserService';
 
 const SUMMARY_MAX_IDS = 300; // tope de /attendance-records/summary
+const REPORT_MAX_IDS = 1000; // tope de /attendance-reports
+
+// CSV oficial de 05-attendance (ERF 7.1). null si no se puede obtener: el reporte
+// se comparte igual con el resumen ya cargado.
+// shortcut: con más de REPORT_MAX_IDS personas se comparte sin CSV; paginar si llega a pasar.
+async function fetchReportCsv(people) {
+    const ids = people.map((p) => p.id).filter((id) => id != null);
+    if (ids.length === 0 || ids.length > REPORT_MAX_IDS) return null;
+    const query = ids.map((id) => `academicActorIds=${encodeURIComponent(id)}`).join('&');
+    try {
+        return await request({
+            method: GET,
+            url: `${ENV.ATTENDANCE_BASE_URL}api/v1/attendance-reports?${query}&format=csv`,
+            requiresAuth: true,
+            responseType: 'text',
+        });
+    } catch {
+        return null;
+    }
+}
 
 export function useAttendanceReportViewModel() {
     const {t} = useTranslation();
@@ -149,12 +169,13 @@ export function useAttendanceReportViewModel() {
     const handleGenerateIndividual = useCallback((person) => { setSelectedPerson(person); setModalVisible(true); }, []);
     const closeModal = useCallback(() => { setModalVisible(false); }, []);
 
-    // No hay endpoint de reportes en el backend (attendance-reports está
-    // planificado): el reporte se compone con los datos cargados y se comparte
-    // por la hoja nativa (correo, mensajería), en vez de fingir un envío.
+    // El reporte se comparte por la hoja nativa (correo, mensajería): un resumen
+    // legible con los datos cargados y, debajo, el CSV oficial de /attendance-reports.
     const sendReport = useCallback(async (people) => {
         const lines = people.map((p) => `${p.name} (${p.code}): ${t('attendanceReport.absenceShort', {count: p.absences})}, ${t('attendanceReport.latenessShort', {count: p.lateness})}`);
-        const result = await Share.share({title: t('attendanceReport.title'), message: [t('attendanceReport.title'), ...lines].join('\n')});
+        const csv = await fetchReportCsv(people);
+        const message = [t('attendanceReport.title'), ...lines, ...(csv ? ['', csv] : [])].join('\n');
+        const result = await Share.share({title: t('attendanceReport.title'), message});
         if (result?.action === Share.sharedAction) showSuccess(t('attendanceReport.title'), t('attendanceReport.reportSent'));
     }, [showSuccess, t]);
 
