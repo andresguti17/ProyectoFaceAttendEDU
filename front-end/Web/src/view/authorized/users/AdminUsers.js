@@ -86,7 +86,35 @@ export function AdminUsers({ section, vm: vmProp }) {
     const [busy, setBusy] = useState(false);
     const [actionError, setActionError] = useState(null);
 
+    // Selección múltiple (acciones en lote). Se guardan ids para que la
+    // selección sobreviva a la paginación; los que ya no aparecen en la
+    // lista filtrada se descartan al resolver `selectedUsers`.
+    const [selectedIds, setSelectedIds] = useState(() => new Set());
+    const [bulkResult, setBulkResult] = useState(null);
+    const canBulk = canManage && (canToggleStatus || canDelete);
+
+    React.useEffect(() => {
+        setSelectedIds(new Set());
+        setBulkResult(null);
+    }, [section]);
+
+    const selectedUsers = useMemo(
+        () => (vm.filteredUsers ?? []).filter((u) => selectedIds.has(u.id)),
+        [vm.filteredUsers, selectedIds]
+    );
+
     async function confirmPending() {
+        if (pending?.type === "bulk") {
+            setBusy(true);
+            setActionError(null);
+            const result = await vm.bulkUpdateUsers(pending.users, pending.action);
+            setBusy(false);
+            setPending(null);
+            setBulkResult(result);
+            // Se conservan seleccionados solo los que fallaron para reintentar.
+            setSelectedIds(new Set(result.failures.map((f) => f.id)));
+            return;
+        }
         if (!pending?.user) return;
         setBusy(true);
         setActionError(null);
@@ -173,11 +201,87 @@ export function AdminUsers({ section, vm: vmProp }) {
                 }}
             />
 
+            {/* Barra de acciones en lote: aparece con al menos un usuario seleccionado */}
+            {canBulk && selectedUsers.length > 0 && (
+                <View
+                    style={{
+                        flexDirection: isSmall ? "column" : "row",
+                        alignItems: isSmall ? "stretch" : "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        padding: 12,
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: c.border.primary,
+                        backgroundColor: c.background.surface,
+                    }}
+                >
+                    <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary }}>
+                        {`${selectedUsers.length} ${
+                            selectedUsers.length === 1 ? t("seleccionado") : t("seleccionados")
+                        }`}
+                    </Text>
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                        {canToggleStatus && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onPress={() =>
+                                    setPending({ type: "bulk", action: "activate", users: selectedUsers })
+                                }
+                            >
+                                {t("Activar")}
+                            </Button>
+                        )}
+                        {canToggleStatus && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onPress={() =>
+                                    setPending({ type: "bulk", action: "deactivate", users: selectedUsers })
+                                }
+                            >
+                                {t("Desactivar")}
+                            </Button>
+                        )}
+                        {canDelete && (
+                            <Button
+                                variant="danger"
+                                size="sm"
+                                onPress={() =>
+                                    setPending({ type: "bulk", action: "delete", users: selectedUsers })
+                                }
+                            >
+                                {t("Eliminar")}
+                            </Button>
+                        )}
+                        <Button variant="ghost" size="sm" onPress={() => setSelectedIds(new Set())}>
+                            {t("Limpiar selección")}
+                        </Button>
+                    </View>
+                </View>
+            )}
+
+            {bulkResult && (
+                <Alert
+                    type={bulkResult.failures.length > 0 ? "warning" : "success"}
+                    message={
+                        bulkResult.failures.length > 0
+                            ? `${bulkResult.done} ${t("usuarios actualizados")}. ${t("No se pudo en")}: ${bulkResult.failures
+                                  .map((f) => `${f.name} (${t(f.reason)})`)
+                                  .join("; ")}`
+                            : `${bulkResult.done} ${t("usuarios actualizados")}`
+                    }
+                />
+            )}
+
             {/* Tabla reutilizable */}
             <UsersTable
                 key={`users-table-${section}-${users.length}`}
                 columns={COLUMNS}
                 data={users}
+                selectedIds={canBulk ? selectedIds : undefined}
+                onSelectionChange={canBulk ? setSelectedIds : undefined}
                 onRowPress={(user) => vm.selectUser(user)}
                 renderContext={renderContext}
                 visibilityContext={visibilityContext}
@@ -263,16 +367,30 @@ export function AdminUsers({ section, vm: vmProp }) {
                 loading={busy}
                 variant="danger"
                 title={
-                    pending?.type === "delete" ? t("Eliminar usuario") : t("Cambiar estado")
+                    pending?.type === "bulk"
+                        ? `${pending.users.length} ${t("usuarios seleccionados")}`
+                        : pending?.type === "delete"
+                          ? t("Eliminar usuario")
+                          : t("Cambiar estado")
                 }
                 message={
-                    pending?.type === "delete"
-                        ? t("Se desactivará al usuario (borrado lógico, sin DELETE físico). ¿Continuar?")
-                        : pending?.nextActive
-                          ? t("Se activará al usuario. ¿Continuar?")
-                          : t("Se desactivará al usuario. ¿Continuar?")
+                    pending?.type === "bulk"
+                        ? pending.action === "activate"
+                            ? t("Se activarán los usuarios seleccionados. ¿Continuar?")
+                            : pending.action === "delete"
+                              ? t("Se desactivarán los usuarios seleccionados (borrado lógico, sin DELETE físico). ¿Continuar?")
+                              : t("Se desactivarán los usuarios seleccionados. ¿Continuar?")
+                        : pending?.type === "delete"
+                          ? t("Se desactivará al usuario (borrado lógico, sin DELETE físico). ¿Continuar?")
+                          : pending?.nextActive
+                            ? t("Se activará al usuario. ¿Continuar?")
+                            : t("Se desactivará al usuario. ¿Continuar?")
                 }
-                confirmText={pending?.type === "delete" ? t("Eliminar") : t("Confirmar")}
+                confirmText={
+                    pending?.type === "delete" || pending?.action === "delete"
+                        ? t("Eliminar")
+                        : t("Confirmar")
+                }
             />
             {actionError && (
                 <View style={{ marginHorizontal: 24, marginBottom: 12 }}>

@@ -21,7 +21,7 @@ jest.mock("../../context/AppDataContext", () => ({
 }));
 
 jest.mock("../../context/AuthContext", () => ({
-    useAuth: () => ({ user: { schoolId: 2 } }),
+    useAuth: () => ({ user: { schoolId: 2, personId: "p-self" } }),
 }));
 
 jest.mock("../../core/utils/i18n/hooks/useTranslation", () => ({
@@ -125,4 +125,67 @@ test("rejects without backend link and surfaces backend errors", async () => {
     });
     expect(err).toBe("duplicate");
     expect(mockPatchStaff).not.toHaveBeenCalled();
+});
+
+describe("bulkUpdateUsers", () => {
+    const users = [
+        { id: "u-1", personId: "p-1", name: "Ana", userType: "admin", status: "active" },
+        { id: "u-2", personId: "p-2", name: "Beto", userType: "admin", status: "active" },
+    ];
+
+    test("applies the status change to every selected user", async () => {
+        const getVm = renderVm();
+        let result;
+        await act(async () => {
+            result = await getVm().bulkUpdateUsers(users, "deactivate");
+        });
+
+        expect(result).toEqual({ done: 2, failures: [] });
+        expect(authApi.setUserStatus).toHaveBeenCalledWith("u-1", false);
+        expect(authApi.setUserStatus).toHaveBeenCalledWith("u-2", false);
+        expect(authApi.setPersonStatus).toHaveBeenCalledWith("p-1", false);
+        expect(authApi.setPersonStatus).toHaveBeenCalledWith("p-2", false);
+    });
+
+    test("activate sends status=true and delete is a soft deactivation", async () => {
+        const getVm = renderVm();
+        await act(async () => {
+            await getVm().bulkUpdateUsers([users[0]], "activate");
+        });
+        expect(authApi.setUserStatus).toHaveBeenLastCalledWith("u-1", true);
+
+        await act(async () => {
+            await getVm().bulkUpdateUsers([users[0]], "delete");
+        });
+        expect(authApi.setUserStatus).toHaveBeenLastCalledWith("u-1", false);
+    });
+
+    test("keeps going after a failure and reports it by user", async () => {
+        authApi.setUserStatus.mockRejectedValueOnce(new Error("forbidden"));
+        const getVm = renderVm();
+        let result;
+        await act(async () => {
+            result = await getVm().bulkUpdateUsers(users, "deactivate");
+        });
+
+        expect(result.done).toBe(1);
+        expect(result.failures).toEqual([{ id: "u-1", name: "Ana", reason: "forbidden" }]);
+        expect(authApi.setUserStatus).toHaveBeenCalledTimes(2);
+    });
+
+    test("never applies the action to the caller's own account", async () => {
+        const getVm = renderVm();
+        const self = { id: "u-9", personId: "p-self", name: "Yo", userType: "admin", status: "active" };
+        let result;
+        await act(async () => {
+            result = await getVm().bulkUpdateUsers([self, users[1]], "deactivate");
+        });
+
+        expect(result.done).toBe(1);
+        expect(result.failures).toEqual([
+            { id: "u-9", name: "Yo", reason: "No puedes aplicar esta acción a tu propia cuenta" },
+        ]);
+        expect(authApi.setUserStatus).toHaveBeenCalledTimes(1);
+        expect(authApi.setUserStatus).toHaveBeenCalledWith("u-2", false);
+    });
 });

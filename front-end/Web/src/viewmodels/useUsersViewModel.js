@@ -758,6 +758,35 @@ export function useUsersViewModel(
         [toggleUserStatus, selected]
     );
 
+    // Acción en lote (activate | deactivate | delete) sobre varios usuarios:
+    // secuencial para no saturar el backend y para que un fallo individual
+    // no aborte el resto. La cuenta propia se omite: desactivarse a uno
+    // mismo dejaría la sede sin quien la administre.
+    const bulkUpdateUsers = useCallback(
+        async (targets, action) => {
+            const failures = [];
+            let done = 0;
+            for (const target of targets ?? []) {
+                if (user?.personId && target?.personId === user.personId) {
+                    failures.push({
+                        id: target?.id,
+                        name: target?.name,
+                        reason: "No puedes aplicar esta acción a tu propia cuenta",
+                    });
+                    continue;
+                }
+                const err =
+                    action === "delete"
+                        ? await removeUser(target)
+                        : await toggleUserStatus(target, action === "activate");
+                if (err) failures.push({ id: target?.id, name: target?.name, reason: err });
+                else done += 1;
+            }
+            return { done, failures };
+        },
+        [user, removeUser, toggleUserStatus]
+    );
+
     // ── Funciones de filtrado avanzado ─────────────────────────
 
     const setAdvancedFilterColumn = useCallback((column) => {
@@ -866,6 +895,7 @@ export function useUsersViewModel(
         updateUserDetails,
         toggleUserStatus,
         removeUser,
+        bulkUpdateUsers,
         changeUserRole,
         cohortsForCourse: cohortsForCourseCode,
         findExistingStudents,
