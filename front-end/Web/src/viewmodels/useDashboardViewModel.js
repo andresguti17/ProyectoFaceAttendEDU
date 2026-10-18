@@ -407,7 +407,8 @@ export function useDashboardViewModel() {
 
         // Calcular datos derivados dinámicamente usando funciones centralizadas
         const minAttendanceThreshold = institutionConfig.minAttendance || 80;
-        
+        const thresholds = getAttendanceThresholds();
+
         const atRiskStudents = getAtRiskStudents(students, minAttendanceThreshold);
 
         // Validaciones defensivas
@@ -494,6 +495,8 @@ export function useDashboardViewModel() {
 
     const studentStats = useMemo(() => {
         if (userRole !== "student") return [];
+
+        const thresholds = getAttendanceThresholds();
 
         // Registro propio (no el primero de la lista).
         const studentData = ownStudent;
