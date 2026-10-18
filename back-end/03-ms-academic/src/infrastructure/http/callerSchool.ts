@@ -21,6 +21,11 @@ export class ScopeError extends Error {
   }
 }
 
+/** Course deletion is a platform-level action: only the unrestricted caller may do it. */
+export function mayDeleteCourse(caller: CallerSchool): boolean {
+  return caller.isSuperAdmin;
+}
+
 const SUPER_ADMIN_ROLE = 'Super Administrador';
 const CACHE_TTL_MS = 30_000;
 

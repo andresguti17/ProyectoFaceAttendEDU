@@ -1,4 +1,4 @@
-import { createCallerSchoolResolver, clearCallerSchoolCache, ScopeError } from '../callerSchool';
+import { createCallerSchoolResolver, mayDeleteCourse, clearCallerSchoolCache, ScopeError } from '../callerSchool';
 import { getJson } from '../authGuard';
 import type { AcademicRepositories } from '../../persistence/postgres';
 
@@ -80,5 +80,13 @@ describe('createCallerSchoolResolver (03-ms-academic)', () => {
   it('throws a 403 ScopeError when the request has no authenticated user', async () => {
     const resolve = createCallerSchoolResolver(reposWithActors([]));
     await expect(resolve({} as any)).rejects.toMatchObject(new ScopeError(403, 'No authenticated user'));
+  });
+});
+
+describe('mayDeleteCourse', () => {
+  it('allows only the unrestricted caller', () => {
+    expect(mayDeleteCourse({ isSuperAdmin: true, schoolId: null })).toBe(true);
+    expect(mayDeleteCourse({ isSuperAdmin: false, schoolId: 1 })).toBe(false);
+    expect(mayDeleteCourse({ isSuperAdmin: false, schoolId: null })).toBe(false);
   });
 });
