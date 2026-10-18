@@ -14,7 +14,12 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.ErrorResponse;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.ServletRequestBindingException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -129,7 +134,33 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest req) {
         // No se expone el mensaje SQL interno al cliente.
         log.warn("Data integrity violation on {}: {}", req != null ? req.getRequestURI() : "", ex.getMessage());
-        return build(HttpStatus.CONFLICT, "CONFLICT", "Resource violates a uniqueness constraint", req);
+        String sqlState = sqlState(ex);
+        // 23505 = unicidad (conflicto real); valor demasiado largo, NOT NULL o CHECK son datos inválidos.
+        if (sqlState == null || sqlState.equals("23505")) {
+            return build(HttpStatus.CONFLICT, "CONFLICT", "Resource violates a uniqueness constraint", req);
+        }
+        return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Request contains an invalid value", req);
+    }
+
+    private static String sqlState(Throwable ex) {
+        for (Throwable t = ex; t != null; t = t.getCause()) {
+            if (t instanceof java.sql.SQLException sql && sql.getSQLState() != null) return sql.getSQLState();
+        }
+        return null;
+    }
+
+    @ExceptionHandler({HttpMediaTypeNotSupportedException.class, HttpMediaTypeNotAcceptableException.class,
+            ServletRequestBindingException.class, ResponseStatusException.class})
+    public ResponseEntity<Map<String, Object>> handleRequestRejected(Exception ex, HttpServletRequest req) {
+        HttpStatus status = ex instanceof ErrorResponse er ? HttpStatus.valueOf(er.getStatusCode().value())
+                : HttpStatus.BAD_REQUEST;
+        String code = switch (status) {
+            case UNSUPPORTED_MEDIA_TYPE -> "UNSUPPORTED_MEDIA_TYPE";
+            case NOT_ACCEPTABLE -> "NOT_ACCEPTABLE";
+            case FORBIDDEN -> "FORBIDDEN";
+            default -> status.is4xxClientError() ? "VALIDATION_ERROR" : "INTERNAL_ERROR";
+        };
+        return build(status, code, status.getReasonPhrase(), req);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
