@@ -123,7 +123,7 @@ public class CallerScopeResolver {
     }
 
     protected Map<?, ?> getMap(String url, String token) {
-        return restTemplate.exchange(url, HttpMethod.GET, auth(token), Map.class).getBody();
+        return TransientRetry.call(() -> restTemplate.exchange(url, HttpMethod.GET, auth(token), Map.class).getBody());
     }
 
     @SuppressWarnings("unchecked")
@@ -138,7 +138,8 @@ public class CallerScopeResolver {
     }
 
     protected List<Map<?, ?>> getList(String url, String token) {
-        List<Map<?, ?>> body = restTemplate.exchange(url, HttpMethod.GET, auth(token), List.class).getBody();
+        List<Map<?, ?>> body = TransientRetry.call(
+                () -> restTemplate.exchange(url, HttpMethod.GET, auth(token), List.class).getBody());
         return body == null ? List.of() : body;
     }
 }
