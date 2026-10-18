@@ -14,7 +14,7 @@ import { Button, AnimatedDropdown, BaseModal, TextInput } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
-import { listSchools } from "../../../services/api/referenceData";
+import { academicApi } from "../../../services/api/academicApi";
 
 const ROLE_TITLES = {
     student: "Editar estudiante",
@@ -66,10 +66,11 @@ export default function EditUserModal({ visible, onClose, onSubmit, user, canCha
             return;
         }
         let cancelled = false;
-        listSchools().then(
+        academicApi.listSchools().then(
             (schools) => {
                 if (cancelled) return;
-                const found = (Array.isArray(schools) ? schools : [])
+                const rows = Array.isArray(schools) ? schools : schools?.content ?? [];
+                const found = rows
                     .find((s) => String(s?.schoolId) === String(user.schoolId));
                 setSchoolName(found?.name ?? "");
             },
@@ -256,9 +257,10 @@ export default function EditUserModal({ visible, onClose, onSubmit, user, canCha
                 </Text>
                 <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                     {[
-                        { label: t("Código"), value: user?.actorCode || "—", icon: "hash" },
+                        // En estudiantes `code` ya es el código del actor (en el resto es el username).
+                        { label: t("Código"), value: user?.actorCode || (user?.userType === "student" ? user?.code : "") || "—", icon: "hash" },
                         { label: t("Sede"), value: schoolName || "—", icon: "map-pin" },
-                        { label: t("Ficha/Curso asignado"), value: user?.course || "—", icon: "book-open" },
+                        { label: t("Ficha/Curso asignado"), value: user?.course || user?.ficha || "—", icon: "book-open" },
                     ].map((f) => (
                         <View key={f.label} style={{ flex: 1, marginBottom: isSmall ? 10 : 0 }}>
                             <Text style={{ fontSize: 12, color: c.text.tertiary, marginBottom: 4 }}>

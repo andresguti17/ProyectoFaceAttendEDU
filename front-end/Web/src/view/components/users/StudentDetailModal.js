@@ -7,7 +7,8 @@
 import React, { useMemo } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Badge, Avatar, Button, ProgressBar, useAttendanceColor, ATTENDANCE_THRESHOLDS } from "../common";
+import { Badge, Avatar, Button, ProgressBar, useAttendanceColor } from "../common";
+import { getAttendanceThresholds } from "../../../models/data/userDerivedData";
 import { useTheme }       from "../hooks/useTheme";
 import { useResponsive }  from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
@@ -32,7 +33,8 @@ export default function StudentDetailModal({
     const { courses } = useAppData();
 
     const attColor = useAttendanceColor(student?.attendance ?? 0);
-    
+    const { minAttendance } = getAttendanceThresholds();
+
     // Obtener nombre completo del curso
     const courseName = useMemo(() => {
         if (!student?.course) return '—';
@@ -164,9 +166,9 @@ export default function StudentDetailModal({
                                     </View>
                                     <ProgressBar value={student.attendance} color={attColor} height={8} />
                                     <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 8 }}>
-                                        {student.attendance >= ATTENDANCE_THRESHOLDS.MIN_ACCEPTABLE
-                                            ? t("Cumple el mínimo requerido (80%)")
-                                            : t("⚠ Por debajo del mínimo requerido (80%)")}
+                                        {(student.attendance ?? 0) >= minAttendance
+                                            ? `${t("Cumple el mínimo requerido")} (${minAttendance}%)`
+                                            : `⚠ ${t("Por debajo del mínimo requerido")} (${minAttendance}%)`}
                                     </Text>
                                 </View>
                             )}

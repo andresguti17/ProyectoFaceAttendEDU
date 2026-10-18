@@ -27,6 +27,7 @@ import {
     normalizeStatus,
     optional,
     personMap,
+    userByPersonMap,
 } from "../../services/api/referenceData";
 
 const STORAGE_KEY = "@faceattend_students";
@@ -68,11 +69,14 @@ async function studentsFromApi() {
     );
     if (!studentType) throw new Error("no hay actor type STUDENT en el backend");
 
-    const [enrollments, cohorts, blocks, courses] = await Promise.all([
+    const [enrollments, cohorts, blocks, courses, usersByPerson] = await Promise.all([
         optional(listEnrollments(), []),
         optional(cohortMap(), new Map()),
         optional(listBlocks(), []),
         optional(courseMap(), new Map()),
+        // Cuenta del estudiante (username): sin ella el formulario de edición
+        // lo pide vacío y no deja guardar. Vacío si el rol no puede listar /users.
+        optional(userByPersonMap(), new Map()),
     ]);
 
     const cohortOfActor = new Map(
@@ -166,6 +170,7 @@ async function studentsFromApi() {
                 phone: person?.phone ?? "",
                 ficha: cohort?.code ?? "",
                 personId: actor.personId,
+                username: usersByPerson.get(actor.personId)?.username ?? "",
             };
         });
 }
