@@ -45,7 +45,7 @@ export function TeacherUsers({ vm: vmProp }) {
     // filas por render) y el resto se pagina en el cliente, como en AdminUsers.
     const users = vm.pageUsers ?? vm.filteredUsers;
     const isPaginated = (vm.totalPages ?? 1) > 1;
-    const renderContext = { t, c, roleVariant: "default", courses: appData.courses };
+    const renderContext = { t, c, roleVariant: "default", courses: appData.courses, programMode: "curso" };
     // La lista ya está acotada a mis estudiantes: forzamos roleFilter para
     // ocultar la columna "Rol" (redundante, todos son estudiantes).
     const visibilityContext = { roleFilter: "student", canManage: false };

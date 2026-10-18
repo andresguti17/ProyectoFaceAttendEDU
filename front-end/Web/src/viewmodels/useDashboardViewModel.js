@@ -4,7 +4,7 @@ import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAuth } from "../context/AuthContext";
 import { useAppData } from "../context/AppDataContext";
 import { useDateFormat } from "../view/components/hooks/useDateFormat";
-import { dashboardSeries, recentActivity } from "../services/api/dashboardSeries";
+import { dashboardSeries, instructorClassCounts, recentActivity } from "../services/api/dashboardSeries";
 import {
     getAtRiskStudents,
     getPerfectAttendanceStudents,
@@ -106,6 +106,23 @@ export function useDashboardViewModel() {
         meta: { sessionsToday: 0, sessionsClosedToday: 0 },
     });
     const [activity, setActivity] = useState([]);
+    // Clases dictadas/programadas por instructor (solo lo usa el administrador).
+    const [classCounts, setClassCounts] = useState(new Map());
+    useEffect(() => {
+        if (userRole !== "admin") return undefined;
+        let cancelled = false;
+        instructorClassCounts().then(
+            (counts) => {
+                if (!cancelled) setClassCounts(counts);
+            },
+            () => {
+                if (!cancelled) setClassCounts(new Map());
+            }
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [userRole]);
 
     useEffect(() => {
         let cancelled = false;
@@ -166,7 +183,7 @@ export function useDashboardViewModel() {
         
         const atRiskStudents = getAtRiskStudents(students, minAttendanceThreshold);
         const perfectAttendanceStudents = getPerfectAttendanceStudents(students, minAttendanceThreshold);
-        const instructorAttendance = getInstructorAttendance(teachers);
+        const instructorAttendance = getInstructorAttendance(teachers, classCounts);
 
         // Validaciones defensivas - verificar que tenemos datos básicos
         if (!instructorAttendance || instructorAttendance.length === 0) return [];
@@ -398,7 +415,7 @@ export function useDashboardViewModel() {
                 icon: "clock",
             },
         ];
-    }, [c, t, userRole, fichas, students, teachers, series]);
+    }, [c, t, userRole, fichas, students, teachers, series, classCounts]);
 
     // ── TEACHER: Métricas de sus cursos/fichas asignadas ──────
 
@@ -686,7 +703,7 @@ export function useDashboardViewModel() {
         const minAttendanceThreshold = institutionConfig.minAttendance || 80;
         
         // Calcular datos derivados dinámicamente
-        const instructorAttendance = getInstructorAttendance(teachers);
+        const instructorAttendance = getInstructorAttendance(teachers, classCounts);
         const atRiskStudents = getAtRiskStudents(students, minAttendanceThreshold);
         const perfectAttendanceStudents = getPerfectAttendanceStudents(students, minAttendanceThreshold);
         
@@ -744,7 +761,7 @@ export function useDashboardViewModel() {
                 .sort((a, b) => a.avgAttendance - b.avgAttendance)
                 .slice(0, 3),
         };
-    }, [userRole, courses, students, teachers, institutionConfig.minAttendance, institutionConfig.daysUntilSanction, institutionConfig.consecutiveDaysForSanction]);
+    }, [userRole, courses, students, teachers, classCounts, institutionConfig.minAttendance, institutionConfig.daysUntilSanction, institutionConfig.consecutiveDaysForSanction]);
 
     // ── Datos específicos de TEACHER ──────────────────────────
 

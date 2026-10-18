@@ -117,12 +117,22 @@ async function coursesFromApi() {
 
         const professorNames = [];
         const instructorActorIds = [];
+        // Fichas (cohortId) donde cada instructor tiene un bloque en este curso.
+        // El backend acota a un docente por ficha, no por curso: sin esto un
+        // alumno de otra ficha que cursa la misma materia quedaba dentro del alcance.
+        const instructorCohortIds = {};
         for (const block of courseBlocks) {
             const person = personOf(block.instructorActorId, actors, persons);
             const name = fullName(person);
             if (name && !professorNames.includes(name)) professorNames.push(name);
             if (block.instructorActorId != null && !instructorActorIds.includes(block.instructorActorId)) {
                 instructorActorIds.push(block.instructorActorId);
+            }
+            if (block.instructorActorId != null && block.cohortId != null) {
+                const key = String(block.instructorActorId);
+                const list = instructorCohortIds[key] ?? [];
+                if (!list.includes(String(block.cohortId))) list.push(String(block.cohortId));
+                instructorCohortIds[key] = list;
             }
         }
 
@@ -144,6 +154,7 @@ async function coursesFromApi() {
             // IDs de los instructores (academic_actor_id) de los bloques de este curso.
             // Permite acotar "mis fichas" para el rol teacher; `professor` es solo el nombre.
             instructorActorIds,
+            instructorCohortIds,
             students: studentIds.size,
             schedule: days.join(", ") || null,
             room: environment ? String(environment.code ?? environment.name ?? "") : null,

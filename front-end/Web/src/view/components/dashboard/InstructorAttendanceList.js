@@ -66,7 +66,7 @@ function InstructorRow({ instructor, isLast, onPress, c, t }) {
                     </Text>
                     
                     <Badge variant={variant} size="sm">
-                        {instructor.attendanceRate}%
+                        {instructor.totalClasses > 0 ? `${instructor.attendanceRate}%` : "—"}
                     </Badge>
                 </View>
 

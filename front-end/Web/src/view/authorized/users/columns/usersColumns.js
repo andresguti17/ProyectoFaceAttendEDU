@@ -25,6 +25,12 @@ const LAYOUT = {
     avatarGap: 10,
 };
 
+const PROGRAM_HEADERS = {
+    colegio: "Colegio",
+    ficha: "Ficha",
+    curso: "Curso",
+};
+
 export const ROLE_VARIANT = {
     student: "default",
     teacher: "default",
@@ -94,18 +100,30 @@ export const COLUMNS = [
     {
         id: "program",
         label: "Programa",
+        // Lo que muestra depende de quién mira la lista:
+        //  - Super Admin: colegio (sede) de cada usuario
+        //  - Administrador de sede: ficha del estudiante
+        //  - Docente: curso
+        headerLabel: ({ programMode }) => PROGRAM_HEADERS[programMode] ?? "Programa",
         flex: 1.6,
         align: "left",
         contentWidth: 150,
         headerOffsetX: -10,
         visible: ({ roleFilter }) => roleFilter !== "admin",
-        render: (user, { c, courses }) => {
-            // Buscar el curso por código o nombre
-            const course = courses?.find(
-                co => co.code === user.course || co.name === user.course || co.id === user.course
-            );
-            const displayName = course ? course.name : user.course || "—";
-            
+        render: (user, { c, courses, programMode, schoolNames }) => {
+            let displayName = "—";
+            if (programMode === "colegio") {
+                displayName = schoolNames?.get?.(String(user.schoolId)) ?? "—";
+            } else if (programMode === "ficha") {
+                displayName = user.ficha || "—";
+            } else {
+                // Curso: buscar por código o nombre
+                const course = courses?.find(
+                    co => co.code === user.course || co.name === user.course || co.id === user.course
+                );
+                displayName = course ? course.name : user.course || "—";
+            }
+
             return (
                 <Text
                     numberOfLines={1}

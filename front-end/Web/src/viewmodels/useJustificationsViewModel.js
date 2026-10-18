@@ -32,7 +32,7 @@ const MAX_ENRICHED_ITEMS = 100;
 // Máximo de alumnos cuyos registros se piden para acotar el cruce del revisor
 // (mismo tope que el historial): sin él, un docente con muchas fichas dispararía
 // cientos de peticiones.
-const MAX_SCOPE_ACTORS = 50;
+const MAX_SCOPE_SESSIONS = 200;
 
 export const REVIEW_STATUS_LABELS = {
     Pending: "Pendiente",
@@ -84,16 +84,16 @@ export function useJustificationsViewModel() {
     const reviewerActorIds = useMemo(() => {
         if (!isReviewer || !user) return null;
         if (user.role === "admin") return null; // sede completa
-        const myCourseIds = (appData.courses || [])
-            .filter(
-                (c) =>
-                    Array.isArray(c.instructorActorIds) &&
-                    c.instructorActorIds.includes(user.academicActorId)
-            )
-            .map((c) => c.id);
+        // Mismo criterio que el backend (CallerScopeResolver): los alumnos de las
+        // FICHAS donde el docente tiene un bloque, no los de cualquier curso que dicte.
+        const me = String(user.academicActorId);
+        const myCohortIds = new Set();
+        for (const course of appData.courses || []) {
+            for (const cohortId of course.instructorCohortIds?.[me] ?? []) myCohortIds.add(String(cohortId));
+        }
         return new Set(
             (appData.students || [])
-                .filter((s) => Array.isArray(s.courseIds) && s.courseIds.some((id) => myCourseIds.includes(id)))
+                .filter((s) => s.cohortId != null && myCohortIds.has(String(s.cohortId)))
                 .map((s) => Number(s.id))
         );
     }, [isReviewer, user, appData.courses, appData.students]);
@@ -228,12 +228,24 @@ export function useJustificationsViewModel() {
                 // por alumno, acotada) y después el cruce con las justificaciones.
                 // Al revés haría falta pedir el detalle de las 300+ justificaciones
                 // y los que quedaran fuera del tope no aparecerían nunca.
-                const actorIds = [...reviewerActorIds].slice(0, MAX_SCOPE_ACTORS);
-                // En secuencia: byActor hace findAll en el backend y en paralelo
-                // agota su heap (OutOfMemoryError) y deja el servicio sin respuesta.
+                // Por SESIÓN de sus bloques, no por alumno: una petición por alumno
+                // supera el límite de Kong (300/min) con una ficha grande. Cada sesión
+                // devuelve ya solo los registros dentro del alcance del docente.
+                const sessions = await optional(schedulingApi.listSessions(), []);
+                const blocks = await optional(listBlocks(), []);
+                const myBlockIds = new Set(
+                    blocks
+                        .filter((b) => Number(b.instructorActorId) === Number(user.academicActorId))
+                        .map((b) => Number(b.scheduleBlockId))
+                );
+                const sessionIds = sessions
+                    .filter((s) => myBlockIds.has(Number(s.scheduleBlockId)))
+                    .map((s) => Number(s.classSessionId))
+                    .slice(0, MAX_SCOPE_SESSIONS);
+                // En secuencia para no saturar el servicio de asistencia.
                 const lists = await batched(
-                    actorIds,
-                    (id) => attendanceApi.recordsByActor(Number(id)).catch(() => []),
+                    sessionIds,
+                    (id) => attendanceApi.recordsBySession(id).catch(() => []),
                     1
                 );
                 if (!alive) return;

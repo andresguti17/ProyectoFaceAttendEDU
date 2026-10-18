@@ -123,7 +123,7 @@ function HeaderCell({ col, label }) {
 
 // ── Header de tabla ───────────────────────────────────────
 
-function TableHeader({ columns, selection }) {
+function TableHeader({ columns, selection, headerContext }) {
     const { t } = useTranslation();
     const { theme } = useTheme();
 
@@ -150,7 +150,11 @@ function TableHeader({ columns, selection }) {
                 </View>
             )}
             {columns.map((col) => (
-                <HeaderCell key={col.id} col={col} label={t(col.label)} />
+                <HeaderCell
+                    key={col.id}
+                    col={col}
+                    label={t(col.headerLabel ? col.headerLabel(headerContext) : col.label)}
+                />
             ))}
         </View>
     );
@@ -359,7 +363,9 @@ export default function UsersTable({
     return (
         <Card padding={0} style={style}>
             {/* Header (solo desktop) */}
-            {!isSmall && <TableHeader columns={visibleColumns} selection={selection} />}
+            {!isSmall && (
+                <TableHeader columns={visibleColumns} selection={selection} headerContext={renderContext} />
+            )}
 
             {/* Contenido */}
             {data.length === 0 && !isLoading ? (

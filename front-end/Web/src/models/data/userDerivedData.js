@@ -237,27 +237,33 @@ export function getPerfectAttendanceStudents(students, minAttendanceThreshold = 
  * @param {Array} teachers - Lista de profesores
  * @returns {Array} Lista de asistencia de instructores con metadata adicional
  */
-export function getInstructorAttendance(teachers) {
+export function getInstructorAttendance(teachers, classCounts = new Map()) {
     if (!teachers || teachers.length === 0) return [];
-    
+
     // Obtener umbrales dinámicos
     const thresholds = getAttendanceThresholds();
-    
+
     return teachers.map(teacher => {
-        const attendanceRate = teacher.attendance || 0;
-        const totalClasses = 45; // Estimado
-        const attendedClasses = Math.round((attendanceRate / 100) * totalClasses);
-        const missedClasses = totalClasses - attendedClasses;
-        const lateClasses = Math.round(missedClasses * 0.4); // 40% de las faltas son llegadas tarde
-        
+        // Clases dictadas frente a programadas, desde las sesiones reales
+        // (instructorClassCounts). Sin sesiones no hay cifra: se muestra 0 y no
+        // se estima. Las tardanzas no existen para instructores: no se inventan.
+        const counts = classCounts.get(String(teacher.actorId ?? "")) ?? null;
+        const totalClasses = counts?.scheduled ?? 0;
+        const attendedClasses = counts?.taught ?? 0;
+        const missedClasses = Math.max(0, totalClasses - attendedClasses);
+        const attendanceRate = totalClasses > 0 ? Math.round((attendedClasses / totalClasses) * 100) : 0;
+        const lateClasses = 0;
+
         // Determinar status según umbrales dinámicos
         let status = "excellent";
-        if (attendanceRate < thresholds.warning) {
+        if (totalClasses === 0) {
+            status = "nodata";
+        } else if (attendanceRate < thresholds.warning) {
             status = "warning";
         } else if (attendanceRate < thresholds.excellent) {
             status = "good";
         }
-        
+
         return {
             id: `ia_${teacher.id}`,
             instructorId: teacher.id,
