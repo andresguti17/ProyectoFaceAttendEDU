@@ -18,6 +18,36 @@ function alertListOf(response) {
     return response?.alerts ?? response?.data ?? response?.content ?? [];
 }
 
+// 08-ms-notification (Go) serializa sus entidades sin etiquetas json, así que
+// los campos llegan en PascalCase (AlertID, RaisedAt…). Se normalizan a camelCase
+// aceptando también snake_case por si el contrato se etiqueta más adelante.
+const pick = (o, ...keys) => {
+    for (const k of keys) if (o?.[k] !== undefined) return o[k];
+    return undefined;
+};
+
+export function normalizeAlert(a) {
+    return {
+        ...a,
+        alertId: pick(a, "alertId", "alert_id", "AlertID", "id"),
+        academicActorId: pick(a, "academicActorId", "academic_actor_id", "AcademicActorID"),
+        alertTypeId: pick(a, "alertTypeId", "alert_type_id", "AlertTypeID"),
+        raisedAt: pick(a, "raisedAt", "raised_at", "RaisedAt") ?? null,
+        resolvedAt: pick(a, "resolvedAt", "resolved_at", "ResolvedAt") ?? null,
+    };
+}
+
+export function normalizeAlertType(t) {
+    return {
+        ...t,
+        alertTypeId: pick(t, "alertTypeId", "alert_type_id", "AlertTypeID", "id"),
+        code: pick(t, "code", "Code"),
+        name: pick(t, "name", "Name"),
+        severity: pick(t, "severity", "Severity"),
+        channel: pick(t, "channel", "Channel"),
+    };
+}
+
 function typeListOf(response) {
     if (Array.isArray(response)) return response;
     return response?.alert_types ?? response?.data ?? response?.content ?? [];
@@ -48,11 +78,11 @@ export function useAlertsViewModel() {
                 }),
                 notificationApi.listAlertTypes().catch(() => []),
             ]);
-            setAlerts(alertListOf(alertRes));
+            setAlerts(alertListOf(alertRes).map(normalizeAlert));
             const map = new Map();
-            for (const type of typeListOf(typeRes)) {
-                const id = type.alertTypeId ?? type.alert_type_id ?? type.AlertTypeID ?? type.id;
-                if (id != null) map.set(Number(id), type);
+            for (const raw of typeListOf(typeRes)) {
+                const type = normalizeAlertType(raw);
+                if (type.alertTypeId != null) map.set(Number(type.alertTypeId), type);
             }
             setTypes(map);
         } catch (e) {
