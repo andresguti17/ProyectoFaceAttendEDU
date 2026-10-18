@@ -57,6 +57,15 @@ async def _fake_get_json(url: str, token: str):
     return 200, {"allowed": permission in PERMISSIONS[user]}
 
 
+@pytest.fixture(autouse=True)
+def _fresh_auth_cache():
+    # Las cachés positivas de sesión/permiso son de proceso: una prueba no debe
+    # heredar la sesión que validó otra (p. ej. identity caído debe dar 503).
+    security._session_cache.clear()
+    security._eval_cache.clear()
+    yield
+
+
 @pytest.fixture
 def client(monkeypatch):
     monkeypatch.setenv("BIOMETRIC_MONGO_ENABLED", "false")
