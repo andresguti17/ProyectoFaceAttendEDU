@@ -208,6 +208,47 @@ function weeklyFromDaily(daily) {
  * - teacher: solo sus bloques (instructorActorId).
  * - student: solo sus registros (academicActorId) + sesiones de su ficha.
  */
+/**
+ * Clases dictadas frente a programadas por instructor, a partir de las sesiones
+ * reales y de sus bloques horarios. Solo lista sesiones y bloques (ninguna
+ * petición por sesión), para no añadir carga al gateway.
+ *
+ * - programadas: sesiones de sus bloques que no están canceladas.
+ * - dictadas:    sesiones cerradas (Closed).
+ * - canceladas:  sesiones canceladas.
+ *
+ * @returns {Promise<Map<string, {taught:number, scheduled:number, cancelled:number}>>}
+ *   clave: academic_actor_id del instructor, como texto.
+ */
+export async function instructorClassCounts() {
+    const [sessionsRes, blocks] = await Promise.all([
+        fetchAllPages(endpoints.scheduling.sessions, {}, { by: "offset", pageSize: 200, concurrency: 4 }).catch(() => []),
+        listBlocks().catch(() => []),
+    ]);
+    const instructorByBlock = new Map();
+    for (const block of listOf(blocks)) {
+        const blockId = block?.scheduleBlockId ?? block?.schedule_block_id;
+        const actorId = block?.instructorActorId ?? block?.instructor_actor_id;
+        if (blockId != null && actorId != null) instructorByBlock.set(String(blockId), String(actorId));
+    }
+    const counts = new Map();
+    for (const raw of listOf(sessionsRes)) {
+        const session = sessionOf(raw);
+        const instructor = instructorByBlock.get(String(session.blockId));
+        if (instructor == null || session.id == null) continue;
+        const entry = counts.get(instructor) ?? { taught: 0, scheduled: 0, cancelled: 0 };
+        const status = String(session.status ?? "").toLowerCase();
+        if (status === "cancelled") {
+            entry.cancelled += 1;
+        } else {
+            entry.scheduled += 1;
+            if (status === "closed") entry.taught += 1;
+        }
+        counts.set(instructor, entry);
+    }
+    return counts;
+}
+
 export async function dashboardSeries({ role, instructorActorId = null, academicActorId = null, cohortId = null } = {}) {
     const scope =
         role === "student" ? { instructorActorId: null, cohortId } : { instructorActorId: role === "teacher" ? instructorActorId : null, cohortId: null };
