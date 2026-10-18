@@ -33,6 +33,7 @@ import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useFaceCapture, CAMERA_SUPPORTED } from "../viewmodels/useFaceCapture";
 import { useFingerprintReader } from "../viewmodels/useFingerprintReader";
 import { ConfirmModal } from "./components/common/modals/ConfirmModal";
+import ClassCard from "./components/kiosk/ClassCard";
 
 const TONE_COLOR_KEY = {
     default: "secondary",
@@ -98,28 +99,13 @@ function SelectSessionPanel({ kioskVm }) {
                         </Card>
                     ) : (
                         kioskVm.todaysBlocks.map((block) => (
-                            <Card key={block.scheduleBlockId} padding="lg">
-                                <View
-                                    style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        gap: 12,
-                                    }}
-                                >
-                                    <View style={{ gap: 4, flex: 1 }}>
-                                        <Text style={{ color: c.text.primary, fontSize: 16, fontWeight: "700" }}>
-                                            {t("Clase de hoy")}
-                                        </Text>
-                                        <Text style={{ color: c.text.secondary, fontSize: 13 }}>
-                                            {block.startsAt} – {block.endsAt}
-                                        </Text>
-                                    </View>
-                                    <Button variant="primary" onPress={() => kioskVm.startClass(block)}>
-                                        {t("Iniciar clase")}
-                                    </Button>
-                                </View>
-                            </Card>
+                            <ClassCard
+                                key={block.scheduleBlockId}
+                                block={block}
+                                details={kioskVm.classCards?.get(block.scheduleBlockId)}
+                                loading={kioskVm.classCardsLoading}
+                                onStart={kioskVm.startClass}
+                            />
                         ))
                     )}
                 </View>
@@ -153,6 +139,7 @@ function RosterPanel({ kioskVm, canCorrect, onCorrect, onRemove }) {
                     kioskVm.roster.map((student) => {
                         const method = kioskVm.registeredMethods.get(student.academicActorId);
                         const present = kioskVm.registeredActorIds.has(student.academicActorId);
+                        const late = kioskVm.lateActorIds?.has(student.academicActorId) ?? false;
                         return (
                             <View
                                 key={student.academicActorId}
@@ -175,18 +162,20 @@ function RosterPanel({ kioskVm, canCorrect, onCorrect, onRemove }) {
                                 </Text>
                                 {present && (
                                     <Text style={{ color: c.text.secondary, fontSize: 12 }}>
-                                        {methodLabel[method] || method || ""}
+                                        {late ? t("Tarde") : methodLabel[method] || method || ""}
                                     </Text>
                                 )}
                                 {present && canCorrect && (
                                     <View style={{ flexDirection: "row", gap: 6 }}>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onPress={() => onCorrect?.(student.academicActorId)}
-                                        >
-                                            {t("Tarde")}
-                                        </Button>
+                                        {!late && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onPress={() => onCorrect?.(student.academicActorId)}
+                                            >
+                                                {t("Tarde")}
+                                            </Button>
+                                        )}
                                         <Button
                                             variant="danger"
                                             size="sm"
@@ -218,7 +207,10 @@ function CapturePanel({ kioskVm }) {
         if (!pending) return;
         setBusy(true);
         if (pending.kind === "cancel") {
-            await kioskVm.cancelClass().catch((e) => kioskVm.onCaptureError(e.message));
+            // cancelClass devuelve el mensaje de error (no lanza): sin leerlo, un
+            // fallo del backend se perdía y el kiosco parecía no responder.
+            const err = await kioskVm.cancelClass();
+            if (err) kioskVm.onCaptureError(err);
         } else if (pending.kind === "correct") {
             const err = await kioskVm.correctRecord?.(pending.actorId, "Late");
             if (err) kioskVm.onCaptureError(err);
@@ -265,10 +257,14 @@ function CapturePanel({ kioskVm }) {
     // persona preseleccionada (no es el flujo de Biometrics), así que
     // requirePersonId/refreshSummary son no-ops; run es pasante porque
     // esta pantalla no tiene su propio estado "busy".
+    // Aviso de cámara: el kiosco no tiene barra de estado, así que los errores
+    // de useFaceCapture (permiso denegado, sin cámara, en uso) se guardan aquí
+    // para pintarlos junto al visor; cualquier estado no-error lo limpia.
+    const [cameraMessage, setCameraMessage] = useState("");
     const vm = useMemo(
         () => ({
             run: (op) => op(),
-            setStatus: () => {},
+            setStatus: (message, tone) => setCameraMessage(tone === "error" ? message : ""),
             requirePersonId: () => null,
             refreshSummary: () => Promise.resolve(null),
         }),
@@ -534,6 +530,22 @@ function CapturePanel({ kioskVm }) {
                             <Text style={{ color: c.text.secondary, fontSize: 13, textAlign: "center" }}>
                                 {t("Cámara no disponible: usa tu huella")}
                             </Text>
+                        )}
+
+                        {!!cameraMessage && (
+                            <View style={{ alignItems: "center", gap: 8 }}>
+                                <Text
+                                    accessibilityRole="alert"
+                                    style={{ color: c.status.danger, fontSize: 13, textAlign: "center" }}
+                                >
+                                    {cameraMessage}
+                                </Text>
+                                {!face.cameraReady && (
+                                    <Button variant="outline" size="sm" onPress={face.startCamera}>
+                                        {t("Reintentar cámara")}
+                                    </Button>
+                                )}
+                            </View>
                         )}
 
                         {!!face.livenessAction && (

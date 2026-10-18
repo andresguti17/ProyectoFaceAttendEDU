@@ -18,12 +18,13 @@
 //      captura (p. ej. sin match).
 // ============================================================
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { attendanceApi } from "../services/api/attendanceApi";
 import { cohortActorByPerson, cohortRoster, listBlocks } from "../services/api/referenceData";
 import { schedulingApi } from "../services/api/schedulingApi";
 import { connectBiometricSocket } from "../services/ws/biometricSocket";
+import { loadClassCards } from "./classCards";
 
 /** getDay(): 0=domingo..6=sábado -> ISO 1..7 del DBML (1=lunes..7=domingo). */
 export function isoWeekday(date = new Date()) {
@@ -65,6 +66,8 @@ export function useAttendanceKioskViewModel() {
     // Roster del cohorte de la clase activa: [{academicActorId, personId,
     // name}], para el panel de lista de estudiantes junto a la cámara.
     const [roster, setRoster] = useState([]);
+    // academicActorId que ya están marcados como Tarde (corrección del profesor).
+    const [lateActorIds, setLateActorIds] = useState(new Set());
 
     // Refs: leídos por onIdentified/el listener del socket, que deben ver
     // siempre el valor más reciente sin forzar su propia recreación.
@@ -108,9 +111,32 @@ export function useAttendanceKioskViewModel() {
         };
     }, []);
 
-    const todaysBlocks = blocks.filter(
-        (b) => b.instructorActorId === user?.academicActorId && b.dayOfWeek === isoWeekday()
+    const todaysBlocks = useMemo(
+        () =>
+            blocks.filter(
+                (b) => b.instructorActorId === user?.academicActorId && b.dayOfWeek === isoWeekday()
+            ),
+        [blocks, user?.academicActorId]
     );
+
+    // Detalles de las tarjetas de clase (curso, ficha, ambiente, matriculados y
+    // estado de la sesión de hoy). Se refrescan cada vez que se vuelve a la lista,
+    // p. ej. tras finalizar una clase, para que la tarjeta pase a "Cerrada".
+    const [classCards, setClassCards] = useState(new Map());
+    const [classCardsLoading, setClassCardsLoading] = useState(true);
+    useEffect(() => {
+        if (view !== "SELECT_SESSION" || todaysBlocks.length === 0) return undefined;
+        let cancelled = false;
+        setClassCardsLoading(true);
+        loadClassCards(todaysBlocks, todayLocalDate()).then((details) => {
+            if (cancelled) return;
+            setClassCards(details);
+            setClassCardsLoading(false);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [view, todaysBlocks]);
 
     function syncRegisteredActorIds() {
         setRegisteredActorIds(new Set(registeredActorIdsRef.current));
@@ -247,6 +273,13 @@ export function useAttendanceKioskViewModel() {
                 );
                 setRegisteredMethods(new Map(registeredMethodsRef.current));
                 setRoster(nextRoster);
+                setLateActorIds(
+                    new Set(
+                        records
+                            .filter((r) => (r.attendanceStatus ?? r.attendance_status) === "Late")
+                            .map((r) => r.academicActorId ?? r.academic_actor_id)
+                    )
+                );
 
                 setStatusMessage("");
                 sessionRef.current = nextSession;
@@ -263,7 +296,9 @@ export function useAttendanceKioskViewModel() {
         [user]
     );
 
-    const endClass = useCallback(async () => {
+    // Cierra el canal biométrico de la sesión activa (socket, suscripciones y
+    // timer de reset). Lo comparten endClass y cancelClass: ambas terminan la clase.
+    function teardownChannel() {
         if (resetTimerRef.current) {
             clearTimeout(resetTimerRef.current);
             resetTimerRef.current = null;
@@ -282,8 +317,13 @@ export function useAttendanceKioskViewModel() {
         }
         setSocket(null);
         setConnectionStatus("closed");
+    }
 
+    const endClass = useCallback(async () => {
+        // Primero se confirma el cierre en el backend: si falla, la clase sigue
+        // abierta y el canal vivo, y el profesor puede reintentar sin perder el kiosco.
         await schedulingApi.closeSession(session.classSessionId, user?.academicActorId);
+        teardownChannel();
 
         actorByPersonRef.current = new Map();
         registeredActorIdsRef.current = new Set();
@@ -293,6 +333,7 @@ export function useAttendanceKioskViewModel() {
         recordIdByActorRef.current = new Map();
         setRecordIdByActor(new Map());
         setRoster([]);
+        setLateActorIds(new Set());
         sessionRef.current = null;
         setSession(null);
         setBlock(null);
@@ -385,6 +426,7 @@ export function useAttendanceKioskViewModel() {
         recordIdByActorRef.current = new Map();
         setRecordIdByActor(new Map());
         setRoster([]);
+        setLateActorIds(new Set());
         sessionRef.current = null;
         setSession(null);
         setBlock(null);
@@ -399,6 +441,7 @@ export function useAttendanceKioskViewModel() {
         } catch (e) {
             return e?.message || "No se pudo cancelar la sesión";
         }
+        teardownChannel();
         resetKioskState();
         return null;
     }, [session]);
@@ -416,6 +459,12 @@ export function useAttendanceKioskViewModel() {
             } catch (e) {
                 return e?.message || "No se pudo corregir el registro";
             }
+            setLateActorIds((prev) => {
+                const next = new Set(prev);
+                if (attendanceStatus === "Late") next.add(academicActorId);
+                else next.delete(academicActorId);
+                return next;
+            });
             return null;
         },
         []
@@ -436,12 +485,19 @@ export function useAttendanceKioskViewModel() {
         setRegisteredActorIds(new Set(registeredActorIdsRef.current));
         registeredMethodsRef.current.delete(academicActorId);
         setRegisteredMethods(new Map(registeredMethodsRef.current));
+        setLateActorIds((prev) => {
+            const next = new Set(prev);
+            next.delete(academicActorId);
+            return next;
+        });
         return null;
     }, []);
 
     return {
         view,
         todaysBlocks,
+        classCards,
+        classCardsLoading,
         startClass,
         endClass,
         cancelClass,
@@ -455,6 +511,7 @@ export function useAttendanceKioskViewModel() {
         registeredActorIds,
         registeredMethods,
         roster,
+        lateActorIds,
         onIdentified,
         onCaptureError,
     };

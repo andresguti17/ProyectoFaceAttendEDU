@@ -415,3 +415,106 @@ test("Important #9: a second startClass() call while one is already in flight is
 function isoWeekdayNow() {
     return ((new Date().getDay() + 6) % 7) + 1;
 }
+
+describe("ending, cancelling and correcting a running class", () => {
+    const block = { scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: ((new Date().getDay() + 6) % 7) + 1, cohortId: 10 };
+    let socket;
+
+    async function startedClass() {
+        listBlocks.mockResolvedValue([block]);
+        schedulingApi.listSessions.mockResolvedValue([
+            { classSessionId: 55, scheduleBlockId: 1, sessionDate: todayLocalDate(), sessionStatus: "Open" },
+        ]);
+        schedulingApi.openSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Open" });
+        attendanceApi.recordsBySession.mockResolvedValue([
+            { academicActorId: 3, attendanceRecordId: 90, captureMethod: "FACIAL", attendanceStatus: "Present" },
+        ]);
+        socket = {
+            send: jest.fn(),
+            onAttendanceEvent: jest.fn(() => () => {}),
+            onStatusChange: jest.fn(() => () => {}),
+            close: jest.fn(),
+        };
+        connectBiometricSocket.mockReturnValue(socket);
+        const getVm = renderHook();
+        await act(async () => {});
+        await act(async () => {
+            await getVm().startClass(getVm().todaysBlocks[0]);
+        });
+        return getVm;
+    }
+
+    beforeEach(() => {
+        schedulingApi.cancelSession = jest.fn();
+        attendanceApi.updateRecord = jest.fn().mockResolvedValue({});
+        attendanceApi.deleteRecord = jest.fn().mockResolvedValue({});
+    });
+
+    test("endClass keeps the class and its socket alive when the backend refuses to close it", async () => {
+        const getVm = await startedClass();
+        schedulingApi.closeSession.mockRejectedValue(new Error("boom"));
+
+        await act(async () => {
+            await expect(getVm().endClass()).rejects.toThrow("boom");
+        });
+
+        expect(socket.close).not.toHaveBeenCalled();
+        expect(getVm().view).toBe("WAITING");
+    });
+
+    test("endClass closes the socket once the backend confirms", async () => {
+        const getVm = await startedClass();
+        schedulingApi.closeSession.mockResolvedValue({});
+
+        await act(async () => {
+            await getVm().endClass();
+        });
+
+        expect(socket.close).toHaveBeenCalledTimes(1);
+        expect(getVm().view).toBe("SELECT_SESSION");
+    });
+
+    test("cancelClass closes the biometric socket and returns to the class list", async () => {
+        const getVm = await startedClass();
+        schedulingApi.cancelSession.mockResolvedValue({});
+        let err;
+
+        await act(async () => {
+            err = await getVm().cancelClass();
+        });
+
+        expect(err).toBeNull();
+        expect(socket.close).toHaveBeenCalledTimes(1);
+        expect(getVm().view).toBe("SELECT_SESSION");
+    });
+
+    test("cancelClass reports the backend error and keeps the class running", async () => {
+        const getVm = await startedClass();
+        schedulingApi.cancelSession.mockRejectedValue(new Error("no se puede cancelar"));
+        let err;
+
+        await act(async () => {
+            err = await getVm().cancelClass();
+        });
+
+        expect(err).toBe("no se puede cancelar");
+        expect(socket.close).not.toHaveBeenCalled();
+        expect(getVm().view).toBe("WAITING");
+    });
+
+    test("marking a student late is reflected locally and removing the record clears it", async () => {
+        const getVm = await startedClass();
+        expect(getVm().lateActorIds.has(3)).toBe(false);
+
+        await act(async () => {
+            await getVm().correctRecord(3, "Late");
+        });
+        expect(attendanceApi.updateRecord).toHaveBeenCalledWith(90, { attendanceStatus: "Late", captureMethod: "MANUAL" });
+        expect(getVm().lateActorIds.has(3)).toBe(true);
+
+        await act(async () => {
+            await getVm().removeRecord(3);
+        });
+        expect(getVm().lateActorIds.has(3)).toBe(false);
+    });
+});
