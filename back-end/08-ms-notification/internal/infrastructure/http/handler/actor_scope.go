@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -153,6 +154,30 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 // getJSONStrict is getJSON that treats any non-200 answer as an error: a
 // partial scope must never widen what the caller can see.
 func getJSONStrict(ctx context.Context, cfg AuthConfig, target, token string, out any) (int, error) {
+	status, err := getJSONOnce(ctx, cfg, target, token, out)
+	if err != nil && isTransient(status) {
+		// One retry after a short pause: under load a single slow or reset
+		// inter-service call was enough to answer 503. A second failure still
+		// propagates, so the scope keeps failing secure.
+		select {
+		case <-time.After(retryPause):
+		case <-ctx.Done():
+			return status, err
+		}
+		status, err = getJSONOnce(ctx, cfg, target, token, out)
+	}
+	if err != nil {
+		log.Printf("actor scope: %v", err)
+	}
+	return status, err
+}
+
+const retryPause = 250 * time.Millisecond
+
+// isTransient: transport failure (status 0) or a 5xx answer; 4xx are final.
+func isTransient(status int) bool { return status == 0 || status >= 500 }
+
+func getJSONOnce(ctx context.Context, cfg AuthConfig, target, token string, out any) (int, error) {
 	status, err := getJSON(ctx, cfg.Client, target, token, out)
 	if err == nil && status != http.StatusOK {
 		err = fmt.Errorf("GET %s answered %d", target, status)
