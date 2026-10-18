@@ -177,7 +177,7 @@ func AuthMiddleware(cfg AuthConfig, rule func(method, path string) string) gin.H
 			}
 		}
 		if cfg.AcademicURL != "" && isAlertPath(path) {
-			scope, err := resolveActorScope(c.Request.Context(), cfg, session.UserID, token)
+			scope, err := resolveActorScope(c.Request.Context(), cfg, userID, token)
 			if err != nil {
 				abort(c, http.StatusServiceUnavailable, "Cannot resolve actor scope")
 				return
@@ -186,7 +186,7 @@ func AuthMiddleware(cfg AuthConfig, rule func(method, path string) string) gin.H
 				c.Set(actorScopeKey, scope)
 			}
 		}
-		c.Set("userID", session.UserID)
+		c.Set("userID", userID)
 		c.Next()
 	}
 }

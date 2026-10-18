@@ -5,3 +5,6 @@ databaseChangeLog:
   - include:
       file: 002-sync-catalog-sequences.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 003-seed-justification-result-alert-types.yaml
+      relativeToChangelogFile: true

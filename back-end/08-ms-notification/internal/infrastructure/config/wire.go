@@ -1,6 +1,8 @@
 package config
 
 import (
+	"context"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/faceattend/notification-service/internal/application/usecase"
@@ -14,6 +16,10 @@ type Container struct {
 	AlertHandler     *handler.AlertHandler
 	AlertTypeHandler *handler.AlertTypeHandler
 	EmailHandler     *handler.EmailHandler
+	// JustificationResult turns JustificationReviewed events into the apprentice's alert (ERF 6.3).
+	JustificationResult interface {
+		Handle(ctx context.Context, ev usecase.JustificationReviewed) error
+	}
 }
 
 func Wire(pool *pgxpool.Pool) *Container {
@@ -43,8 +49,9 @@ func Wire(pool *pgxpool.Pool) *Container {
 	emailHandler := handler.NewEmailHandler(email.NewSMTPSender(mailCfg), mailCfg)
 
 	return &Container{
-		AlertHandler:     alertHandler,
-		AlertTypeHandler: alertTypeHandler,
-		EmailHandler:     emailHandler,
+		AlertHandler:        alertHandler,
+		AlertTypeHandler:    alertTypeHandler,
+		EmailHandler:        emailHandler,
+		JustificationResult: usecase.NewNotifyJustificationResult(alertRepo, alertTypeRepo),
 	}
 }

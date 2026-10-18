@@ -11,6 +11,7 @@ export default class Justification extends BaseModel {
     this.reviewedBy = data.reviewed_by || null;
     this.reviewedAt = data.reviewed_at || null;
     this.reviewStatus = data.review_status || 'Pending';
+    this.resolutionNotes = data.resolution_notes || null;
   }
 
   get isPending() {

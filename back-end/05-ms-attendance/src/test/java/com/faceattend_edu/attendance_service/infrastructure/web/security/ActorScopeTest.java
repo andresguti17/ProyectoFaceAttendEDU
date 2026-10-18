@@ -73,9 +73,8 @@ class ActorScopeTest {
     void instructorScopeIsOwnActorsPlusActiveStudentsOfTaughtCohorts() {
         Map<String, Object> backend = Map.of(
                 "/api/v1/users/u-1", Map.of("personId", "p-1"),
-                "/api/v1/academic-actors?limit=100&offset=0", List.of(
-                        Map.of("academicActorId", 1, "personId", "p-1"),
-                        Map.of("academicActorId", 2, "personId", "p-2")),
+                // Solo ?personId= trae el actor del instructor (el listado con ?limit se corta en 100).
+                "/api/v1/academic-actors?personId=p-1", List.of(Map.of("academicActorId", 1, "personId", "p-1")),
                 "/api/v1/schedule-blocks?instructorActorId=1", List.of(Map.of("cohortId", 7)),
                 "/api/v1/cohorts/7/enrollments", List.of(
                         Map.of("academicActorId", 2, "enrollmentStatus", "Active"),
@@ -106,6 +105,8 @@ class ActorScopeTest {
     void schoolAdminScopeIsLimitedToOwnSchool() {
         Map<String, Object> backend = Map.of(
                 "/api/v1/users/u-admin", Map.of("personId", "p-admin"),
+                // El alcance de sede se deduce del listado completo (paginado).
+                "/api/v1/academic-actors?personId=p-admin", List.of(Map.of("academicActorId", 1, "personId", "p-admin", "schoolId", 100)),
                 "/api/v1/academic-actors?limit=100&offset=0", List.of(
                         Map.of("academicActorId", 1, "personId", "p-admin", "schoolId", 100),
                         Map.of("academicActorId", 2, "personId", "p-2", "schoolId", 100),

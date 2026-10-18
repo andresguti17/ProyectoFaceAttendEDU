@@ -1,17 +1,15 @@
 package com.faceattend_edu.attendance_service.application.usecase;
 
-import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
+import com.faceattend_edu.attendance_service.domain.model.AttendanceRecordFilter;
+import com.faceattend_edu.attendance_service.domain.model.AttendanceRecordSlice;
 import com.faceattend_edu.attendance_service.domain.port.in.ListAttendanceRecordsUseCase;
 import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ListAttendanceRecordsUseCaseImpl implements ListAttendanceRecordsUseCase {
     private final AttendanceRecordRepository repository;
-    @Override public List<AttendanceRecord> list(){ return repository.findAll(); }
-    @Override public List<AttendanceRecord> listBySession(Long s){ return repository.findByClassSessionId(s); }
-    @Override public List<AttendanceRecord> listByActor(Long a){ return repository.findByAcademicActorId(a); }
+    @Override public AttendanceRecordSlice search(AttendanceRecordFilter filter, int offset, Integer limit){ return repository.search(filter, offset, limit); }
 }

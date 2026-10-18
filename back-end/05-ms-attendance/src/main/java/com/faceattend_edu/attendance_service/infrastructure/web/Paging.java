@@ -20,13 +20,21 @@ public final class Paging {
     public static <T> ResponseEntity<List<T>> slice(List<T> items, Integer limit, Integer offset) {
         if (limit == null && offset == null) return ResponseEntity.ok(items);
 
-        int safeLimit = limit == null ? MAX_LIMIT : Math.min(Math.max(limit, 1), MAX_LIMIT);
-        int safeOffset = offset == null ? 0 : Math.max(offset, 0);
+        int safeLimit = limitOf(limit);
+        int safeOffset = offsetOf(offset);
         int from = Math.min(safeOffset, items.size());
         int to = Math.min(from + safeLimit, items.size());
 
         return ResponseEntity.ok()
                 .header("X-Total-Count", String.valueOf(items.size()))
                 .body(List.copyOf(items.subList(from, to)));
+    }
+
+    public static int limitOf(Integer limit) {
+        return limit == null ? MAX_LIMIT : Math.min(Math.max(limit, 1), MAX_LIMIT);
+    }
+
+    public static int offsetOf(Integer offset) {
+        return offset == null ? 0 : Math.max(offset, 0);
     }
 }

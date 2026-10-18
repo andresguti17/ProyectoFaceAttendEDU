@@ -2,6 +2,8 @@ package com.faceattend_edu.attendance_service.infrastructure.web.controller;
 
 import com.faceattend_edu.attendance_service.infrastructure.web.security.ActorScope;
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
+import com.faceattend_edu.attendance_service.domain.model.AttendanceRecordFilter;
+import com.faceattend_edu.attendance_service.domain.model.AttendanceRecordSlice;
 import com.faceattend_edu.attendance_service.domain.port.in.*;
 import com.faceattend_edu.attendance_service.infrastructure.web.dto.*;
 import com.faceattend_edu.attendance_service.infrastructure.persistence.repository.ActorAttendanceCount;
@@ -76,32 +78,15 @@ public class AttendanceRecordController {
             @RequestParam(required = false) String attendanceStatus,
             @RequestParam(required = false) Integer limit,
             @RequestParam(required = false) Integer offset){
-        // Los filtros por sesión/actor van a SQL (índices uq_attendance_session_actor
-        // e idx_attendance_actor): traer los ~81k registros y filtrar en memoria
-        // agotaba el heap (OutOfMemoryError). Solo el estado se filtra en memoria.
-        List<AttendanceRecord> base;
-        if (classSessionId != null && academicActorId != null) {
-            base = listUseCase.listBySession(classSessionId).stream()
-                    .filter(r -> academicActorId.equals(r.getAcademicActorId()))
-                    .filter(r -> ActorScope.allows(r.getAcademicActorId()))
-                    .collect(Collectors.toList());
-        } else if (classSessionId != null) {
-            base = listUseCase.listBySession(classSessionId).stream()
-                    .filter(r -> ActorScope.allows(r.getAcademicActorId()))
-                    .collect(Collectors.toList());
-        } else if (academicActorId != null) {
-            base = listUseCase.listByActor(academicActorId).stream()
-                    .filter(r -> ActorScope.allows(r.getAcademicActorId()))
-                    .collect(Collectors.toList());
-        } else {
-            base = listUseCase.list().stream()
-                    .filter(r -> ActorScope.allows(r.getAcademicActorId()))
-                    .collect(Collectors.toList());
-        }
-        List<AttendanceRecordResponse> list = base.stream()
-                .filter(r -> attendanceStatus == null || attendanceStatus.equals(r.getAttendanceStatus()))
-                .map(mapper::toResponse).collect(Collectors.toList());
-        return Paging.slice(list, limit, offset);
+        // Filtros, alcance y paginación van a SQL. Sin filtro de sesión o actor y sin ?limit la
+        // respuesta era la tabla entera (~81k filas, OutOfMemoryError): se pagina por defecto.
+        boolean unbounded = limit == null && offset == null && (classSessionId != null || academicActorId != null);
+        AttendanceRecordSlice slice = listUseCase.search(
+                new AttendanceRecordFilter(classSessionId, academicActorId, attendanceStatus, ActorScope.actorIds()),
+                Paging.offsetOf(offset), unbounded ? null : Paging.limitOf(limit));
+        List<AttendanceRecordResponse> body = slice.items().stream().map(mapper::toResponse).collect(Collectors.toList());
+        if (unbounded) return ResponseEntity.ok(body);
+        return ResponseEntity.ok().header("X-Total-Count", String.valueOf(slice.total())).body(body);
     }
 
     @PostMapping

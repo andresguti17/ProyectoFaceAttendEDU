@@ -1,14 +1,17 @@
 import {useCallback, useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
+import {useNavigation} from '@react-navigation/native';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUserRole} from "../services/UserService";
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {AlertService} from '../services/AlertService';
 import {loadScopedAlerts} from '../services/alertFeed';
+import {isJustificationResultAlert} from '../utils/justificationLink';
 
 // Novedades = alertas con alcance por rol; resolver es acción del staff (RBAC del backend).
 export function useNewsViewModel() {
     const {t} = useTranslation();
+    const navigation = useNavigation();
     const {loadThemeForRole} = useTheme();
     const updateKey = useLanguageRefresh();
 
@@ -51,8 +54,16 @@ export function useNewsViewModel() {
         }
     }, [t]);
 
+    // El resultado de una justificación es del aprendiz: su alerta abre el detalle (ERF 6.3).
+    const canOpen = useCallback((alert) => userRole === 'Aprendiz' && isJustificationResultAlert(alert), [userRole]);
+    const openAlert = useCallback((alert) => {
+        if (canOpen(alert)) navigation.navigate('ValidJustifications', {reviewedAt: alert.raisedAt});
+    }, [canOpen, navigation]);
+
     return {
         userRole,
+        canOpen,
+        openAlert,
         updateKey,
         alerts,
         loading,

@@ -213,10 +213,10 @@ export const usePendingJustificationViewModel = () => {
         }
     }, [closeDetail, canReview]);
 
-    const rejectJustification = useCallback(async (id) => {
+    const rejectJustification = useCallback(async (id, notes) => {
         if (!canReview) return;
         const reviewer = await getCurrentUser();
-        const updated = await JustificationService.reject(id, reviewer?.userId);
+        const updated = await JustificationService.reject(id, reviewer?.userId, notes);
         if (updated) {
             setJustifications((prev) => prev.map((j) => j.id === id ? {...j, status: JUSTIFICATION_STATUS_INTERNAL.REJECTED} : j));
             closeDetail();

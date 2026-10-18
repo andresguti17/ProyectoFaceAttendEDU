@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { PageOptions } from '../../domain/ports/out/ICrudRepository';
 import type { AcademicRepositories } from '../persistence/postgres';
-import { createCallerSchoolResolver, ScopeError as SchoolScopeError, type CallerSchool } from './callerSchool';
+import { createCallerSchoolResolver, mayDeleteCourse, ScopeError as SchoolScopeError, type CallerSchool } from './callerSchool';
 
 /**
  * HTTP adapters — 03-ms-academic.
@@ -568,12 +568,15 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     return updated ?? notFound(reply);
   });
   app.delete('/api/v1/courses/:id', async (req, reply) => {
+    // Deleting a course is reserved to Super Administrador (frontend: canDeleteCourse).
+    const caller = await callerSchoolOf(req, reply);
+    if (!caller) return reply;
+    if (!mayDeleteCourse(caller)) {
+      return reply.code(403).send({ error: 'Forbidden', message: 'Only Super Administrador deletes courses', timestamp: new Date().toISOString() });
+    }
     const id = parseId((req.params as any).id);
     const found = id ? await repos.courses.findById(id) : null;
     if (!found) return notFound(reply);
-    const caller = await callerSchoolOf(req, reply);
-    if (!caller) return reply;
-    if (!caller.isSuperAdmin && (await schoolOfProgram(found.programId)) !== caller.schoolId) return notFound(reply);
     if (!(await repos.courses.softDelete(id as number))) return notFound(reply);
     return reply.code(204).send();
   });

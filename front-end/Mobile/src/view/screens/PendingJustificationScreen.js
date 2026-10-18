@@ -1,5 +1,5 @@
 import BackButton from '../components/common/BackButton';
-import React, {useMemo} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
     ActivityIndicator,
     FlatList,
@@ -11,6 +11,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
@@ -188,8 +189,25 @@ const DetailModal = ({
                      }) => {
     const {t, i18n} = useTranslation();
     const styles = useMemo(() => createPendingStyles(colors), [colors]);
+    const [notes, setNotes] = useState('');
+    const [notesError, setNotesError] = useState(false);
+
+    // Cada justificación abre con el comentario vacío.
+    useEffect(() => {
+        setNotes('');
+        setNotesError(false);
+    }, [item?.id]);
 
     if (!item) return null;
+
+    // ERF 6.2: rechazar exige comentario.
+    const handleReject = () => {
+        if (!notes.trim()) {
+            setNotesError(true);
+            return;
+        }
+        onReject(item.id, notes);
+    };
 
     const typeColors = getTypeColors(item.type);
     const roleColors = getRoleColors(item.role);
@@ -419,6 +437,43 @@ const DetailModal = ({
                                 </Text>
                             </View>
                         )}
+
+                        {/* ── Comentario de resolución (obligatorio al rechazar) ── */}
+                        {userRole !== 'student' && (
+                            <>
+                                <Text style={[styles.sectionLabelPending, { color: colors.text }]}>
+                                    {t('consultJustify.resolutionNotesLabel')}
+                                </Text>
+                                <TextInput
+                                    style={[
+                                        styles.descriptionBoxPending,
+                                        styles.descriptionTextPending,
+                                        {
+                                            color: colors.text,
+                                            backgroundColor: colors.background,
+                                            borderColor: notesError ? colors.danger : colors.border,
+                                            minHeight: 80,
+                                            textAlignVertical: 'top',
+                                        },
+                                    ]}
+                                    value={notes}
+                                    onChangeText={(text) => {
+                                        setNotes(text);
+                                        if (text.trim()) setNotesError(false);
+                                    }}
+                                    placeholder={t('consultJustify.resolutionNotesPlaceholder')}
+                                    placeholderTextColor={colors.textSecondary}
+                                    accessibilityLabel={t('consultJustify.resolutionNotesLabel')}
+                                    multiline
+                                    maxLength={500}
+                                />
+                                {notesError && (
+                                    <Text style={{ color: colors.danger, marginBottom: 12 }} accessibilityLiveRegion="polite">
+                                        {t('consultJustify.resolutionNotesRequired')}
+                                    </Text>
+                                )}
+                            </>
+                        )}
                     </ScrollView>
 
                     {/* ── Botones de acción (ocultos para estudiantes) ── */}
@@ -431,7 +486,7 @@ const DetailModal = ({
                         >
                             <TouchableOpacity
                                 style={styles.rejectBtnPending}
-                                onPress={() => onReject(item.id)}
+                                onPress={handleReject}
                                 activeOpacity={0.8}
                             >
                                 <Text style={{fontSize: 16}}>✕</Text>

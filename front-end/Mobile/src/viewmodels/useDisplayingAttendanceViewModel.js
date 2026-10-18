@@ -6,8 +6,10 @@ import {useTheme} from "../view/components/common/ThemeContext";
 import {getCurrentUserRole, getCurrentUser} from "../services/UserService";
 import {ActorService} from "../services/ActorService";
 import {PeriodService} from "../services/PeriodService";
+import {JustificationService} from "../services/JustificationService";
 import {backendGet} from "../api/backend";
 import ENV from "../config/env";
+import {filterAttendance} from "../utils/attendanceFilters";
 
 function unwrap(data) {
   if (data && Array.isArray(data.value)) return data.value;
@@ -33,7 +35,7 @@ async function safe(promise) {
 const RECENT_LIMIT = 50;
 const ENRICH_CHUNK_SIZE = 10;
 
-async function enrichRecord(record, { locale, t, activePeriod }) {
+async function enrichRecord(record, { locale, t, activePeriod, justificationsByRecord }) {
   try {
     const [sessionData, actorData] = await Promise.all([
       record.class_session_id
@@ -81,14 +83,16 @@ async function enrichRecord(record, { locale, t, activePeriod }) {
       }
     }
 
-    const statusMap = { Present: 'presente', Late: 'tarde', Absent: 'ausente' };
-    const when = record.captured_at || record.created_at || null;
+    const statusMap = { Present: 'presente', Late: 'tarde', Absent: 'ausente', Justified: 'justificado' };
+    const justification = justificationsByRecord?.get(String(record.attendance_record_id));
+    // Una inasistencia no tiene captured_at: su fecha es la de la sesión, no created_at (fecha de carga).
+    const when = record.captured_at || null;
     const hora = when ? new Date(when).toLocaleTimeString(locale, {hour: '2-digit', minute: '2-digit'}) : '—';
 
     return {
       id: record.attendance_record_id,
       nombre: `${person.name || ''} ${person.last_name || ''}`.trim() || t('attendance.unknownPerson', {id: record.academic_actor_id}),
-      fecha: when ? when.split('T')[0] : '',
+      fecha: session.session_date || (when ? when.split('T')[0] : ''),
       hora,
       estado: statusMap[record.attendance_status] || 'ausente',
       materia: course.name || course.code || '—',
@@ -101,6 +105,12 @@ async function enrichRecord(record, { locale, t, activePeriod }) {
       periodo_inicio: activePeriod?.startsOn || '—',
       periodo_fin: activePeriod?.endsOn || '—',
       docente: docenteName,
+      // ERF 7.4: estado de la justificación asociada al registro, si existe.
+      justificacion: justification ? {
+        estado: justification.reviewStatus,
+        texto: justification.reason || '—',
+        revisado_en: justification.reviewedAt ? String(justification.reviewedAt).split('T')[0] : '—',
+      } : null,
     };
   } catch (e) {
     return null;
@@ -204,14 +214,16 @@ export function useAttendanceViewModel() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchText, setSearchText] = useState("");
-    const [selectedDate, setSelectedDate] = useState(null);
+    const [fromDate, setFromDate] = useState(null);
+    const [toDate, setToDate] = useState(null);
+    const [pickerTarget, setPickerTarget] = useState("from");
+    const [statusFilter, setStatusFilter] = useState("");
     const [showPicker, setShowPicker] = useState(false);
     const [showIOSModal, setShowIOSModal] = useState(false);
     const [tempDate, setTempDate] = useState(new Date());
     const [detailItem, setDetailItem] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [teacherData, setTeacherData] = useState([]);
-    const [myAttendance, setMyAttendance] = useState([]);
 
     const fetchAttendance = useCallback(async (role) => {
         try {
@@ -257,10 +269,13 @@ export function useAttendanceViewModel() {
                     : (await PeriodService.getAll({is_active: true}))[0] || null;
             } catch (e) {}
 
-            const enriched = await enrichRecords(records, { locale, t, activePeriod });
+            // El backend acota las justificaciones al alcance del usuario; si fallan, el histórico sigue sin ellas.
+            const justifications = await safe(JustificationService.getAll()) ?? [];
+            const justificationsByRecord = new Map(justifications.map((j) => [String(j.attendanceRecordId), j]));
+
+            const enriched = await enrichRecords(records, { locale, t, activePeriod, justificationsByRecord });
 
             setTeacherData(enriched);
-            setMyAttendance(enriched.slice(-10));
         } catch (error) {
             console.error('Error fetching attendance:', error);
             setError(t('attendance.loadError'));
@@ -298,35 +313,38 @@ export function useAttendanceViewModel() {
         init();
     }, [fetchAttendance, loadThemeForRole]);
 
-    const isAdmin = String(userRole || '').toLowerCase() === 'administrador' || String(userRole || '').toLowerCase() === 'admin';
+    const roleLower = String(userRole || '').toLowerCase();
+    const isAdmin = roleLower === 'administrador' || roleLower === 'admin';
+    // El instructor consulta a sus aprendices: mismo listado por persona que el admin (ERF 5.1).
+    const isStaff = isAdmin || roleLower === 'instructor' || roleLower === 'docente' || roleLower === 'teacher';
 
-    const filteredTeachers = teacherData.filter(item =>
-        (!searchText || item.nombre.toLowerCase().includes(searchText.toLowerCase())) &&
-        (!selectedDate || item.fecha === formatDateKey(selectedDate))
-    );
-
-    const filteredMyAttendance = myAttendance.filter(item =>
-        (!selectedDate || item.fecha === formatDateKey(selectedDate))
-    );
-
-    const activeData = isAdmin ? filteredTeachers : filteredMyAttendance;
+    const activeData = filterAttendance(teacherData, {
+        search: isStaff ? searchText : '',
+        from: formatDateKey(fromDate),
+        to: formatDateKey(toDate),
+        status: statusFilter,
+    });
 
     const openDetail = (item) => { setDetailItem(item); setShowDetailModal(true); };
     const closeDetail = () => { setShowDetailModal(false); setDetailItem(null); };
 
-    const handleOpenPicker = () => {
-        setTempDate(selectedDate ?? new Date());
+    const handleOpenPicker = (target) => {
+        setPickerTarget(target);
+        setTempDate((target === "to" ? toDate : fromDate) ?? new Date());
         Platform.OS === "ios" ? setShowIOSModal(true) : setShowPicker(true);
     };
 
     const handleAndroidChange = (event, date) => {
         setShowPicker(false);
-        if (event.type === "set" && date) setSelectedDate(date);
+        if (event.type === "set" && date) setPickedDate(date);
     };
 
+    const setPickedDate = (date) => (pickerTarget === "to" ? setToDate(date) : setFromDate(date));
+
     return {
-        t, locale: resolveLocale(i18n.language), isAdmin, isDark, colors, refreshKey, updateKey,
-        searchText, setSearchText, selectedDate, setSelectedDate,
+        t, locale: resolveLocale(i18n.language), isAdmin, isStaff, isDark, colors, refreshKey, updateKey,
+        searchText, setSearchText, fromDate, setFromDate, toDate, setToDate, setPickedDate,
+        statusFilter, setStatusFilter,
         showPicker, showIOSModal, setShowIOSModal, tempDate, setTempDate,
         activeData, detailItem, showDetailModal, loading, error, retry,
         openDetail, closeDetail, handleOpenPicker, handleAndroidChange,

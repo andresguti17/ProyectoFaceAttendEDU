@@ -41,10 +41,10 @@ export const ActorService = {
 
   getByPerson: async (personId) => {
     if (!personId) return [];
-    // Caché de 5 min (backendGet): esta lista se pedía completa en cada
-    // pantalla (dashboard, asistencias, justificaciones, cursos) y cada
-    // montaje re-descargaba hasta 100 actores.
-    const actors = await backendGet(BASE(), ENDPOINT, { limit: 2000 }, { useCache: true });
+    // ?personId= filtra en el servidor: el listado completo se corta en 100
+    // filas (ms-academic), así que con más actores el del usuario no aparecía.
+    // Caché de 5 min: cada pantalla pide el actor del usuario al montarse.
+    const actors = await backendGet(BASE(), ENDPOINT, { personId }, { useCache: true });
     return actors
       .filter((a) => String(a.person_id ?? a.personId) === String(personId))
       .map(AcademicActor.fromApi);

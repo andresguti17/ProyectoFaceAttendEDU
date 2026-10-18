@@ -8,6 +8,8 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -62,11 +64,15 @@ public class CallerScopeResolver {
         if (hit != null && hit.expiresAt() > System.currentTimeMillis()) return hit.actorIds();
 
         Map<?, ?> user = getMap(identityUrl + "/api/v1/users/" + userId, token);
-        String personId = user == null ? null : String.valueOf(user.get("personId"));
-        List<Map<?, ?>> allActors = allAcademicActors(token);
+        Object rawPersonId = user == null ? null : user.get("personId");
+        String personId = rawPersonId == null ? null : String.valueOf(rawPersonId);
         Set<Long> actors = new HashSet<>();
-        for (Map<?, ?> actor : allActors) {
-            if (personId != null && personId.equalsIgnoreCase(String.valueOf(actor.get("personId")))) {
+        if (personId == null) return Set.of();
+        // ?personId= filtra en academic: el listado completo con ?limit se corta en 100 filas y el
+        // actor del llamante quedaba fuera (el instructor veía un alcance vacío).
+        String byPerson = academicUrl + "/api/v1/academic-actors?personId=" + URLEncoder.encode(personId, StandardCharsets.UTF_8);
+        for (Map<?, ?> actor : getList(byPerson, token)) {
+            if (personId.equalsIgnoreCase(String.valueOf(actor.get("personId")))) {
                 actors.add(toLong(actor.get("academicActorId")));
             }
         }
@@ -74,6 +80,8 @@ public class CallerScopeResolver {
         if (roles.contains(SCHOOL_ADMIN_ROLE)) {
             // Administrador de sede: su propia sede, nunca otras instituciones
             // (a diferencia de Super Administrador, que ve todo).
+            // La sede propia se deduce de la lista completa (no solo del actor del llamante).
+            List<Map<?, ?>> allActors = allAcademicActors(token);
             Set<String> ownSchools = new HashSet<>();
             for (Map<?, ?> actor : allActors) {
                 if (actors.contains(toLong(actor.get("academicActorId"))) && actor.get("schoolId") != null) {
@@ -123,7 +131,7 @@ public class CallerScopeResolver {
     }
 
     protected Map<?, ?> getMap(String url, String token) {
-        return restTemplate.exchange(url, HttpMethod.GET, auth(token), Map.class).getBody();
+        return TransientRetry.call(() -> restTemplate.exchange(url, HttpMethod.GET, auth(token), Map.class).getBody());
     }
 
     @SuppressWarnings("unchecked")
@@ -138,7 +146,8 @@ public class CallerScopeResolver {
     }
 
     protected List<Map<?, ?>> getList(String url, String token) {
-        List<Map<?, ?>> body = restTemplate.exchange(url, HttpMethod.GET, auth(token), List.class).getBody();
+        List<Map<?, ?>> body = TransientRetry.call(
+                () -> restTemplate.exchange(url, HttpMethod.GET, auth(token), List.class).getBody());
         return body == null ? List.of() : body;
     }
 }

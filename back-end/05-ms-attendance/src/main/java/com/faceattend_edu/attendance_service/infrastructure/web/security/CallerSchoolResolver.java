@@ -42,10 +42,18 @@ public class CallerSchoolResolver {
     private String academicUrl;
 
     public CallerSchoolResolver() {
+        this(buildRestTemplate());
+    }
+
+    CallerSchoolResolver(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    private static RestTemplate buildRestTemplate() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(3000);
-        factory.setReadTimeout(5000);
-        this.restTemplate = new RestTemplate(factory);
+        factory.setReadTimeout(8000);
+        return new RestTemplate(factory);
     }
 
     /** @throws RuntimeException if identity/academic do not respond (the filter answers 503). */
@@ -78,12 +86,13 @@ public class CallerSchoolResolver {
     }
 
     protected Map<?, ?> getMap(String url, String token) {
-        return restTemplate.exchange(url, HttpMethod.GET, auth(token), Map.class).getBody();
+        return TransientRetry.call(() -> restTemplate.exchange(url, HttpMethod.GET, auth(token), Map.class).getBody());
     }
 
     @SuppressWarnings("unchecked")
     protected List<Map<?, ?>> getList(String url, String token) {
-        List<Map<?, ?>> body = restTemplate.exchange(url, HttpMethod.GET, auth(token), List.class).getBody();
+        List<Map<?, ?>> body = TransientRetry.call(
+                () -> restTemplate.exchange(url, HttpMethod.GET, auth(token), List.class).getBody());
         return body == null ? List.of() : body;
     }
 }

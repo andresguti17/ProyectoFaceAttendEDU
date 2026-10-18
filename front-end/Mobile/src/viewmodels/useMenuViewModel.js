@@ -3,7 +3,7 @@ import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {getHighestRole} from '../utils/getHighestRole';
-import {removeToken} from '../view/storage/TokenStorage';
+import {removeToken} from '../storage/TokenStorage';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {getCurrentUserRole, isSuperAdmin as checkIsSuperAdmin} from "../services/UserService";
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';

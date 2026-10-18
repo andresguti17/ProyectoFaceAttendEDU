@@ -18,4 +18,4 @@ Buenas prácticas:
 
 Interacciones con otras carpetas:
 - `view` provee los `screens` que el navigator renderiza.
-- `view/storage/TokenStorage.js` y `viewmodels` ayudan a decidir si el usuario está autenticado y qué stack mostrar.
+- `storage/TokenStorage.js` y `viewmodels` ayudan a decidir si el usuario está autenticado y qué stack mostrar.

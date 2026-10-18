@@ -5,7 +5,7 @@ import {useTheme} from "../view/components/common/ThemeContext";
 import {AuthService, authError} from "../services/AuthService";
 import {ApiError} from "../api/apiClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {removeToken, saveToken} from "../view/storage/TokenStorage";
+import {removeToken, saveToken} from "../storage/TokenStorage";
 import {getHighestRole} from "../utils/getHighestRole";
 import AuthResponse from "../models/identity/AuthResponse";
 

@@ -22,6 +22,11 @@ public final class ActorScope {
         return scope instanceof Set<?> set ? (Set<Long>) set : null;
     }
 
+    /** Actores visibles para quien llama, o {@code null} sin restricción. */
+    public static Set<Long> actorIds() {
+        return current();
+    }
+
     public static boolean restricted() {
         return current() != null;
     }

@@ -226,7 +226,7 @@ class AuthControllerTest {
             when(getUserByUsernameUseCase.getUserByUsername("carolina.mendoza")).thenReturn(user);
 
             // Act & Assert
-            mockMvc.perform(get("/api/v1/auth/me").param("username", "carolina.mendoza"))
+            mockMvc.perform(get("/api/v1/auth/me").param("username", "carolina.mendoza").requestAttr("X-User-Id", userId.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.userId").value(userId.toString()))
                     .andExpect(jsonPath("$.username").value("carolina.mendoza"))
@@ -244,7 +244,7 @@ class AuthControllerTest {
             when(getUserByUsernameUseCase.getUserByUsername("carolina@example.com")).thenReturn(user);
 
             // Act & Assert
-            mockMvc.perform(get("/api/v1/auth/me").param("email", "carolina@example.com"))
+            mockMvc.perform(get("/api/v1/auth/me").param("email", "carolina@example.com").requestAttr("X-User-Id", userId.toString()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.username").value("carolina.mendoza"));
         }
@@ -253,10 +253,30 @@ class AuthControllerTest {
         @DisplayName("givenNoIdentifier_whenMe_thenReturn400ValidationError")
         void givenNoIdentifier_whenMe_thenReturn400ValidationError() throws Exception {
             // Act & Assert
-            mockMvc.perform(get("/api/v1/auth/me"))
+            mockMvc.perform(get("/api/v1/auth/me").requestAttr("X-User-Id", userId.toString()))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
                     .andExpect(jsonPath("$.message").value("username or email is required"));
+        }
+
+        @Test
+        @DisplayName("givenNoSession_whenMe_thenReturn401")
+        void givenNoSession_whenMe_thenReturn401() throws Exception {
+            mockMvc.perform(get("/api/v1/auth/me").param("username", "carolina.mendoza"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("givenAnotherUsersIdentifier_whenMe_thenReturn404WithoutLeakingData")
+        void givenAnotherUsersIdentifier_whenMe_thenReturn404WithoutLeakingData() throws Exception {
+            User other = new User();
+            other.setUserId(UUID.randomUUID());
+            other.setUsername("someone.else");
+            when(getUserByUsernameUseCase.getUserByUsername("someone.else")).thenReturn(other);
+
+            mockMvc.perform(get("/api/v1/auth/me").param("username", "someone.else")
+                            .requestAttr("X-User-Id", userId.toString()))
+                    .andExpect(status().isNotFound());
         }
     }
 }

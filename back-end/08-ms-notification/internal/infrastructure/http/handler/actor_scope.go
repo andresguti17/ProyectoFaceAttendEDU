@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -74,15 +75,11 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 		PersonID        string `json:"personId"`
 		SchoolID        *int64 `json:"schoolId"`
 	}
-	// The academic service caps each page at actorPageSize, so the full list is walked page by page.
-	for offset := 0; ; offset += actorPageSize {
-		var page []struct {
-			AcademicActorID int64  `json:"academicActorId"`
-			PersonID        string `json:"personId"`
-			SchoolID        *int64 `json:"schoolId"`
-		}
-		pageURL := fmt.Sprintf("%s/api/v1/academic-actors?limit=%d&offset=%d", cfg.AcademicURL, actorPageSize, offset)
-		if _, err := getJSONStrict(ctx, cfg, pageURL, token, &page); err != nil {
+	if user.PersonID == "" {
+		return map[int64]bool{}, nil
+	}
+	// ?personId= filtra en academic: el actor del llamante sin recorrer el listado capado.
+	if _, err := getJSONStrict(ctx, cfg, cfg.AcademicURL+"/api/v1/academic-actors?personId="+url.QueryEscape(user.PersonID), token, &actors); err != nil {
 		return nil, err
 	}
 		actors = append(actors, page...)
@@ -93,24 +90,46 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 	scope := map[int64]bool{}
 	var own []int64
 	for _, a := range actors {
-		if user.PersonID != "" && strings.EqualFold(a.PersonID, user.PersonID) {
+		if strings.EqualFold(a.PersonID, user.PersonID) {
 			scope[a.AcademicActorID] = true
 			own = append(own, a.AcademicActorID)
 		}
 	}
 
 	if isSchoolAdmin {
+		// Administrador de sede: la sede se deduce del listado completo, recorrido por páginas.
+		var all []struct {
+			AcademicActorID int64  `json:"academicActorId"`
+			PersonID        string `json:"personId"`
+			SchoolID        *int64 `json:"schoolId"`
+		}
+		for offset := 0; ; offset += actorPageSize {
+			var page []struct {
+				AcademicActorID int64  `json:"academicActorId"`
+				PersonID        string `json:"personId"`
+				SchoolID        *int64 `json:"schoolId"`
+			}
+			pageURL := fmt.Sprintf("%s/api/v1/academic-actors?limit=%d&offset=%d", cfg.AcademicURL, actorPageSize, offset)
+			if _, err := getJSONStrict(ctx, cfg, pageURL, token, &page); err != nil {
+				return nil, err
+			}
+			all = append(all, page...)
+			if len(page) < actorPageSize {
+				break
+			}
+		}
+
 		// Administrador de sede: solo los actores de su propia sede, nunca los
 		// de otras instituciones (a diferencia de Super Administrador = nil).
 		ownSchools := map[int64]bool{}
-		for _, a := range actors {
+		for _, a := range all {
 			if scope[a.AcademicActorID] && a.SchoolID != nil {
 				ownSchools[*a.SchoolID] = true
 			}
 		}
 		adminScope := map[int64]bool{}
 		if len(ownSchools) > 0 {
-			for _, a := range actors {
+			for _, a := range all {
 				if a.SchoolID != nil && ownSchools[*a.SchoolID] {
 					adminScope[a.AcademicActorID] = true
 				}
@@ -153,6 +172,30 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 // getJSONStrict is getJSON that treats any non-200 answer as an error: a
 // partial scope must never widen what the caller can see.
 func getJSONStrict(ctx context.Context, cfg AuthConfig, target, token string, out any) (int, error) {
+	status, err := getJSONOnce(ctx, cfg, target, token, out)
+	if err != nil && isTransient(status) {
+		// One retry after a short pause: under load a single slow or reset
+		// inter-service call was enough to answer 503. A second failure still
+		// propagates, so the scope keeps failing secure.
+		select {
+		case <-time.After(retryPause):
+		case <-ctx.Done():
+			return status, err
+		}
+		status, err = getJSONOnce(ctx, cfg, target, token, out)
+	}
+	if err != nil {
+		log.Printf("actor scope: %v", err)
+	}
+	return status, err
+}
+
+const retryPause = 250 * time.Millisecond
+
+// isTransient: transport failure (status 0) or a 5xx answer; 4xx are final.
+func isTransient(status int) bool { return status == 0 || status >= 500 }
+
+func getJSONOnce(ctx context.Context, cfg AuthConfig, target, token string, out any) (int, error) {
 	status, err := getJSON(ctx, cfg.Client, target, token, out)
 	if err == nil && status != http.StatusOK {
 		err = fmt.Errorf("GET %s answered %d", target, status)

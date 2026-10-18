@@ -8,6 +8,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -76,6 +78,29 @@ class CreateSupportingDocumentUseCaseImplTest {
     }
 
     @Nested
+    @DisplayName("TC-05-CD03: Accepted formats and size limit (ERF 6.1)")
+    class AcceptedFormatTests {
+
+        @ParameterizedTest
+        @ValueSource(strings = {"application/pdf", "image/jpeg", "image/png", "IMAGE/PNG"})
+        @DisplayName("Given an accepted mime type of exactly 5 MB when create then it is saved")
+        void givenAcceptedMimeTypeAtTheLimit_whenCreate_thenSave(String mimeType) {
+            // Arrange
+            SupportingDocument doc = validDocument();
+            doc.setMimeType(mimeType);
+            doc.setSizeBytes(5L * 1024 * 1024);
+            when(repository.save(any(SupportingDocument.class))).thenAnswer(call -> call.getArgument(0));
+
+            // Act
+            SupportingDocument result = useCase.create(doc);
+
+            // Assert
+            assertEquals(mimeType, result.getMimeType());
+            verify(repository).save(doc);
+        }
+    }
+
+    @Nested
     @DisplayName("TC-05-CD02: Validation before persistence")
     class ValidationTests {
 
@@ -117,6 +142,34 @@ class CreateSupportingDocumentUseCaseImplTest {
             // Act & Assert
             IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> useCase.create(doc));
             assertEquals("sizeBytes must be > 0", ex.getMessage());
+            verify(repository, never()).save(any());
+            verifyNoInteractions(eventPublisher);
+        }
+
+        @Test
+        @DisplayName("Given a DOCX when create then IllegalArgumentException without save nor publish")
+        void givenUnsupportedMimeType_whenCreate_thenThrowAndNeverPersist() {
+            // Arrange
+            SupportingDocument doc = validDocument();
+            doc.setMimeType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+
+            // Act & Assert
+            IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> useCase.create(doc));
+            assertEquals("mimeType must be one of application/pdf, image/jpeg, image/png", ex.getMessage());
+            verify(repository, never()).save(any());
+            verifyNoInteractions(eventPublisher);
+        }
+
+        @Test
+        @DisplayName("Given a document over 5 MB when create then IllegalArgumentException without save nor publish")
+        void givenSizeOverFiveMegabytes_whenCreate_thenThrowAndNeverPersist() {
+            // Arrange
+            SupportingDocument doc = validDocument();
+            doc.setSizeBytes(5L * 1024 * 1024 + 1);
+
+            // Act & Assert
+            IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> useCase.create(doc));
+            assertEquals("sizeBytes must be <= 5242880 (5 MB)", ex.getMessage());
             verify(repository, never()).save(any());
             verifyNoInteractions(eventPublisher);
         }

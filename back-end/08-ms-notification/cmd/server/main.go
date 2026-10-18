@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/faceattend/notification-service/internal/infrastructure/config"
 	"github.com/faceattend/notification-service/internal/infrastructure/http/handler"
+	"github.com/faceattend/notification-service/internal/infrastructure/kafka"
 )
 
 var startedAt = time.Now()
@@ -101,6 +103,10 @@ func main() {
 		}
 		if container.EmailHandler != nil {
 			container.EmailHandler.Register(r)
+		}
+		// ERF 6.3: alert the apprentice when a justification is approved or rejected.
+		if brokers := os.Getenv("KAFKA_BROKERS"); brokers != "" && pool != nil {
+			go kafka.RunJustificationConsumer(context.Background(), strings.Split(brokers, ","), container.JustificationResult)
 		}
 	}
 
