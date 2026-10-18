@@ -4,7 +4,7 @@
 //  Fuente de verdad para el frontend. Rutas verificadas contra:
 //  - back-end/01..09 controllers/routers (Java/Fastify/FastAPI/Go)
 //  - back-end/99-api-gateway/kong/kong.yml (prefijo /api/v1)
-//  Todas las rutas se consumen a través del gateway Kong :8080.
+//  Todas las rutas se consumen a través del gateway Kong :8000.
 // ============================================================
 
 export const API_V1 = "/api/v1";

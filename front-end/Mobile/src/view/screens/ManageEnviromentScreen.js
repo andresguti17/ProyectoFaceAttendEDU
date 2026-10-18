@@ -143,7 +143,7 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                     {item.nombre}
                 </Text>
                 <Text style={[styles.manageEnvironmentItemMeta, {color: colors.textSecondary}]} numberOfLines={1}>
-                    {`${item.ubicacion || ''} • Cap. ${item.capacidad || '-'}`}
+                    {t('manageEnvironment.capacityLine', {location: item.ubicacion || '', capacity: item.capacidad || '-'})}
                 </Text>
             </View>
             <View style={styles.manageEnvironmentItemActions}>

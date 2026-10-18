@@ -10,6 +10,8 @@
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card } from "../../components/common";
+import { useAuth } from "../../../context/AuthContext";
+import { pushInstitutionConfig, loadBackendOverrides, parseSetting } from "../../../services/api/settingsPersistence";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useDateFormat } from "../../components/hooks/useDateFormat";
@@ -53,6 +55,7 @@ import {
 export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onSaveSuccessColors, previewAccent, onPreviewChange, previewTheme, onHasChanges, onColorChanges }) {
     const { isSmall } = useResponsive();
     const { currentLanguage, t } = useTranslation();
+    const { user } = useAuth();
     const { dateFormat } = useDateFormat(); // Forzar re-render cuando cambie el formato
 
     // ── Estado no editable (UI temporal) ──────────────────────
@@ -94,15 +97,25 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
         hasChanges,
         save,
         discard,
+        reset,
     } = useEditableConfig(initialConfig, {
-        onSave: (cfg) => {
+        onSave: async (cfg) => {
             // Transformar sessionTime a número antes de guardar
-            const success = updateInstitutionConfig({
+            const merged = {
                 ...cfg,
                 confidenceThreshold: cfg.confidence,
                 sessionTime: parseInt(cfg.sessionTime),
-            });
-            return success;
+            };
+            const success = updateInstitutionConfig(merged);
+            if (!success) return false;
+            // Réplica en el backend (upsert por clave); si falla, el
+            // guardado se reporta como fallido para no mostrar éxito falso.
+            try {
+                await pushInstitutionConfig(user?.schoolId ?? null, merged);
+                return true;
+            } catch {
+                return false;
+            }
         },
         onHasChanges,
     });
@@ -111,6 +124,31 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
     useEffect(() => {
         if (onSave) onSave(save);
     }, [onSave, save]);
+
+    // ── Hidratación desde el backend ──────────────────────────
+    // La réplica web.* por sede es la fuente compartida entre
+    // dispositivos: al abrir se fusiona sobre los valores locales.
+    // Si el backend no responde, se conserva lo local sin errores.
+    useEffect(() => {
+        let alive = true;
+        loadBackendOverrides(user?.schoolId ?? null)
+            .then((overrides) => {
+                if (!alive) return;
+                const keys = Object.keys(overrides).filter((k) => k in initialConfig);
+                if (keys.length === 0) return;
+                const merged = { ...initialConfig };
+                for (const key of keys) {
+                    merged[key] = parseSetting(overrides[key], initialConfig[key]);
+                }
+                if (merged.sessionTime != null) merged.sessionTime = String(merged.sessionTime);
+                reset(merged);
+            })
+            .catch(() => {});
+        return () => {
+            alive = false;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         if (onDiscard) onDiscard(discard);

@@ -19,6 +19,10 @@ import React, { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+import { authApi } from "../services/api/authApi";
+import { authorizationApi } from "../services/api/authorizationApi";
+import { provisionStaff, provisionStudent, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails, findExistingStudents } from "../services/api/staffProvisioning";
+import { userByPersonMap } from "../services/api/referenceData";
 import { isValidEmail } from "../core/utils/validation";
 
 // Usuarios pintados por página (la vista de Usuarios pagina en el cliente
@@ -33,6 +37,12 @@ export const USER_TYPES = {
     ADMIN: "admin",
     ALL: "all",
 };
+
+function isUuid(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        String(value ?? "")
+    );
+}
 
 export const USER_TYPE_LABELS = {
     [USER_TYPES.STUDENT]: "Estudiante",
@@ -49,6 +59,15 @@ export const EMPTY_USER_FORM = {
     email: "",
     course: "",
     role: USER_TYPES.STUDENT,
+    documentNumber: "",
+    documentType: "",
+    bloodType: "",
+    birthDate: "",
+    address: "",
+    phone: "",
+    password: "",
+    schoolId: "",
+    cohortId: "",
     attendance: 0,
     hasFacial: false,      // Registro facial
     hasFingerprint: false, // Registro de huella dactilar
@@ -128,17 +147,29 @@ export function validateUserForm(form) {
     if (!form.email.trim()) return "El correo es requerido";
     if (!isValidEmail(form.email.trim())) return "El formato del correo electrónico no es válido";
     if (!form.role) return "El rol es requerido";
-    
+
+    // Todos los roles se crean en el backend (POST /persons exige
+    // documentNumber, POST /users exige password de 8-100 chars).
+    if (!String(form.documentNumber ?? "").trim()) return "El documento es requerido";
+    if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
+    // Campos opcionales de persona (PersonDto): formato fecha si se informa.
+    if (String(form.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form.birthDate).trim())) {
+        return "La fecha de nacimiento debe tener formato AAAA-MM-DD";
+    }
+
     // Validación adicional para estudiantes
     if (form.role === USER_TYPES.STUDENT && !form.course?.trim()) {
         return "El programa es requerido para estudiantes";
     }
-    
-    // Validación adicional para profesores
-    if (form.role === USER_TYPES.TEACHER && !form.course?.trim()) {
-        return "El departamento es requerido para profesores";
+
+    // El docente/administrador queda vinculado a su sede (actor).
+    if (
+        (form.role === USER_TYPES.TEACHER || form.role === USER_TYPES.ADMIN) &&
+        !String(form.schoolId ?? "").trim()
+    ) {
+        return "Selecciona la sede";
     }
-    
+
     return null;
 }
 
@@ -163,6 +194,7 @@ export function useUsersViewModel(
     const [selected, setSelected] = useState(null);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
     
     // Estado de ordenamiento (inicializado desde parámetros de navegación)
     const [sortBy, setSortBy] = useState(initialSortBy || null);
@@ -287,6 +319,23 @@ export function useUsersViewModel(
             })),
         ];
     }, [appData.courses, myCourseIds, t]);
+
+    // ── Cursos para el "Curso destino" de la importación CSV ────
+    // El valor es el courseCode (provisionStudent resuelve la cohorte por
+    // código); mismo filtro de alcance que courseOptions. Las filas del
+    // archivo sin columna course se matriculan en este curso.
+    const importCourseOptions = useMemo(
+        () =>
+            (appData.courses || [])
+                .filter((course) => !myCourseIds || myCourseIds.includes(course.id))
+                .map((course) => ({
+                    value: String(course.code ?? ""),
+                    label: `${course.code} — ${course.name}`,
+                    icon: "book-open",
+                }))
+                .filter((opt) => opt.value),
+        [appData.courses, myCourseIds]
+    );
 
     // ── Filtros de tipo de usuario ────────────────────────────
     
@@ -446,6 +495,21 @@ export function useUsersViewModel(
 
             // Delegar al método correspondiente según el tipo de usuario
             if (form.role === USER_TYPES.STUDENT) {
+                try {
+                    await provisionStudent({
+                        name: form.name.trim(),
+                        code: form.code.trim(),
+                        email: form.email.trim(),
+                        documentNumber: String(form.documentNumber ?? "").trim(),
+                        password: String(form.password ?? ""),
+                        courseCode: form.course.trim(),
+                        cohortId: String(form.cohortId ?? "").trim() || null,
+                        details: form,
+                    });
+                } catch (e) {
+                    return e?.message || "No se pudo registrar el estudiante en el backend";
+                }
+
                 await appData.addStudent({
                     ...baseUser,
                     course: form.course.trim(),
@@ -454,46 +518,195 @@ export function useUsersViewModel(
                     hasFacial: form.hasFacial || false,
                     hasFingerprint: form.hasFingerprint || false,
                 });
-            } else {
-                // Para profesores y administradores, agregar a la lista general users
-                const userData = {
-                    ...baseUser,
-                    id: `${form.role.charAt(0)}${Date.now()}`, // Generar ID único
-                };
-
-                if (form.role === USER_TYPES.TEACHER) {
-                    userData.role = "teacher";
-                    userData.userType = USER_TYPES.TEACHER;
-                    userData.course = form.course ? form.course.trim() : null;
-                    userData.department = form.course ? form.course.trim() : null;
-                    userData.grade = "Docente";
-                    userData.attendance = 0;
-                    userData.hasFacial = form.hasFacial || false;
-                    userData.hasFingerprint = form.hasFingerprint || false;
-                } else if (form.role === USER_TYPES.ADMIN) {
-                    userData.role = "admin";
-                    userData.userType = USER_TYPES.ADMIN;
-                    // Los administradores no necesitan campos adicionales
-                }
-
-                await appData.addUser(userData);
+                return null;
             }
-            
+
+            // Docentes y administradores: alta real en el backend
+            // (persona + usuario + rol, más academic_actor en docentes y
+            // vínculo a sede con actor ADMIN en administradores).
+            try {
+                await provisionStaff({
+                    name: form.name.trim(),
+                    code: form.code.trim(),
+                    email: form.email.trim(),
+                    documentNumber: String(form.documentNumber ?? "").trim(),
+                    password: String(form.password ?? ""),
+                    role: form.role === USER_TYPES.TEACHER ? "teacher" : "admin",
+                    schoolId: String(form.schoolId ?? "").trim() || user?.schoolId,
+                    details: form,
+                });
+            } catch (e) {
+                return e?.message || "No se pudo registrar el usuario en el backend";
+            }
+
+            // Se trae la lista real del backend en vez de fabricar una fila
+            // local: un espejo local con el "código" del formulario (que no
+            // es el username real, ver provisionStaff) quedaba como fila
+            // duplicada para siempre frente a la que luego trae loadUsers().
+            await appData.reloadUsers();
+
             return null;
         },
-        [appData]
+        [appData, user]
     );
 
     const importUsers = useCallback(
         async (drafts, userType = USER_TYPES.STUDENT) => {
             // Delegar al método correspondiente según el tipo
             if (userType === USER_TYPES.STUDENT) {
-                return appData.importStudents(drafts);
+                // Alta real en el backend por fila (persona + actor + matrícula +
+                // usuario + rol). Antes esto solo guardaba filas falsas en
+                // AsyncStorage (appData.importStudents): "importación exitosa"
+                // sin crear nada en el backend.
+                const result = await bulkImportStudents(drafts);
+                // Refleja en la UI lo que sí se creó de verdad (sin esto los
+                // estudiantes importados no aparecían hasta recargar la página).
+                // Con try/catch: si la recarga falla (p. ej. 429 del rate-limit
+                // al terminar una tanda grande), el resultado de la importación
+                // no se pierde detrás de un "Error al importar" genérico.
+                if (result.success > 0) {
+                    try { await appData.reloadStudents?.(); } catch { /* el usuario puede recargar a mano */ }
+                }
+                return result;
             }
-            // TODO: Agregar importación para otros tipos
-            return { success: 0, errors: [] };
+            // Sin CSV con documento/contraseña no hay alta masiva de
+            // docentes/administradores: error explícito, nunca éxito falso.
+            throw new Error("Bulk import is only available for students");
         },
         [appData]
+    );
+
+    // OJO: las filas de estudiante traen id = academic_actor_id (numérico),
+    // no el UUID de app_user: el userId real se resuelve por persona.
+    const resolveUserId = useCallback(async (target) => {
+        if (!target?.personId) return null;
+        if (isUuid(target?.id)) return target.id;
+        if (target?.userType && target.userType !== USER_TYPES.STUDENT) return target.id ?? null;
+        try {
+            const byPerson = await userByPersonMap();
+            const linked = byPerson.get(target.personId);
+            return linked?.userId ?? linked?.user_id ?? null;
+        } catch {
+            return null;
+        }
+    }, []);
+
+    // Edición real: PUT /persons/{id} + PUT /users/{id} (+ PATCH de
+    // estado si cambió). Resuelve el UUID de app_user igual que el toggle.
+    const updateUserDetails = useCallback(
+        async (target, form) => {
+            if (!target?.personId) return "Falta el vínculo con el backend";
+            const userId = await resolveUserId(target);
+            if (!userId) return "Falta el vínculo con el backend";
+            if (!String(form?.name ?? "").trim() || !String(form?.lastName ?? "").trim()) {
+                return "El nombre y el apellido son requeridos";
+            }
+            if (!String(form?.documentNumber ?? "").trim()) return "El documento es requerido";
+            if (!String(form?.email ?? "").trim()) return "El correo es requerido";
+            if (!String(form?.username ?? "").trim()) return "El usuario es requerido";
+
+            const nextActive = (form?.status ?? "active") === "active";
+            const wasActive = (target?.status ?? "active") === "active";
+            try {
+                await authApi.updatePerson(target.personId, {
+                    documentNumber: String(form.documentNumber).trim(),
+                    name: String(form.name).trim(),
+                    lastName: String(form.lastName).trim(),
+                    email: String(form.email).trim().toLowerCase(),
+                    phone: String(form.phone ?? "").trim() || null,
+                    ...personDetails(form),
+                });
+                await authApi.updateUser(userId, {
+                    username: String(form.username).trim(),
+                });
+                if (nextActive !== wasActive) {
+                    await authApi.setUserStatus(userId, nextActive);
+                    await authApi.setPersonStatus(target.personId, nextActive).catch(() => {});
+                }
+            } catch (e) {
+                return e?.message || "No se pudo actualizar el usuario en el backend";
+            }
+
+            appData.patchStaff(target.userType || USER_TYPES.STUDENT, target.id, {
+                name: `${String(form.name).trim()} ${String(form.lastName).trim()}`.trim(),
+                email: String(form.email).trim().toLowerCase(),
+                username: String(form.username).trim(),
+                status: nextActive ? "active" : "inactive",
+            });
+            if (selected?.id === target.id) {
+                setSelected((prev) =>
+                    prev
+                        ? {
+                              ...prev,
+                              name: `${String(form.name).trim()} ${String(form.lastName).trim()}`.trim(),
+                              email: String(form.email).trim().toLowerCase(),
+                              username: String(form.username).trim(),
+                              status: nextActive ? "active" : "inactive",
+                          }
+                        : prev
+                );
+            }
+            return null;
+        },
+        [appData, selected, resolveUserId]
+    );
+
+    // Cambio de rol (HU-IAM-010, FR 4.6, solo Super Admin en UI):
+    // resuelve los role_id del backend por nombre y mueve al usuario
+    // del rol anterior al nuevo vía 02-ms-authorization. Incluye
+    // "superadmin" para que el rol global sea otorgable sin tocar la DB.
+    const changeUserRole = useCallback(
+        async (target, nextUserType) => {
+            if (!target?.personId) return "Falta el vínculo con el backend";
+            const userId = await resolveUserId(target);
+            if (!userId) return "Falta el vínculo con el backend";
+            if (![USER_TYPES.STUDENT, USER_TYPES.TEACHER, USER_TYPES.ADMIN, "superadmin"].includes(nextUserType)) {
+                return "Rol no válido";
+            }
+            if ((target.userType || USER_TYPES.STUDENT) === nextUserType) return null;
+            const candidates = {
+                [USER_TYPES.STUDENT]: ["APRENDIZ", "STUDENT", "ESTUDIANTE"],
+                [USER_TYPES.TEACHER]: ["INSTRUCTOR", "DOCENTE", "TEACHER"],
+                [USER_TYPES.ADMIN]: ["ADMINISTRADOR", "SCHOOL_ADMIN", "ADMIN", "RECTOR", "COORDINATOR"],
+                superadmin: ["SUPER_ADMINISTRADOR", "SUPER_ADMIN"],
+            };
+            const norm = (v) => String(v ?? "").trim().replace(/\s+/g, "_").toUpperCase();
+            const pickId = (roles, names) => {
+                const list = Array.isArray(roles) ? roles : roles?.data ?? [];
+                for (const want of names) {
+                    const found = list.find((r) => norm(r.roleName ?? r.role_name) === want);
+                    if (found) return found.roleId ?? found.role_id ?? found.id;
+                }
+                return null;
+            };
+            try {
+                const [allRoles, current] = await Promise.all([
+                    authorizationApi.listRoles(),
+                    authorizationApi.userRoles(userId),
+                ]);
+                const currentList = Array.isArray(current) ? current : current?.data ?? [];
+                const prevNames = candidates[target.userType || USER_TYPES.STUDENT];
+                const prev = currentList.find((r) => prevNames.includes(norm(r.roleName ?? r.role_name)));
+                const prevId = prev ? (prev.roleId ?? prev.role_id ?? prev.id) : null;
+                const nextId = pickId(allRoles, candidates[nextUserType]);
+                if (nextId == null) return "El rol no existe en el backend";
+                await authorizationApi.assignRole(userId, nextId);
+                if (prevId != null && prevId !== nextId) {
+                    await authorizationApi.removeRole(userId, prevId).catch(() => {});
+                }
+            } catch (e) {
+                return e?.message || "No se pudo cambiar el rol en el backend";
+            }
+            appData.patchStaff(target.userType || USER_TYPES.STUDENT, target.id, {
+                userType: nextUserType,
+            });
+            if (selected?.id === target.id) {
+                setSelected((prev) => (prev ? { ...prev, userType: nextUserType } : prev));
+            }
+            await appData.reloadUsers().catch(() => {});
+            return null;
+        },
+        [appData, selected, resolveUserId]
     );
 
     function selectUser(user) {
@@ -503,6 +716,76 @@ export function useUsersViewModel(
     function clearSelection() {
         setSelected(null);
     }
+
+    // Activar/desactivar real (HU-IAM-007): PATCH /users/{id}/status +
+    // PATCH /persons/{id}/status. Soft-delete universal: jamás borrado físico.
+    const toggleUserStatus = useCallback(
+        async (target, nextActive) => {
+            const userId = await resolveUserId(target);
+            if (!userId) {
+                return target?.userType === USER_TYPES.STUDENT
+                    ? "El estudiante no tiene usuario vinculado"
+                    : "Falta el vínculo con el backend";
+            }
+            try {
+                await authApi.setUserStatus(userId, nextActive);
+                await authApi.setPersonStatus(target.personId, nextActive).catch(() => {});
+            } catch (e) {
+                return e?.message || "No se pudo cambiar el estado en el backend";
+            }
+            appData.patchStaff(target.userType || USER_TYPES.STUDENT, target.id, {
+                status: nextActive ? "active" : "inactive",
+            });
+            if (selected?.id === target.id) {
+                setSelected((prev) =>
+                    prev ? { ...prev, status: nextActive ? "active" : "inactive" } : prev
+                );
+            }
+            return null;
+        },
+        [appData, selected, resolveUserId]
+    );
+
+    // Eliminar lógico (HU-IAM-008): desactivar (mismo alcance que el toggle).
+    // Sin DELETE físico (AGENTS.md soft-delete).
+    const removeUser = useCallback(
+        async (target) => {
+            const err = await toggleUserStatus(target, false);
+            if (err) return err;
+            if (selected?.id === target?.id) setSelected(null);
+            return null;
+        },
+        [toggleUserStatus, selected]
+    );
+
+    // Acción en lote (activate | deactivate | delete) sobre varios usuarios:
+    // secuencial para no saturar el backend y para que un fallo individual
+    // no aborte el resto. La cuenta propia se omite: desactivarse a uno
+    // mismo dejaría la sede sin quien la administre.
+    const bulkUpdateUsers = useCallback(
+        async (targets, action) => {
+            const failures = [];
+            let done = 0;
+            for (const target of targets ?? []) {
+                if (user?.personId && target?.personId === user.personId) {
+                    failures.push({
+                        id: target?.id,
+                        name: target?.name,
+                        reason: "No puedes aplicar esta acción a tu propia cuenta",
+                    });
+                    continue;
+                }
+                const err =
+                    action === "delete"
+                        ? await removeUser(target)
+                        : await toggleUserStatus(target, action === "activate");
+                if (err) failures.push({ id: target?.id, name: target?.name, reason: err });
+                else done += 1;
+            }
+            return { done, failures };
+        },
+        [user, removeUser, toggleUserStatus]
+    );
 
     // ── Funciones de filtrado avanzado ─────────────────────────
 
@@ -559,6 +842,7 @@ export function useUsersViewModel(
         pageSize: USERS_PAGE_SIZE,
         setPage,
         courseOptions,
+        importCourseOptions,
         userTypeFilters,
         statusFilters,
         selected,
@@ -579,6 +863,7 @@ export function useUsersViewModel(
         // Estado de modales
         showRegisterModal,
         showImportModal,
+        showEditModal,
         
         // Setters de filtros básicos
         setSearch,
@@ -601,10 +886,19 @@ export function useUsersViewModel(
         closeRegisterModal: () => setShowRegisterModal(false),
         openImportModal: () => setShowImportModal(true),
         closeImportModal: () => setShowImportModal(false),
-        
+        openEditModal: () => setShowEditModal(true),
+        closeEditModal: () => setShowEditModal(false),
+
         // Acciones de CRUD
         registerUser,
         importUsers,
+        updateUserDetails,
+        toggleUserStatus,
+        removeUser,
+        bulkUpdateUsers,
+        changeUserRole,
+        cohortsForCourse: cohortsForCourseCode,
+        findExistingStudents,
         
         // Función para manejar actualización de usuario desde el modal de edición
         handleUserUpdated: (updatedUser) => {

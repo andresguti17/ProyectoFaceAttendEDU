@@ -19,6 +19,7 @@ export default function EnvironmentDetailModal({
     onAddSchedule,
     onEditSchedule,
     onDeleteSchedule,
+    canManage = false,
 }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
@@ -28,25 +29,29 @@ export default function EnvironmentDetailModal({
 
     const footer = (
         <>
-            <Button
-                variant="outline"
-                size="sm"
-                onPress={onDelete}
-                leftIcon={<Feather name="trash-2" size={14} color={c.status.danger} />}
-            >
-                <Text style={{ color: c.status.danger }}>{t("Eliminar")}</Text>
-            </Button>
+            {canManage && (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onPress={onDelete}
+                    leftIcon={<Feather name="trash-2" size={14} color={c.status.danger} />}
+                >
+                    <Text style={{ color: c.status.danger }}>{t("Eliminar")}</Text>
+                </Button>
+            )}
             <Button variant="ghost" size="sm" onPress={onClose}>
                 {t("Cerrar")}
             </Button>
-            <Button
-                variant="primary"
-                size="sm"
-                onPress={onEdit}
-                leftIcon={<Feather name="edit-2" size={14} color="#fff" />}
-            >
-                {t("Editar ambiente")}
-            </Button>
+            {canManage && (
+                <Button
+                    variant="primary"
+                    size="sm"
+                    onPress={onEdit}
+                    leftIcon={<Feather name="edit-2" size={14} color="#fff" />}
+                >
+                    {t("Editar ambiente")}
+                </Button>
+            )}
         </>
     );
 
@@ -58,7 +63,7 @@ export default function EnvironmentDetailModal({
             title={`${t("Ambiente")} ${environment.number}`}
             icon="home"
             iconColor={c.brand.primary}
-            size="md"
+            size="lg"
             footer={footer}
             bodyScrollEnabled={false}
         >
@@ -125,19 +130,21 @@ export default function EnvironmentDetailModal({
                     <Text style={{ fontSize: 16, fontWeight: "700", color: c.text.primary }}>
                         {t("Horarios asignados")}
                     </Text>
-                    <Button 
-                        variant="primary" 
-                        size="sm" 
-                        onPress={onAddSchedule}
-                        leftIcon={<Feather name="plus" size={14} color="#fff" />}
-                    >
-                        {t("Añadir horario")}
-                    </Button>
+                    {canManage && (
+                        <Button 
+                            variant="primary" 
+                            size="sm" 
+                            onPress={onAddSchedule}
+                            leftIcon={<Feather name="plus" size={14} color="#fff" />}
+                        >
+                            {t("Añadir horario")}
+                        </Button>
+                    )}
                 </View>
 
                 {/* Sección SCROLLEABLE */}
-                <ScrollView 
-                    style={{ flex: 1, maxHeight: 140 }}
+                <ScrollView
+                    style={{ flex: 1, maxHeight: 320, minHeight: 160 }}
                     showsVerticalScrollIndicator={false}
                     nestedScrollEnabled={true}
                 >
@@ -156,6 +163,7 @@ export default function EnvironmentDetailModal({
                                     onEdit={() => onEditSchedule(schedule)}
                                     onDelete={() => onDeleteSchedule(schedule.id)}
                                     isLast={i === environment.schedules.length - 1}
+                                    canManage={canManage}
                                 />
                             ))
                         )}

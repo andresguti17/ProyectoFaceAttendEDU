@@ -14,6 +14,7 @@ import java.util.Optional;
 public interface AttendanceRecordJpaRepository extends JpaRepository<AttendanceRecordJpaEntity, Long> {
     Optional<AttendanceRecordJpaEntity> findByClassSessionIdAndAcademicActorId(Long classSessionId, Long academicActorId);
     List<AttendanceRecordJpaEntity> findByClassSessionId(Long classSessionId);
+    List<AttendanceRecordJpaEntity> findByAcademicActorId(Long academicActorId);
 
     /**
      * Listado filtrado y paginado en SQL (índices uq_attendance_session_actor e

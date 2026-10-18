@@ -19,6 +19,7 @@ import { Feather } from "@expo/vector-icons";
 import { Button, EmptyState, SearchInput, PageHeader } from "./components/common";
 import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
+import { useAppData } from "../context/AppDataContext";
 import { useEnvironmentsViewModel } from "../viewmodels/useEnvironmentsViewModel";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
@@ -34,12 +35,29 @@ import {
 // ── EnvironmentsView ─────────────────────────────────────────
 
 export default function EnvironmentsView() {
-    const { isSmall } = useResponsive();
+    const { isSmall, isMedium } = useResponsive();
     const { theme } = useTheme();
     const c = theme.colors;
     const vm = useEnvironmentsViewModel();
     const { t } = useTranslation();
     const permissions = useRolePermissions();
+    const appData = useAppData();
+
+    // Código de ficha por cohortId para las filas de horario de la tarjeta.
+    const cohortCodeById = React.useMemo(() => {
+        const map = new Map();
+        for (const ficha of appData.fichas ?? []) {
+            if (ficha?.code) {
+                map.set(String(ficha.id ?? ficha.cohortId), ficha.code);
+                map.set(Number(ficha.id ?? ficha.cohortId), ficha.code);
+            }
+        }
+        return map;
+    }, [appData.fichas]);
+    const cohortCodeOf = React.useCallback(
+        (cohortId) => cohortCodeById.get(cohortId) ?? cohortCodeById.get(Number(cohortId)) ?? null,
+        [cohortCodeById]
+    );
     const pushNotification = usePushNotification();
 
     if (vm.isLoading) {
@@ -252,8 +270,19 @@ export default function EnvironmentsView() {
                 ) : (
                     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
                         {vm.filtered.map((env) => (
-                            <View key={env.id} style={{ flexBasis: isSmall ? "100%" : "30%", flexGrow: 1 }}>
-                                <EnvironmentCard environment={env} onPress={() => vm.selectEnvironment(env)} />
+                            <View
+                                key={env.id}
+                                style={{
+                                    flexBasis: isSmall ? "100%" : isMedium ? "48%" : "31%",
+                                    flexGrow: 0,
+                                    flexShrink: 1,
+                                }}
+                            >
+                                <EnvironmentCard
+                                    environment={env}
+                                    onPress={() => vm.selectEnvironment(env)}
+                                    cohortCodeOf={cohortCodeOf}
+                                />
                             </View>
                         ))}
                     </View>
@@ -269,7 +298,8 @@ export default function EnvironmentsView() {
                     onDelete={() => handleDeleteEnvironment(vm.selected.id)}
                     onAddSchedule={() => vm.openAddSchedule(vm.selected.id)}
                     onEditSchedule={(schedule) => vm.openEditSchedule(vm.selected.id, schedule)}
-                    onDeleteSchedule={(scheduleId) => handleDeleteSchedule(vm.selected.id, scheduleId)}
+                    onDeleteSchedule={(scheduleId) => vm.removeSchedule(vm.selected.id, scheduleId)}
+                    canManage={permissions.canManageEnvironments}
                 />
             )}
 
@@ -298,6 +328,7 @@ export default function EnvironmentsView() {
                 onSave={vm.saveSchedule}
                 getCurrentEnvironment={vm.getCurrentEnvironment}
                 getCourseByCode={vm.getCourseByCode}
+                getCohortsForCourse={vm.cohortsForCourse}
             />
         </View>
     );

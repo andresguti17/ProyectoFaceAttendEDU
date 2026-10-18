@@ -9,7 +9,7 @@ never removes it, so the review trail survives.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
 from domain.entities.update_case import BiometricUpdateCase
@@ -18,7 +18,11 @@ from domain.value_objects.biometric_type import BiometricType
 from domain.value_objects.update_case_status import UpdateCaseStatus
 from infrastructure.config.dependencies import get_update_case_repository
 from infrastructure.web.schemas.responses import update_case_response
-from infrastructure.web.security import require_permission
+from infrastructure.web.security import (
+    ensure_can_touch_case_person,
+    ensure_can_touch_person,
+    require_permission,
+)
 
 router = APIRouter(prefix="/api/v1/biometric", tags=["update-requests"])
 
@@ -38,9 +42,13 @@ class ReviewUpdateRequestIn(BaseModel):
 @router.post("/update-request", status_code=status.HTTP_201_CREATED)
 async def create_update_request(
     req: UpdateRequestIn,
+    request: Request,
     _auth: None = Depends(require_permission("biometric.case:request")),
     repository: UpdateCaseRepositoryPort = Depends(get_update_case_repository),
 ):
+    # Self always allowed; a reviewer may also request for someone in their own
+    # school — never another person outside both of those (RN cross-tenant).
+    await ensure_can_touch_person(request, req.person_id)
     case = BiometricUpdateCase(
         person_id=req.person_id,
         biometric_type=BiometricType(req.biometric_type),
@@ -53,9 +61,11 @@ async def create_update_request(
 @router.get("/update-requests/{person_id}")
 async def list_update_requests(
     person_id: str,
+    request: Request,
     _auth: None = Depends(require_permission("biometric.case:request")),
     repository: UpdateCaseRepositoryPort = Depends(get_update_case_repository),
 ):
+    await ensure_can_touch_person(request, person_id)
     cases = await repository.list_for_person(person_id)
     return {"requests": [update_case_response(case) for case in cases]}
 
@@ -64,9 +74,15 @@ async def list_update_requests(
 async def review_update_request(
     request_id: str,
     req: ReviewUpdateRequestIn,
+    request: Request,
     _auth: None = Depends(require_permission("biometric.case:review")),
     repository: UpdateCaseRepositoryPort = Depends(get_update_case_repository),
 ):
+    case = await repository.find_by_request_id(request_id)
+    if case is None:
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
+    # A reviewer only reviews cases within their own school (Super Administrador: any).
+    await ensure_can_touch_case_person(request, case.person_id)
     reviewed = await repository.review(request_id, UpdateCaseStatus(req.status))
     if reviewed is None:
         raise HTTPException(status_code=404, detail=NOT_FOUND)
@@ -76,9 +92,14 @@ async def review_update_request(
 @router.delete("/update-request/{request_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_update_request(
     request_id: str,
+    request: Request,
     _auth: None = Depends(require_permission("biometric.case:review")),
     repository: UpdateCaseRepositoryPort = Depends(get_update_case_repository),
 ):
+    case = await repository.find_by_request_id(request_id)
+    if case is None:
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
+    await ensure_can_touch_case_person(request, case.person_id)
     if not await repository.deactivate(request_id):
         raise HTTPException(status_code=404, detail=NOT_FOUND)
     return None

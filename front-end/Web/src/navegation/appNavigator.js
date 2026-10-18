@@ -24,6 +24,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LandingScreen from "../view/screens/LandingScreen";
 import LoginScreen from "../view/screens/LoginScreen";
 import SignupScreen from "../view/screens/SignupScreen";
+import RecoveryScreen from "../view/screens/RecoveryScreen";
 
 // ── Importación de Screens Autenticados ─────────────────────
 import DashboardScreen from "../view/screens/DashboardScreen";
@@ -39,6 +40,9 @@ import JustificationsScreen from "../view/screens/JustificationsScreen";
 import AcademicScreen from "../view/screens/AcademicScreen";
 import ContactsScreen from "../view/screens/ContactsScreen";
 import BiometricsScreen from "../view/screens/BiometricsScreen";
+import RolesScreen from "../view/screens/RolesScreen";
+import AlertsScreen from "../view/screens/AlertsScreen";
+import AttendanceKioskScreen from "../view/screens/AttendanceKioskScreen";
 
 // ── Importación de Componentes de Layout ────────────────────
 import AuthMiddleware from "../view/authorized/AuthMiddleware";
@@ -60,6 +64,9 @@ export default function AppNavigator() {
     const ContactsWrapped = React.useMemo(() => AuthMiddleware(ContactsScreen), []);
     const BiometricsWrapped = React.useMemo(() => AuthMiddleware(BiometricsScreen), []);
     const SettingsWrapped = React.useMemo(() => AuthMiddleware(SettingsScreen), []);
+    const RolesWrapped = React.useMemo(() => AuthMiddleware(RolesScreen), []);
+    const AlertsWrapped = React.useMemo(() => AuthMiddleware(AlertsScreen), []);
+    const AttendanceKioskWrapped = React.useMemo(() => AuthMiddleware(AttendanceKioskScreen), []);
 
     return (
         <Stack.Navigator
@@ -83,6 +90,11 @@ export default function AppNavigator() {
                 component={SignupScreen}
             />
 
+            <Stack.Screen
+                name="FaceAttendEDU-Recovery"
+                component={RecoveryScreen}
+            />
+
             {/* ── Rutas Autenticadas (con AuthMiddleware) ─────── */}
             <Stack.Screen name="Dashboard" component={DashboardWrapped} />
             <Stack.Screen name="Users" component={UsersWrapped} />
@@ -97,6 +109,9 @@ export default function AppNavigator() {
             <Stack.Screen name="Contacts" component={ContactsWrapped} />
             <Stack.Screen name="Biometrics" component={BiometricsWrapped} />
             <Stack.Screen name="Settings" component={SettingsWrapped} />
+            <Stack.Screen name="Roles" component={RolesWrapped} />
+            <Stack.Screen name="Alerts" component={AlertsWrapped} />
+            <Stack.Screen name="AttendanceKiosk" component={AttendanceKioskWrapped} />
         </Stack.Navigator>
     );
 }

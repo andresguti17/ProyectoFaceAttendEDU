@@ -39,7 +39,8 @@
     "activate": "Ativar",
     "deactivate": "Desativar",
     "logoLabel": "Logotipo do FaceAttend",
-    "logoPlaceholder": "logotipo"
+    "logoPlaceholder": "logotipo",
+    "confirm": "Confirmar"
   },
   "login": {
     "title": "Login",
@@ -706,7 +707,8 @@
     "justificationUpdated": "Tipo de justificativa atualizado.",
     "newJustificationType": "Novo tipo de justificativa",
     "editJustificationType": "Editar tipo de justificativa",
-    "updateJustification": "Salvar alterações"
+    "updateJustification": "Salvar alterações",
+    "categoryGeneral": "Geral"
   },
   "justifications": {
     "validList": "Justificativas Válidas",
@@ -780,7 +782,9 @@
       "saveButton": "Salvar alterações",
       "saving": "Salvando...",
       "successMessage": "Perfil atualizado com sucesso",
-      "successTitle": "Perfil atualizado"
+      "successTitle": "Perfil atualizado",
+      "enterEmail": "Digite seu e-mail",
+      "enterPhone": "Digite seu número de telefone"
     },
     "schoolInfo": "Informações da escola",
     "schoolName": "Nome da escola",
@@ -1023,7 +1027,8 @@
     "sending": "Enviando código",
     "sendA11y": "Enviar código de recuperação",
     "emailHint": "Digite seu e-mail para receber o código de recuperação",
-    "waitSeconds": "Aguarde {{seconds}} segundos"
+    "waitSeconds": "Aguarde {{seconds}} segundos",
+    "retryIn": "Tentar novamente em {{seconds}}s"
   },
   "passwordUpdate": {
     "title": "Nova senha",
@@ -1049,7 +1054,9 @@
     "a11yRequirementsHint": "Deve ter pelo menos 8 caracteres, com maiúsculas, minúsculas, números e caracteres especiais.",
     "a11yShowConfirmation": "Mostrar confirmação",
     "a11yHideConfirmation": "Ocultar confirmação",
-    "a11yCancel": "Cancelar e descartar alterações"
+    "a11yCancel": "Cancelar e descartar alterações",
+    "enterNew": "Digite sua nova senha",
+    "confirmNew": "Confirme a senha digitada"
   },
   "verifyCode": {
     "title": "Verifique seu e-mail",
@@ -1068,7 +1075,10 @@
     "resendIn": "Reenviar código em {{seconds}} segundos",
     "resentTitle": "Código reenviado",
     "resentMessage": "Verifique seu e-mail para ver o novo código.",
-    "resendError": "Não foi possível reenviar o código."
+    "resendError": "Não foi possível reenviar o código.",
+    "lockedWait": "Aguarde {{seconds}}s",
+    "noCodeQuestion": "Não recebeu o código?",
+    "resendCountdown": "Reenviar em {{seconds}}s"
   },
   "manageAmbientes": {
     "title": "Gestão de ambientes",
@@ -1221,5 +1231,109 @@
     "sessionNotCreated": "O servidor não conseguiu criar sua sessão. Tente novamente.",
     "sessionNotSaved": "Não foi possível salvar a sessão neste dispositivo. Verifique o espaço disponível e tente novamente.",
     "sessionNotRenewable": "Sua sessão não pode ser renovada. Faça login novamente."
+  },
+  "codeInput": {
+    "digitLabel": "Dígito {{n}} de 6",
+    "hint": "Digite o código de 6 caracteres"
+  },
+  "datePicker": {
+    "selectDate": "Selecione uma data"
+  },
+  "manageEnvironment": {
+    "capacityLine": "{{location}} • Cap. {{capacity}}"
+  },
+  "passwordStrength": {
+    "veryWeak": "Muito fraca",
+    "weak": "Fraca",
+    "fair": "Razoável",
+    "strong": "Forte",
+    "veryStrong": "Muito forte"
+  },
+  "documentTypes": {
+    "cc": "Cédula de Cidadania (CC)",
+    "ti": "Cartão de Identidade (TI)",
+    "ce": "Cédula de Estrangeiro (CE)"
+  },
+  "appearance": {
+    "colors": {
+      "azul": "Azul",
+      "verde": "Verde",
+      "violeta": "Violeta",
+      "naranja": "Laranja",
+      "neutro": "Neutro",
+      "dorado": "Dourado",
+      "celeste": "Azul-celeste",
+      "amarillo": "Amarelo",
+      "rojo": "Vermelho",
+      "rosa": "Rosa",
+      "gris-osc": "Cinza escuro",
+      "gris-med": "Cinza médio",
+      "gris-cla": "Cinza claro",
+      "carbon": "Carvão"
+    },
+    "visionDesc": {
+      "normal": "Paleta base, otimizada para visão padrão.",
+      "deuteranopia": "Tipo mais comum (~6% dos homens). Afeta a percepção do verde. Use azul + dourado + violeta.",
+      "protanopia": "Afeta a percepção do vermelho (~1% dos homens). Azul + amarelo são os mais distinguíveis.",
+      "tritanopia": "Afeta a percepção do azul/amarelo (~0,01%). Vermelho + verde são os mais distinguíveis.",
+      "achromatopsia": "Sem percepção de cor (muito raro). Só o contraste de luminosidade é eficaz."
+    },
+    "wcagFail": "Falha",
+    "read": {
+      "excellent": "O texto branco por cima fica perfeito",
+      "good": "O texto branco é legível sem problemas",
+      "weak": "O texto branco aparece, mas é difícil de ler",
+      "poor": "O texto branco não se lê bem — cor clara demais"
+    },
+    "vibe": {
+      "neutral": "Tom neutro — discreto",
+      "red": "Vermelho — enérgico e chamativo",
+      "orange": "Laranja / dourado — quente e amigável",
+      "green": "Verde — fresco e confiável",
+      "cyan": "Ciano / turquesa — moderno",
+      "blue": "Azul — profissional",
+      "violet": "Violeta — criativo e sofisticado",
+      "pink": "Rosa / magenta — expressivo"
+    },
+    "uiFit": {
+      "light": "Muito claro — pode se perder em fundos brancos",
+      "dark": "Muito escuro — pode se confundir com o texto",
+      "desaturated": "Pouco saturado — funciona como neutro",
+      "vibrant": "Muito vibrante — pode cansar em uso prolongado",
+      "balanced": "Proporções equilibradas — ideal para botões e abas"
+    },
+    "tip": {
+      "lowerLum15": "Reduza o brilho em 15–20 pts para o texto branco ficar legível",
+      "lowerLum8": "Reduza o brilho em 8–10 pts para melhorar a legibilidade",
+      "raiseSat": "Aumente a saturação para o destaque se sobressair",
+      "tooPale": "Este tom é muito pálido — escureça-o para que pareça um destaque real",
+      "fine": "Esta cor funciona bem — não precisa de ajustes"
+    },
+    "score": {
+      "excellent": "excelente",
+      "good": "bom",
+      "acceptable": "aceitável",
+      "caution": "atenção",
+      "problematic": "problemático"
+    }
+  },
+  "countries": {
+    "loadError": "Não foi possível carregar os países.",
+    "connectionError": "Erro de conexão ao carregar os países.",
+    "citiesLoadError": "Não foi possível carregar as cidades.",
+    "citiesConnectionError": "Erro de conexão ao carregar as cidades."
+  },
+  "weekdays": {
+    "1": "Segunda-feira",
+    "2": "Terça-feira",
+    "3": "Quarta-feira",
+    "4": "Quinta-feira",
+    "5": "Sexta-feira",
+    "6": "Sábado",
+    "7": "Domingo"
+  },
+  "errors": {
+    "missingPerson": "Falta o registro de pessoa do usuário.",
+    "missingSchool": "Falta a escola selecionada."
   }
 }

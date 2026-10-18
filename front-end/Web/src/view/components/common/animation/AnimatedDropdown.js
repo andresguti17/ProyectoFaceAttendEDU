@@ -7,6 +7,7 @@ import {
   TextInput,
   Modal,
   Animated,
+  Dimensions,
   Easing,
   StyleSheet,
 } from "react-native";
@@ -19,7 +20,8 @@ const SEARCH_HEIGHT = 56;
 
 /**
  * Dropdown animado reutilizable
- * Se posiciona automáticamente debajo del trigger
+ * Se posiciona debajo del trigger; si no cabe en el viewport se
+ * despliega hacia arriba (dropUp).
  * 
  * @param {Array} items - Items: [{ value, label, icon?, description?, prefix? }]
  * @param {*} value - Valor seleccionado
@@ -58,6 +60,7 @@ export function AnimatedDropdown({
   const { theme } = useTheme();
   const [open, setOpen] = useState(false);
   const [triggerRect, setTriggerRect] = useState(null);
+  const [dropUp, setDropUp] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const triggerRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -97,6 +100,17 @@ export function AnimatedDropdown({
     
     // Primero medir ANTES de cambiar los estilos
     triggerRef.current?.measureInWindow((x, y, width, height) => {
+      // Si el panel no cabe debajo del trigger, se despliega hacia arriba.
+      // Sin esto, dropdowns al final de un modal (p. ej. ficha/curso al
+      // registrar docente) abrían su panel fuera del viewport y el usuario
+      // no veía nada que seleccionar.
+      const openHeight =
+        Math.min(items.length, maxVisible) * ITEM_HEIGHT +
+        (searchable && !(controlledOpen !== undefined && controlledOpen) ? SEARCH_HEIGHT : 0);
+      const winHeight = Dimensions.get("window").height || 0;
+      const fitsBelow = !winHeight || y + height + openHeight <= winHeight;
+      const fitsAbove = !winHeight || y >= openHeight;
+      setDropUp(!fitsBelow && fitsAbove);
       setTriggerRect({ x, y, width, height });
       
       // Luego cambiar estado y animar
@@ -118,7 +132,7 @@ export function AnimatedDropdown({
         }
       });
     });
-  }, [dropdownAnim, searchable, controlledOpen, onOpenChange]);
+  }, [dropdownAnim, searchable, controlledOpen, onOpenChange, items.length, maxVisible]);
 
   const animateClose = useCallback(() => {
     Animated.timing(dropdownAnim, {
@@ -439,13 +453,24 @@ export function AnimatedDropdown({
               style={[
                 styles.panel,
                 {
-                  top: triggerRect.y + triggerRect.height,
+                  top: dropUp
+                    ? dropdownAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [triggerRect.y, triggerRect.y - PANEL_HEIGHT],
+                      })
+                    : triggerRect.y + triggerRect.height,
                   left: triggerRect.x,
                   width: triggerRect.width, // Ancho fijo del trigger
                   minWidth: triggerRect.width, // Prevenir que se encoja
                   maxWidth: triggerRect.width, // Prevenir que se expanda
                   height: panelHeight,
                   opacity: panelOpacity,
+                  borderTopWidth: dropUp ? 2 : 0,
+                  borderBottomWidth: dropUp ? 0 : 2,
+                  borderTopLeftRadius: dropUp ? DESIGN_TOKENS.borderRadius.lg : 0,
+                  borderTopRightRadius: dropUp ? DESIGN_TOKENS.borderRadius.lg : 0,
+                  borderBottomLeftRadius: dropUp ? 0 : DESIGN_TOKENS.borderRadius.lg,
+                  borderBottomRightRadius: dropUp ? 0 : DESIGN_TOKENS.borderRadius.lg,
                   borderColor: theme.colors.brand.primary,
                   backgroundColor: theme.colors.background.surface,
                   ...DESIGN_TOKENS.shadows.lg,

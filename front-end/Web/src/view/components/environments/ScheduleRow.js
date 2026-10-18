@@ -18,7 +18,7 @@ import { useDateFormat } from "../hooks/useDateFormat";
  * @param {function} onDelete - Callback para eliminar
  * @param {boolean} isLast - Si es la última fila
  */
-export function ScheduleRow({ schedule, onEdit, onDelete, isLast }) {
+export function ScheduleRow({ schedule, onEdit, onDelete, isLast, canManage = true }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const { formatTime } = useDateFormat();
@@ -128,34 +128,36 @@ export function ScheduleRow({ schedule, onEdit, onDelete, isLast }) {
                     </View>
                 </View>
                 
-                {/* Acciones */}
-                <View style={{
-                    flexDirection: "row",
-                    gap: 8,
-                    marginLeft: 12,
-                }}>
-                    <TouchableOpacity
-                        onPress={onEdit}
-                        style={{
-                            padding: 8,
-                            borderRadius: 6,
-                            backgroundColor: c.brand.primaryLight,
-                        }}
-                    >
-                        <Feather name="edit-2" size={16} color={c.brand.primary} />
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                        onPress={onDelete}
-                        style={{
-                            padding: 8,
-                            borderRadius: 6,
-                            backgroundColor: c.status.dangerLight,
-                        }}
-                    >
-                        <Feather name="trash-2" size={16} color={c.status.danger} />
-                    </TouchableOpacity>
-                </View>
+                {/* Acciones (solo gestión) */}
+                {canManage && (
+                    <View style={{
+                        flexDirection: "row",
+                        gap: 8,
+                        marginLeft: 12,
+                    }}>
+                        <TouchableOpacity
+                            onPress={onEdit}
+                            style={{
+                                padding: 8,
+                                borderRadius: 6,
+                                backgroundColor: c.brand.primaryLight,
+                            }}
+                        >
+                            <Feather name="edit-2" size={16} color={c.brand.primary} />
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity
+                            onPress={onDelete}
+                            style={{
+                                padding: 8,
+                                borderRadius: 6,
+                                backgroundColor: c.status.dangerLight,
+                            }}
+                        >
+                            <Feather name="trash-2" size={16} color={c.status.danger} />
+                        </TouchableOpacity>
+                    </View>
+                )}
             </View>
         </View>
     );

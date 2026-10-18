@@ -31,6 +31,7 @@ export default function ScheduleModal({
     onSave,
     getCurrentEnvironment, // Nueva prop
     getCourseByCode,       // Nueva prop
+    getCohortsForCourse,   // Fichas del programa del curso (backend)
 }) {
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
@@ -44,6 +45,32 @@ export default function ScheduleModal({
     const [showErrors, setShowErrors] = useState(false);
     const [courseNameInput, setCourseNameInput] = useState(""); // Para búsqueda bidireccional
     const [dropdownOpen, setDropdownOpen] = useState(false); // Controlar apertura del dropdown
+    const [cohortOptions, setCohortOptions] = useState([]); // Fichas del curso (backend)
+
+    // Fichas vigentes del programa del curso: si hay una sola se
+    // autoselecciona; si hay varias el usuario elige.
+    useEffect(() => {
+        if (!visible || !form.courseCode || !getCohortsForCourse) {
+            setCohortOptions([]);
+            return;
+        }
+        let cancelled = false;
+        getCohortsForCourse(form.courseCode).then(
+            (list) => {
+                if (cancelled) return;
+                setCohortOptions(Array.isArray(list) ? list : []);
+                if (Array.isArray(list) && list.length === 1) {
+                    setForm((prev) => ({ ...prev, cohortId: String(list[0].cohortId) }));
+                }
+            },
+            () => {
+                if (!cancelled) setCohortOptions([]);
+            }
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [visible, form.courseCode, getCohortsForCourse]);
 
     // Obtener curso seleccionado y calcular placeholders dinámicos
     const selectedCourse = useMemo(() => {
@@ -94,6 +121,7 @@ export default function ScheduleModal({
             setForm({
                 courseCode: editing.courseCode,
                 courseName: editing.courseName,
+                cohortId: editing.cohortId ?? "",
                 instructorQuery: editing.instructorName,
                 instructorId: editing.instructor,
                 instructorName: editing.instructorName,
@@ -106,6 +134,7 @@ export default function ScheduleModal({
             setForm(EMPTY_SCHEDULE_FORM);
             setCourseNameInput(""); // Limpiar input de nombre
         }
+        setCohortOptions([]);
         setShowErrors(false);
         setSaving(false);
     }, [visible, editing]);
@@ -556,6 +585,59 @@ export default function ScheduleModal({
                     searchFn={searchFn}
                     error={showErrors && !form.instructorId}
                 />
+            </View>
+
+            {/* Ficha (solo si el curso tiene varias vigentes en el backend) */}
+            {cohortOptions.length > 1 && (
+                <View style={{ marginBottom: 8, position: 'relative', zIndex: 4 }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: showErrors && !form.cohortId ? c.status.error : c.text.secondary,
+                        marginBottom: 6,
+                    }}>
+                        {t("Ficha") + " *"}
+                    </Text>
+                    <AnimatedDropdown
+                        items={cohortOptions.map((cohort) => ({
+                            value: String(cohort.cohortId),
+                            label: cohort.code || String(cohort.cohortId),
+                            icon: "users",
+                        }))}
+                        value={form.cohortId}
+                        onSelect={(v) => setField("cohortId", v)}
+                        placeholder={t("Seleccionar ficha")}
+                        triggerIcon="users"
+                        error={showErrors && !form.cohortId}
+                        triggerHeight={48}
+                    />
+                </View>
+            )}
+
+            {/* Time range */}
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 14, marginBottom: 14, position: 'relative', zIndex: 1 }}>
+                <View style={{ flex: 1 }}>
+                    <TextInput
+                        label={t("Hora inicio") + " *"}
+                        value={form.startTime}
+                        onChangeText={(v) => handleTimeInput("startTime", v)}
+                        onBlur={() => handleTimeBlur("startTime")}
+                        placeholder={timePlaceholders.startPlaceholder}
+                        error={isEmpty(form.startTime)}
+                        maxLength={8} // "HH:MM AM" = 8 caracteres
+                    />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <TextInput
+                        label={t("Hora fin") + " *"}
+                        value={form.endTime}
+                        onChangeText={(v) => handleTimeInput("endTime", v)}
+                        onBlur={() => handleTimeBlur("endTime")}
+                        placeholder={timePlaceholders.endPlaceholder}
+                        error={isEmpty(form.endTime)}
+                        maxLength={8} // "HH:MM AM" = 8 caracteres
+                    />
+                </View>
             </View>
 
             {/* Days selector */}

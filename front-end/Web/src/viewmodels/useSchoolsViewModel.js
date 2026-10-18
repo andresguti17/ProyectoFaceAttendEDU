@@ -25,6 +25,7 @@ export const EMPTY_SCHOOL_FORM = {
     name: "",
     code: "",
     address: "",
+    cityName: "",
     phone: "",
     email: "",
 };
@@ -35,6 +36,10 @@ export function validateSchoolForm(form, isEdit) {
     if (!isEdit && !form.code?.trim()) return "El código de la sede es obligatorio.";
     if (form.email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
         return "El correo electrónico no es válido.";
+    // Ciudad: nombre del catálogo externo, elegido en el dropdown de texto
+    // (la columna city_name del modelo admite 100 caracteres).
+    if (String(form.cityName ?? "").length > 100)
+        return "El nombre de la ciudad no puede superar los 100 caracteres.";
     return null;
 }
 
@@ -161,6 +166,7 @@ export function useSchoolsViewModel() {
             name: school.name ?? "",
             code: school.code ?? "",
             address: school.address ?? "",
+            cityName: school.cityName ?? "",
             phone: school.phone ?? "",
             email: school.email ?? "",
         });
@@ -192,6 +198,7 @@ export function useSchoolsViewModel() {
                 name: form.name.trim(),
                 code: form.code?.trim() || undefined,
                 address: form.address?.trim() || undefined,
+                cityName: form.cityName?.trim() || undefined,
                 phone: form.phone?.trim() || undefined,
                 email: form.email?.trim() || undefined,
             };

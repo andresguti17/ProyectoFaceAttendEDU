@@ -101,3 +101,67 @@ func TestInstructorSeesAndResolvesOnlyOwnStudentsAlerts(t *testing.T) {
 	assert.Equal(t, http.StatusOK, do(http.MethodPatch, "/api/v1/alerts/1/resolve").Code)
 	assert.Equal(t, []int64{1}, alerts.resolved)
 }
+
+// School admin (actor 1, school 100) must not see alerts from actor 9 (school 200).
+func schoolAdminBackends(t *testing.T) AuthConfig {
+	t.Helper()
+	mux := http.NewServeMux()
+	write := func(body string) http.HandlerFunc {
+		return func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write([]byte(body)) }
+	}
+	mux.HandleFunc("/api/v1/sessions/", write(`{"sessionStatus":"Active","userId":"admin"}`))
+	mux.HandleFunc("/api/v1/auth/evaluate", write(`{"allowed":true}`))
+	mux.HandleFunc("/api/v1/users/", func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/roles") {
+			_, _ = w.Write([]byte(`[{"roleName":"Administrador"}]`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"personId":"p-admin"}`))
+	})
+	mux.HandleFunc("/api/v1/academic-actors", write(`[{"academicActorId":1,"personId":"p-admin","schoolId":100},{"academicActorId":2,"personId":"p-2","schoolId":100},{"academicActorId":9,"personId":"p-9","schoolId":200}]`))
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+	return AuthConfig{IdentityURL: srv.URL, AuthorizationURL: srv.URL, AcademicURL: srv.URL, SchedulingURL: srv.URL, Client: srv.Client()}
+}
+
+func TestSchoolAdminSeesOnlyOwnSchoolAlerts(t *testing.T) {
+	scopeCache.Delete("admin")
+	gin.SetMode(gin.TestMode)
+	alerts := &fakeAlerts{}
+	r := gin.New()
+	r.Use(AuthMiddleware(schoolAdminBackends(t), NotificationPermission))
+	NewAlertHandler(alerts, alerts, alerts, alerts).Register(r)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/alerts", nil)
+	req.Header.Set("Authorization", "Bearer "+teacherSession)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var body struct {
+		Alerts []domain.Alert `json:"alerts"`
+	}
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	// Actor 2 (same school) is visible; actor 9 (school 200) must not be.
+	assert.Len(t, body.Alerts, 1)
+	assert.Equal(t, int64(2), body.Alerts[0].AcademicActorID)
+}
+
+// The session cache answers the second request: the scope must still be
+// resolved for the cached user (it used to be resolved for an empty id → 503).
+func TestActorScopeSurvivesCachedSession(t *testing.T) {
+	scopeCache.Delete("admin")
+	gin.SetMode(gin.TestMode)
+	alerts := &fakeAlerts{}
+	r := gin.New()
+	r.Use(AuthMiddleware(schoolAdminBackends(t), NotificationPermission))
+	NewAlertHandler(alerts, alerts, alerts, alerts).Register(r)
+
+	for i := 0; i < 3; i++ {
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/alerts", nil)
+		req.Header.Set("Authorization", "Bearer "+teacherSession)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusOK, w.Code, "request %d", i+1)
+	}
+}

@@ -26,7 +26,7 @@ jest.mock('../../storage/TokenStorage', () => ({
   saveToken: jest.fn(),
 }));
 
-const BASE = 'http://gateway.test:8080';
+const BASE = 'http://gateway.test:8000';
 
 function mockResponse(body, status = 200) {
   global.fetch.mockResolvedValue({ ok: status < 400, status, json: async () => body });

@@ -1,3 +1,4 @@
+import BackButton from '../components/common/BackButton';
 import React, {useMemo} from 'react';
 import {
     FlatList,
@@ -105,18 +106,7 @@ export default function ValidJustificationsScreen() {
                 >
                     <View style={styles.containerValidJustifications}>
                         <View style={styles.headerTopRowValidJustifications}>
-                            <TouchableOpacity
-                                onPress={handleBack}
-                                activeOpacity={0.7}
-                                accessibilityRole="button"
-                                accessibilityLabel={t('common.back')}
-                                style={{ padding: 6 }}
-                            >
-                                <Image
-                                    source={require('../../assets/images/flecha-volver.png')}
-                                    style={[styles.headerBackImageValidJustifications, { tintColor: colors.text }]}
-                                />
-                            </TouchableOpacity>
+                            <BackButton onPress={handleBack} />
                             <View style={{ flex: 1 }}>
                                 <Text style={[styles.mainTitleValidJustifications, { color: colors.text }]}>
                                     {t('consultJustify.mainTitle')}

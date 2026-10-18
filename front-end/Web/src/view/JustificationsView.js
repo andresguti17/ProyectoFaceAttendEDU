@@ -21,10 +21,12 @@ import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useJustificationsViewModel } from "../viewmodels/useJustificationsViewModel";
 import {
     JustificationDetailModal,
+    JustificationTypesManager,
     ReviewJustifications,
     StudentJustifications,
     SubmitJustificationModal,
 } from "./authorized/justifications";
+import { useRolePermissions } from "../viewmodels/useRolePermissions";
 
 export default function JustificationsView() {
     const { isSmall } = useResponsive();
@@ -32,6 +34,8 @@ export default function JustificationsView() {
     const c = theme.colors;
     const { t } = useTranslation();
     const vm = useJustificationsViewModel();
+    const permissions = useRolePermissions();
+    const canManageTypes = permissions.canManageJustificationTypes ?? false;
 
     if (vm.isLoading) {
         return (
@@ -86,7 +90,10 @@ export default function JustificationsView() {
                 )}
 
                 {vm.isReviewer ? (
-                    <ReviewJustifications vm={vm} />
+                    <>
+                        <ReviewJustifications vm={vm} />
+                        {canManageTypes && <JustificationTypesManager />}
+                    </>
                 ) : (
                     <StudentJustifications vm={vm} />
                 )}
@@ -129,6 +136,21 @@ export default function JustificationsView() {
                 cancelText={t("Cancelar")}
                 loading={vm.isReviewing}
             />
+
+            {/* Retiro de justificación pendiente (alumno) */}
+            {vm.withdrawOpen && (
+                <ConfirmModal
+                    visible
+                    onClose={() => vm.setWithdrawOpen(false)}
+                    onConfirm={vm.confirmWithdraw}
+                    title={t("Retirar justificación")}
+                    message={t("Se retirará tu justificación pendiente. ¿Continuar?")}
+                    variant="danger"
+                    confirmText={t("Retirar")}
+                    cancelText={t("Cancelar")}
+                    loading={vm.isWithdrawing}
+                />
+            )}
         </View>
     );
 }

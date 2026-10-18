@@ -1,3 +1,4 @@
+import i18n from '../utils/i18n';
 const COUNTRIES_API = 'https://countriesnow.space/api/v0.1';
 
 export const apiCountry = {
@@ -9,9 +10,9 @@ export const apiCountry = {
       if (!data.error && data.data) {
         return { success: true, data: data.data };
       }
-      return { success: false, error: 'No se pudieron cargar los países.' };
+      return { success: false, error: i18n.t('countries.loadError') };
     } catch {
-      return { success: false, error: 'Error de conexión al cargar los países.' };
+      return { success: false, error: i18n.t('countries.connectionError') };
     }
   },
 
@@ -27,9 +28,9 @@ export const apiCountry = {
       if (!data.error && data.data) {
         return { success: true, data: data.data };
       }
-      return { success: false, error: 'No se pudieron cargar las ciudades.' };
+      return { success: false, error: i18n.t('countries.citiesLoadError') };
     } catch {
-      return { success: false, error: 'Error de conexión al cargar las ciudades.' };
+      return { success: false, error: i18n.t('countries.citiesConnectionError') };
     }
   },
 };

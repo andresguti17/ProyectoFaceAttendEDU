@@ -48,43 +48,49 @@ function getVisibleTabs(role, isSuperAdmin) {
     switch (role) {
         case "admin":
             if (isSuperAdmin) {
-                // Super Admin (rol explícito "Super Administrador"): sin
-                // interés en expedientes de personas concretas (sin
-                // Justificaciones ni Historial): su consulta son las
-                // escuelas ("Escuelas", su sección de gestión) y los
-                // reportes por sede.
+                // Super Admin global: multi-sede (escuelas, reportes por
+                // sede, usuarios, historial). Sin expedientes propios de
+                // instituciones (justificaciones) ni detalle académico
+                // (cursos, ambientes, académico).
                 return [
                     "dashboard",
                     "schools",
                     "reports",
                     "users",
-                    "courses",
-                    "environments",
+                    "roles",
+                    "history",
+                    "alerts",
                     "settings",
                 ];
             }
-            // Admin de sede: gestión de su sede, sin "Historial" de personas
-            // y sin "Sede"/"Contactos" como tabs: viven dentro de Configuración.
-            // "Académico" se cayó por redundante: cursos, fichas y reportes
-            // ya exponen esa información con mucho más detalle.
+            // Admin de sede: gestión de su sede. Historial y
+            // Justificaciones con alcance de sede (HU-HIST-001
+            // AC12, HU-JUS-002 AC1). Sin tab "schools".
             return [
                 "dashboard",
                 "reports",
                 "users",
                 "courses",
+                "academic",
                 "environments",
+                "history",
                 "justifications",
+                "alerts",
                 "settings",
             ];
         case "teacher":
-            // Sin "Académico" (redundante con "Mis cursos" y Reportes).
+            // Docente: sus fichas. Ambientes en lectura (ver dónde
+            // enseña, sin gestionar). Sin "Académico" (redundante
+            // con "Mis cursos" y Reportes).
             return [
                 "dashboard",
                 "users",
                 "courses",
+                "environments",
                 "reports",
                 "history",
                 "justifications",
+                "alerts",
                 "settings",
             ];
         case "student":
@@ -96,6 +102,7 @@ function getVisibleTabs(role, isSuperAdmin) {
                 "justifications",
                 "academic",
                 "courses",
+                "alerts",
                 "settings",
             ];
         default:
@@ -116,25 +123,54 @@ function buildPermissions(role, schoolId = null, roleNames = []) {
     const isSuperAdmin = isAdmin && (hasSuperAdminRole(roleNames) || schoolId == null);
 
     return {
-        // Estudiantes
+        // Estudiantes (HU-IAM-002/007/008/010)
         canViewStudents: isAdmin || isTeacher,
         canManageStudents: isAdmin,
+        canCreateUser: isAdmin,
+        canEditUser: isAdmin,
+        canToggleUserStatus: isAdmin,
+        // Eliminar es lógico (desactivar, HU-IAM-008) con alcance de sede:
+        // el admin solo ve usuarios de su sede (scopedUsers) y el super
+        // puede con cualquiera. Sin super-bootstrap operativo no habría
+        // quién elimine: por eso NO se restringe al super.
+        canDeleteUser: isAdmin,
+        canChangeUserRole: isSuperAdmin,
         canImportStudents: isAdmin,
+        // Biométrico (HU-ATT-002). canRegisterFace se conserva como alias
+        // de inscripción a terceros para no romper imports existentes.
         canRegisterFace: isAdmin || isTeacher,
+        canEnrollOwnFace: true,
+        canEnrollOthersFace: isAdmin || isTeacher,
+        canDeleteBiometrics: isAdmin,
 
-        // Cursos
+        // Cursos (HU-SCH-001, FR 8.1)
         canViewCourses: true,
         canManageCourses: isAdmin,
+        canDeleteCourse: isSuperAdmin,
 
-        // Ambientes
+        // Ambientes (HU-ACAD-001)
         canViewEnvironments: isAdmin || isTeacher,
         canManageEnvironments: isAdmin,
 
-        // Reportes
+        // Académico (HU-ACAD-002/004/005)
+        canManageAcademic: isAdmin,
+
+        // Sesiones de clase (scheduling.session:manage). El kiosco
+        // abrir/cerrar/cancelar usa este permiso, no canRegisterFace.
+        canManageSessions: isAdmin || isTeacher,
+        // Corrección de asistencia (attendance.record:write)
+        canCorrectAttendance: isAdmin || isTeacher,
+        // Casos biométricos SQL (biometric.case:request/review)
+        canRequestBiometricUpdate: true,
+        canReviewBiometricUpdate: isAdmin,
+
+        // Reportes (HU-REP-001/002/003/004)
         canViewReports: isAdmin || isTeacher,
+        canViewOwnReports: isStudent,
         canExportReports: isAdmin || isTeacher,
         canNotifyAll: isAdmin,
         canViewAllReports: isAdmin,
+        canReviewAllScopes: isSuperAdmin,
 
         // Historial de asistencia (HU-HIST-001: consulta los 3 roles, AC10/AC11/AC12)
         canViewHistory: true,
@@ -156,7 +192,22 @@ function buildPermissions(role, schoolId = null, roleNames = []) {
         canViewAcademic: true,
         canViewContacts: true,
 
-        // Configuración
+        // Configuración (configuration:manage + HU-CONF-001..008)
+        // Granular por sección: Teacher/StudentSettings solo deben usar
+        // notificaciones y apariencia (ver AdminSettings vs sidebar adminOnly).
+        canManageConfiguration: isAdmin,
+        canManageGeneralSettings: isAdmin,
+        canManageFacialConfig: isAdmin,
+        canManageSecurityConfig: isAdmin,
+        canManageNotifications: true,
+        canManageJustificationTypes: isAdmin,
+        // Alertas (notification.alert:read, HU-JUS-003)
+        canViewAlerts: true,
+        canManageAlerts: isAdmin,
+        // RBAC admin (HU-IAM-003, FR 1.1.2): matriz rol x permiso
+        canManageRoles: isSuperAdmin,
+
+        // Compat: aliases históricos usados por Views existentes.
         canEditAppearance: true,
         canManageUsers: isAdmin,
         canViewSettings: true,
@@ -175,8 +226,65 @@ function buildPermissions(role, schoolId = null, roleNames = []) {
 }
 
 // ── Permisos de invitado (sin sesión) ────────────────────────
+// Fail-secure (security-policy.md): sin sesión, cero permisos.
 
-const GUEST_PERMISSIONS = buildPermissions("student");
+const GUEST_PERMISSIONS = {
+    canViewStudents: false,
+    canManageStudents: false,
+    canCreateUser: false,
+    canEditUser: false,
+    canToggleUserStatus: false,
+    canDeleteUser: false,
+    canChangeUserRole: false,
+    canImportStudents: false,
+    canRegisterFace: false,
+    canEnrollOwnFace: false,
+    canEnrollOthersFace: false,
+    canDeleteBiometrics: false,
+    canViewCourses: false,
+    canManageCourses: false,
+    canDeleteCourse: false,
+    canViewEnvironments: false,
+    canManageEnvironments: false,
+    canManageAcademic: false,
+    canManageSessions: false,
+    canCorrectAttendance: false,
+    canRequestBiometricUpdate: false,
+    canReviewBiometricUpdate: false,
+    canViewReports: false,
+    canViewOwnReports: false,
+    canExportReports: false,
+    canNotifyAll: false,
+    canViewAllReports: false,
+    canReviewAllScopes: false,
+    canViewHistory: false,
+    canSubmitJustifications: false,
+    canReviewJustifications: false,
+    canViewSchoolInfo: false,
+    canEditSchoolInfo: false,
+    canManageSchools: false,
+    canViewAcademic: false,
+    canViewContacts: false,
+    canManageConfiguration: false,
+    canManageGeneralSettings: false,
+    canManageFacialConfig: false,
+    canManageSecurityConfig: false,
+    canManageNotifications: false,
+    canManageJustificationTypes: false,
+    canViewAlerts: false,
+    canManageAlerts: false,
+    canManageRoles: false,
+    canEditAppearance: false,
+    canManageUsers: false,
+    canViewSettings: false,
+    visibleTabs: [],
+    getTabLabel: () => null,
+    role: null,
+    isAdmin: false,
+    isSuperAdmin: false,
+    isTeacher: false,
+    isStudent: false,
+};
 
 // ── Hook ──────────────────────────────────────────────────────
 

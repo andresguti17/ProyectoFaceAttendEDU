@@ -8,6 +8,13 @@ import PrimaryButton from '../components/auth/PrimaryButton';
 import {createValidAllJustificationsStyles} from "./Styles/ValidAllJustifications/Style";
 import {useJustificationsViewModel} from '../../viewmodels/useValidAllJustificationsViewModel';
 
+const CATEGORY_LABEL_KEYS = {
+    health: 'admin.categoryHealth',
+    family: 'admin.categoryFamily',
+    academic: 'admin.categoryAcademic',
+    general: 'admin.categoryGeneral',
+};
+
 export default function JustificationsScreen() {
     const { t } = useTranslation();
     const { colors } = useTheme();
@@ -50,7 +57,7 @@ export default function JustificationsScreen() {
             <View style={styles.validAllJustificationsItemFooter}>
                 <View style={[styles.validAllJustificationsItemBadge, { backgroundColor: colors.badgeBackground }]}>
                     <Text style={[styles.validAllJustificationsItemBadgeText, { color: colors.badgeText }]}>
-                        {item.category}
+                        {t(CATEGORY_LABEL_KEYS[item.category])}
                     </Text>
                 </View>
                 <Text style={[styles.validAllJustificationsItemDocText, { color: colors.textMuted }]}>
@@ -97,7 +104,7 @@ export default function JustificationsScreen() {
                                 <View key={category} style={styles.validAllJustificationsCategorySection}>
                                     <View style={[styles.validAllJustificationsCategoryHeader, { backgroundColor: colors.categoryBackground }]}>
                                         <Text style={[styles.validAllJustificationsCategoryTitle, { color: colors.categoryText }]}>
-                                            {category}
+                                            {t(CATEGORY_LABEL_KEYS[category])}
                                         </Text>
                                         <Text style={[styles.validAllJustificationsCategoryCount, { color: colors.textMuted }]}>
                                             {categoryItems.length} {t('justifications.items')}

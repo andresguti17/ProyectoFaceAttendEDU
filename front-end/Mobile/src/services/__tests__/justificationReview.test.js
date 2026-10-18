@@ -24,7 +24,7 @@ describe('JustificationService.reject', () => {
     await JustificationService.reject(5, 'u-1', '  soporte ilegible  ');
 
     const [url, options] = global.fetch.mock.calls[0];
-    expect(url).toBe('http://gateway.test:8080/api/v1/justifications/5/review');
+    expect(url).toBe('http://gateway.test:8000/api/v1/justifications/5/review');
     expect(options.method).toBe('PATCH');
     expect(JSON.parse(options.body)).toEqual({
       reviewStatus: 'Rejected',

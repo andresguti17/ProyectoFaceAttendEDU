@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import com.faceattend_edu.scheduling_service.infrastructure.web.security.CallerSchoolResolver.CallerSchool;
+import org.springframework.beans.factory.ObjectProvider;
+
 /**
  * Exige Bearer con sessionId opaco de identity en todo /api/** (salud/docs públicos).
  * Valida la sesión contra identity, resuelve roles y evalúa el permiso requerido
@@ -50,6 +53,55 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             "/actuator/", "/v3/api-docs", "/swagger-ui", "/swagger-ui.html");
 
     private final RestTemplate restTemplate;
+    // Perezoso: los tests @WebMvcTest cargan el filtro sin la capa de persistencia.
+    private final ObjectProvider<CallerSchoolResolver> schoolResolver;
+
+    /** Atributo con el CallerSchool resuelto, para que los controladores lo lean (CallerSchoolContext). */
+    public static final String CALLER_SCHOOL_ATTRIBUTE = "scheduling.callerSchool";
+
+    /**
+    * Caché positiva de autenticación (TTL corto). Cada request autenticado
+    * costaba 2-3 introspecciones secuenciales (sesión + roles + evaluate);
+    * bajo fan-out del frontend eso saturaba identity/authorization y Kong
+    * respondía 503 "Cannot verify session". Solo se cachean resultados
+    * POSITIVOS: cualquier fallo se revalida en vivo (fail-secure). Ventana
+    * de revocación/logout: AUTH_CACHE_TTL_MS.
+    */
+    private static final long AUTH_CACHE_TTL_MS = 10_000;
+    private static final int AUTH_CACHE_MAX_ENTRIES = 5_000;
+    private final java.util.Map<String, CachedSession> sessionCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Map<String, CachedEvaluation> evaluationCache = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private record CachedSession(String userId, java.util.List<String> roles, long expiresAt) {}
+    private record CachedEvaluation(boolean allowed, long expiresAt) {}
+
+    private CachedSession cachedSession(String rawToken) {
+        CachedSession hit = sessionCache.get(rawToken);
+        if (hit == null) return null;
+        if (hit.expiresAt() <= System.currentTimeMillis()) { sessionCache.remove(rawToken); return null; }
+        return hit;
+    }
+
+    private void storeSession(String rawToken, String userId, java.util.List<String> roles) {
+        if (sessionCache.size() > AUTH_CACHE_MAX_ENTRIES) sessionCache.clear();
+        sessionCache.put(rawToken, new CachedSession(userId, java.util.List.copyOf(roles), System.currentTimeMillis() + AUTH_CACHE_TTL_MS));
+    }
+
+    private boolean cachedEvaluate(String rawToken, String userId, String permission) {
+        String key = rawToken + "\n" + userId + "\n" + permission;
+        CachedEvaluation hit = evaluationCache.get(key);
+        long now = System.currentTimeMillis();
+        if (hit != null) {
+            if (hit.expiresAt() > now) return hit.allowed();
+            evaluationCache.remove(key);
+        }
+        boolean allowed = evaluate(rawToken, userId, permission);
+        if (allowed) {
+            if (evaluationCache.size() > AUTH_CACHE_MAX_ENTRIES) evaluationCache.clear();
+            evaluationCache.put(key, new CachedEvaluation(true, now + AUTH_CACHE_TTL_MS));
+        }
+        return allowed;
+    }
 
     @Value("${faceattend.auth.identity-url:http://localhost:8081}")
     private String identityUrl;
@@ -57,7 +109,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Value("${faceattend.auth.authorization-url:http://localhost:8082}")
     private String authorizationUrl;
 
-    public AuthTokenFilter() {
+    public AuthTokenFilter(ObjectProvider<CallerSchoolResolver> schoolResolver) {
+        this.schoolResolver = schoolResolver;
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(3000);
         factory.setReadTimeout(5000);
@@ -88,28 +141,53 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             return;
         }
 
-        Map<?, ?> session = fetchSession(rawToken, sessionId);
-        if (session == null || !"Active".equals(session.get("sessionStatus"))) {
-            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired session", path);
-            return;
-        }
-        Object userId = session.get("userId");
-        if (userId == null) {
-            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Session without user", path);
-            return;
-        }
-        String caller = String.valueOf(userId);
-
-        List<String> roles = fetchRoles(rawToken, caller);
-        if (roles == null) {
-            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Cannot verify user roles", path);
-            return;
+        CachedSession cached = cachedSession(rawToken);
+        final String caller;
+        final List<String> roles;
+        if (cached != null) {
+            caller = cached.userId();
+            roles = cached.roles();
+        } else {
+            Map<?, ?> session = fetchSession(rawToken, sessionId);
+            if (session == null || !"Active".equals(session.get("sessionStatus"))) {
+                deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired session", path);
+                return;
+            }
+            Object userId = session.get("userId");
+            if (userId == null) {
+                deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Session without user", path);
+                return;
+            }
+            caller = String.valueOf(userId);
+            List<String> fetched = fetchRoles(rawToken, caller);
+            if (fetched == null) {
+                deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Cannot verify user roles", path);
+                return;
+            }
+            roles = fetched;
+            storeSession(rawToken, caller, roles);
         }
 
         String required = requiredPermission(request.getMethod(), path);
-        if (required != null && !evaluate(rawToken, caller, required)) {
+        if (required != null && !cachedEvaluate(rawToken, caller, required)) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + required, path);
             return;
+        }
+
+        // Environments/bloques/sesiones trazan a una sede (directa o vía environment);
+        // Administrador (sede propia) y Super Administrador (todas) se distinguen aquí,
+        // nunca por lo que el cliente declare en query/body.
+        CallerSchoolResolver resolver = schoolResolver.getIfAvailable();
+        if (resolver != null) {
+            CallerSchool callerSchool;
+            try {
+                callerSchool = resolver.resolve(caller, roles, rawToken);
+            } catch (RuntimeException e) {
+                log.warn("AuthTokenFilter: caller school for {} failed: {}", caller, e.getMessage());
+                deny(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Cannot resolve caller school", path);
+                return;
+            }
+            request.setAttribute(CALLER_SCHOOL_ATTRIBUTE, callerSchool);
         }
 
         request.setAttribute("X-User-Id", caller);
@@ -217,7 +295,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         response.setContentType("application/json");
         String safe = message.replace("\"", "'");
         String body = "{\"status\":" + status + ",\"error\":\""
-                + (status == 401 ? "Unauthorized" : "Forbidden") + "\",\"message\":\"" + safe
+                + (status == 401 ? "Unauthorized" : status == 503 ? "Service Unavailable" : "Forbidden") + "\",\"message\":\"" + safe
                 + "\",\"path\":\"" + path.replace("\"", "'") + "\"}";
         response.getWriter().write(body);
     }

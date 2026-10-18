@@ -33,7 +33,20 @@ export const PersonService = {
   },
 
   create: async (personData) => {
-    const data = await request({ method: POST, url: ENDPOINT, data: personData.toApi(), requiresAuth: false });
+    // ms-identity (PersonDto) habla camelCase y exige
+    // documentNumber/name/lastName: el toApi en snake respondía 400.
+    const p = personData ?? {};
+    const body = {
+      documentNumber: p.documentNumber ?? p.document_number,
+      name: p.name,
+      lastName: p.lastName ?? p.last_name,
+      email: p.email,
+      phone: p.phone,
+      documentType: p.documentType ?? p.document_type,
+      status: p.status,
+    };
+    Object.keys(body).forEach((k) => (body[k] === null || body[k] === undefined) && delete body[k]);
+    const data = await request({ method: POST, url: ENDPOINT, data: body, requiresAuth: false });
     return Person.fromApi(toSnakeDeep(data));
   },
 

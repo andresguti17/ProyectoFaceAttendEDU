@@ -48,7 +48,7 @@ export const DocumentSelector = ({ selectedDocument, onSelect }) => {
                             selectedDocument?.id === doc.id && stylescommon.optionTextSelected,
                             { color: selectedDocument?.id === doc.id ? colors.modalOptionBorder : colors.modalInputText }
                         ]}>
-                            {doc.label}
+                            {t(doc.labelKey)}
                         </Text>
                     </TouchableOpacity>
                 ))}

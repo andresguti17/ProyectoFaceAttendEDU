@@ -25,20 +25,20 @@ export function useAddValidJustificationViewModel() {
     const clearAlert = () => setAlertData({message: null, type: 'warning', timestamp: 0});
 
     const categories = useMemo(() => [
-        { id: 'salud', label: t('admin.categoryHealth'), icon: '🏥', description: t('admin.categoryHealthDesc') || 'Incapacidades y citas médicas' },
-        { id: 'familiar', label: t('admin.categoryFamily'), icon: '👨‍👩‍👧', description: t('admin.categoryFamilyDesc') || 'Situaciones de carácter familiar' },
-        { id: 'legal', label: t('admin.categoryLegal'), icon: '⚖️', description: t('admin.categoryLegalDesc') || 'Diligencias judiciales o legales' },
-        { id: 'academica', label: t('admin.categoryAcademic'), icon: '🎓', description: t('admin.categoryAcademicDesc') || 'Actividades académicas externas' },
-        { id: 'otro', label: t('admin.categoryOther'), icon: '📋', description: t('admin.categoryOtherDesc') || 'Otros motivos justificados' },
+        { id: 'salud', label: t('admin.categoryHealth'), icon: '🏥', description: t('admin.categoryHealthDesc') },
+        { id: 'familiar', label: t('admin.categoryFamily'), icon: '👨‍👩‍👧', description: t('admin.categoryFamilyDesc') },
+        { id: 'legal', label: t('admin.categoryLegal'), icon: '⚖️', description: t('admin.categoryLegalDesc') },
+        { id: 'academica', label: t('admin.categoryAcademic'), icon: '🎓', description: t('admin.categoryAcademicDesc') },
+        { id: 'otro', label: t('admin.categoryOther'), icon: '📋', description: t('admin.categoryOtherDesc') },
     ], [t]);
 
     const types = useMemo(() => [
-        { id: 'medica', label: t('admin.typeMedical'), icon: '💊', description: t('admin.typeMedicalDesc') || 'Consulta, cirugía o incapacidad' },
-        { id: 'familiar', label: t('admin.typeFamily'), icon: '🏠', description: t('admin.typeFamilyDesc') || 'Fallecimiento o calamidad familiar' },
-        { id: 'personal', label: t('admin.typePersonal'), icon: '👤', description: t('admin.typePersonalDesc') || 'Asunto personal de fuerza mayor' },
-        { id: 'academica', label: t('admin.typeAcademic'), icon: '📚', description: t('admin.typeAcademicDesc') || 'Evento, congreso o representación' },
-        { id: 'laboral', label: t('admin.typeWork'), icon: '💼', description: t('admin.typeWorkDesc') || 'Comisión o actividad laboral' },
-        { id: 'otro', label: t('admin.typeOther'), icon: '📝', description: t('admin.typeOtherDesc') || 'Otro tipo de justificación' },
+        { id: 'medica', label: t('admin.typeMedical'), icon: '💊', description: t('admin.typeMedicalDesc') },
+        { id: 'familiar', label: t('admin.typeFamily'), icon: '🏠', description: t('admin.typeFamilyDesc') },
+        { id: 'personal', label: t('admin.typePersonal'), icon: '👤', description: t('admin.typePersonalDesc') },
+        { id: 'academica', label: t('admin.typeAcademic'), icon: '📚', description: t('admin.typeAcademicDesc') },
+        { id: 'laboral', label: t('admin.typeWork'), icon: '💼', description: t('admin.typeWorkDesc') },
+        { id: 'otro', label: t('admin.typeOther'), icon: '📝', description: t('admin.typeOtherDesc') },
     ], [t]);
 
     useEffect(() => {

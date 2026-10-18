@@ -3,12 +3,16 @@ import { request } from "../../api/apiClient";
 import { endpoints } from "../../api/endpoints";
 
 export const configurationApi = {
-    listAcademic: () => request(endpoints.configuration.academic, { method: "GET" }),
+    listAcademic: (params) => request(endpoints.configuration.academic, { method: "GET", query: params }),
     createAcademic: (b) =>
         request(endpoints.configuration.academic, { method: "POST", body: b }),
-    listSecurity: () => request(endpoints.configuration.security, { method: "GET" }),
+    updateAcademic: (id, b) =>
+        request(endpoints.configuration.academicById(id), { method: "PUT", body: b }),
+    listSecurity: (params) => request(endpoints.configuration.security, { method: "GET", query: params }),
     createSecurity: (b) =>
         request(endpoints.configuration.security, { method: "POST", body: b }),
+    updateSecurity: (id, b) =>
+        request(endpoints.configuration.securityById(id), { method: "PUT", body: b }),
     listBiometricCases: (status) =>
         request(endpoints.configuration.biometricCases, { method: "GET", query: status ? { status } : undefined }),
     createBiometricCase: (b) =>

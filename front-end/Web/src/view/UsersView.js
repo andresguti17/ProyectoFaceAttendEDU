@@ -63,11 +63,13 @@ export default function UsersView({
     // Título dinámico según el rol del usuario
     const pageTitle = permissions.getTabLabel("users") || t("Usuarios");
 
-    // Subtitle dinámico: mantiene texto base, solo cambia contenido de paréntesis
+    // Subtitle dinámico: mantiene texto base, solo cambia contenido de paréntesis.
+    // El verbo depende del rol (solo el admin gestiona; el resto consulta).
     const sectionLabel = getSectionLabel(section);
+    const actionVerb = permissions.canManageStudents ? t("Gestiona") : t("Consulta");
     const pageSubtitle = vm.isLoading
-        ? `${t("Gestiona los usuarios del sistema")} (${t("Cargando")} ${sectionLabel}...)`
-        : `${t("Gestiona los usuarios del sistema")} (${vm.filteredUsers.length} ${
+        ? `${actionVerb} ${t("los usuarios del sistema")} (${t("Cargando")} ${sectionLabel}...)`
+        : `${actionVerb} ${t("los usuarios del sistema")} (${vm.filteredUsers.length} ${
             vm.filteredUsers.length !== 1 
                 ? `${sectionLabel} ${t("encontrados")}` 
                 : `${sectionLabel.slice(0, -1)} ${t("encontrado")}` // Singular: quita la 's' final

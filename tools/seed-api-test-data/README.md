@@ -54,7 +54,7 @@ historical reporting comes from the session dates those records hang on.
 ## Why direct microservice URLs
 
 The script targets microservice ports (`8081`-`8089`) instead of the
-Kong gateway (`:8080`) because most gateway routes require a JWT. Apps keep
+Kong gateway (`:8000`) because most gateway routes require a JWT. Apps keep
 using the gateway. Override any target in `.env` (`IDENTITY_URL`, ...); the
 local `.env` is loaded automatically (older Node versions fall back to the
 built-in defaults).
@@ -64,14 +64,14 @@ built-in defaults).
 Web (`front-end/Web`, see `src/config/env.ts`):
 
 ```bash
-EXPO_PUBLIC_API_URL=http://localhost:8080 npx expo start --web
+EXPO_PUBLIC_API_URL=http://localhost:8000 npx expo start --web
 ```
 
 Mobile (`front-end/Mobile`, see `src/config/env.js`): on a physical device
 or emulator `localhost` is the phone itself, so use the PC LAN IP:
 
 ```bash
-EXPO_PUBLIC_API_URL=http://192.168.1.10:8080 npx expo start
+EXPO_PUBLIC_API_URL=http://192.168.1.10:8000 npx expo start
 ```
 
 Login smoke test: `POST /api/v1/auth/login` then browse schools, sessions,

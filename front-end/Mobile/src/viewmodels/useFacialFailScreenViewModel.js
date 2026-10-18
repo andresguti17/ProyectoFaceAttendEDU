@@ -69,7 +69,7 @@ export function useFacialFailViewModel() {
         setVerifying(true);
         try {
             const user = await getCurrentUser();
-            if (!user?.personId) throw new Error('missing person');
+            if (!user?.personId) throw new Error(t('errors.missingPerson'));
             // backendGet normaliza a lista en snake_case (document_number, blood_type...).
             const [person] = await backendGet(ENV.API_BASE_URL, `api/v1/persons/${user.personId}`);
 

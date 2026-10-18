@@ -78,7 +78,7 @@ la red que ve el navegador**:
         ┌──────────────────────────── host ─────────────────────────────┐
         │   navegador ──8090──► frontend-web (nginx)                    │
         │        │                      │  /api/* (red edge)           │
-        │        │8080 (red edge)       ▼                              │
+        │        │8000 (red edge)       ▼                              │
         │        └──────────────► kong-gateway ──► redis                │
         │                            │            (red app)            │
         │                            └──► ms-identity … ms-quality     │
@@ -113,7 +113,7 @@ invisibles para el resto de la LAN:
 
 | Puerto | Servicio | Bind | Motivo |
 |---|---|---|---|
-| **8080** | `kong-gateway` (proxy) | `0.0.0.0` | el navegador y un celular en la LAN consumen la API |
+| **8000** | `kong-gateway` (proxy) | `0.0.0.0` | el navegador y un celular en la LAN consumen la API |
 | **8090** | `frontend-web` | `0.0.0.0` | el navegador (y un celular) cargan el SPA |
 | 8001 | `kong-gateway` (admin) | `BIND_IP` | administración local |
 | 5432 / 27017 / 6379 / 9092 | postgres / mongodb / redis / kafka | `BIND_IP` | bases y broker: nunca exponerlos |
@@ -128,7 +128,7 @@ docker ps --format "{{.Names}} | {{.Ports}}"
 ```
 
 > Para probar desde el celular además hace falta
-> `EXPO_PUBLIC_API_URL=http://<IP-de-la-PC>:8080` y **reconstruir** el frontend
+> `EXPO_PUBLIC_API_URL=http://<IP-de-la-PC>:8000` y **reconstruir** el frontend
 > (la URL se hornea en el bundle en tiempo de build). Kong permite CORS en
 > `http://localhost:3000`, `:5173` y `:8090`; agrega la IP de la PC en
 > `back-end/99-api-gateway/kong/kong.yml` si vas a servirla desde otro origen.
@@ -274,7 +274,7 @@ no un anti-spoofing certificado.
 
 ## 10. TLS / HTTPS (opcional)
 
-El compose base sirve todo en HTTP plano (8080/8090); no hay nada que termine
+El compose base sirve todo en HTTP plano (8000/8090); no hay nada que termine
 TLS por defecto. `docker-compose.tls.yml` agrega un Caddy delante de
 `kong-gateway` y `frontend-web` sin tocar el compose base:
 
@@ -285,7 +285,7 @@ TLS por defecto. `docker-compose.tls.yml` agrega un Caddy delante de
 docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d
 ```
 
-Los puertos 8080/8090 en HTTP siguen publicados en paralelo (no se tocó el
+Los puertos 8000/8090 en HTTP siguen publicados en paralelo (no se tocó el
 compose base) para no romper el flujo de desarrollo actual; para forzar
 solo-HTTPS en un despliegue real, quita esas dos líneas `ports:` una vez que
 Caddy esté validado. Mobile debe apuntar `EXPO_PUBLIC_API_URL` a

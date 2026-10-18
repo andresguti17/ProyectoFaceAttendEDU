@@ -96,7 +96,7 @@ sumó después y no está dibujado aquí):
 | `academic_period` | Ventana temporal (trimestre/semestre) | `academic_period_id` (INT) |
 | `cohort` | Grupo de estudiantes en programa + periodo | `cohort_id` (BIGINT) |
 | `course` | Materia/asignatura de un programa | `course_id` (INT) |
-| `academic_actor_type` | Catálogo: STUDENT / INSTRUCTOR | `actor_type_id` (SMALLINT) |
+| `academic_actor_type` | Catálogo: STUDENT / INSTRUCTOR / ADMIN (administrador de sede) | `actor_type_id` (SMALLINT) |
 | `academic_actor` | Rol que una persona cumple en una sede | `academic_actor_id` (BIGINT) |
 | `enrollment` | Matrícula de actor en una cohorte | `enrollment_id` (BIGINT) |
 

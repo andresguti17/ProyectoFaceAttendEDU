@@ -8,6 +8,8 @@ import com.faceattend_edu.scheduling_service.domain.port.in.CloseClassSessionUse
 import com.faceattend_edu.scheduling_service.domain.port.in.CreateClassSessionUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.in.DeleteClassSessionUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.in.GetClassSessionUseCase;
+import com.faceattend_edu.scheduling_service.domain.port.in.GetEnvironmentUseCase;
+import com.faceattend_edu.scheduling_service.domain.port.in.GetScheduleBlockUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.in.ListClassSessionsUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.in.OpenClassSessionUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.in.UpdateClassSessionUseCase;
@@ -76,6 +78,10 @@ class ClassSessionControllerTest {
     private CloseClassSessionUseCase closeUseCase;
     @MockitoBean
     private CancelClassSessionUseCase cancelUseCase;
+    @MockitoBean
+    private GetScheduleBlockUseCase getScheduleBlockUseCase;
+    @MockitoBean
+    private GetEnvironmentUseCase getEnvironmentUseCase;
 
     private ClassSession openSession;
 
@@ -234,10 +240,12 @@ class ClassSessionControllerTest {
         @Test
         @DisplayName("givenOpenableSession_whenOpen_thenReturn200Open")
         void givenOpenableSession_whenOpen_thenReturn200Open() throws Exception {
-            // Arrange
-            when(openUseCase.open(5L, 77L)).thenReturn(openSession);
+            // Arrange: openedBy is no longer read from the request body (it was
+            // spoofable) — the controller derives it from the caller's own actor,
+            // which is null outside the real AuthTokenFilter (addFilters=false here).
+            when(openUseCase.open(5L, null)).thenReturn(openSession);
 
-            // Act & Assert
+            // Act & Assert: a body, even with an openedBy, is ignored.
             mockMvc.perform(post("/api/v1/class-sessions/5/open")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
@@ -245,7 +253,7 @@ class ClassSessionControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.sessionStatus").value("Open"));
 
-            verify(openUseCase).open(5L, 77L);
+            verify(openUseCase).open(5L, null);
         }
 
         @Test
@@ -277,12 +285,13 @@ class ClassSessionControllerTest {
         @Test
         @DisplayName("givenOpenSession_whenClose_thenReturn200Closed")
         void givenOpenSession_whenClose_thenReturn200Closed() throws Exception {
-            // Arrange: el use case real setea closedBy/closedAt antes de guardar
+            // Arrange: closedBy is no longer read from the request body (it was
+            // spoofable) — null here outside the real AuthTokenFilter.
             ClassSession closed = withStatus(openSession, "Closed");
             closed.setClosedBy(88L);
-            when(closeUseCase.close(5L, 88L)).thenReturn(closed);
+            when(closeUseCase.close(5L, null)).thenReturn(closed);
 
-            // Act & Assert
+            // Act & Assert: a body, even with a closedBy, is ignored.
             mockMvc.perform(post("/api/v1/class-sessions/5/close")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
@@ -291,7 +300,7 @@ class ClassSessionControllerTest {
                     .andExpect(jsonPath("$.sessionStatus").value("Closed"))
                     .andExpect(jsonPath("$.closedBy").value(88));
 
-            verify(closeUseCase).close(5L, 88L);
+            verify(closeUseCase).close(5L, null);
         }
 
         @Test

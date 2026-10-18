@@ -1,371 +1,212 @@
 // ============================================================
 //  FaceAttend EDU — EditCourseModal
-//  Modal para editar información del curso
-//  Permite editar nombre, código y fechas
+//  Edición de nombre/código/programa de un curso existente.
+//  El guardado real es PUT /courses/{id}.
 // ============================================================
 
-import React, { useState, useCallback, useMemo } from "react";
-import { View, Text, TouchableOpacity, Modal, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Button, TextInput, DateInput } from "../../../components/common";
+import { Button, AnimatedDropdown, BaseModal, TextInput } from "../../../components/common";
 import { useTheme } from "../../../components/hooks/useTheme";
+import { useResponsive } from "../../../components/hooks/useResponsive";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
-import { useAppData } from "../../../../context/AppDataContext";
-import { usePushNotification } from "../../../components/common/feedback/PushNotification";
-import { titleCase } from "../../../../core/utils/formatting";
+import { useAuth } from "../../../../context/AuthContext";
+import { listSchoolPrograms } from "../../../../services/api/courseCreation";
 
-// ── Funciones de formateo ─────────────────────────────────
-
-/**
- * Formatea el nombre del curso: capitaliza primera letra de cada palabra
- */
-const formatCourseName = (text) => {
-    if (!text) return '';
-    return titleCase(text);
-};
-
-/**
- * Formatea el código del curso: mayúsculas y sin espacios
- */
-const formatCourseCode = (text) => {
-    if (!text) return '';
-    return text.toUpperCase().replace(/\s+/g, '');
-};
-
-// ── Componente principal ─────────────────────────────────
-
-export default function EditCourseModal({
-    course,
-    onClose,
-    onSave,
-    visible = true,
-    closeOnBackdrop = false,
-}) {
+export default function EditCourseModal({ course, onClose, onSubmit }) {
     const { theme } = useTheme();
+    const { isSmall } = useResponsive();
     const { t } = useTranslation();
     const c = theme.colors;
-    const { updateCourse, forceRefresh, courses } = useAppData();
-    const pushNotification = usePushNotification();
+    const { user } = useAuth();
 
-    // Estados del formulario (fechas en formato interno YYYY-MM-DD)
-    const [form, setForm] = useState({
-        name: course?.name || "",
-        code: course?.code || "",
-        startDate: course?.startDate || "",
-        endDate: course?.endDate || "",
-    });
+    const [form, setForm] = useState(null);
+    const [error, setError] = useState(null);
     const [saving, setSaving] = useState(false);
-    const [errors, setErrors] = useState({});
     const [showErrors, setShowErrors] = useState(false);
+    const [success, setSuccess] = useState(false);
 
-    // Validación del formulario
-    const validateForm = useCallback(() => {
-        const newErrors = {};
+    const [schoolPrograms, setSchoolPrograms] = useState([]);
+    const [programsError, setProgramsError] = useState(null);
 
-        // Validar nombre
-        if (!form.name.trim()) {
-            newErrors.name = t("El nombre del curso es requerido");
-        } else if (form.name.trim().length < 3) {
-            newErrors.name = t("El nombre debe tener al menos 3 caracteres");
-        }
-
-        // Validar código
-        if (!form.code.trim()) {
-            newErrors.code = t("El código del curso es requerido");
-        } else if (form.code.trim().length < 2) {
-            newErrors.code = t("El código debe tener al menos 2 caracteres");
-        } else {
-            // Verificar que el código no esté duplicado (excepto el curso actual)
-            const isDuplicate = courses.some(c => 
-                c.code.toUpperCase() === form.code.trim().toUpperCase() && 
-                c.id !== course.id
-            );
-            if (isDuplicate) {
-                newErrors.code = t("Este código ya está en uso por otro curso");
-            }
-        }
-
-        // Validar fechas
-        if (!form.startDate) {
-            newErrors.startDate = t("La fecha de inicio es requerida");
-        }
-        
-        if (!form.endDate) {
-            newErrors.endDate = t("La fecha de fin es requerida");
-        }
-
-        // Validar que la fecha de fin sea posterior a la de inicio
-        if (form.startDate && form.endDate) {
-            const start = new Date(form.startDate);
-            const end = new Date(form.endDate);
-            
-            if (end <= start) {
-                newErrors.endDate = t("La fecha de fin debe ser posterior a la fecha de inicio");
-            }
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    }, [form, course.id, courses, t]);
-
-    // Manejo de cambios en el formulario
-    const handleFieldChange = useCallback((field, value) => {
-        setForm(prev => {
-            const updated = { ...prev };
-            
-            // Formatear automáticamente según el campo
-            if (field === "name") {
-                updated[field] = formatCourseName(value);
-            } else if (field === "code") {
-                updated[field] = formatCourseCode(value);
-            } else {
-                updated[field] = value;
-            }
-
-            return updated;
+    useEffect(() => {
+        if (!course) return;
+        setForm({
+            code: course.code ?? "",
+            name: course.name ?? "",
+            programId: course.programId != null ? String(course.programId) : "",
+            creditHours: course.creditHours ?? course.credit_hours ?? "",
         });
+        setError(null);
+        setShowErrors(false);
+        setSuccess(false);
+    }, [course]);
 
-        // Limpiar errores cuando el usuario modifica el campo
-        if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: undefined }));
-        }
-    }, [errors]);
+    useEffect(() => {
+        if (!course) return;
+        let cancelled = false;
+        setProgramsError(null);
+        listSchoolPrograms(user?.schoolId ?? null).then(
+            (list) => {
+                if (!cancelled) setSchoolPrograms(list);
+            },
+            (e) => {
+                if (!cancelled) {
+                    setSchoolPrograms([]);
+                    setProgramsError(e?.message || "No se pudieron cargar los programas");
+                }
+            }
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [course, user?.schoolId]);
 
-    // Guardar cambios
-    const handleSave = useCallback(async () => {
+    if (!course || !form) return null;
+
+    const programItems = schoolPrograms.map((p) => ({
+        value: String(p.programId),
+        label: p.code ? `${p.code} — ${p.name}` : p.name,
+        icon: "book-open",
+    }));
+
+    const setField = (key, value) => {
+        setForm((prev) => ({ ...prev, [key]: value }));
+        if (showErrors) setError(null);
+    };
+
+    const handleClose = () => {
+        setError(null);
+        setShowErrors(false);
+        setSuccess(false);
+        onClose();
+    };
+
+    const handleSubmit = async () => {
         setShowErrors(true);
-        
-        if (!validateForm()) {
-            pushNotification.error(
-                t("Error de validación"),
-                t("Por favor corrige los errores en el formulario")
-            );
+        setError(null);
+
+        if (!form.code.trim() || !form.name.trim() || !form.programId) {
+            setError(t("Completa los campos requeridos"));
             return;
         }
 
         setSaving(true);
+        const err = await onSubmit(form);
+        setSaving(false);
 
-        try {
-            // Crear objeto con los datos actualizados
-            const updatedData = {
-                name: form.name.trim(),
-                code: form.code.trim().toUpperCase(),
-                startDate: form.startDate,
-                endDate: form.endDate,
-            };
-
-            console.log('Actualizando curso:', course.id, 'con datos:', updatedData);
-
-            // Actualizar el curso en el contexto
-            await updateCourse(course.id, updatedData);
-
-            // Crear objeto de curso actualizado para el callback
-            const updatedCourse = {
-                ...course,
-                ...updatedData,
-            };
-
-            console.log('Curso actualizado exitosamente:', updatedCourse);
-
-            pushNotification.success(
-                t("Curso actualizado"),
-                t("La información del curso se ha actualizado correctamente")
-            );
-
-            // Llamar al callback del padre ANTES de cerrar
-            if (onSave) {
-                await onSave(updatedCourse);
-            }
-
-            // Forzar refresh del contexto
-            if (forceRefresh) {
-                setTimeout(() => {
-                    forceRefresh();
-                }, 200);
-            }
-
-            onClose();
-
-        } catch (error) {
-            console.error("Error al actualizar curso:", error);
-            pushNotification.error(
-                t("Error"),
-                t("No se pudo actualizar la información. Intenta nuevamente.")
-            );
-        } finally {
-            setSaving(false);
+        if (err) {
+            setError(t(err));
+        } else {
+            setSuccess(true);
+            setTimeout(() => {
+                setShowErrors(false);
+                setSuccess(false);
+                onClose();
+            }, 900);
         }
-    }, [form, course, validateForm, updateCourse, onSave, onClose, pushNotification, forceRefresh, t]);
+    };
 
-    if (!visible || !course) return null;
+    const isEmpty = (v) => showErrors && !v.trim();
 
     return (
-        <Modal transparent animationType="fade" onRequestClose={onClose}>
-            <TouchableOpacity
-                style={{
-                    flex: 1,
-                    backgroundColor: c.background.overlay,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    padding: 24,
-                }}
-                onPress={closeOnBackdrop ? onClose : undefined}
-                activeOpacity={1}
-                disabled={!closeOnBackdrop}
-            >
-                <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
-                    <View style={{
-                        backgroundColor: c.background.surface,
-                        borderRadius: 14,
-                        width: 520,
-                        maxHeight: "90%",
-                        overflow: "hidden",
-                        shadowColor: "#000",
-                        shadowOpacity: 0.15,
-                        shadowRadius: 8,
-                        elevation: 8,
-                    }}>
-                        {/* Header */}
-                        <View style={{
-                            padding: 20,
-                            borderBottomWidth: 1,
-                            borderBottomColor: c.border.primary,
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                        }}>
-                            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                                <Feather name="edit-3" size={20} color={c.brand.primary} />
-                                <Text style={{ fontSize: 18, fontWeight: "700", color: c.text.primary }}>
-                                    {t("Editar curso")}
-                                </Text>
-                            </View>
-                            <TouchableOpacity onPress={onClose}>
-                                <Feather name="x" size={18} color={c.text.secondary} />
-                            </TouchableOpacity>
-                        </View>
+        <BaseModal
+            visible={!!course}
+            onClose={handleClose}
+            title={t("Editar curso")}
+            subtitle={course.code}
+            icon="edit-3"
+            maxWidth={520}
+            footer={
+                <React.Fragment>
+                    <Button variant="ghost" onPress={handleClose} disabled={saving}>
+                        {t("Cancelar")}
+                    </Button>
+                    <Button variant="primary" onPress={handleSubmit} disabled={saving || success}>
+                        {saving
+                            ? <ActivityIndicator size="small" color={c.brand.textOnPrimary} />
+                            : success
+                                ? <React.Fragment><Feather name="check" size={14} color={c.brand.textOnPrimary} /> {t("¡Guardado!")}</React.Fragment>
+                                : t("Guardar cambios")}
+                    </Button>
+                </React.Fragment>
+            }
+        >
+            {error && (
+                <View style={{
+                    backgroundColor: c.status.errorLight || c.status.error + "20",
+                    borderRadius: 14,
+                    padding: 12,
+                    flexDirection: "row",
+                    gap: 8,
+                    marginBottom: 14,
+                }}>
+                    <Feather name="alert-circle" size={14} color={c.status.error} />
+                    <Text style={{ fontSize: 13, color: c.status.error, flex: 1 }}>{error}</Text>
+                </View>
+            )}
 
-                        {/* Body */}
-                        <ScrollView style={{ maxHeight: 400 }}>
-                            <View style={{ padding: 20, gap: 20 }}>
-                                {/* Campo Nombre */}
-                                <TextInput
-                                    label={t("Nombre del curso")}
-                                    value={form.name}
-                                    onChangeText={(text) => handleFieldChange("name", text)}
-                                    placeholder={t("Ej: Programación Orientada a Objetos")}
-                                    required
-                                    error={showErrors && !!errors.name}
-                                    errorMessage={errors.name}
-                                    leftIcon={<Feather name="book-open" size={16} color={c.text.secondary} />}
-                                    type="text"
-                                />
+            <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
+                <View style={{ flex: 1 }}>
+                    <TextInput
+                        label={t("Nombre del curso")}
+                        value={form.name}
+                        onChangeText={v => setField("name", v)}
+                        error={isEmpty(form.name)}
+                        errorMessage={isEmpty(form.name) ? t("Campo requerido") : ""}
+                        leftIcon={<Feather name="book-open" size={16} color={c.text.tertiary} />}
+                    />
+                </View>
+                <View style={{ width: isSmall ? "100%" : 160 }}>
+                    <TextInput
+                        label={t("Código")}
+                        value={form.code}
+                        onChangeText={v => setField("code", v)}
+                        error={isEmpty(form.code)}
+                        errorMessage={isEmpty(form.code) ? t("Campo requerido") : ""}
+                        leftIcon={<Feather name="hash" size={16} color={c.text.tertiary} />}
+                    />
+                </View>
+                <View style={{ width: isSmall ? "100%" : 120 }}>
+                    <TextInput
+                        label={t("Créditos")}
+                        value={String(form.creditHours ?? "")}
+                        onChangeText={v => setField("creditHours", v.replace(/[^\d]/g, ""))}
+                        placeholder="3"
+                        error={showErrors && String(form.creditHours ?? "").trim() !== "" && (!/^\d+$/.test(String(form.creditHours).trim()) || Number(form.creditHours) > 32767)}
+                        errorMessage={t("0 a 32767")}
+                        leftIcon={<Feather name="award" size={16} color={c.text.tertiary} />}
+                    />
+                </View>
+            </View>
 
-                                {/* Campo Código */}
-                                <TextInput
-                                    label={t("Código del curso")}
-                                    value={form.code}
-                                    onChangeText={(text) => handleFieldChange("code", text)}
-                                    placeholder={t("Ej: POO-301")}
-                                    required
-                                    error={showErrors && !!errors.code}
-                                    errorMessage={errors.code}
-                                    leftIcon={<Feather name="hash" size={16} color={c.text.secondary} />}
-                                    type="text"
-                                    maxLength={20}
-                                />
-
-                                {/* Fechas */}
-                                <View style={{
-                                    flexDirection: "row",
-                                    gap: 12,
-                                }}>
-                                    {/* Fecha de inicio */}
-                                    <View style={{ flex: 1 }}>
-                                        <DateInput
-                                            label={t("Fecha de inicio")}
-                                            value={form.startDate}
-                                            onChangeText={(text) => handleFieldChange("startDate", text)}
-                                            required
-                                            error={showErrors && !!errors.startDate}
-                                            errorMessage={errors.startDate}
-                                            leftIcon={<Feather name="calendar" size={16} color={c.text.secondary} />}
-                                        />
-                                    </View>
-
-                                    {/* Fecha de fin */}
-                                    <View style={{ flex: 1 }}>
-                                        <DateInput
-                                            label={t("Fecha de fin")}
-                                            value={form.endDate}
-                                            onChangeText={(text) => handleFieldChange("endDate", text)}
-                                            required
-                                            error={showErrors && !!errors.endDate}
-                                            errorMessage={errors.endDate}
-                                            leftIcon={<Feather name="calendar" size={16} color={c.text.secondary} />}
-                                        />
-                                    </View>
-                                </View>
-
-                                {/* Información adicional */}
-                                <View style={{
-                                    padding: 12,
-                                    backgroundColor: c.background.app,
-                                    borderRadius: 8,
-                                    borderLeftWidth: 4,
-                                    borderLeftColor: c.brand.primary,
-                                }}>
-                                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                                        <Feather name="info" size={14} color={c.brand.primary} />
-                                        <Text style={{
-                                            fontSize: 12,
-                                            fontWeight: "600",
-                                            color: c.text.primary,
-                                        }}>
-                                            {t("Información importante")}
-                                        </Text>
-                                    </View>
-                                    <Text style={{
-                                        fontSize: 11,
-                                        color: c.text.secondary,
-                                        lineHeight: 16,
-                                    }}>
-                                        • {t("El código se convertirá automáticamente a mayúsculas")}{"\n"}
-                                        • {t("Las fechas determinan el período académico del curso")}{"\n"}
-                                        • {t("Los estudiantes asignados mantendrán su vinculación al curso")}
-                                    </Text>
-                                </View>
-                            </View>
-                        </ScrollView>
-
-                        {/* Footer */}
-                        <View style={{
-                            padding: 20,
-                            borderTopWidth: 1,
-                            borderTopColor: c.border.primary,
-                            flexDirection: "row",
-                            gap: 12,
-                            justifyContent: "flex-end",
-                        }}>
-                            <Button
-                                variant="ghost"
-                                onPress={onClose}
-                                disabled={saving}
-                            >
-                                {t("Cancelar")}
-                            </Button>
-                            <Button
-                                variant="primary"
-                                onPress={handleSave}
-                                loading={saving}
-                                disabled={saving}
-                            >
-                                {saving ? t("Guardando...") : t("Guardar cambios")}
-                            </Button>
-                        </View>
-                    </View>
-                </TouchableOpacity>
-            </TouchableOpacity>
-        </Modal>
+            <View style={{ marginBottom: 2 }}>
+                <Text style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: (showErrors && !form.programId) || programsError ? c.status.error : c.text.secondary,
+                    marginBottom: 6,
+                }}>
+                    {t("Programa") + " *"}
+                </Text>
+                <AnimatedDropdown
+                    items={programItems}
+                    value={form.programId}
+                    onSelect={v => setField("programId", v)}
+                    placeholder={t("Seleccionar programa")}
+                    searchable={true}
+                    searchPlaceholder={t("Buscar...")}
+                    triggerIcon="book-open"
+                    error={showErrors && !form.programId}
+                    triggerHeight={48}
+                />
+                {programsError && (
+                    <Text style={{ fontSize: 12, color: c.status.error, marginTop: 4 }}>
+                        {programsError}
+                    </Text>
+                )}
+            </View>
+        </BaseModal>
     );
 }

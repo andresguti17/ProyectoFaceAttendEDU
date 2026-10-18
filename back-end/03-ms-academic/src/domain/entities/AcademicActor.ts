@@ -1,4 +1,4 @@
-export type ActorType = 'STUDENT' | 'INSTRUCTOR';
+export type ActorType = 'STUDENT' | 'INSTRUCTOR' | 'ADMIN';
 export interface AcademicActorRecord {
   academicActorId: number;
   personId: string;

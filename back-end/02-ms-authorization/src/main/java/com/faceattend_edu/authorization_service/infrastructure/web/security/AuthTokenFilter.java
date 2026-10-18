@@ -49,7 +49,59 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     private static final Pattern USER_ROLES_PATH = Pattern.compile(".*/users/([^/]+)/roles.*");
 
+    /** Any write on the role catalog itself, including a role's permission set. */
+    private static final Pattern ROLE_CATALOG_WRITE_PATH = Pattern.compile("^(/api/v1)?/roles(/.*)?$");
+    /** Any write on the permission catalog — what a permission even means. */
+    private static final Pattern PERMISSION_CATALOG_WRITE_PATH = Pattern.compile("^(/api/v1)?/permissions(/.*)?$");
+
+    /** Role name reserved for the unrestricted, school-less administrator. */
+    static final String SUPER_ADMIN_ROLE = "Super Administrador";
+
     private final RestTemplate restTemplate;
+
+    /**
+    * Caché positiva de autenticación (TTL corto). Cada request autenticado
+    * costaba 2-3 introspecciones secuenciales (sesión + roles + evaluate);
+    * bajo fan-out del frontend eso saturaba identity/authorization y Kong
+    * respondía 503 "Cannot verify session". Solo se cachean resultados
+    * POSITIVOS: cualquier fallo se revalida en vivo (fail-secure). Ventana
+    * de revocación/logout: AUTH_CACHE_TTL_MS.
+    */
+    private static final long AUTH_CACHE_TTL_MS = 10_000;
+    private static final int AUTH_CACHE_MAX_ENTRIES = 5_000;
+    private final java.util.Map<String, CachedSession> sessionCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Map<String, CachedEvaluation> evaluationCache = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private record CachedSession(String userId, java.util.List<String> roles, long expiresAt) {}
+    private record CachedEvaluation(boolean allowed, long expiresAt) {}
+
+    private CachedSession cachedSession(String rawToken) {
+        CachedSession hit = sessionCache.get(rawToken);
+        if (hit == null) return null;
+        if (hit.expiresAt() <= System.currentTimeMillis()) { sessionCache.remove(rawToken); return null; }
+        return hit;
+    }
+
+    private void storeSession(String rawToken, String userId, java.util.List<String> roles) {
+        if (sessionCache.size() > AUTH_CACHE_MAX_ENTRIES) sessionCache.clear();
+        sessionCache.put(rawToken, new CachedSession(userId, java.util.List.copyOf(roles), System.currentTimeMillis() + AUTH_CACHE_TTL_MS));
+    }
+
+    private boolean cachedEvaluate(String rawToken, String userId, String permission) {
+        String key = rawToken + "\n" + userId + "\n" + permission;
+        CachedEvaluation hit = evaluationCache.get(key);
+        long now = System.currentTimeMillis();
+        if (hit != null) {
+            if (hit.expiresAt() > now) return hit.allowed();
+            evaluationCache.remove(key);
+        }
+        boolean allowed = evaluate(rawToken, userId, permission);
+        if (allowed) {
+            if (evaluationCache.size() > AUTH_CACHE_MAX_ENTRIES) evaluationCache.clear();
+            evaluationCache.put(key, new CachedEvaluation(true, now + AUTH_CACHE_TTL_MS));
+        }
+        return allowed;
+    }
 
     @Value("${faceattend.auth.identity-url:http://localhost:8081}")
     private String identityUrl;
@@ -88,26 +140,45 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             return;
         }
 
-        Map<?, ?> session = fetchSession(rawToken, sessionId);
-        if (session == null || !"Active".equals(session.get("sessionStatus"))) {
-            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired session", path);
-            return;
+        CachedSession cached = cachedSession(rawToken);
+        final String caller;
+        final List<String> roles;
+        if (cached != null) {
+            caller = cached.userId();
+            roles = cached.roles();
+        } else {
+            Map<?, ?> session = fetchSession(rawToken, sessionId);
+            if (session == null || !"Active".equals(session.get("sessionStatus"))) {
+                deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired session", path);
+                return;
+            }
+            Object userId = session.get("userId");
+            if (userId == null) {
+                deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Session without user", path);
+                return;
+            }
+            caller = String.valueOf(userId);
+            List<String> fetched = fetchRoles(rawToken, caller);
+            if (fetched == null) {
+                deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Cannot verify user roles", path);
+                return;
+            }
+            roles = fetched;
+            storeSession(rawToken, caller, roles);
         }
-        Object userId = session.get("userId");
-        if (userId == null) {
-            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Session without user", path);
-            return;
-        }
-        String caller = String.valueOf(userId);
 
-        List<String> roles = fetchRoles(rawToken, caller);
-        if (roles == null) {
-            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Cannot verify user roles", path);
+        // RBAC-on-RBAC (HU-IAM-003/010): who a user IS and what a role CAN do are
+        // platform-level decisions. `configuration:manage` alone would let a
+        // school Administrador (who also holds it) grant themselves or anyone
+        // else the Super Administrador role, or rewrite the permission matrix —
+        // so these writes require the role itself, not just the permission.
+        if (requiresSuperAdminRole(request.getMethod(), path) && !roles.contains(SUPER_ADMIN_ROLE)) {
+            deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + SUPER_ADMIN_ROLE, path);
             return;
         }
 
         String required = requiredPermission(request.getMethod(), path, request, caller);
-        if (required != null && !evaluate(rawToken, caller, required)) {
+        if (required != null && !cachedEvaluate(rawToken, caller, required)) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + required, path);
             return;
         }
@@ -123,6 +194,18 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         } finally {
             SecurityContextHolder.clearContext();
         }
+    }
+
+    /**
+     * Whether this write changes who a user IS (role assignment) or what a role
+     * or permission CAN do (the RBAC catalog itself). Reserved for Super
+     * Administrador: `configuration:manage` is held by a school Administrador
+     * too, and the RBAC catalog is not scoped per school.
+     */
+    static boolean requiresSuperAdminRole(String method, String path) {
+        if (method.equalsIgnoreCase("GET")) return false;
+        return ROLE_CATALOG_WRITE_PATH.matcher(path).matches()
+                || PERMISSION_CATALOG_WRITE_PATH.matcher(path).matches();
     }
 
     /**

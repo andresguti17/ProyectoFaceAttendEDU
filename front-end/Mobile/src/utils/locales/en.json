@@ -39,7 +39,8 @@
     "activate": "Activate",
     "deactivate": "Deactivate",
     "logoLabel": "FaceAttend logo",
-    "logoPlaceholder": "logo"
+    "logoPlaceholder": "logo",
+    "confirm": "Confirm"
   },
   "login": {
     "title": "Login",
@@ -706,7 +707,8 @@
     "justificationUpdated": "Justification type updated.",
     "newJustificationType": "New justification type",
     "editJustificationType": "Edit justification type",
-    "updateJustification": "Save changes"
+    "updateJustification": "Save changes",
+    "categoryGeneral": "General"
   },
   "justifications": {
     "validList": "Valid Justifications",
@@ -780,7 +782,9 @@
       "saveButton": "Save changes",
       "saving": "Saving...",
       "successMessage": "Profile updated successfully",
-      "successTitle": "Profile updated"
+      "successTitle": "Profile updated",
+      "enterEmail": "Enter your email address",
+      "enterPhone": "Enter your phone number"
     },
     "schoolInfo": "School information",
     "schoolName": "School name",
@@ -1023,7 +1027,8 @@
     "sending": "Sending code",
     "sendA11y": "Send recovery code",
     "emailHint": "Enter your email to receive the recovery code",
-    "waitSeconds": "Wait {{seconds}} seconds"
+    "waitSeconds": "Wait {{seconds}} seconds",
+    "retryIn": "Retry in {{seconds}}s"
   },
   "passwordUpdate": {
     "title": "New password",
@@ -1049,7 +1054,9 @@
     "a11yRequirementsHint": "Must have at least 8 characters, with uppercase, lowercase, numbers and special characters.",
     "a11yShowConfirmation": "Show confirmation",
     "a11yHideConfirmation": "Hide confirmation",
-    "a11yCancel": "Cancel and discard changes"
+    "a11yCancel": "Cancel and discard changes",
+    "enterNew": "Enter your new password",
+    "confirmNew": "Confirm the password you entered"
   },
   "verifyCode": {
     "title": "Check your email",
@@ -1068,7 +1075,10 @@
     "resendIn": "Resend code in {{seconds}} seconds",
     "resentTitle": "Code resent",
     "resentMessage": "Check your email for the new code.",
-    "resendError": "The code could not be resent."
+    "resendError": "The code could not be resent.",
+    "lockedWait": "Wait {{seconds}}s",
+    "noCodeQuestion": "Didn't get the code?",
+    "resendCountdown": "Resend in {{seconds}}s"
   },
   "manageAmbientes": {
     "title": "Environment management",
@@ -1221,5 +1231,109 @@
     "sessionNotCreated": "The server could not create your session. Please try again.",
     "sessionNotSaved": "The session could not be saved on this device. Check the available storage and try again.",
     "sessionNotRenewable": "Your session cannot be renewed. Please log in again."
+  },
+  "codeInput": {
+    "digitLabel": "Digit {{n}} of 6",
+    "hint": "Enter the 6-character code"
+  },
+  "datePicker": {
+    "selectDate": "Select a date"
+  },
+  "manageEnvironment": {
+    "capacityLine": "{{location}} • Cap. {{capacity}}"
+  },
+  "passwordStrength": {
+    "veryWeak": "Very weak",
+    "weak": "Weak",
+    "fair": "Fair",
+    "strong": "Strong",
+    "veryStrong": "Very strong"
+  },
+  "documentTypes": {
+    "cc": "Citizenship ID (CC)",
+    "ti": "Minor ID card (TI)",
+    "ce": "Foreigner ID (CE)"
+  },
+  "appearance": {
+    "colors": {
+      "azul": "Blue",
+      "verde": "Green",
+      "violeta": "Violet",
+      "naranja": "Orange",
+      "neutro": "Neutral",
+      "dorado": "Gold",
+      "celeste": "Sky blue",
+      "amarillo": "Yellow",
+      "rojo": "Red",
+      "rosa": "Pink",
+      "gris-osc": "Dark grey",
+      "gris-med": "Mid grey",
+      "gris-cla": "Light grey",
+      "carbon": "Charcoal"
+    },
+    "visionDesc": {
+      "normal": "Base palette, optimised for standard vision.",
+      "deuteranopia": "Most common type (~6% of men). Affects green perception. Use blue + gold + violet.",
+      "protanopia": "Affects red perception (~1% of men). Blue + yellow are the most distinguishable.",
+      "tritanopia": "Affects blue/yellow perception (~0.01%). Red + green are the most distinguishable.",
+      "achromatopsia": "No colour perception (very rare). Only luminance contrast is effective."
+    },
+    "wcagFail": "Fail",
+    "read": {
+      "excellent": "White text on top looks perfect",
+      "good": "White text is readable without trouble",
+      "weak": "White text is visible but hard to read",
+      "poor": "White text doesn't read well — colour too light"
+    },
+    "vibe": {
+      "neutral": "Neutral tone — subtle",
+      "red": "Red — energetic and eye-catching",
+      "orange": "Orange / gold — warm and friendly",
+      "green": "Green — fresh and reliable",
+      "cyan": "Cyan / turquoise — modern",
+      "blue": "Blue — professional",
+      "violet": "Violet — creative and sophisticated",
+      "pink": "Pink / magenta — expressive"
+    },
+    "uiFit": {
+      "light": "Very light — may get lost on white backgrounds",
+      "dark": "Very dark — can be mistaken for text",
+      "desaturated": "Low saturation — works as a neutral",
+      "vibrant": "Very vibrant — can tire the eyes in long use",
+      "balanced": "Balanced proportions — ideal for buttons and tabs"
+    },
+    "tip": {
+      "lowerLum15": "Lower the brightness by 15–20 pts so white text is readable",
+      "lowerLum8": "Lower the brightness by 8–10 pts to improve readability",
+      "raiseSat": "Raise the saturation so the accent stands out",
+      "tooPale": "This shade is very pale — darken it so it reads as a real accent",
+      "fine": "This colour works well — no adjustments needed"
+    },
+    "score": {
+      "excellent": "excellent",
+      "good": "good",
+      "acceptable": "acceptable",
+      "caution": "caution",
+      "problematic": "problematic"
+    }
+  },
+  "countries": {
+    "loadError": "Could not load countries.",
+    "connectionError": "Connection error while loading countries.",
+    "citiesLoadError": "Could not load cities.",
+    "citiesConnectionError": "Connection error while loading cities."
+  },
+  "weekdays": {
+    "1": "Monday",
+    "2": "Tuesday",
+    "3": "Wednesday",
+    "4": "Thursday",
+    "5": "Friday",
+    "6": "Saturday",
+    "7": "Sunday"
+  },
+  "errors": {
+    "missingPerson": "The user's person record is missing.",
+    "missingSchool": "The selected school is missing."
   }
 }

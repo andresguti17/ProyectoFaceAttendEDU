@@ -30,18 +30,20 @@ export class PostgresBiometricUpdateCaseRepository extends PostgresCrudRepositor
     ...AUDIT_FIELDS,
   ];
 
-  search(query: { status?: string; personId?: string; limit?: number; offset?: number } = {}) {
+  search(query: { status?: string; personId?: string; personIds?: readonly string[]; limit?: number; offset?: number } = {}) {
     return this.list({ filters: this.filtersFor(query), limit: query.limit, offset: query.offset });
   }
 
-  countMatching(query: { status?: string; personId?: string } = {}) {
+  countMatching(query: { status?: string; personId?: string; personIds?: readonly string[] } = {}) {
     return this.count({ filters: this.filtersFor(query) });
   }
 
-  private filtersFor(query: { status?: string; personId?: string }) {
+  private filtersFor(query: { status?: string; personId?: string; personIds?: readonly string[] }) {
     return [
       ...(query.status !== undefined ? [this.filterOn('updateStatus', query.status)] : []),
       ...(query.personId !== undefined ? [this.filterOn('personId', query.personId)] : []),
+      // School-scoped reviewer: restrict to a set of persons instead of one.
+      ...(query.personIds !== undefined ? [{ ...this.filterOn('personId', query.personIds), op: 'in' as const }] : []),
     ];
   }
 }

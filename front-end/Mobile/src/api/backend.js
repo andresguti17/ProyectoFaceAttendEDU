@@ -1,7 +1,7 @@
 import { request, GET } from './apiClient';
 
 // Typed access to the real microservices through the Kong gateway
-// (API_BASE_URL / AUTHZ_BASE_URL / ... all alias the gateway :8080;
+// (API_BASE_URL / AUTHZ_BASE_URL / ... all alias the gateway :8000;
 // Kong routes by path, so the service base only matters for overrides).
 function toSnakeKey(key) {
   return String(key)
@@ -58,7 +58,7 @@ function cacheKey(base, path, params) {
   return `${base}${path}?${JSON.stringify(params || {})}`;
 }
 
-// Todo pasa por el gateway Kong (:8080), que exige Bearer en /api/**.
+// Todo pasa por el gateway Kong (:8000), que exige Bearer en /api/**.
 // El token se guarda en login (TokenStorage) y apiClient lo adjunta.
 export async function backendGet(base, path, params = null, { useCache = false } = {}) {
   const key = cacheKey(base, path, params);

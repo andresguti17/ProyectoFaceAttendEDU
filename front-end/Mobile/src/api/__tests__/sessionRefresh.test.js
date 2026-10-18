@@ -14,7 +14,7 @@ jest.mock('../../storage/TokenStorage', () => ({
   }),
 }));
 
-const REFRESH_URL = 'http://gateway.test:8080/api/v1/auth/refresh';
+const REFRESH_URL = 'http://gateway.test:8000/api/v1/auth/refresh';
 
 function ok(body) {
   return { ok: true, status: 200, json: async () => body };

@@ -30,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -196,7 +195,8 @@ class JustificationTypeControllerTest {
         @Test
         @DisplayName("Given renamed type when PUT then 200 with updated body")
         void givenRenamedType_whenPut_thenReturn200() throws Exception {
-            // Arrange
+            // Arrange: update() now fetches first (ownership check before updating).
+            when(getUseCase.getById(1)).thenReturn(type(1, null, "Medical leave"));
             JustificationType updated = type(1, null, "Renamed leave");
             updated.setStatus(false);
             when(updateUseCase.update(eq(1), any(JustificationType.class))).thenReturn(updated);
@@ -225,7 +225,8 @@ class JustificationTypeControllerTest {
         @Test
         @DisplayName("Given existing type when DELETE then 204")
         void givenExistingType_whenDelete_thenReturn204() throws Exception {
-            // Arrange
+            // Arrange: delete() now fetches first (ownership check before deleting).
+            when(getUseCase.getById(1)).thenReturn(type(1, null, "Medical leave"));
 
             // Act
             // Assert
@@ -237,9 +238,9 @@ class JustificationTypeControllerTest {
         @Test
         @DisplayName("Given unknown type when DELETE then 404 ISO-8.5-INT-001")
         void givenUnknownType_whenDelete_thenReturn404() throws Exception {
-            // Arrange
-            doThrow(new EntityNotFoundException("JustificationType", 999))
-                    .when(deleteUseCase).delete(999);
+            // Arrange: delete() now fetches first (ownership check before deleting),
+            // so the 404 now comes from that fetch instead of deleteUseCase.
+            when(getUseCase.getById(999)).thenThrow(new EntityNotFoundException("JustificationType", 999));
 
             // Act
             // Assert

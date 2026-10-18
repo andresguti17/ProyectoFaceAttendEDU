@@ -318,7 +318,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                         <ActivityIndicator color={colors.onPrimary} size="small" />
                                     ) : codeVerification.isLockedOut ? (
                                         <Text style={styles.recoveryPrimaryButtonText}>
-                                            Espera {codeVerification.lockoutRemaining}s
+                                            {t('verifyCode.lockedWait', {seconds: codeVerification.lockoutRemaining})}
                                         </Text>
                                     ) : (
                                         <Text style={styles.recoveryPrimaryButtonText}>
@@ -330,7 +330,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                 {/* Reenviar código */}
                                 <View style={{ alignItems: 'center', marginTop: 16 }}>
                                     <Text style={[styles.textoCredenciales, { color: colors.textSecondary }]}>
-                                        ¿No recibiste el código?
+                                        {t('verifyCode.noCodeQuestion')}
                                     </Text>
                                     <TouchableOpacity
                                         onPress={handleResendCode}
@@ -351,7 +351,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                             marginTop: 4,
                                         }}>
                                             {resendCooldown.isActive
-                                                ? `Reenviar en ${resendCooldown.remaining}s`
+                                                ? t('verifyCode.resendCountdown', {seconds: resendCooldown.remaining})
                                                 : t('verifyCode.resendButton')}
                                         </Text>
                                     </TouchableOpacity>

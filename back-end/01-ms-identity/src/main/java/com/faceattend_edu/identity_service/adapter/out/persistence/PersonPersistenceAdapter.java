@@ -30,16 +30,17 @@ public class PersonPersistenceAdapter implements LoadPersonPort, SavePersonPort,
 
     // Sorted by the primary key: without a deterministic order Postgres may repeat or skip
     // rows between pages, so a client walking every page would not see the table exactly once.
+    // Soft-deleted persons are excluded (findAllActive) per the model's soft-delete rule.
     @Override
     public List<Person> listPersons(int pageIndex, int limit) {
-        return repository.findAll(PageRequest.of(pageIndex, limit, Sort.by("personId")))
+        return repository.findAllActive(PageRequest.of(pageIndex, limit, Sort.by("personId")))
                 .map(mapper::toDomain)
                 .getContent();
     }
 
     @Override
     public long countPersons() {
-        return repository.count();
+        return repository.countActive();
     }
 
     @Override

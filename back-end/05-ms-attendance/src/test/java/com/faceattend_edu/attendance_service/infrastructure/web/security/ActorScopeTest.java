@@ -100,4 +100,36 @@ class ActorScopeTest {
         assertThat(resolver.resolve("u-1", List.of("Instructor"), "t")).containsExactlyInAnyOrder(1L, 2L);
         assertThat(resolver.resolve("admin", List.of("Super Administrador"), "t")).isNull();
     }
+
+    @Test
+    void schoolAdminScopeIsLimitedToOwnSchool() {
+        Map<String, Object> backend = Map.of(
+                "/api/v1/users/u-admin", Map.of("personId", "p-admin"),
+                // El alcance de sede se deduce del listado completo (paginado).
+                "/api/v1/academic-actors?personId=p-admin", List.of(Map.of("academicActorId", 1, "personId", "p-admin", "schoolId", 100)),
+                "/api/v1/academic-actors?limit=100&offset=0", List.of(
+                        Map.of("academicActorId", 1, "personId", "p-admin", "schoolId", 100),
+                        Map.of("academicActorId", 2, "personId", "p-2", "schoolId", 100),
+                        Map.of("academicActorId", 3, "personId", "p-3", "schoolId", 200)));
+        CallerScopeResolver resolver = new CallerScopeResolver() {
+            private Object at(String url) {
+                return backend.get(url.substring(url.indexOf("/api/")));
+            }
+
+            @Override
+            protected Map<?, ?> getMap(String url, String token) {
+                return (Map<?, ?>) at(url);
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            protected List<Map<?, ?>> getList(String url, String token) {
+                Object value = at(url);
+                return value == null ? List.of() : (List<Map<?, ?>>) value;
+            }
+        };
+
+        Set<Long> scope = resolver.resolve("u-admin", List.of("Administrador"), "t");
+        assertThat(scope).containsExactlyInAnyOrder(1L, 2L);
+    }
 }

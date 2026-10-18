@@ -4,7 +4,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import com.faceattend_edu.identity_service.application.port.out.LoadPersonPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserPort;
+import com.faceattend_edu.identity_service.domain.model.Person;
 import com.faceattend_edu.identity_service.domain.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +35,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Exige Bearer con sessionId opaco en todo /api/** salvo login/logout/me (bootstrap).
+ * Exige Bearer con sessionId opaco en todo /api/** salvo login/logout/refresh y recuperación de contraseña (bootstrap).
  * Valida la sesión contra el propio store vía identity, resuelve roles y evalúa
  * el permiso requerido contra authorization. Propaga X-User-Id / X-User-Roles.
  *
@@ -57,6 +59,10 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     private static final Pattern PERSON_ITEM = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})$");
     private static final Pattern USER_ITEM = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})$");
+    /** Persona y sus sub-recursos de escritura: PUT /persons/{id}, PATCH /persons/{id}/status. */
+    private static final Pattern PERSON_SCOPED = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})(?:/status)?$");
+    /** Cuenta y sub-recursos de escritura: PUT /users/{id}, PATCH .../status, POST .../activate. */
+    private static final Pattern USER_SCOPED = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})(?:/status|/activate)?$");
     private static final Pattern USER_SESSIONS = Pattern.compile("^/api/v1/sessions/user/([0-9a-fA-F-]{36})$");
     private static final String WRITE = "identity.person:write";
 
@@ -64,6 +70,51 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     // Perezoso: los tests @WebMvcTest cargan el filtro sin la capa de persistencia.
     private final ObjectProvider<LoadUserPort> loadUserPort;
     private final ObjectProvider<CallerScopeResolver> scopeResolver;
+    private final ObjectProvider<LoadPersonPort> loadPersonPort;
+
+    /**
+    * Caché positiva de autenticación (TTL corto). Cada request autenticado
+    * costaba 2-3 introspecciones secuenciales (sesión + roles + evaluate);
+    * bajo fan-out del frontend eso saturaba identity/authorization y Kong
+    * respondía 503 "Cannot verify session". Solo se cachean resultados
+    * POSITIVOS: cualquier fallo se revalida en vivo (fail-secure). Ventana
+    * de revocación/logout: AUTH_CACHE_TTL_MS.
+    */
+    private static final long AUTH_CACHE_TTL_MS = 10_000;
+    private static final int AUTH_CACHE_MAX_ENTRIES = 5_000;
+    private final java.util.Map<String, CachedSession> sessionCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Map<String, CachedEvaluation> evaluationCache = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private record CachedSession(String userId, java.util.List<String> roles, long expiresAt) {}
+    private record CachedEvaluation(boolean allowed, long expiresAt) {}
+
+    private CachedSession cachedSession(String rawToken) {
+        CachedSession hit = sessionCache.get(rawToken);
+        if (hit == null) return null;
+        if (hit.expiresAt() <= System.currentTimeMillis()) { sessionCache.remove(rawToken); return null; }
+        return hit;
+    }
+
+    private void storeSession(String rawToken, String userId, java.util.List<String> roles) {
+        if (sessionCache.size() > AUTH_CACHE_MAX_ENTRIES) sessionCache.clear();
+        sessionCache.put(rawToken, new CachedSession(userId, java.util.List.copyOf(roles), System.currentTimeMillis() + AUTH_CACHE_TTL_MS));
+    }
+
+    private boolean cachedEvaluate(String rawToken, String userId, String permission) {
+        String key = rawToken + "\n" + userId + "\n" + permission;
+        CachedEvaluation hit = evaluationCache.get(key);
+        long now = System.currentTimeMillis();
+        if (hit != null) {
+            if (hit.expiresAt() > now) return hit.allowed();
+            evaluationCache.remove(key);
+        }
+        boolean allowed = evaluate(rawToken, userId, permission);
+        if (allowed) {
+            if (evaluationCache.size() > AUTH_CACHE_MAX_ENTRIES) evaluationCache.clear();
+            evaluationCache.put(key, new CachedEvaluation(true, now + AUTH_CACHE_TTL_MS));
+        }
+        return allowed;
+    }
 
     @Value("${faceattend.auth.identity-url:http://localhost:8081}")
     private String identityUrl;
@@ -71,8 +122,10 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Value("${faceattend.auth.authorization-url:http://localhost:8082}")
     private String authorizationUrl;
 
-    public AuthTokenFilter(ObjectProvider<LoadUserPort> loadUserPort, ObjectProvider<CallerScopeResolver> scopeResolver) {
+    public AuthTokenFilter(ObjectProvider<LoadUserPort> loadUserPort, ObjectProvider<CallerScopeResolver> scopeResolver,
+                           ObjectProvider<LoadPersonPort> loadPersonPort) {
         this.loadUserPort = loadUserPort;
+        this.loadPersonPort = loadPersonPort;
         this.scopeResolver = scopeResolver;
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(3000);
@@ -104,22 +157,31 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             return;
         }
 
-        Map<?, ?> session = fetchSession(rawToken, sessionId);
-        if (session == null || !"Active".equals(session.get("sessionStatus"))) {
-            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired session", path);
-            return;
-        }
-        Object userId = session.get("userId");
-        if (userId == null) {
-            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Session without user", path);
-            return;
-        }
-        String caller = String.valueOf(userId);
-
-        List<String> roles = fetchRoles(rawToken, caller);
-        if (roles == null) {
-            deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Cannot verify user roles", path);
-            return;
+        CachedSession cached = cachedSession(rawToken);
+        final String caller;
+        final List<String> roles;
+        if (cached != null) {
+            caller = cached.userId();
+            roles = cached.roles();
+        } else {
+            Map<?, ?> session = fetchSession(rawToken, sessionId);
+            if (session == null || !"Active".equals(session.get("sessionStatus"))) {
+                deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired session", path);
+                return;
+            }
+            Object userId = session.get("userId");
+            if (userId == null) {
+                deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Session without user", path);
+                return;
+            }
+            caller = String.valueOf(userId);
+            List<String> fetched = fetchRoles(rawToken, caller);
+            if (fetched == null) {
+                deny(response, HttpServletResponse.SC_UNAUTHORIZED, "Cannot verify user roles", path);
+                return;
+            }
+            roles = fetched;
+            storeSession(rawToken, caller, roles);
         }
 
         String required = requiredPermission(request.getMethod(), path, caller);
@@ -128,13 +190,24 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             required = "identity.person:read";
             request.setAttribute(SELF_EDIT_ATTRIBUTE, Boolean.TRUE);
         }
-        if (required != null && !evaluate(rawToken, caller, required)) {
+        if (required != null && !cachedEvaluate(rawToken, caller, required)) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + required, path);
             return;
         }
 
-        if (request.getMethod().equalsIgnoreCase("GET") && path.startsWith("/api/v1/persons")
-                && !applyPersonScope(request, response, path, caller, roles, rawToken)) {
+        // Una cuenta ajena exige alcance; la propia no — y el guard de academic
+        // resuelve la persona del llamante justo con esa auto-llamada: sin esta
+        // excepción la resolución de alcance (→ academic-actors → identity
+        // users/{id}) se llama a sí misma hasta agotar timeouts (503).
+        boolean read = request.getMethod().equalsIgnoreCase("GET");
+        Matcher userItemPath = (read ? USER_ITEM : USER_SCOPED).matcher(path);
+        boolean ownUserItem = userItemPath.matches() && userItemPath.group(1).equalsIgnoreCase(caller);
+        boolean scoped = read
+                ? (path.startsWith("/api/v1/persons") || path.equals("/api/v1/users")
+                        || (userItemPath.matches() && !ownUserItem))
+                // Las escrituras sobre una persona/cuenta concreta también quedan acotadas a la sede.
+                : (PERSON_SCOPED.matcher(path).matches() || (userItemPath.matches() && !ownUserItem));
+        if (scoped && !applyPersonScope(request, response, path, caller, roles, rawToken)) {
             return;
         }
 
@@ -155,7 +228,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         for (String prefix : PUBLIC_PREFIXES) {
             if (path.equals(prefix) || path.startsWith(prefix)) return true;
         }
-        // Bootstrap: login/logout/me públicos; el resto de /api/** exige sesión.
+        // Bootstrap: login/logout públicos; el resto de /api/** exige sesión.
         if (path.equals("/api/v1/auth/login") && method.equalsIgnoreCase("POST")) return true;
         if (path.equals("/api/v1/auth/logout") && method.equalsIgnoreCase("POST")) return true;
         // Rotación de sesión (refresh token): el sessionId viejo viaja en el cuerpo
@@ -166,7 +239,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         if (path.equals("/api/v1/auth/forgot-password") && method.equalsIgnoreCase("POST")) return true;
         if (path.equals("/api/v1/auth/verify-code") && method.equalsIgnoreCase("POST")) return true;
         if (path.equals("/api/v1/auth/reset-password") && method.equalsIgnoreCase("POST")) return true;
-        if (path.equals("/api/v1/auth/me") && method.equalsIgnoreCase("GET")) return true;
         // Lectura de sesión por UUID: la usa el propio filtro (fetchSession) en cada
         // MS. Sin bypass, la validación se llamaría a sí misma por HTTP en bucle
         // hasta agotar timeouts y toda petición autenticada terminaría en 401.
@@ -208,13 +280,37 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             return false;
         }
         if (scope.all()) return true;
-        Matcher item = PERSON_ITEM.matcher(path);
-        if (item.matches() && !scope.allows(UUID.fromString(item.group(1)))) {
+        Matcher item = PERSON_SCOPED.matcher(path);
+        if (item.matches() && !scope.allows(UUID.fromString(item.group(1)))
+                && !createdByCaller(UUID.fromString(item.group(1)), caller)) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: person outside your scope", path);
             return false;
         }
+        Matcher userItem = USER_SCOPED.matcher(path);
+        if (userItem.matches() && !userItem.group(1).equalsIgnoreCase(caller)) {
+            // Una cuenta ajena se ve solo si su persona cae en el alcance del llamante.
+            LoadUserPort port = loadUserPort.getIfAvailable();
+            User target = port == null ? null : port.loadUser(UUID.fromString(userItem.group(1)));
+            UUID personId = target == null || target.getPersonId() == null ? null
+                    : target.getPersonId().getPersonId();
+            if (personId == null || !scope.allows(personId)) {
+                deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: user outside your scope", path);
+                return false;
+            }
+        }
         request.setAttribute(PERSON_SCOPE_ATTRIBUTE, scope.personIds());
         return true;
+    }
+
+    /**
+     * A person has no school of its own (it hangs off academic_actor), so one an
+     * Administrador just created stays theirs to complete until it is assigned.
+     */
+    private boolean createdByCaller(UUID personId, String caller) {
+        LoadPersonPort port = loadPersonPort.getIfAvailable();
+        Person person = port == null ? null : port.loadPerson(personId);
+        return person != null && person.getCreatedBy() != null
+                && person.getCreatedBy().toString().equalsIgnoreCase(caller);
     }
 
     private boolean isOwnPerson(String method, String path, String caller) {

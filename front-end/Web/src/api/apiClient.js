@@ -95,7 +95,7 @@ export async function clearToken() {
     return removeRaw(TOKEN_KEY);
 }
 
-function resolveBaseUrl(override) {
+export function resolveBaseUrl(override) {
     if (override) return override.replace(/\/$/, "");
     if (
         typeof window !== "undefined" &&
@@ -273,7 +273,7 @@ async function performRequest(path, opts, method) {
     throw new ApiError({
         status: 0,
         code: "NetworkError",
-        message: "No se pudo conectar con el backend. Verifica que el gateway :8080 esté en ejecución.",
+        message: "No se pudo conectar con el backend. Verifica que el gateway :8000 esté en ejecución.",
     });
 }
 

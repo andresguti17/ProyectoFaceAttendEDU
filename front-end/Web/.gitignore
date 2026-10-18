@@ -47,3 +47,5 @@ storybook-static
 
 # SDK DigitalPersona copiado por scripts/copy-digitalpersona.mjs
 /public/vendor
+.vercel
+.env*

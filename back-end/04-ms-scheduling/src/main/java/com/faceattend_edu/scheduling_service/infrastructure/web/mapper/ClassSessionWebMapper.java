@@ -5,6 +5,7 @@ import com.faceattend_edu.scheduling_service.infrastructure.web.dto.ClassSession
 import com.faceattend_edu.scheduling_service.infrastructure.web.dto.CreateClassSessionRequest;
 import com.faceattend_edu.scheduling_service.infrastructure.web.dto.UpdateClassSessionRequest;
 import org.springframework.stereotype.Component;
+import java.time.Instant;
 
 @Component
 public class ClassSessionWebMapper {
@@ -14,6 +15,15 @@ public class ClassSessionWebMapper {
         s.setScheduleBlockId(req.getScheduleBlockId());
         s.setSessionDate(req.getSessionDate());
         s.setSessionStatus(req.getSessionStatus() != null ? req.getSessionStatus() : "Open");
+        // Una sesión nace ya "Open" (no hay estado "Creada" en el enum), así
+        // que el POST /open explícito que sigue siempre choca con "already
+        // Open" y openedBy/openedAt nunca quedaban grabados. Si quien crea
+        // la sesión es quien la está abriendo (caso normal: el docente pulsa
+        // "Iniciar clase"), se registra aquí.
+        if (req.getOpenedBy() != null) {
+            s.setOpenedBy(req.getOpenedBy());
+            s.setOpenedAt(Instant.now());
+        }
         return s;
     }
     public ClassSession toDomain(UpdateClassSessionRequest req) {

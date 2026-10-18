@@ -7,10 +7,11 @@ import {useLanguageRefresh} from '../utils/useLanguageRefresh';
 import {JustificationService} from '../services/JustificationService';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
 
+// Identificadores estables; la pantalla los traduce (admin.category*).
 const categoryOf = (name) =>
-    /m[eé]d/i.test(name) ? 'Salud' :
-    /familiar|calamidad/i.test(name) ? 'Familiar' :
-    /representaci[oó]n|institucional|academic/i.test(name) ? 'Académica' : 'General';
+    /m[eé]d/i.test(name) ? 'health' :
+    /familiar|calamidad/i.test(name) ? 'family' :
+    /representaci[oó]n|institucional|academic/i.test(name) ? 'academic' : 'general';
 
 // Catálogo de tipos de justificación (05-attendance), administrado por el Administrador.
 export function useJustificationsViewModel() {

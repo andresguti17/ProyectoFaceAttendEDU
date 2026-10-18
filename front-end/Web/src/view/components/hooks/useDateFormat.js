@@ -36,26 +36,31 @@ export function useDateFormat() {
         return unsubscribe;
     }, []);
 
-    // Función para formatear fechas
+    // Función para formatear fechas. Acepta un formato opcional que sobrescribe
+    // el configurado (antes el 2º argumento se ignoraba siempre).
     const formatDate = useCallback(
-        (date) => {
-            return formatDateUtil(date, config.dateFormat);
+        (date, overrideFormat) => {
+            return formatDateUtil(date, overrideFormat || config.dateFormat);
         },
         [config.dateFormat]
     );
 
-    // Función para formatear horas
+    // Función para formatear horas. Acepta un override opcional de 12h/24h.
     const formatTime = useCallback(
-        (date) => {
-            return formatTimeUtil(date, config.timeFormat24h);
+        (date, override24h) => {
+            return formatTimeUtil(date, override24h ?? config.timeFormat24h);
         },
         [config.timeFormat24h]
     );
 
-    // Función para formatear fecha y hora
+    // Función para formatear fecha y hora (con overrides opcionales).
     const formatDateTime = useCallback(
-        (date) => {
-            return formatDateTimeUtil(date, config.dateFormat, config.timeFormat24h);
+        (date, overrideDateFormat, override24h) => {
+            return formatDateTimeUtil(
+                date,
+                overrideDateFormat || config.dateFormat,
+                override24h ?? config.timeFormat24h
+            );
         },
         [config.dateFormat, config.timeFormat24h]
     );

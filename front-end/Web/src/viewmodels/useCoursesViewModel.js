@@ -15,11 +15,15 @@ import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { getAttendanceThresholds, getAtRiskStudents } from "../models/data/userDerivedData";
 import { useAuth } from "../context/AuthContext";
+import { createCourse, updateCourse, deleteCourse as deleteCourseApi, importCourses as bulkImportCourses } from "../services/api/courseCreation";
+
 // ── Formulario vacío ───────────────────────────────────────
 
 export const EMPTY_COURSE_FORM = {
     code: "",
     name: "",
+    programId: "",
+    creditHours: "",
     schedule: "mañana",
     startDate: "",
     endDate: "",
@@ -27,8 +31,27 @@ export const EMPTY_COURSE_FORM = {
 
 // ── Validación de formulario ──────────────────────────────
 
+/**
+ * Créditos opcionales (credit_hours SMALLINT 0..32767): null si vacío.
+ */
+export function parseCreditHours(value) {
+    const raw = String(value ?? "").trim();
+    if (raw === "") return null;
+    if (!/^\d+$/.test(raw)) return null;
+    const n = Number(raw);
+    return n <= 32767 ? n : null;
+}
+
 export function validateCourseForm(form) {
     if (!form.name.trim()) return "El nombre es requerido";
+    // El backend exige program_id (FK NOT NULL) para crear el curso.
+    if (!String(form.programId ?? "").trim()) return "El programa es requerido";
+    // credit_hours es SMALLINT (0..32767, default 3 en el backend): opcional.
+    const rawCredits = String(form.creditHours ?? "").trim();
+    if (rawCredits !== "" && (!/^\d+$/.test(rawCredits) || Number(rawCredits) > 32767)) {
+        return "Los créditos deben ser un número entre 0 y 32767";
+    }
+
     if (!form.code.trim()) return "El código es requerido";
     
     return null;
@@ -114,6 +137,8 @@ export function useCoursesViewModel() {
     const [statusFilter, setStatusFilter] = useState("");
     const [selected, setSelected] = useState(null);
     const [showRegisterModal, setShowRegisterModal] = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [editingCourse, setEditingCourse] = useState(null);
 
     // ── Estado de filtrado avanzado ────────────────────────────
     
@@ -285,13 +310,28 @@ export function useCoursesViewModel() {
     }, [myCourses, search]);
 
     const myStats = useMemo(() => {
-        const totalStudents = myCourses.reduce((a, x) => a + (x.students || 0), 0);
-        const avgAttendance = myCourses.length === 0
-            ? 0
-            : Math.round(myCourses.reduce((a, x) => a + (x.avgAttendance || 0), 0) / myCourses.length);
+        // Estudiantes ÚNICOS en mis cursos: sumar x.students por curso
+        // duplica cuando dos cursos comparten la misma ficha.
+        const mine = new Set(myCourseIds.map(String));
+        const seen = new Set();
+        let attSum = 0;
+        for (const s of appData.students || []) {
+            const ids = Array.isArray(s.courseIds) ? s.courseIds.map(String) : [];
+            const match = ids.length
+                ? ids.some((id) => mine.has(id))
+                : myCourses.some((c) => c.code === s.course || c.name === s.course);
+            if (!match) continue;
+            const key = s.personId ?? s.id;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            attSum += s.attendance || 0;
+        }
+        const totalStudents = seen.size;
+        const avgAttendance =
+            totalStudents === 0 ? 0 : Math.round(attSum / totalStudents);
         const alertCount = myCourses.filter((x) => (x.avgAttendance || 0) < 80).length;
         return { total: myCourses.length, totalStudents, avgAttendance, alertCount };
-    }, [myCourses]);
+    }, [myCourses, myCourseIds, appData.students]);
 
     // ── Estadísticas derivadas ─────────────────────────────────
     
@@ -373,15 +413,111 @@ export function useCoursesViewModel() {
             const err = validateCourseForm(form);
             if (err) return err;
 
-            await appData.addCourse({
+            // Alta real en el backend (programa + código únicos por sede).
+            try {
+                await createCourse({
+                    programId: form.programId,
+                    code: form.code.trim(),
+                    name: form.name.trim(),
+                    creditHours: parseCreditHours(form.creditHours),
+                });
+            } catch (e) {
+                return e?.message || "No se pudo registrar el curso en el backend";
+            }
+
+            // Se trae la lista real del backend en vez de fabricar una fila
+            // local: un espejo local quedaba duplicado para siempre frente
+            // al curso real que luego trae loadCourses() (mismo problema que
+            // reloadUsers resolvió para docentes/admins).
+            await appData.reloadCourses();
+
+            return null;
+        },
+        [appData]
+    );
+
+    const editCourse = useCallback(
+        async (form) => {
+            const err = validateCourseForm(form);
+            if (err) return err;
+            if (editingCourse == null) return "No hay curso seleccionado";
+
+            try {
+                await updateCourse(Number(editingCourse.id), {
+                    programId: form.programId,
+                    code: form.code.trim(),
+                    name: form.name.trim(),
+                    creditHours: parseCreditHours(form.creditHours),
+                });
+            } catch (e) {
+                return e?.message || "No se pudo editar el curso en el backend";
+            }
+
+            // El id ya existe en `courses`: se parchea, no se agrega una fila.
+            await appData.updateCourse(editingCourse.id, {
+                programId: form.programId,
                 code: form.code.trim(),
                 name: form.name.trim(),
-                schedule: form.schedule,
-                startDate: form.startDate,
-                endDate: form.endDate,
-                status: "active",
+                ...(parseCreditHours(form.creditHours) != null
+                    ? { creditHours: parseCreditHours(form.creditHours) }
+                    : {}),
             });
-            
+
+            return null;
+        },
+        [appData, editingCourse]
+    );
+
+    const importCourses = useCallback(
+        async (drafts) => {
+            // Importación real: un curso por fila, con el programa
+            // resuelto por código o nombre dentro de la sede.
+            try {
+                return await bulkImportCourses(user?.schoolId ?? null, drafts);
+            } catch (e) {
+                return {
+                    success: 0,
+                    errors: [{ course: "", reason: e?.message || "No se pudo importar" }],
+                };
+            }
+        },
+        [user]
+    );
+
+    // Eliminar curso (HU-SCH-001, FR 8.1, solo Super Admin en UI).
+    const removeCourse = useCallback(
+        async (course) => {
+            if (course?.id == null) return "Falta el curso a eliminar";
+            try {
+                await deleteCourseApi(course.id);
+            } catch (e) {
+                return e?.message || "No se pudo eliminar el curso en el backend";
+            }
+            await appData.reloadCourses();
+            if (selected?.id === course.id) setSelected(null);
+            if (editingCourse?.id === course.id) setEditingCourse(null);
+            return null;
+        },
+        [appData, selected, editingCourse]
+    );
+
+    // Activar/desactivar curso (actualizar estado).
+    const toggleCourseStatus = useCallback(
+        async (course) => {
+            if (course?.id == null) return "Falta el curso";
+            if (course.programId == null) return "El curso no tiene programa asociado";
+            const nextActive = (course.status ?? "active") !== "active";
+            try {
+                await updateCourse(Number(course.id), {
+                    programId: course.programId,
+                    code: course.code,
+                    name: course.name,
+                    status: nextActive,
+                });
+            } catch (e) {
+                return e?.message || "No se pudo cambiar el estado del curso";
+            }
+            await appData.updateCourse(course.id, { status: nextActive ? "active" : "inactive" });
             return null;
         },
         [appData]
@@ -463,6 +599,8 @@ export function useCoursesViewModel() {
         
         // Estado de modales
         showRegisterModal,
+        showImportModal,
+        editingCourse,
         
         // Setters de filtros básicos
         setSearch,
@@ -482,9 +620,20 @@ export function useCoursesViewModel() {
         // Acciones de modales
         openRegisterModal: () => setShowRegisterModal(true),
         closeRegisterModal: () => setShowRegisterModal(false),
-        
+        openImportModal: () => setShowImportModal(true),
+        closeImportModal: () => setShowImportModal(false),
+        openEditModal: (course) => {
+            setEditingCourse(course);
+            setSelected(null); // cierra el detalle para mostrar la edición
+        },
+        closeEditModal: () => setEditingCourse(null),
+
         // Acciones de CRUD
         registerCourse,
+        editCourse,
+        importCourses,
+        removeCourse,
+        toggleCourseStatus,
         
         // Estadísticas (legacy - mantener por compatibilidad)
         totalStudents,

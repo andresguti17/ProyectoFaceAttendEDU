@@ -1,3 +1,4 @@
+import BackButton from '../components/common/BackButton';
 import React, {useEffect, useMemo, useState} from 'react';
 import {
     ActivityIndicator,
@@ -617,18 +618,7 @@ export default function PendingJustificationScreen({ navigation }) {
                 {/* Header */}
                 <View style={[styles.headerPending, { backgroundColor: colors.background }]}>
                     <View style={styles.headerTopRowPending}>
-                        <TouchableOpacity
-                            onPress={handleBack}
-                            activeOpacity={0.7}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('common.back')}
-                            style={{ padding: 6 }}
-                        >
-                            <Image
-                                source={require('../../assets/images/flecha-volver.png')}
-                                style={[styles.headerBackImagePending, { tintColor: colors.text }]}
-                            />
-                        </TouchableOpacity>
+                        <BackButton onPress={handleBack} />
                         <View style={{ flex: 1 }}>
                             <Text style={[styles.headerTitlePending, {color: colors.text}]}>
                                 {t('consultJustify.headerTitle')}

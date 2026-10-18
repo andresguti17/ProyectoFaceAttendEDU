@@ -27,6 +27,11 @@ const ALL_TABS = [
     },
     { key: "courses",      label: "Cursos",        icon: "book-open"   },
     { key: "environments", label: "Ambientes",     icon: "home"        },
+    { key: "academic",     label: "Académico",     icon: "award"       },
+    // Matriz rol x permiso (HU-IAM-003, FR 1.1.2): solo Super Admin.
+    { key: "roles",        label: "Roles",         icon: "shield"      },
+    // Bandeja de alertas (HU-JUS-003, FR 6.3): alcance propio.
+    { key: "alerts",       label: "Alertas",       icon: "bell"        },
     { 
         key: "reports",      
         label: "Reportes",      
@@ -52,8 +57,9 @@ const ALL_TABS = [
             { key: "appearance",     label: "Apariencia",      icon: "sliders",  adminOnly: false },
             // Sede y Contactos dejaron de ser tabs propios y ahora son una
             // sola sección: "Sede" reúne los datos de la institución y el
-            // directorio de instructores (antes "Contactos").
-            { key: "schoolInfo",     label: "Sede",            icon: "map-pin",  adminOnly: false },
+            // directorio de instructores (antes "Contactos"). El Super Admin
+            // global no tiene sede propia: no ve esta sección.
+            { key: "schoolInfo",     label: "Sede",            icon: "map-pin",  adminOnly: false, hideForSuperAdmin: true },
         ]
     },
 ];
@@ -77,7 +83,8 @@ export function useDashboardScreenViewModel() {
                 let processedChildren = undefined;
                 if (tab.children) {
                     processedChildren = tab.children
-                        .filter(child => !child.adminOnly || permissions.canManageUsers)
+                        .filter(child => (!child.adminOnly || permissions.canManageUsers) &&
+                            (!child.hideForSuperAdmin || !permissions.isSuperAdmin))
                         .map(child => {
                             const childRoleLabel = permissions.getTabLabel(child.key);
                             return {
@@ -95,7 +102,7 @@ export function useDashboardScreenViewModel() {
                     optionalNavigation: tab.optionalNavigation,
                 };
             }),
-        [permissions.visibleTabs, permissions.getTabLabel, permissions.canManageUsers, t]
+        [permissions.visibleTabs, permissions.getTabLabel, permissions.canManageUsers, permissions.isSuperAdmin, t]
     );
 
     // Si el tab inicial (dashboard) no fuera visible, toma el primero disponible

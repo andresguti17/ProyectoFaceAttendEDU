@@ -4,7 +4,7 @@
 Entrada unica web/movil/API. Routing, session token validation against identity 8081, rate-limiting, CORS, TLS. Enruta a 9 servicios internos (8081-8089) del modular monolith (ADR-002). Extraction Strangler Fig sin reemplazo.
 
 ## 2. Stack (ADR-007 + ADR-005 10)
-Kong OSS 3.6 DB-less + Redis 7. Puerto 8080/8001. Ver ADR-007 para alternativas descartadas (NGINX+Lua, Traefik, custom Node).
+Kong OSS 3.6 DB-less + Redis 7. Puerto 8000/8001. Ver ADR-007 para alternativas descartadas (NGINX+Lua, Traefik, custom Node).
 
 ## 3. Rutas (kong/kong.yml)
 | Prefijo | Upstream |

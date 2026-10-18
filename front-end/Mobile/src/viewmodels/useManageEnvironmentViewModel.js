@@ -1,4 +1,5 @@
 import {useCallback, useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {EnvironmentService} from '../services/EnvironmentService';
 import {SchoolService} from '../services/SchoolService';
 import Environment from '../models/scheduling/Environment';
@@ -12,6 +13,7 @@ const toItem = (env) => ({
 });
 
 export function useManageEnvironmentViewModel(enabled = true) {
+    const {t} = useTranslation();
     const [ambientes, setAmbientes] = useState([]);
     const [schoolId, setSchoolId] = useState(null);
     const [updateKey, setUpdateKey] = useState(0);
@@ -67,7 +69,7 @@ export function useManageEnvironmentViewModel(enabled = true) {
 
     // Las tres operaciones lanzan el error del backend para que la pantalla lo muestre.
     const addAmbiente = useCallback(async (form) => {
-        if (!schoolId) throw new Error('missing school');
+        if (!schoolId) throw new Error(t('errors.missingSchool'));
         await EnvironmentService.create(toModel(form));
         await fetchEnvironments();
     }, [schoolId, fetchEnvironments]);

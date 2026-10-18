@@ -1,3 +1,4 @@
+import BackButton from '../components/common/BackButton';
 import React, {useMemo} from "react";
 import {
     Image,
@@ -106,14 +107,7 @@ export default function MenuScreen({ onLogout }) {
                         contentContainerStyle={styles.menuScrollContent}
                     >
                         <View style={[styles.container, {marginTop: Platform.OS === "ios" ? 0 : 15, marginHorizontal: 10}]}>
-                            <TouchableOpacity onPress={handleBack} activeOpacity={0.2}>
-                                <View style={styles.backIcon}>
-                                    <Image
-                                        source={require("../../assets/images/flecha-volver.png")}
-                                        style={[styles.backIconImage, { tintColor: colors.text }]}
-                                    />
-                                </View>
-                            </TouchableOpacity>
+                            <BackButton onPress={handleBack} />
 
                             <View style={styles.containerSesion}>
                                 <CustomLogo
@@ -173,11 +167,13 @@ export default function MenuScreen({ onLogout }) {
                                     />
                                 )}
 
-                                <DangerButton
-                                    title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
-                                    onLogout={handleLogout}
-                                    disabled={isLoading}
-                                />
+                                <View style={styles.logoutContainer}>
+                                    <DangerButton
+                                        title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
+                                        onLogout={handleLogout}
+                                        disabled={isLoading}
+                                    />
+                                </View>
                             </View>
                         </View>
                     </ScrollView>

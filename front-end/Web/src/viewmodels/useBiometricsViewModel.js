@@ -122,6 +122,29 @@ export function useBiometricsViewModel() {
         [run, requirePersonId, setStatus, refreshSummary, t]
     );
 
+    // Revocar biometría (canDeleteBiometrics, solo admin en UI).
+    const revokeFace = useCallback(
+        () =>
+            run(async () => {
+                const personId = requirePersonId();
+                await biometricCaptureApi.revokeFace(personId);
+                setStatus(t("Rostro revocado."), "ok");
+                await refreshSummary();
+            }),
+        [run, requirePersonId, refreshSummary, setStatus, t]
+    );
+
+    const removeAll = useCallback(
+        () =>
+            run(async () => {
+                const personId = requirePersonId();
+                await biometricCaptureApi.deleteAllBiometrics(personId);
+                setStatus(t("Biometría revocada."), "ok");
+                await refreshSummary();
+            }),
+        [run, requirePersonId, refreshSummary, setStatus, t]
+    );
+
     return {
         person,
         setPerson,
@@ -135,5 +158,7 @@ export function useBiometricsViewModel() {
         summary,
         refreshSummary,
         checkPerson,
+        revokeFace,
+        removeAll,
     };
 }

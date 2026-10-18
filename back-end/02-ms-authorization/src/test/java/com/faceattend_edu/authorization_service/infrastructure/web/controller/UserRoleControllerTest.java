@@ -5,6 +5,7 @@ import com.faceattend_edu.authorization_service.domain.exception.EntityNotFoundE
 import com.faceattend_edu.authorization_service.domain.model.Role;
 import com.faceattend_edu.authorization_service.domain.port.in.AssignRoleToUserUseCase;
 import com.faceattend_edu.authorization_service.domain.port.in.CheckPermissionUseCase;
+import com.faceattend_edu.authorization_service.domain.port.out.RoleRepository;
 import com.faceattend_edu.authorization_service.domain.port.out.UserRoleRepository;
 import com.faceattend_edu.authorization_service.infrastructure.web.mapper.RoleWebMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,6 +63,8 @@ class UserRoleControllerTest {
     @MockitoBean
     private CheckPermissionUseCase checkPermissionUseCase;
     @MockitoBean
+    private RoleRepository roleRepository;
+    @MockitoBean
     private UserRoleRepository userRoleRepository;
 
     private UUID userId;
@@ -94,6 +97,39 @@ class UserRoleControllerTest {
                     .andExpect(status().isCreated());
 
             verify(assignRoleToUserUseCase).assignRoleToUser(userId, 3);
+        }
+
+        @Test
+        @DisplayName("givenOperationalRole_whenSchoolAdmin_thenAllowed")
+        void givenOperationalRole_whenSchoolAdmin_thenAllowed() throws Exception {
+            when(roleRepository.findById(3)).thenReturn(java.util.Optional.of(role(3, "Aprendiz")));
+
+            mockMvc.perform(post("/api/v1/users/" + userId + "/roles")
+                            .requestAttr("X-User-Roles", List.of("Administrador"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"roleId\":3}"))
+                    .andExpect(status().isCreated());
+        }
+
+        @Test
+        @DisplayName("givenAdministradorRole_whenSchoolAdmin_thenForbidden")
+        void givenAdministradorRole_whenSchoolAdmin_thenForbidden() throws Exception {
+            when(roleRepository.findById(2)).thenReturn(java.util.Optional.of(role(2, "Administrador")));
+
+            mockMvc.perform(post("/api/v1/users/" + userId + "/roles")
+                            .requestAttr("X-User-Roles", List.of("Administrador"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"roleId\":2}"))
+                    .andExpect(status().isForbidden());
+
+            verify(assignRoleToUserUseCase, never()).assignRoleToUser(any(), any());
+        }
+
+        private Role role(int id, String name) {
+            Role r = new Role();
+            r.setRoleId(id);
+            r.setRoleName(name);
+            return r;
         }
 
         @Test

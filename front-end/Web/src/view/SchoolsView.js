@@ -17,6 +17,7 @@ import { View, Text, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import {
     Alert,
+    AnimatedDropdown,
     Badge,
     BaseModal,
     Button,
@@ -37,6 +38,7 @@ import {
     ATTENDANCE_THRESHOLD,
     useSchoolsViewModel,
 } from "../viewmodels/useSchoolsViewModel";
+import { useCityOptions } from "../viewmodels/useCityOptions";
 
 function attendanceColor(avg, c) {
     if (avg == null) return c.text.disabled;
@@ -133,6 +135,7 @@ function SchoolCard({ school, vm, t, c }) {
 
 function SchoolFormModal({ vm, t, c }) {
     const isEdit = vm.modalMode === "edit";
+    const cityItems = useCityOptions();
     return (
         <BaseModal
             visible={vm.modalMode !== "none"}
@@ -180,6 +183,31 @@ function SchoolFormModal({ vm, t, c }) {
                     value={vm.form.address}
                     onChangeText={(v) => vm.setField("address", v)}
                 />
+                <View>
+                    <Text
+                        style={{
+                            fontSize: 14,
+                            fontWeight: "600",
+                            color: c.text.secondary,
+                            marginBottom: 6,
+                        }}
+                    >
+                        {t("Ciudad")}
+                    </Text>
+                    <AnimatedDropdown
+                        items={cityItems}
+                        value={vm.form.cityName}
+                        onSelect={(v) => vm.setField("cityName", v)}
+                        placeholder={t("Seleccionar ciudad")}
+                        triggerIcon="map-pin"
+                        searchable
+                        searchPlaceholder={t("Buscar ciudad...")}
+                        triggerHeight={48}
+                    />
+                    <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 6 }}>
+                        {t("Opcional · catálogo de ciudades de Colombia")}
+                    </Text>
+                </View>
                 <TextInput
                     label={t("Teléfono")}
                     type="phone"

@@ -6,6 +6,7 @@
     "vendor:digitalpersona": "node scripts/copy-digitalpersona.mjs",
     "prestart": "npm run vendor:digitalpersona",
     "preweb": "npm run vendor:digitalpersona",
+    "build": "expo export --platform web",
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",

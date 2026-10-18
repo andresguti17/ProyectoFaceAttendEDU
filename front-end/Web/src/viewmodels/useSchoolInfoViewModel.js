@@ -6,9 +6,10 @@
 //  ✓ Lectura para todos los roles (matriz de acceso)
 //  ✓ Edición solo para administrador (HU-ACAD / school info edit)
 //
-//  ms-academic solo expone code, name, cityId, address, phone,
-//  email y status: district/country/city_name existen en el modelo
-//  relacional pero el repositorio no los mapea.
+//  ms-academic expone code, name, cityId, cityName, address,
+//  phone, email y status: district/country siguen sin mapearse
+//  (existen en el modelo relacional pero no forman parte de la
+//  API de sedes).
 // ============================================================
 
 import { useCallback, useEffect, useState } from "react";
@@ -91,6 +92,7 @@ export function useSchoolInfoViewModel() {
             name: school?.name ?? "",
             code: school?.code ?? "",
             address: school?.address ?? "",
+            cityName: school?.cityName ?? "",
             phone: school?.phone ?? "",
             email: school?.email ?? "",
         });
@@ -121,6 +123,7 @@ export function useSchoolInfoViewModel() {
                 name: form.name.trim(),
                 code: form.code?.trim() || undefined,
                 address: form.address?.trim() || undefined,
+                cityName: form.cityName?.trim() || undefined,
                 phone: form.phone?.trim() || undefined,
                 email: form.email?.trim() || undefined,
             };

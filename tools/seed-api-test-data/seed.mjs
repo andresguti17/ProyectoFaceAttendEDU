@@ -171,12 +171,6 @@ async function upsert(service, path, body, { idKeys, map, mapKey, matchKey, matc
 }
 
 // Realistic colombian demo catalog (stable keys keep reruns idempotent).
-const CITIES = [
-  { name: "Bogotá", department: "Cundinamarca" },
-  { name: "Medellín", department: "Antioquia" },
-  { name: "Cali", department: "Valle del Cauca" },
-];
-
 const PEOPLE = [
   { documentNumber: "1014287635", name: "Valentina", lastName: "Ríos Herrera", email: "valentina.rios@example.com", documentType: "CC", actorCode: "EST-2026-001", biometricId: "est-2026-001", address: "Calle 134 # 54-20, Suba", birthDate: "2009-03-14", bloodType: "O+" },
   { documentNumber: "1014298812", name: "Santiago", lastName: "Herrera Mora", email: "santiago.herrera@example.com", documentType: "CC", actorCode: "EST-2026-002", biometricId: "est-2026-002", address: "Carrera 68 # 24-15, Kennedy", birthDate: "2009-07-02", bloodType: "A+" },
@@ -413,19 +407,14 @@ const personBody = (p) => {
   return b;
 };
 
-// Identity: cities, persons (1690), users (demo logins + 80 teachers).
+// Identity: persons (1690), users (demo logins + 80 teachers).
 async function seedIdentity() {
   const done = banner("identity");
-  // Cities have no unique constraint on name, so look up first to avoid
-  // creating duplicates on every rerun (other catalogs answer 409).
-  const knownCities = asArray(await get("identity", "/api/v1/cities?limit=100"));
-  for (const c of CITIES) {
-    if (knownCities.some((e) => e?.name === c.name)) continue;
-    await post("identity", "/api/v1/cities", c);
-  }
-  const cities = asArray(await get("identity", "/api/v1/cities?limit=100"));
-  ids.cityIdByName = new Map(cities.map((c) => [c.name, pick(c, "cityId", "id")]));
-  ids.cityId = cities.length ? pick(cities[0], "cityId", "id") : 1;
+  // identity.city fue retirado del modelo (las ciudades ahora salen de la API
+  // externa countriesnow.space): ya no existe GET/POST /api/v1/cities y cada
+  // corrida solo sumaba 5 FAIL 404. El campo city_name de schools se llena con
+  // SCHOOLS[].city y cityId numérico queda en el default del endpoint.
+  ids.cityId = 1;
 
   // One pass over the full collections turns every rerun create into a map hit.
   const existingPersons = new Map();
@@ -577,7 +566,7 @@ async function seedAcademic() {
     let school = M.schools.get(s.code);
     if (!school) {
       const created = await post("academic", "/api/v1/schools", {
-        code: s.code, name: s.name, cityId: ids.cityIdByName.get(s.city) ?? ids.cityId ?? 1,
+        code: s.code, name: s.name, cityId: ids.cityId ?? 1, cityName: s.city,
       });
       if (created) { school = created; M.schools.set(s.code, created); }
     }
@@ -897,6 +886,25 @@ async function seedAttendance() {
     if (id != null) await call("attendance", "PUT", "/api/v1/justification-types/" + id, { status: false }, true);
   }
 
+  // Regla ISO-8.2-VAL-001 (AGENTS.md §6.5): un tipo con requiresAttachment no
+  // puede pasar a Approved sin al menos un supporting_document. El backend
+  // respondia 400 correctamente y el seed aprobaba a ciegas (95 FAIL/corrida):
+  // ahora se sube el soporte antes de aprobar.
+  const requiresDocTypeIds = new Set(
+    typeDefs
+      .filter((t) => t.requiresAttachment)
+      .map((t) => M.justTypes.get(t.name))
+      .filter((v) => v != null),
+  );
+  const attachSupportingDoc = (jid) =>
+    post("attendance", "/api/v1/supporting-documents", {
+      justificationId: jid,
+      fileName: `soporte-${jid}.pdf`,
+      storageUri: `seed://justifications/${jid}/soporte.pdf`,
+      mimeType: "application/pdf",
+      sizeBytes: 2048,
+    });
+
   const existingJustifications = [];
   for (const j of asArray(await get("attendance", "/api/v1/justifications"))) {
     const rid = pick(j, "attendanceRecordId", "attendance_record_id");
@@ -951,7 +959,9 @@ async function seedAttendance() {
     "Traslado de ciudad por causas familiares",
     "Malestar general manifestado la noche anterior",
   ];
-  const typeIds = typeDefs.map((t) => M.justTypes.get(t.name)).filter((v) => v != null);
+  const typeSlots = typeDefs
+    .map((t) => ({ id: M.justTypes.get(t.name), requiresDoc: t.requiresAttachment }))
+    .filter((t) => t.id != null);
   const targets = [...ids.sessionCtx].sort((a, b) => a.id - b.id).filter((_, i) => i % 8 === 0);
   const tickJust = progress(targets.length, 50, "justified sessions");
   await pooled(targets, CONCURRENCY, async (job, ti) => {
@@ -961,9 +971,10 @@ async function seedAttendance() {
     for (const rec of absent) {
       const rid = pick(rec, "attendanceRecordId", "recordId", "id");
       if (rid == null || M.justifications.has(String(rid))) continue;
+      const slotType = typeSlots[(ti + k) % typeSlots.length];
       const created = await post("attendance", "/api/v1/justifications", {
         attendanceRecordId: rid,
-        justificationTypeId: typeIds[(ti + k) % typeIds.length],
+        justificationTypeId: slotType.id,
         reason: reasons[(ti + k) % reasons.length],
       });
       M.justifications.add(String(rid));
@@ -974,6 +985,7 @@ async function seedAttendance() {
       const slot = (ti + k) % 20;
       if (jid != null && ids.userId && slot < 13) {
         const approved = slot < 9;
+        if (approved && slotType.requiresDoc) await attachSupportingDoc(jid);
         await call("attendance", "PATCH", "/api/v1/justifications/" + jid + "/review", {
           reviewStatus: approved ? "Approved" : "Rejected",
           reviewedBy: ids.userId,
@@ -990,12 +1002,18 @@ async function seedAttendance() {
   // salta, asi que en una base sembrada seguian todas en Pending. Se les aplica el
   // mismo reparto para que la bandeja tenga historial desde la primera consulta.
   const unreviewed = existingJustifications
-    .map((j, i) => ({ id: pick(j, "justificationId", "id"), status: pick(j, "reviewStatus", "review_status"), slot: i % 20 }))
+    .map((j, i) => ({
+      id: pick(j, "justificationId", "id"),
+      status: pick(j, "reviewStatus", "review_status"),
+      typeId: pick(j, "justificationTypeId", "justification_type_id"),
+      slot: i % 20,
+    }))
     .filter((j) => j.id != null && j.status === "Pending" && j.slot < 13);
   if (unreviewed.length && ids.userId) {
     const tickRev = progress(unreviewed.length, 50, "justification reviews");
     await pooled(unreviewed, CONCURRENCY, async (j, i) => {
       const approved = j.slot < 9;
+      if (approved && requiresDocTypeIds.has(j.typeId)) await attachSupportingDoc(j.id);
       await call("attendance", "PATCH", "/api/v1/justifications/" + j.id + "/review", {
         reviewStatus: approved ? "Approved" : "Rejected",
         reviewedBy: ids.userId,

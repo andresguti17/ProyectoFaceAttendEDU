@@ -186,6 +186,16 @@ export function StudentJustifications({ vm }) {
                                                 </Text>
                                             </View>
                                         ) : null}
+
+                                        {item.reviewStatus === "Pending" && (
+                                            <Button
+                                                variant="danger"
+                                                size="sm"
+                                                onPress={() => vm.askWithdraw(item)}
+                                            >
+                                                {t("Retirar")}
+                                            </Button>
+                                        )}
                                     </View>
                                 </Card>
                             </View>

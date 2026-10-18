@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
+import { provisionStudent } from "../services/api/staffProvisioning";
 
 // ── Tipos de formulario ───────────────────────────────────
 
@@ -9,6 +10,15 @@ export const EMPTY_FORM = {
     email: "",
     course: "",
     role: "student",
+    documentNumber: "",
+    documentType: "",
+    bloodType: "",
+    birthDate: "",
+    address: "",
+    phone: "",
+    password: "",
+    schoolId: "",
+    cohortId: "",
     attendance: 0,
     hasFacial: false,      // Registro facial
     hasFingerprint: false, // Registro de huella dactilar
@@ -19,8 +29,21 @@ export function validateStudentForm(form) {
     if (!form.name.trim()) return "Completa todos los campos";
     if (!form.code.trim()) return "Completa todos los campos";
     if (!form.email.trim()) return "Completa todos los campos";
-    if (!form.course.trim()) return "Completa todos los campos";
     if (!form.role) return "Completa todos los campos";
+    // Todos los roles se crean en el backend (POST /persons exige
+    // documentNumber, POST /users exige password de 8-100 chars).
+    if (!String(form.documentNumber ?? "").trim()) return "Completa todos los campos";
+    if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
+    if (String(form.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form.birthDate).trim())) {
+        return "La fecha de nacimiento debe tener formato AAAA-MM-DD";
+    }
+    // El programa/ficha solo aplica a estudiantes (el formulario de
+    // docente/administrador ni siquiera lo muestra).
+    if (form.role === "student" && !form.course.trim()) return "Completa todos los campos";
+    // El docente/administrador queda vinculado a su sede (actor).
+    if ((form.role === "teacher" || form.role === "admin") && !String(form.schoolId ?? "").trim()) {
+        return "Selecciona la sede";
+    }
     return null;
 }
 
@@ -95,6 +118,21 @@ export function useStudentsViewModel() {
         async (form) => {
             const err = validateStudentForm(form);
             if (err) return err;
+
+            try {
+                await provisionStudent({
+                    name: form.name.trim(),
+                    code: form.code.trim(),
+                    email: form.email.trim(),
+                    documentNumber: String(form.documentNumber ?? "").trim(),
+                    password: String(form.password ?? ""),
+                    courseCode: form.course.trim(),
+                    cohortId: String(form.cohortId ?? "").trim() || null,
+                    details: form,
+                });
+            } catch (e) {
+                return e?.message || "No se pudo registrar el estudiante en el backend";
+            }
 
             await appData.addStudent({
                 name: form.name.trim(),

@@ -369,10 +369,7 @@ export default function AddValidJustificationScreen() {
                             </Text>
                             <DropdownSelector
                                 label={t("admin.category")}
-                                placeholder={
-                                    t("admin.selectCategory") ??
-                                    "Selecciona una categoría..."
-                                }
+                                placeholder={t("admin.selectCategory")}
                                 value={category}
                                 options={categories}
                                 onSelect={setCategory}
@@ -390,9 +387,7 @@ export default function AddValidJustificationScreen() {
                             </Text>
                             <DropdownSelector
                                 label={t("admin.justificationType")}
-                                placeholder={
-                                    t("admin.selectType") ?? "Selecciona un tipo..."
-                                }
+                                placeholder={t("admin.selectType")}
                                 value={type}
                                 options={types}
                                 onSelect={setType}

@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Button, BaseModal } from "../common";
+import { Button, BaseModal, AnimatedDropdown } from "../common";
 import TextInput from "../common/inputs/TextInput";
 import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
@@ -14,6 +14,8 @@ import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { usePushNotification } from "../common/feedback/PushNotification";
 import { getInstitutionConfig } from "../../../core/config/institutionConfig";
 import { EMPTY_ENV_FORM } from "../../../viewmodels/useEnvironmentsViewModel";
+import { academicApi } from "../../../services/api/academicApi";
+import { useAuth } from "../../../context/AuthContext";
 
 // Placeholders rotativos para mostrar variedad de identificadores
 const IDENTIFIER_PLACEHOLDERS = [
@@ -41,12 +43,19 @@ export default function EnvironmentFormModal({
     const { t } = useTranslation();
     const pushNotification = usePushNotification();
     const c = theme.colors;
+    const { user } = useAuth();
+    // Un admin de sede solo administra la suya (schoolId no nulo): no tiene
+    // sentido ofrecerle las demás sedes del sistema en el selector. Solo el
+    // Super Admin (sin sede propia) necesita elegir entre todas.
+    const isScopedToSchool = user?.schoolId != null;
 
     const [form, setForm] = useState(EMPTY_ENV_FORM);
     const [saving, setSaving] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
     const [placeholderIndex, setPlaceholderIndex] = useState(0);
     const placeholderIntervalRef = useRef(null);
+    const [schoolItems, setSchoolItems] = useState([]);
+    const [schoolsError, setSchoolsError] = useState(null);
 
     useEffect(() => {
         if (visible && mode === "edit" && environment) {
@@ -54,13 +63,51 @@ export default function EnvironmentFormModal({
                 number: environment.number,
                 description: environment.description,
                 capacity: environment.capacity ? String(environment.capacity) : "",
+                schoolId: environment.schoolId ?? "",
             });
         } else if (visible) {
-            setForm(EMPTY_ENV_FORM);
+            setForm({
+                ...EMPTY_ENV_FORM,
+                // Admin de sede: se asigna la suya de una vez, sin selector.
+                schoolId: isScopedToSchool ? String(user.schoolId) : "",
+            });
         }
         setSaving(false);
         setShowErrors(false);
-    }, [visible, mode, environment]);
+    }, [visible, mode, environment, isScopedToSchool, user?.schoolId]);
+
+    // Sedes para el alta (el backend exige school_id). Solo para Super
+    // Admin: un admin de sede ya trae la suya fijada arriba.
+    useEffect(() => {
+        if (!visible || mode !== "register" || isScopedToSchool) return;
+        let cancelled = false;
+        setSchoolsError(null);
+        academicApi.listSchools().then(
+            (list) => {
+                if (cancelled) return;
+                const rows = Array.isArray(list) ? list : list?.content ?? [];
+                setSchoolItems(
+                    rows
+                        .map((s) => ({
+                            value: String(s?.schoolId ?? s?.school_id ?? ""),
+                            label: s?.name ?? s?.code ?? "",
+                            description: s?.code ?? "",
+                            icon: "map-pin",
+                        }))
+                        .filter((item) => item.value && item.label)
+                );
+            },
+            (e) => {
+                if (!cancelled) {
+                    setSchoolItems([]);
+                    setSchoolsError(e?.message || "No se pudieron cargar las sedes");
+                }
+            }
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [visible, mode]);
 
     // Rotación automática de placeholders cada 3 segundos
     useEffect(() => {
@@ -210,6 +257,35 @@ export default function EnvironmentFormModal({
                 multiline
                 hint={form.description.trim() === "" && showErrors ? t("*Se guardará como 'Sin descripción'") : t("Opcional")}
             />
+
+            {mode === "register" && !isScopedToSchool && (
+                <View style={{ marginTop: 2 }}>
+                    <Text style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: (showErrors && !form.schoolId) || schoolsError ? c.status.error : c.text.secondary,
+                        marginBottom: 6,
+                    }}>
+                        {t("Sede") + " *"}
+                    </Text>
+                    <AnimatedDropdown
+                        items={schoolItems}
+                        value={form.schoolId}
+                        onSelect={(v) => setField("schoolId", v)}
+                        placeholder={t("Seleccionar sede")}
+                        searchable={true}
+                        searchPlaceholder={t("Buscar...")}
+                        triggerIcon="map-pin"
+                        error={showErrors && !form.schoolId}
+                        triggerHeight={48}
+                    />
+                    {schoolsError && (
+                        <Text style={{ fontSize: 12, color: c.status.error, marginTop: 4 }}>
+                            {schoolsError}
+                        </Text>
+                    )}
+                </View>
+            )}
         </BaseModal>
     );
 }

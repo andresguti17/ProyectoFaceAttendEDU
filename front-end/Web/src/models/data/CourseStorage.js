@@ -137,6 +137,7 @@ async function coursesFromApi() {
 
         return {
             id: String(course.courseId),
+            programId: course.programId ?? null,
             code: course.code ?? "",
             name: course.name ?? "",
             professor: professorNames.length ? professorNames.join(", ") : null,

@@ -1,4 +1,5 @@
 import {useCallback, useState} from "react";
+import i18n from "../../../utils/i18n";
 
 export const useCustomAlert = () => {
     const isAlertEnabled = (type) => {
@@ -76,7 +77,7 @@ export const useCustomAlert = () => {
             type: "confirm",
             buttons: [
                 {
-                    text: "Cancelar",
+                    text: i18n.t("common.cancel"),
                     style: "cancel",
                     onPress: () => {
                         hideAlert();
@@ -84,7 +85,7 @@ export const useCustomAlert = () => {
                     },
                 },
                 {
-                    text: "Confirmar",
+                    text: i18n.t("common.confirm"),
                     onPress: () => {
                         hideAlert();
                         onConfirm && onConfirm();

@@ -14,6 +14,8 @@ import pytest
 from fastapi import WebSocketDisconnect
 from fastapi.testclient import TestClient
 
+import infrastructure.config.dependencies as dependencies
+import infrastructure.web.routers.facial_router as facial_router
 from domain.value_objects.biometric_type import BiometricType
 from infrastructure.config.dependencies import (
     get_facial_repository,
@@ -36,6 +38,9 @@ PERSON = "550e8400-e29b-41d4-a716-446655440000"
 UNIT_VECTOR = [1.0, 0.0, 0.0, 0.0]
 
 WS_PATH = "/api/v1/biometric/ws"
+FACIAL_PREFIX = "/api/v1/biometric/facial"
+FAKE_IMAGE = "aGVsbG8="  # never decoded: decode_image is monkeypatched in these tests
+LIVENESS_SECRET = "test-liveness-secret"
 
 ADMIN = "11111111-1111-1111-1111-111111111111"
 STUDENT = "22222222-2222-2222-2222-222222222222"
@@ -79,6 +84,8 @@ def client(monkeypatch, stores):
     a test can prove both channels run the same business layer on the same
     data (`TestRestAndWebSocketCoexistence`)."""
     monkeypatch.setenv("BIOMETRIC_MONGO_ENABLED", "false")
+    monkeypatch.setenv("BIOMETRIC_LIVENESS_CHALLENGE_SECRET", LIVENESS_SECRET)
+    dependencies._rate_limiters.clear()
     get_settings.cache_clear()
 
     app.dependency_overrides[get_facial_repository] = lambda: stores["facial"]
@@ -363,6 +370,33 @@ class TestConnectionRegistry:
         assert manager.connection_count() == 0
 
 
+class TestFrameHandlerResilience:
+    def test_an_unexpected_exception_during_dispatch_returns_an_error_frame_not_a_dropped_connection(
+        self, client, monkeypatch
+    ):
+        """A non-HTTPException/ValidationError failure inside `_dispatch` (a dlib
+        RuntimeError, a Mongo error, ...) must degrade to an error frame, not
+        propagate and kill the connection — otherwise the frontend's
+        reconnect-and-resend logic would resend the same poison message forever."""
+
+        async def _boom(*args, **kwargs):
+            raise RuntimeError("dlib exploded")
+
+        monkeypatch.setattr(ws_router, "identify_facial", _boom)
+
+        with client.websocket_connect(WS_PATH) as ws:
+            _send(ws, ws_router.FACIAL_IDENTIFY, {"encoding": UNIT_VECTOR}, client_message_id="boom-1")
+            error = ws.receive_json()
+            assert error["type"] == "error"
+            assert error["error"] == "InternalError"
+            assert error["client_message_id"] == "boom-1"
+
+            # the connection must still be usable afterwards
+            _send(ws, ws_router.PING)
+            pong = ws.receive_json()
+            assert pong["type"] == "pong"
+
+
 class TestWebSocketAuthentication:
     def test_missing_token_closes_the_handshake(self, auth_client):
         with pytest.raises(WebSocketDisconnect) as exc_info:
@@ -381,3 +415,96 @@ class TestWebSocketAuthentication:
             _send(ws, ws_router.PING)
             pong = ws.receive_json()
         assert pong["type"] == "pong"
+
+
+class TestFacialImageOverWebSocket:
+    def _completed_liveness_token(self, client, monkeypatch) -> str:
+        monkeypatch.setattr(facial_router, "decode_image", lambda data, max_bytes, max_pixels: "decoded")
+        monkeypatch.setattr(facial_router, "validate_liveness", lambda images, action: True)
+        challenge = client.get(f"{FACIAL_PREFIX}/liveness-challenge", params={"actions": 2}).json()
+        token = challenge["challenge_token"]
+        for step in range(len(challenge["actions"])):
+            response = client.post(
+                f"{FACIAL_PREFIX}/liveness-step",
+                json={"challenge_token": token, "action_index": step, "images": [FAKE_IMAGE] * 6},
+            )
+            assert response.status_code == 200, response.json()
+            token = response.json()["challenge_token"]
+        return token
+
+    def test_identify_image_ack_matches_the_rest_response_shape(self, client, monkeypatch):
+        monkeypatch.setattr(facial_router, "face_encoding", lambda image: UNIT_VECTOR)
+        # Enrolling over the vector REST endpoint (no liveness) leaves an active
+        # template whose encoding is the same UNIT_VECTOR face_encoding returns.
+        client.post(f"{FACIAL_PREFIX}/enroll", json={"person_id": PERSON, "encoding": UNIT_VECTOR})
+        token = self._completed_liveness_token(client, monkeypatch)
+
+        with client.websocket_connect(WS_PATH) as ws:
+            _send(
+                ws,
+                "facial.identify_image",
+                {"image_base64": FAKE_IMAGE, "challenge_token": token},
+                client_message_id="c1",
+            )
+            ack = ws.receive_json()
+
+        assert ack["type"] == "facial.identify_image.ack"
+        assert ack["client_message_id"] == "c1"
+        assert ack["result"]["person_id"] == PERSON
+        assert ack["result"]["score"] == pytest.approx(1.0)
+
+
+class TestFingerprintSampleOverWebSocket:
+    def test_identify_sample_ack_matches_the_rest_response_shape(self, client, monkeypatch):
+        import infrastructure.web.routers.fingerprint_router as fingerprint_router
+        monkeypatch.setattr(fingerprint_router, "decode_fingerprint", lambda data, max_bytes, max_pixels: "decoded")
+        monkeypatch.setattr(fingerprint_router, "fingerprint_keypoint_score", lambda a, b: 999)
+
+        # Enrolar por /enroll-sample deja un template con raw_sample_b64 activo
+        # para PERSON, dedo 1 — la única clase de template que identify-sample
+        # considera candidato (ver `_raw_sample_candidates`).
+        client.post(
+            "/api/v1/biometric/fingerprint/enroll-sample",
+            json={"person_id": PERSON, "finger_number": 1, "data_base64": "seed", "quality": 80},
+        )
+
+        with client.websocket_connect(WS_PATH) as ws:
+            _send(
+                ws,
+                "fingerprint.identify_sample",
+                {"sample_format": 1, "data_base64": "x", "quality": 80},
+                client_message_id="f1",
+            )
+            ack = ws.receive_json()
+
+        assert ack["type"] == "fingerprint.identify_sample.ack"
+        assert ack["result"]["person_id"] == PERSON
+        assert ack["result"]["finger_number"] == 1
+
+    def test_identify_sample_broadcasts_an_attendance_event_to_other_clients(self, client, monkeypatch):
+        import infrastructure.web.routers.fingerprint_router as fingerprint_router
+        monkeypatch.setattr(fingerprint_router, "decode_fingerprint", lambda data, max_bytes, max_pixels: "decoded")
+        monkeypatch.setattr(fingerprint_router, "fingerprint_keypoint_score", lambda a, b: 999)
+
+        client.post(
+            "/api/v1/biometric/fingerprint/enroll-sample",
+            json={"person_id": PERSON, "finger_number": 1, "data_base64": "seed", "quality": 80},
+        )
+
+        with client.websocket_connect(WS_PATH) as observer:
+            with client.websocket_connect(WS_PATH) as kiosk:
+                _send(
+                    kiosk,
+                    "fingerprint.identify_sample",
+                    {"sample_format": 1, "data_base64": "x", "quality": 80},
+                    direction="CHECK_IN",
+                )
+                kiosk.receive_json()
+                event = observer.receive_json()
+
+        assert event["type"] == "attendance.event"
+        assert event["event_type"] == "CHECK_IN"
+        assert event["person_id"] == PERSON
+        assert event["biometric_type"] == "FINGERPRINT"
+        assert event["finger_number"] == 1
+        assert event["score"] == 999

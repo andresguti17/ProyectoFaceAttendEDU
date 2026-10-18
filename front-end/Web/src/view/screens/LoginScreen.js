@@ -40,8 +40,7 @@ export default function LoginScreen() {
 
     // ── Navegación a recuperación de contraseña ──────────────
     function onForgotPassword() {
-        // TODO: navegar a pantalla de recuperación de contraseña
-        console.log("Recuperar contraseña");
+        navigation.navigate("FaceAttendEDU-Recovery");
     }
 
     // ── Navegación a registro ─────────────────────────────────

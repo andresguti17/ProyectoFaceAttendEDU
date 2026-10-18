@@ -44,7 +44,13 @@ menuScreen: {
     },
 
 menuScrollContent: {
+        flexGrow: 1,
         paddingBottom: 24,
+    },
+
+logoutContainer: {
+        marginTop: "auto",
+        paddingTop: 24,
     },
 
 safeAreaWhite: {

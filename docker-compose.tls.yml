@@ -5,7 +5,7 @@
 # Uso:
 #   docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d
 #
-# No reemplaza los puertos 8080/8090 en HTTP plano del compose base (siguen
+# No reemplaza los puertos 8000/8090 en HTTP plano del compose base (siguen
 # disponibles para no romper el flujo de desarrollo actual); para forzar
 # solo-HTTPS en un despliegue real, quita esas líneas `ports:` del compose
 # base una vez que Caddy esté validado.

@@ -1,4 +1,5 @@
 import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
+import { toSnakeDeep } from '../api/backend';
 import Role from '../models/authorization/Role';
 
 const ENDPOINT = 'role';
@@ -18,12 +19,12 @@ function unwrapFirst(data) {
 export const RoleService = {
   getAll: async (params = {}) => {
     const data = await request({ method: GET, url: ENDPOINT, params, requiresAuth: false });
-    return unwrap(data).map(Role.fromApi);
+    return unwrap(data).map((r) => Role.fromApi(toSnakeDeep(r)));
   },
 
   getById: async (id) => {
     const data = await request({ method: GET, url: `${ENDPOINT}/${id}`, requiresAuth: false });
-    return Role.fromApi(data);
+    return Role.fromApi(toSnakeDeep(data));
   },
 
   getByName: async (roleName) => {

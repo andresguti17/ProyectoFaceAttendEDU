@@ -30,7 +30,7 @@ export const CohortService = {
 
   getById: async (id) => {
     const data = await request({ method: GET, url: `${ENDPOINT}/${id}`, requiresAuth: false });
-    return Cohort.fromApi(data);
+    return Cohort.fromApi(toSnakeDeep(data));
   },
 
   getByProgram: async (programId) => {

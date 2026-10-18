@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, View, TextInput } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { createAuthStyles } from './style/Style';
 
 /**
@@ -14,6 +15,7 @@ export function CodeInput({
                               onVerify,
                               disabled
                           }) {
+    const { t } = useTranslation();
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const styleAuth = useMemo(() => createAuthStyles(colors), [colors]);
 
@@ -98,8 +100,8 @@ export function CodeInput({
                             autoCapitalize="characters"
                             selectTextOnFocus
                             editable={!disabled}
-                            accessibilityLabel={`Dígito ${i + 1} de 6`}
-                            accessibilityHint={i === 0 ? 'Ingresa el código de 6 caracteres' : ''}
+                            accessibilityLabel={t('codeInput.digitLabel', {n: i + 1})}
+                            accessibilityHint={i === 0 ? t('codeInput.hint') : ''}
                         />
                     );
                 })}

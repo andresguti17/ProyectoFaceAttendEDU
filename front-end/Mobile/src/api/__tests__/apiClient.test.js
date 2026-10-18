@@ -5,7 +5,7 @@ jest.mock('../../storage/TokenStorage', () => ({
   getToken: jest.fn(async () => 'session-token'),
 }));
 
-const BASE = 'http://gateway.test:8080';
+const BASE = 'http://gateway.test:8000';
 
 function respond(status, body) {
   return { ok: status >= 200 && status < 300, status, json: async () => body };

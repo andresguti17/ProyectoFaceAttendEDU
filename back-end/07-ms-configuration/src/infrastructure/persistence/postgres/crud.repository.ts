@@ -49,6 +49,8 @@ export interface ColumnFilter {
   readonly column: string;
   readonly value: unknown;
   readonly cast?: string;
+  /** `'eq'` (default) binds a single value; `'in'` binds an array via `= ANY($n)`. */
+  readonly op?: 'eq' | 'in';
 }
 
 export interface ListQuery {
@@ -114,6 +116,11 @@ export abstract class PostgresCrudRepository<T extends object> {
         throw new RepositoryError(500, 'InternalError', `Unmapped filter column for ${this.qualifiedTable}`);
       }
       params.push(filter.value);
+      if (filter.op === 'in') {
+        // Array bind: `$n::uuid[]` (or whatever cast) compared with `= ANY(...)`.
+        const arrayCast = filter.cast ? `::${filter.cast}[]` : '';
+        return `${filter.column} = ANY($${index++}${arrayCast})`;
+      }
       const cast = filter.cast ? `::${filter.cast}` : '';
       return `${filter.column} = $${index++}${cast}`;
     });

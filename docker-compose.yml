@@ -12,7 +12,7 @@
 include:
   - ./database/docker-compose.yml
   - ./back-end/docker-compose.yml
-  # frontend-web (:8090 → nginx :80) y kong-gateway (:8080) se sirven desde aquí.
+  # frontend-web (:8090 → nginx :80) y kong-gateway (:8000) se sirven desde aquí.
   # Solo frontend + gateway (tras primer build del backend):
   #   docker compose up frontend-web kong-gateway
 
@@ -102,7 +102,7 @@ services:
   # ──────────────────────────────────────────────────────────────
   # Frontend — Expo Web estático + nginx (SPA /, /login, /register,
   # /dashboard). Lives here (not in back-end/): it is a presentation
-  # concern and consumes the backend only via gateway Kong :8080.
+  # concern and consumes the backend only via gateway Kong :8000.
   # ──────────────────────────────────────────────────────────────
   frontend-web:
     build:

@@ -73,8 +73,9 @@ Atomic permissions with bounded-context prefix (`context.resource:action`). Assi
 |----|------|------|
 | 1 | `STUDENT` | Student |
 | 2 | `INSTRUCTOR` | Instructor |
+| 3 | `ADMIN` | Administrador de sede |
 
-**File:** `03-ms-academic-db/02-dml/001-seed-academic-actor-type-table.yaml`
+**File:** `03-ms-academic-db/02-dml/001-seed-academic-actor-type-table.yaml` (legado de 2 tipos) + `003-seed-admin-actor-type.yaml` (tipo `ADMIN`: vínculo admin→sede vía `academic_actor`)
 
 ---
 

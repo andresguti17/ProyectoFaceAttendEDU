@@ -88,6 +88,11 @@ func TestAuthMiddlewareDisabled(t *testing.T) {
 }
 
 func TestAuthMiddlewareIdentityDown(t *testing.T) {
+	// The auth cache is process-wide: forget sessions cached by earlier tests.
+	authCache.Lock()
+	authCache.session = map[string]cacheEntry{}
+	authCache.eval = map[string]cacheEntry{}
+	authCache.Unlock()
 	cfg := fakeBackends(t)
 	cfg.IdentityURL = "http://127.0.0.1:1"
 	assert.Equal(t, http.StatusServiceUnavailable, call(guardedRouter(cfg), http.MethodGet, "/api/v1/alerts", adminSession))

@@ -1,3 +1,4 @@
+import BackButton from '../components/common/BackButton';
 import React, {useMemo} from "react";
 import {
   ActivityIndicator,
@@ -73,19 +74,7 @@ export default function MyCoursesScreen({ navigation }) {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.backgroundWhite }]}>
       <View style={styles.container}>
         <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => navigation?.navigate("DashboardScreen")}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel={t("common.back")}
-          >
-            <View style={styles.backIcon}>
-              <Image
-                source={require("../../assets/images/flecha-volver.png")}
-                style={[styles.backIconImage, { tintColor: colors.text }]}
-              />
-            </View>
-          </TouchableOpacity>
+          <BackButton onPress={() => navigation?.navigate("DashboardScreen")} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>{title}</Text>
         </View>
         <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>

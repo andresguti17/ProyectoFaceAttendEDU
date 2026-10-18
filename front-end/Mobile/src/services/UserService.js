@@ -33,7 +33,17 @@ export const UserService = {
   },
 
   create: async (userData) => {
-    const data = await request({ method: POST, url: ENDPOINT, data: userData.toApi(), requiresAuth: false });
+    // ms-identity (CreateUserRequest) habla camelCase: personId,
+    // username y password (8-100). El toApi en snake respondía 400.
+    const u = userData ?? {};
+    const body = {
+      personId: u.personId ?? u.person_id,
+      username: u.username,
+      password: u.password,
+      authenticationType: u.authenticationType ?? u.authentication_type,
+    };
+    Object.keys(body).forEach((k) => (body[k] === null || body[k] === undefined) && delete body[k]);
+    const data = await request({ method: POST, url: ENDPOINT, data: body, requiresAuth: false });
     return AppUser.fromApi(data);
   },
 

@@ -59,8 +59,20 @@ export const ActorService = {
   },
 
   create: async (actorData) => {
-    const data = await request({ method: POST, url: ENDPOINT, data: actorData.toApi(), requiresAuth: false });
-    return AcademicActor.fromApi(data);
+    // ms-academic (zod) habla camelCase y descarta las llaves snake:
+    // el toApi en snake fallaba con 400. Los null se omiten.
+    const a = actorData ?? {};
+    const body = {
+      personId: a.personId ?? a.person_id,
+      actorTypeId: a.actorTypeId ?? a.actor_type_id,
+      schoolId: a.schoolId ?? a.school_id,
+      actorCode: a.actorCode ?? a.actor_code,
+      startedOn: a.startedOn ?? a.started_on,
+      status: a.status,
+    };
+    Object.keys(body).forEach((k) => (body[k] === null || body[k] === undefined) && delete body[k]);
+    const data = await request({ method: POST, url: ENDPOINT, data: body, requiresAuth: false });
+    return AcademicActor.fromApi(toSnakeDeep(data));
   },
 
   update: async (id, actorData) => {

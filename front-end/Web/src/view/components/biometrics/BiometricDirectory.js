@@ -13,12 +13,14 @@
 //  resumen rostro/huella de la persona elegida en PersonAutocomplete.
 // ============================================================
 
-import React from "react";
+import React, { useState } from "react";
 import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, Badge, Card, EmptyState } from "../common";
+import { ConfirmModal } from "../common/modals/ConfirmModal";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { useRolePermissions } from "../../../viewmodels/useRolePermissions";
 import { DESIGN_TOKENS } from "../../../core/config/theme.config";
 import { fullName } from "../../../services/api/referenceData";
 
@@ -26,6 +28,9 @@ export default function BiometricDirectory({ vm }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
+    const permissions = useRolePermissions();
+    const canDelete = permissions.canDeleteBiometrics ?? false;
+    const [pending, setPending] = useState(null);
 
     return (
         <Card padding="md" contentStyle={{ gap: DESIGN_TOKENS.spacing.md }}>
@@ -68,6 +73,45 @@ export default function BiometricDirectory({ vm }) {
             >
                 {t("Actualizar")}
             </Button>
+            {canDelete && vm.person && (vm.summary?.has_face || vm.summary?.has_fingerprint) && (
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                    {vm.summary?.has_face && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={vm.busy}
+                            onPress={() => setPending("face")}
+                        >
+                            {t("Revocar rostro")}
+                        </Button>
+                    )}
+                    <Button
+                        variant="danger"
+                        size="sm"
+                        disabled={vm.busy}
+                        onPress={() => setPending("all")}
+                    >
+                        {t("Revocar todo")}
+                    </Button>
+                </View>
+            )}
+            <ConfirmModal
+                visible={pending != null}
+                onClose={() => setPending(null)}
+                onConfirm={() => {
+                    const op = pending === "face" ? vm.revokeFace() : vm.removeAll();
+                    Promise.resolve(op).finally(() => setPending(null));
+                }}
+                loading={vm.busy}
+                variant="danger"
+                title={t("Revocar biometría")}
+                message={
+                    pending === "face"
+                        ? t("Se revocará el rostro de la persona. ¿Continuar?")
+                        : t("Se revocará rostro y huellas de la persona. ¿Continuar?")
+                }
+                confirmText={t("Revocar")}
+            />
         </Card>
     );
 }

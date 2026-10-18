@@ -52,11 +52,11 @@ export default function PasswordUpdateModal() {
     const handlePasswordUpdate = async () => {
         setPasswordError('');
         if (!currentPassword || !newPassword || !confirmPassword) {
-            setPasswordError(t('profile.passwordModal.errorRequired', 'Completa todos los campos'));
+            setPasswordError(t('profile.passwordModal.errorRequired'));
             return;
         }
         if (newPassword !== confirmPassword) {
-            setPasswordError(t('profile.passwordModal.errorMatch', 'Las contraseñas no coinciden'));
+            setPasswordError(t('profile.passwordModal.errorMatch'));
             return;
         }
         if (!areAllRequirementsMet(validatePasswordRequirements(newPassword))) {
@@ -68,13 +68,13 @@ export default function PasswordUpdateModal() {
             await PasswordService.changePassword(currentPassword, newPassword);
             setPasswordLoading(false);
             Alert.alert(
-                t('profile.passwordModal.successTitle', 'Contraseña actualizada'),
-                t('profile.passwordModal.successMessage', 'Tu contraseña ha sido actualizada correctamente')
+                t('profile.passwordModal.successTitle'),
+                t('profile.passwordModal.successMessage')
             );
             closePasswordModal();
         } catch (error) {
             setPasswordLoading(false);
-            setPasswordError(error?.message || t('profile.passwordModal.errorGeneric', 'No se pudo actualizar. Intenta de nuevo.'));
+            setPasswordError(error?.message || t('profile.passwordModal.errorGeneric'));
         }
     };
 
@@ -88,7 +88,7 @@ export default function PasswordUpdateModal() {
             >
                 <View style={{ flex: 1 }}>
                     <Text style={[stylesCommon.passwordSettingsTitle, { color: colors.text }]}>
-                        {t('profile.passwordModal.title', 'Actualizar contraseña')}
+                        {t('profile.passwordModal.title')}
                     </Text>
                 </View>
                 <Text style={{ fontSize: 20, color: colors.textSecondary, marginLeft: 4 }}>›</Text>
@@ -120,10 +120,10 @@ export default function PasswordUpdateModal() {
                                     },
                                 ]}>
                                     <Text style={[stylesCommon.passwordModalTitle, { color: colors.text }]}>
-                                        {t('profile.passwordModal.title', 'Actualizar contraseña')}
+                                        {t('profile.passwordModal.title')}
                                     </Text>
                                     <Text style={[stylesCommon.passwordModalDescription, { color: colors.textSecondary }]}>
-                                        {t('profile.passwordModal.help', 'Protege tu cuenta con una contraseña segura.')}
+                                        {t('profile.passwordModal.help')}
                                     </Text>
 
                                     <View style={[
@@ -138,33 +138,31 @@ export default function PasswordUpdateModal() {
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }]}
-                                        placeholder={t('profile.passwordModal.currentPassword', 'Contraseña actual')}
+                                        placeholder={t('profile.passwordModal.currentPassword')}
                                         placeholderTextColor={colors.textSecondary}
                                         secureTextEntry
                                         onChangeText={setCurrentPassword}
                                     />
-                                    <Text style={{marginBottom: 10, color: colors.text, marginTop: 20}}>Ingrese su nueva
-                                        contraseña</Text>
+                                    <Text style={{marginBottom: 10, color: colors.text, marginTop: 20}}>{t('passwordUpdate.enterNew')}</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
                                             borderColor: colors.border,
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }]}
-                                        placeholder={t('profile.passwordModal.newPassword', 'Nueva contraseña (mín. 6 caracteres)')}
+                                        placeholder={t('profile.passwordModal.newPassword')}
                                         placeholderTextColor={colors.textSecondary}
                                         secureTextEntry
                                         onChangeText={setNewPassword}
                                     />
-                                    <Text style={{marginBottom: 10, color: colors.text, marginTop: 20}}>Confirme la
-                                        contraseña ingresada</Text>
+                                    <Text style={{marginBottom: 10, color: colors.text, marginTop: 20}}>{t('passwordUpdate.confirmNew')}</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
                                             borderColor: colors.border,
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }]}
-                                        placeholder={t('profile.passwordModal.confirmPassword', 'Confirmar nueva contraseña')}
+                                        placeholder={t('profile.passwordModal.confirmPassword')}
                                         placeholderTextColor={colors.textSecondary}
                                         secureTextEntry
                                         onChangeText={setConfirmPassword}
@@ -191,8 +189,8 @@ export default function PasswordUpdateModal() {
                                             <PrimaryButton
                                                 title={
                                                     passwordLoading
-                                                        ? t('profile.passwordModal.saving', 'Guardando...')
-                                                        : t('profile.passwordModal.saveButton', 'Guardar')
+                                                        ? t('profile.passwordModal.saving')
+                                                        : t('profile.passwordModal.saveButton')
                                                 }
                                                 onPress={handlePasswordUpdate}
                                                 disabled={passwordLoading}
@@ -203,7 +201,7 @@ export default function PasswordUpdateModal() {
                                             style={stylesCommon.passwordModalCancelButton}
                                         >
                                             <Text style={[stylesCommon.passwordModalCancelText, { color: colors.primary }]}>
-                                                {t('profile.passwordModal.cancel', 'Cancelar')}
+                                                {t('profile.passwordModal.cancel')}
                                             </Text>
                                         </TouchableOpacity>
                                     </View>

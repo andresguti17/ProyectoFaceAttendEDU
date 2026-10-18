@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Animated, Easing } from "react-native";
+import { Animated, Easing, Platform } from "react-native";
 
 /**
  * Genera los estilos animados de entrada para ambos paneles
@@ -18,6 +18,17 @@ export function useAuthAnimation(key) {
     const formOpacity = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
+        // Web no soporta el driver nativo: el estado inicial (opacity 0)
+        // pintaba el login a medias y parecía roto mientras el bundle
+        // estático arrancaba. En web se renderiza directamente en reposo.
+        if (Platform.OS === "web") {
+            brandTranslateX.setValue(0);
+            brandOpacity.setValue(1);
+            formTranslateY.setValue(0);
+            formOpacity.setValue(1);
+            return;
+        }
+
         // Reiniciar valores al cambiar de pantalla
         brandTranslateX.setValue(-80);
         brandOpacity.setValue(0);

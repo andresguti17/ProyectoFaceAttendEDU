@@ -1,4 +1,5 @@
 import BaseModel from '../BaseModel';
+import i18n from '../../utils/i18n';
 
 export default class ScheduleBlock extends BaseModel {
   constructor(data = {}) {
@@ -26,8 +27,7 @@ export default class ScheduleBlock extends BaseModel {
       const label = ref.toLocaleDateString(locale, {weekday: 'long'});
       return label ? label.charAt(0).toUpperCase() + label.slice(1) : '';
     } catch {
-      const days = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-      return days[day] || '';
+      return i18n.t(`weekdays.${day}`);
     }
   }
 

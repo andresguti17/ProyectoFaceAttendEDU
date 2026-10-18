@@ -149,7 +149,7 @@ export function PasswordModal({
                                                 }]} />
                                             </View>
                                             <Text style={[styleAuth.strengthLabel, { color: strength.tone ? colors[strength.tone] : colors.textSecondary }]}>
-                                                {strength.label}
+                                                {strength.labelKey ? t(strength.labelKey) : ''}
                                             </Text>
                                         </View>
                                     )}

@@ -107,7 +107,7 @@ function buildConfig(): DatabaseConfig {
   return {
     connectionString: buildConnectionString(),
     schema: sanitiseSchema(process.env.PG_SCHEMA, 'configuration'),
-    max: Number(process.env.DB_POOL_MAX ?? 10),
+    max: Number(process.env.DB_POOL_MAX ?? 25),
     statementTimeoutMs: Number(process.env.DB_STATEMENT_TIMEOUT_MS ?? 15000),
     ssl: sslMode === 'disable' ? false : { rejectUnauthorized: sslMode === 'verify-full' },
   };

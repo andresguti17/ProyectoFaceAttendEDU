@@ -5,6 +5,7 @@ import com.faceattend_edu.scheduling_service.domain.exception.EntityNotFoundExce
 import com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock;
 import com.faceattend_edu.scheduling_service.domain.port.in.CreateScheduleBlockUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.in.DeleteScheduleBlockUseCase;
+import com.faceattend_edu.scheduling_service.domain.port.in.GetEnvironmentUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.in.GetScheduleBlockUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.in.ListScheduleBlocksUseCase;
 import com.faceattend_edu.scheduling_service.domain.port.in.UpdateScheduleBlockUseCase;
@@ -66,6 +67,8 @@ class ScheduleBlockControllerTest {
     private ListScheduleBlocksUseCase listUseCase;
     @MockitoBean
     private DeleteScheduleBlockUseCase deleteUseCase;
+    @MockitoBean
+    private GetEnvironmentUseCase getEnvironmentUseCase;
 
     private ScheduleBlock mondayMorning;
 
@@ -225,7 +228,8 @@ class ScheduleBlockControllerTest {
         @Test
         @DisplayName("givenExistingId_whenUpdateScheduleBlock_thenReturn200")
         void givenExistingId_whenUpdateScheduleBlock_thenReturn200() throws Exception {
-            // Arrange
+            // Arrange: update() now fetches first (ownership check before updating).
+            when(getUseCase.getById(9L)).thenReturn(mondayMorning);
             when(updateUseCase.update(eq(9L), any(ScheduleBlock.class))).thenReturn(mondayMorning);
 
             // Act & Assert
@@ -243,6 +247,9 @@ class ScheduleBlockControllerTest {
         @Test
         @DisplayName("givenExistingId_whenDeleteScheduleBlock_thenReturn204")
         void givenExistingId_whenDeleteScheduleBlock_thenReturn204() throws Exception {
+            // Arrange: delete() now fetches first (ownership check before deleting).
+            when(getUseCase.getById(9L)).thenReturn(mondayMorning);
+
             // Act & Assert
             mockMvc.perform(delete("/api/v1/schedule-blocks/9"))
                     .andExpect(status().isNoContent());

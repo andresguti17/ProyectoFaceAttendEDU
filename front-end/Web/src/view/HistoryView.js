@@ -14,10 +14,12 @@
 import React from "react";
 import { View, Text, ScrollView, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { Alert, Badge, Button, EmptyState, PageHeader, Select } from "./components/common";
 import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
 import { useHistoryViewModel, PAGE_SIZE } from "../viewmodels/useHistoryViewModel";
+import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 
 const STATUS_META = {
@@ -89,6 +91,13 @@ export default function HistoryView() {
     const c = theme.colors;
     const { t } = useTranslation();
     const vm = useHistoryViewModel();
+    const navigation = useNavigation();
+    const permissions = useRolePermissions();
+    // Solo quien puede enviar justificaciones (alumno) ve el atajo;
+    // la pantalla de Justificaciones ya separa elegibles de enviadas
+    // y bloquea duplicados (HU-JUS-001 AC5).
+    const canJustify = permissions.canSubmitJustifications ?? false;
+    const justifyRow = (row) => (row.status === "Absent" || row.status === "Late") && canJustify;
 
     if (vm.isPreparing) {
         return (
@@ -131,6 +140,15 @@ export default function HistoryView() {
                     <Text style={{ color: c.text.secondary, fontSize: 12 }}>
                         {[row.cohort, row.course, row.environment, row.instructor].filter(Boolean).join(" · ")}
                     </Text>
+                    {justifyRow(row) && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onPress={() => navigation.navigate("Justifications")}
+                        >
+                            {t("Justificar")}
+                        </Button>
+                    )}
                 </View>
             );
         }
@@ -161,6 +179,15 @@ export default function HistoryView() {
                 <Text style={{ ...cell, flex: 1.1 }}>{row.course || "—"}</Text>
                 <Text style={{ ...cell, flex: 1 }}>{row.environment || "—"}</Text>
                 <Text style={{ ...cell, flex: 1.2 }}>{row.instructor || "—"}</Text>
+                {justifyRow(row) && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onPress={() => navigation.navigate("Justifications")}
+                    >
+                        {t("Justificar")}
+                    </Button>
+                )}
             </View>
         );
     };

@@ -132,15 +132,20 @@ Un solo mensaje JSON de texto por frame: `{"type": "...", "client_message_id": "
 | `facial.enroll` / `fingerprint.enroll` | `POST .../enroll` | `<type>.ack` con el template persistido |
 | `facial.verify` / `fingerprint.verify` | `POST .../verify` | `<type>.ack` con `{match, score}` |
 | `facial.identify` / `fingerprint.identify` | `POST .../identify` | `<type>.ack`; además dispara `attendance.event` a todas las **demás** conexiones activas |
+| `facial.identify_image` | `POST .../facial/identify-image` | `<type>.ack`; dispara `attendance.event` |
+| `fingerprint.identify_sample` | `POST .../fingerprint/identify-sample` | `<type>.ack`; dispara `attendance.event` |
 | `ping` | — | `pong` (latido) |
 
 `payload` se valida con el mismo modelo Pydantic que usa el router REST
 correspondiente (`EnrollFacialRequest`, `IdentifyFingerprintRequest`, etc.) —
 un mensaje inválido responde `{"type": "error", "error": "BadRequest", ...}`
 sin cerrar la conexión. Fuera de alcance deliberadamente: los endpoints de
-imagen/muestra/liveness (`/enroll-image`, `/identify-image`, `/enroll-sample`,
-`/identify-sample`, `/liveness-*`) — son un flujo de UI de varios pasos, no
-un evento único de asistencia, y siguen siendo solo REST.
+enrolamiento por imagen/muestra y el reto de vida (`/enroll-image`,
+`/enroll-sample`, `/liveness-challenge`, `/liveness-step`) — son un flujo de UI
+de varios pasos, no un evento único de asistencia, y siguen siendo solo REST.
+El reto de vida sigue siendo exclusivamente REST incluso para clientes que usan
+`facial.identify_image`: el `challenge_token` completado se obtiene por REST y
+se envía en el mensaje WS.
 
 `attendance.event` lleva `person_id`, `biometric_type`, `event_type`
 (`CHECK_IN` / `CHECK_OUT`, tomado del `direction` del mensaje `identify`, o

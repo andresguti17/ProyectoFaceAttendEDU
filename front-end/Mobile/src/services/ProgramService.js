@@ -30,7 +30,7 @@ export const ProgramService = {
 
   getById: async (id) => {
     const data = await request({ method: GET, url: `${ENDPOINT}/${id}`, requiresAuth: false });
-    return Program.fromApi(data);
+    return Program.fromApi(toSnakeDeep(data));
   },
 
   getBySchool: async (schoolId) => {

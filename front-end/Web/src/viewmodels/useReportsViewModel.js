@@ -17,14 +17,18 @@
 // ============================================================
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "../view/components/hooks/useTheme";
 import { getAttendanceThresholds } from "../models/data/userDerivedData";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../context/AppDataContext";
+import { useAuth } from "../context/AuthContext";
 import { useRolePermissions } from "./useRolePermissions";
 import { academicApi } from "../services/api";
-import { optional } from "../services/api/referenceData";
-import { mockAttendanceByDay, mockAttendanceByWeek } from "../models/data/mockData";
+import { attendanceApi } from "../services/api/attendanceApi";
+import { schedulingApi } from "../services/api/schedulingApi";
+import { notifyActors, notifyStudentByActorId } from "../services/api/reportNotifications";
+import { optional, listBlocks } from "../services/api/referenceData";
 import { exportToExcel, exportToPDF, buildReportHTML, buildHTMLTable, formatPercentageWithColor, formatStatusBadge } from "../core/utils/exportHelpers";
 
 // ══════════════════════════════════════════════════════════
@@ -71,21 +75,46 @@ function periodLabel(p, t) {
 }
 
 /**
- * Filtra datos semanales según período seleccionado
+ * Días cubiertos por cada opción de período.
  * @private
  */
-function weekDataForPeriod(period) {
-    if (period === "week") return mockAttendanceByWeek.slice(0, 1);
-    if (period === "month") return mockAttendanceByWeek.slice(0, 4);
-    return mockAttendanceByWeek;
+function periodDays(period) {
+    if (period === "week") return 7;
+    if (period === "month") return 30;
+    return 180;
 }
 
 /**
- * Obtiene datos diarios según período
+ * Etiqueta corta dd/mm para una fecha YYYY-MM-DD.
  * @private
  */
-function dailyDataForPeriod(_period) {
-    return mockAttendanceByDay;
+function shortDate(iso) {
+    return `${String(iso).slice(8, 10)}/${String(iso).slice(5, 7)}`;
+}
+
+/**
+ * Nombre corto del día de semana (lun..dom) para YYYY-MM-DD.
+ * @private
+ */
+function weekdayShort(iso) {
+    const names = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+    const d = new Date(`${iso}T12:00:00`);
+    return names[Number.isNaN(d.getTime()) ? 1 : d.getDay()];
+}
+
+// Clave de semana ISO (YYYY-Www) para agrupar la evolución semanal.
+function isoWeekKey(iso) {
+    const d = new Date(`${iso}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return String(iso).slice(0, 7);
+    const day = (d.getDay() + 6) % 7;
+    const thursday = new Date(d);
+    thursday.setDate(d.getDate() - day + 3);
+    const first = new Date(thursday.getFullYear(), 0, 4);
+    const firstDay = (first.getDay() + 6) % 7;
+    const firstThursday = new Date(first);
+    firstThursday.setDate(first.getDate() - firstDay + 3);
+    const week = 1 + Math.round((thursday - firstThursday) / (7 * 24 * 3600 * 1000));
+    return `${thursday.getFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 
 /**
@@ -167,12 +196,15 @@ export function useReportsViewModel(
     const [fichaFilter, setFichaFilter] = useState(fichaId || "");
     const [statusFilter, setStatusFilter] = useState("active");
     const [sortBy, setSortBy] = useState("none");
+    const [notifyState, setNotifyState] = useState({ sending: false, error: null, sent: 0 });
 
     // ── Hooks de contexto ─────────────────────────────────────
     const { theme } = useTheme();
     const { t } = useTranslation();
     const appData = useAppData();
+    const { user } = useAuth();
     const permissions = useRolePermissions();
+    const navigation = useNavigation();
     const c = theme.colors;
 
     // ── Datos del contexto global ─────────────────────────────
@@ -217,20 +249,164 @@ export function useReportsViewModel(
     }, [fichaFilter, appData.programs]);
 
     /**
-     * Datos de asistencia semanal según período
+     * Serie real de asistencia (HU-REP-003/004): sesiones de clase del
+     * alcance del rol dentro del período + sus attendance_record.
+     * Tasa = Presentes (+Justificados) sobre registros totales.
+     * Sin sesiones o sin backend, la serie queda vacía (nunca mock).
      */
-    const attendanceByWeek = useMemo(
-        () => weekDataForPeriod(period),
-        [period]
-    );
+    const [series, setSeries] = useState({ weeks: [], days: [] });
+    const [seriesLoading, setSeriesLoading] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            setSeriesLoading(true);
+            try {
+                const days = periodDays(period);
+                const now = new Date();
+                const cutoff = new Date(now);
+                cutoff.setDate(now.getDate() - days);
+                const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+                const [sessions, blocks, envs] = await Promise.all([
+                    optional(schedulingApi.listSessions(), []),
+                    optional(listBlocks(), []),
+                    !permissions.isSuperAdmin && user?.role === "admin"
+                        ? optional(schedulingApi.listEnvironments(), [])
+                        : Promise.resolve([]),
+                ]);
+                const sessionList = Array.isArray(sessions) ? sessions : sessions?.content ?? sessions?.data ?? [];
+                const blockList = Array.isArray(blocks) ? blocks : blocks?.content ?? blocks?.data ?? [];
+                const envList = Array.isArray(envs) ? envs : envs?.content ?? envs?.data ?? [];
+                const blockById = new Map(
+                    blockList.map((b) => [
+                        Number(b.scheduleBlockId ?? b.schedule_block_id ?? b.id),
+                        b,
+                    ])
+                );
+                const envSchoolById = new Map(
+                    envList.map((e) => [
+                        Number(e.environmentId ?? e.environment_id ?? e.id),
+                        e.schoolId ?? e.school_id ?? null,
+                    ])
+                );
+
+                const inScope = (s) => {
+                    const date = s.sessionDate ?? s.session_date ?? "";
+                    if (!date || date < cutoffStr) return false;
+                    const status = s.sessionStatus ?? s.session_status ?? "";
+                    if (status === "Cancelled") return false;
+                    if (permissions.isSuperAdmin) return true;
+                    const blockId = Number(s.scheduleBlockId ?? s.schedule_block_id);
+                    const block = blockById.get(blockId);
+                    if (!block) return user?.role !== "admin";
+                    if (user?.role === "teacher") {
+                        const instructor = block.instructorActorId ?? block.instructor_actor_id;
+                        return Number(instructor) === Number(user?.academicActorId);
+                    }
+                    if (user?.role === "admin" && user?.schoolId != null) {
+                        const envId = Number(block.environmentId ?? block.environment_id);
+                        const school = envSchoolById.get(envId);
+                        if (school == null) return false;
+                        return Number(school) === Number(user.schoolId);
+                    }
+                    return true;
+                };
+
+                const scoped = sessionList
+                    .filter(inScope)
+                    .sort((a, b) =>
+                        String(b.sessionDate ?? b.session_date ?? "").localeCompare(
+                            String(a.sessionDate ?? a.session_date ?? "")
+                        )
+                    )
+                    .slice(0, 60);
+
+                const settled = await Promise.allSettled(
+                    scoped.map((s) =>
+                        attendanceApi.recordsBySession(
+                            s.classSessionId ?? s.class_session_id ?? s.id
+                        )
+                    )
+                );
+                if (cancelled) return;
+                const byDate = new Map();
+                scoped.forEach((s, i) => {
+                    if (settled[i].status !== "fulfilled") return;
+                    const records = Array.isArray(settled[i].value) ? settled[i].value : [];
+                    const date = s.sessionDate ?? s.session_date ?? "";
+                    const bucket = byDate.get(date) ?? { present: 0, absent: 0, late: 0 };
+                    for (const r of records) {
+                        const st = r.attendanceStatus ?? r.attendance_status ?? "";
+                        if (st === "Present" || st === "Justified") bucket.present += 1;
+                        else if (st === "Late") bucket.late += 1;
+                        else if (st === "Absent") bucket.absent += 1;
+                    }
+                    byDate.set(date, bucket);
+                });
+
+                const daysArr = [...byDate.entries()]
+                    .sort((a, b) => a[0].localeCompare(b[0]))
+                    .map(([date, b]) => ({
+                        day: `${weekdayShort(date)} ${shortDate(date)}`,
+                        date,
+                        present: b.present,
+                        absent: b.absent,
+                        late: b.late,
+                    }));
+
+                const weekGroups = new Map();
+                for (const d of daysArr) {
+                    const key = isoWeekKey(d.date);
+                    const group = weekGroups.get(key) ?? {
+                        week: key,
+                        present: 0,
+                        absent: 0,
+                        late: 0,
+                        dailyData: [],
+                        from: d.date,
+                        to: d.date,
+                    };
+                    group.present += d.present;
+                    group.absent += d.absent;
+                    group.late += d.late;
+                    group.dailyData.push({ day: d.day, present: d.present, late: d.late, absent: d.absent });
+                    if (d.date < group.from) group.from = d.date;
+                    if (d.date > group.to) group.to = d.date;
+                    weekGroups.set(key, group);
+                }
+                const weeks = [...weekGroups.values()]
+                    .sort((a, b) => a.from.localeCompare(b.from))
+                    .map((w) => {
+                        const total = w.present + w.absent + w.late;
+                        return {
+                            week: `${shortDate(w.from)}–${shortDate(w.to)}`,
+                            rate: total === 0 ? 0 : Math.round((100 * w.present) / total),
+                            dailyData: w.dailyData,
+                        };
+                    });
+
+                setSeries({ weeks, days: daysArr });
+            } catch {
+                if (!cancelled) setSeries({ weeks: [], days: [] });
+            } finally {
+                if (!cancelled) setSeriesLoading(false);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [period, permissions.isSuperAdmin, user?.role, user?.academicActorId, user?.schoolId]);
 
     /**
-     * Datos de asistencia diaria
+     * Datos de asistencia semanal del período (serie real).
      */
-    const attendanceByDay = useMemo(
-        () => dailyDataForPeriod(period),
-        [period]
-    );
+    const attendanceByWeek = useMemo(() => series.weeks, [series]);
+
+    /**
+     * Datos de asistencia diaria (serie real).
+     */
+    const attendanceByDay = useMemo(() => series.days, [series]);
 
     /**
      * Verifica si hay filtros activos
@@ -507,36 +683,56 @@ export function useReportsViewModel(
     }, []);
 
     /**
-     * Notificar a un estudiante individual
+     * Notificar a un estudiante individual (POST /api/v1/alerts).
      */
-    const notifyStudent = useCallback((studentId) => {
-        console.log("Notificar estudiante:", studentId);
-        // TODO: Implementar lógica de notificación
+    const notifyStudent = useCallback(async (studentId) => {
+        setNotifyState({ sending: true, error: null, sent: 0 });
+        try {
+            await notifyStudentByActorId(studentId);
+            setNotifyState({ sending: false, error: null, sent: 1 });
+        } catch (e) {
+            setNotifyState({
+                sending: false,
+                error: e?.message || "No se pudo enviar la notificación",
+                sent: 0,
+            });
+        }
     }, []);
 
     /**
-     * Notificar a todos los estudiantes filtrados
+     * Notificar a todos los estudiantes filtrados (una alerta por actor).
      */
-    const notifyAll = useCallback(() => {
-        console.log("Notificar a todos:", filteredStudents.length, "estudiantes");
-        // TODO: Implementar lógica de notificación masiva
+    const notifyAll = useCallback(async () => {
+        setNotifyState({ sending: true, error: null, sent: 0 });
+        try {
+            const { sent } = await notifyActors(filteredStudents.map((s) => s.id));
+            setNotifyState({ sending: false, error: null, sent });
+        } catch (e) {
+            setNotifyState({
+                sending: false,
+                error: e?.message || "No se pudieron enviar las notificaciones",
+                sent: 0,
+            });
+        }
     }, [filteredStudents]);
 
     /**
-     * Ver detalles de un estudiante
+     * Ver detalles de un estudiante: abre Usuarios filtrado por su código.
      */
     const viewStudentDetails = useCallback((studentId) => {
-        console.log("Ver detalles de estudiante:", studentId);
-        // TODO: Navegar a detalle de estudiante
-    }, []);
+        const found = filteredStudents.find((s) => s.id === studentId);
+        navigation.navigate("Users", {
+            section: "students",
+            searchQuery: found?.code || found?.name || "",
+        });
+    }, [navigation, filteredStudents]);
 
     /**
-     * Ver historial completo
+     * Ver historial completo: abre la pestaña Historial.
      */
     const viewFullHistory = useCallback(() => {
-        console.log("Ver historial completo");
-        // TODO: Navegar a vista de historial
-    }, []);
+        navigation.navigate("History");
+    }, [navigation]);
 
     /**
      * Exporta datos a Excel
@@ -706,6 +902,7 @@ export function useReportsViewModel(
         exportPDF,
         notifyStudent,
         notifyAll,
+        notifyState,
         viewStudentDetails,
         exportSelection,
         viewFullHistory,
@@ -733,5 +930,6 @@ export function useReportsViewModel(
 
         // Estado de carga
         isLoading,
+        seriesLoading,
     };
 }

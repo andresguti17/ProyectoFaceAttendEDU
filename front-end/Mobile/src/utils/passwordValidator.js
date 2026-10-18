@@ -72,13 +72,14 @@ export function calculatePasswordStrength(requirements, length) {
     if (requirements.special) score++;
     if (length >= 12) score++;
 
-    const labels = ['', 'Muy débil', 'Débil', 'Regular', 'Fuerte', 'Muy fuerte'];
+    // Claves de traducción (passwordStrength.*); la UI las traduce al mostrarlas.
+    const labelKeys = [null, 'passwordStrength.veryWeak', 'passwordStrength.weak', 'passwordStrength.fair', 'passwordStrength.strong', 'passwordStrength.veryStrong'];
     // Tono semántico de la barra (danger/warning/success); la UI lo resuelve con colors del tema.
     const tones = [null, 'danger', 'warning', 'warning', 'success', 'success'];
 
     return {
         score,
-        label: labels[score],
+        labelKey: labelKeys[score],
         tone: tones[score],
     };
 }

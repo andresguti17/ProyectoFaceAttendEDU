@@ -85,6 +85,11 @@ class Settings(BaseSettings):
         default="http://localhost:8082",
         validation_alias=AliasChoices("BIOMETRIC_AUTHORIZATION_URL", "AUTHORIZATION_URL"),
     )
+    # Caller/person school resolution (update-request scoping): academic_actor.school_id.
+    academic_url: str = Field(
+        default="http://localhost:8083",
+        validation_alias=AliasChoices("BIOMETRIC_ACADEMIC_URL", "ACADEMIC_URL"),
+    )
     # Owner of the canonical biometric update cases (RN-29 re-enrollment check).
     configuration_url: str = Field(
         default="http://localhost:8087",

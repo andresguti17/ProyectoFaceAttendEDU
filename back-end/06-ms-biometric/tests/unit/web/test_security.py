@@ -34,6 +34,9 @@ PERMISSIONS = {
     "admin": {"attendance.record:write", "biometric.case:request", "biometric.case:review"},
     "student": {"biometric.case:request"},
 }
+# Own person of each caller, for ensure_can_touch_person's identity lookup
+# (GET /api/v1/users/{id}, no query string — distinct from the evaluate call below).
+OWN_PERSON = {"admin": "person-admin", "student": "person-student"}
 
 
 async def _fake_get_json(url: str, token: str):
@@ -45,9 +48,22 @@ async def _fake_get_json(url: str, token: str):
         }
         session = sessions.get(url.rsplit("/", 1)[1])
         return (200, session) if session else (404, None)
+    if "/api/v1/users/" in url and "?" not in url:
+        user_id = url.rsplit("/", 1)[1]
+        person_id = OWN_PERSON.get(user_id)
+        return (200, {"personId": person_id}) if person_id else (404, None)
     user = url.split("userId=")[1].split("&")[0]
     permission = unquote(url.split("permission=")[1])
     return 200, {"allowed": permission in PERMISSIONS[user]}
+
+
+@pytest.fixture(autouse=True)
+def _fresh_auth_cache():
+    # Las cachés positivas de sesión/permiso son de proceso: una prueba no debe
+    # heredar la sesión que validó otra (p. ej. identity caído debe dar 503).
+    security._session_cache.clear()
+    security._eval_cache.clear()
+    yield
 
 
 @pytest.fixture
@@ -102,13 +118,49 @@ def test_admin_passes_the_guard_on_templates(client):
 
 
 def test_student_can_request_an_update_but_not_review_it(client):
-    body = {"person_id": "p1", "biometric_type": "FACIAL", "reason": "new photo"}
+    # Requesting for themselves (ensure_can_touch_person's self-case) —
+    # a plain student (no review permission) could not request for anyone else.
+    body = {"person_id": OWN_PERSON["student"], "biometric_type": "FACIAL", "reason": "new photo"}
     created = client.post("/api/v1/biometric/update-request", json=body, headers=_auth(STUDENT))
     assert created.status_code == 201
     review = client.patch(
         "/api/v1/biometric/update-request/x/review", json={"status": "Approved"}, headers=_auth(STUDENT)
     )
     assert review.status_code == 403
+
+
+def test_student_cannot_request_an_update_for_someone_else(client, monkeypatch):
+    # Without the review permission, "someone else" is out of reach even when
+    # the caller otherwise holds biometric.case:request (every role does).
+    # _get_list (roles, academic-actors) isn't faked by the `client` fixture —
+    # left unmocked it would hit the real authorization/academic services on
+    # the compose network, so it's pinned here to keep the test hermetic.
+    async def empty_list(url: str, token: str):
+        return []
+
+    monkeypatch.setattr(security, "_get_list", empty_list)
+    body = {"person_id": "someone-elses-person", "biometric_type": "FACIAL", "reason": "new photo"}
+    response = client.post("/api/v1/biometric/update-request", json=body, headers=_auth(STUDENT))
+    assert response.status_code == 403
+
+
+def test_admin_cannot_request_an_update_for_a_person_in_another_school(client, monkeypatch):
+    # Admin is a reviewer, but still confined to their own school — not every
+    # school's persons, the exact gap the audit flagged.
+    async def get_list(url: str, token: str):
+        if "/api/v1/users/admin/roles" in url:
+            return [{"roleName": "Administrador"}]
+        if "/api/v1/academic-actors?personId=" in url:
+            person = url.split("personId=")[1]
+            if person == OWN_PERSON["admin"]:
+                return [{"academicActorId": 1, "schoolId": 100}]
+            return [{"academicActorId": 2, "schoolId": 200}]  # another school
+        return []
+
+    monkeypatch.setattr(security, "_get_list", get_list)
+    body = {"person_id": "person-other-school", "biometric_type": "FACIAL", "reason": "new photo"}
+    response = client.post("/api/v1/biometric/update-request", json=body, headers=_auth(ADMIN))
+    assert response.status_code == 403
 
 
 def test_identity_down_is_service_unavailable(client, monkeypatch):

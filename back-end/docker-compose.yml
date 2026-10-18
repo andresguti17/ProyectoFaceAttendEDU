@@ -103,8 +103,6 @@ services:
     mem_limit: 1g
     cpus: "1.0"
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
       kafka:
@@ -113,9 +111,9 @@ services:
       ms-notification:
         condition: service_started
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}?stringtype=unspecified
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db?stringtype=unspecified}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-postgres}
       SPRING_DATASOURCE_HIKARI_SCHEMA: identity
       SPRING_DATA_REDIS_HOST: redis
       FACEATTEND_RECOVERY_STORE: redis
@@ -155,16 +153,14 @@ services:
     mem_limit: 1g
     cpus: "1.0"
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
       kafka:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-postgres}
       SPRING_DATASOURCE_HIKARI_SCHEMA: authorization
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_LIQUIBASE_ENABLED: "false"
@@ -196,14 +192,12 @@ services:
     mem_limit: 1g
     cpus: "1.0"
     depends_on:
-      postgres:
-        condition: service_healthy
       kafka:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}?stringtype=unspecified
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db?stringtype=unspecified}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-postgres}
       SPRING_DATASOURCE_HIKARI_SCHEMA: scheduling
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_LIQUIBASE_ENABLED: "false"
@@ -212,6 +206,7 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
       FACEATTEND_AUTH_IDENTITY_URL: http://ms-identity:8081
       FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8082
+      FACEATTEND_AUTH_ACADEMIC_URL: http://ms-academic:8083
       SERVER_PORT: 8084
     ports:
       - "${BIND_IP:-127.0.0.1}:8084:8084"
@@ -242,6 +237,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
+      JAVA_OPTS: "-Xmx768m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}?stringtype=unspecified
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -331,6 +327,8 @@ services:
       # Session + RBAC guard: sessions come from identity, permissions from authorization.
       IDENTITY_URL: http://ms-identity:8081
       AUTHORIZATION_URL: http://ms-authorization:8082
+      # Biometric case scope (caseScope.ts): school of the caller, via academic_actor.
+      ACADEMIC_URL: http://ms-academic:8083
       KAFKA_BROKERS: kafka:29092
       NODE_ENV: production
     ports:
@@ -372,6 +370,8 @@ services:
       # Session + RBAC guard: sessions come from identity, permissions from authorization.
       IDENTITY_URL: http://ms-identity:8081
       AUTHORIZATION_URL: http://ms-authorization:8082
+      # Alcance de update-request (sede del llamante/persona), vía academic_actor.
+      ACADEMIC_URL: http://ms-academic:8083
       # Casos de actualización biométrica (RN-29) para re-registrar el propio rostro.
       CONFIGURATION_URL: http://ms-configuration:8087
       KAFKA_BROKERS: kafka:29092
@@ -509,7 +509,7 @@ services:
 
   # ──────────────────────────────────────────────────────────────
   # API Gateway — Kong OSS 3.6 DB-less + Redis (ADR-007, ADR-005 §10)
-  # 99 gateway 8080 proxy / 8001 admin
+  # 99 gateway 8000 proxy / 8001 admin
   # ──────────────────────────────────────────────────────────────
   kong-gateway:
     image: kong:3.6
@@ -553,7 +553,7 @@ services:
       # Lets the pre-function token check call identity through resty.http.
       KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
     ports:
-      - "0.0.0.0:${KONG_PROXY_PORT:-8080}:8000"
+      - "0.0.0.0:${KONG_PROXY_PORT:-8000}:8000"
       - "${BIND_IP:-127.0.0.1}:${KONG_ADMIN_PORT:-8001}:8001"
     volumes:
       - ./99-api-gateway/kong/kong.yml:/kong/kong.yml:ro
@@ -570,7 +570,7 @@ services:
   # Frontend web lives in FULL/docker-compose.yml (presentation concern,
   # context ./front-end/Web). It is intentionally NOT defined here.
 networks:
-  # edge â€” browser tier: frontend-web <-> Kong proxy (:8080).
+  # edge â€” browser tier: frontend-web <-> Kong proxy (:8000).
   faceattend-edge:
     driver: bridge
   # app â€” service tier: Kong <-> microservices <-> Redis.

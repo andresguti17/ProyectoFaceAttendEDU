@@ -133,7 +133,7 @@ function notifySessionExpired() {
 
 /**
  * Mapa legacy Mobile (singular snake, sin /api/v1, contra :3000)
- * -> canónico Gateway Kong :8080 (/api/v1/plural-kebab).
+ * -> canónico Gateway Kong :8000 (/api/v1/plural-kebab).
  * Fuente: back-end/99-api-gateway/kong/kong.yml + controllers 01-09.
  * Los servicios Mobile siguen usando 'person', 'app_user', etc.; se
  * reescriben aquí para no tocar los 30+ services en este fix.
@@ -312,7 +312,7 @@ async function performRequest({ method, url, data = null, params = null, require
     if (error instanceof ApiError) throw error;
 
     // fetch failed / Network request failed / timed out en iOS: el gateway
-    // Kong (:8080) está caído o el host es inalcanzable desde el dispositivo.
+    // Kong (:8000) está caído o el host es inalcanzable desde el dispositivo.
     throw new ApiError(0, httpErrorMessage(0), null, `${error.message || 'network error'} (${BASE_URL})`);
   }
 }

@@ -28,6 +28,7 @@ import {
 import { useTheme } from "../../../components/hooks/useTheme";
 import { useResponsive } from "../../../components/hooks/useResponsive";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
+import { Checkbox } from "../../../components/common/inputs/Checkbox";
 import UsersLoadingFooter from "./UsersLoadingFooter";
 
 // ── Constantes de layout ──────────────────────────────────
@@ -40,6 +41,8 @@ const LAYOUT = {
     avatarSize: 36,
     avatarGap: 10,
 };
+
+const SELECT_COLUMN_WIDTH = 32;
 
 const DEFAULT_HEADER_ALIGN = "center";
 const ALIGN_TO_JUSTIFY = { left: "flex-start", center: "center", right: "flex-end" };
@@ -120,7 +123,7 @@ function HeaderCell({ col, label }) {
 
 // ── Header de tabla ───────────────────────────────────────
 
-function TableHeader({ columns }) {
+function TableHeader({ columns, selection }) {
     const { t } = useTranslation();
     const { theme } = useTheme();
 
@@ -135,6 +138,17 @@ function TableHeader({ columns }) {
                 borderBottomColor: theme.colors.border.primary,
             }}
         >
+            {selection && (
+                <View style={{ width: SELECT_COLUMN_WIDTH }}>
+                    <Checkbox
+                        size="sm"
+                        checked={selection.allSelected}
+                        indeterminate={selection.someSelected && !selection.allSelected}
+                        onToggle={selection.onToggleAll}
+                        accessibilityLabel={t("Seleccionar todos los usuarios de la página")}
+                    />
+                </View>
+            )}
             {columns.map((col) => (
                 <HeaderCell key={col.id} col={col} label={t(col.label)} />
             ))}
@@ -144,7 +158,21 @@ function TableHeader({ columns }) {
 
 // ── Fila de tabla (desktop / tablet) ──────────────────────
 
-function UserRow({ user, columns, onPress, isLast, renderContext, useAttendanceColorHook }) {
+function SelectBox({ user, selection }) {
+    const { t } = useTranslation();
+    return (
+        <View style={{ width: SELECT_COLUMN_WIDTH }}>
+            <Checkbox
+                size="sm"
+                checked={selection.isSelected(user)}
+                onToggle={() => selection.onToggle(user)}
+                accessibilityLabel={`${t("Seleccionar")} ${user.name}`}
+            />
+        </View>
+    );
+}
+
+function UserRow({ user, columns, onPress, isLast, renderContext, useAttendanceColorHook, selection }) {
     const { theme } = useTheme();
     const c = theme.colors;
     
@@ -167,6 +195,7 @@ function UserRow({ user, columns, onPress, isLast, renderContext, useAttendanceC
             }}
             disabled={!onPress}
         >
+            {selection && <SelectBox user={user} selection={selection} />}
             {columns.map((col) => (
                 <BodyCell key={col.id} col={col}>
                     {col.render(user, ctx)}
@@ -178,7 +207,7 @@ function UserRow({ user, columns, onPress, isLast, renderContext, useAttendanceC
 
 // ── Fila compacta (móvil) ─────────────────────────────────
 
-function UserCompactRow({ user, onPress, isLast, compactConfig, renderContext, useAttendanceColorHook }) {
+function UserCompactRow({ user, onPress, isLast, compactConfig, renderContext, useAttendanceColorHook, selection }) {
     const { theme } = useTheme();
     const c = theme.colors;
     
@@ -202,6 +231,7 @@ function UserCompactRow({ user, onPress, isLast, compactConfig, renderContext, u
             }}
             disabled={!onPress}
         >
+            {selection && <SelectBox user={user} selection={selection} />}
             {/* Renderizar contenido compacto usando la configuración personalizada */}
             {compactConfig ? (
                 compactConfig.render(user, ctx)
@@ -245,6 +275,8 @@ function UserCompactRow({ user, onPress, isLast, compactConfig, renderContext, u
  * @param {boolean} isLoading - Si está cargando más usuarios (muestra loading footer)
  * @param {string} loadingMessage - Mensaje personalizado mientras carga
  * @param {string} completeMessage - Mensaje cuando terminó de cargar
+ * @param {Set} selectedIds - ids seleccionados (selección múltiple, opcional)
+ * @param {Function} onSelectionChange - recibe el nuevo Set; si falta, no hay checkboxes
  * @param {Object} style - Estilos adicionales para el Card contenedor
  * 
  * @example
@@ -275,6 +307,8 @@ export default function UsersTable({
     isLoading = false,
     loadingMessage = "Cargando usuarios...",
     completeMessage = "¡Ya llegaste hasta el final de la lista, no hay más usuarios que mostrar!",
+    selectedIds,
+    onSelectionChange,
     style,
 }) {
     const { isSmall } = useResponsive();
@@ -282,6 +316,31 @@ export default function UsersTable({
     const { t } = useTranslation();
     const c = theme.colors;
     const useAttendanceColorHook = useAttendanceColor;
+
+    // Selección múltiple: solo si el padre entrega onSelectionChange. El
+    // "seleccionar todos" del header actúa sobre las filas visibles (página).
+    const selection = useMemo(() => {
+        if (!onSelectionChange) return null;
+        const ids = selectedIds ?? new Set();
+        const pageIds = data.map((u) => u.id);
+        const selectedOnPage = pageIds.filter((id) => ids.has(id)).length;
+        return {
+            isSelected: (u) => ids.has(u.id),
+            allSelected: pageIds.length > 0 && selectedOnPage === pageIds.length,
+            someSelected: selectedOnPage > 0,
+            onToggle: (u) => {
+                const next = new Set(ids);
+                if (next.has(u.id)) next.delete(u.id);
+                else next.add(u.id);
+                onSelectionChange(next);
+            },
+            onToggleAll: (checked) => {
+                const next = new Set(ids);
+                pageIds.forEach((id) => (checked ? next.add(id) : next.delete(id)));
+                onSelectionChange(next);
+            },
+        };
+    }, [data, selectedIds, onSelectionChange]);
 
     // Calcular columnas visibles según contexto
     const visibleColumns = useMemo(() => {
@@ -300,7 +359,7 @@ export default function UsersTable({
     return (
         <Card padding={0} style={style}>
             {/* Header (solo desktop) */}
-            {!isSmall && <TableHeader columns={visibleColumns} />}
+            {!isSmall && <TableHeader columns={visibleColumns} selection={selection} />}
 
             {/* Contenido */}
             {data.length === 0 && !isLoading ? (
@@ -325,6 +384,7 @@ export default function UsersTable({
                                 compactConfig={compactConfig}
                                 renderContext={renderContext}
                                 useAttendanceColorHook={useAttendanceColorHook}
+                                selection={selection}
                             />
                         ) : (
                             <UserRow
@@ -335,6 +395,7 @@ export default function UsersTable({
                                 isLast={false} // Footer siempre muestra borde superior
                                 renderContext={renderContext}
                                 useAttendanceColorHook={useAttendanceColorHook}
+                                selection={selection}
                             />
                         );
                     })}

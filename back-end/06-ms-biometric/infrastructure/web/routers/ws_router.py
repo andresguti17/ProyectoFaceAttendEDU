@@ -23,8 +23,8 @@ Client -> server, one JSON object per text frame::
     {"type": "facial.identify", "client_message_id": "c1", "payload": {"encoding": [...]}}
 
 `type` is one of ``facial.enroll`` / ``facial.verify`` / ``facial.identify`` /
-``fingerprint.enroll`` / ``fingerprint.verify`` / ``fingerprint.identify`` /
-``ping``. `payload` is validated with the same pydantic model the matching
+``facial.identify_image`` / ``fingerprint.enroll`` / ``fingerprint.verify`` /
+``fingerprint.identify`` / ``fingerprint.identify_sample`` / ``ping``. `payload` is validated with the same pydantic model the matching
 REST endpoint uses. `client_message_id` is optional but required for the
 idempotent-replay guarantee below. `direction` (`CHECK_IN` default or
 `CHECK_OUT`) tags an `identify` as an entry or exit for the broadcast event.
@@ -57,12 +57,14 @@ Reliability
   reconnects and resends the same `client_message_id`; the cached response is
   replayed instead of enrolling/matching a second time.
 
-Scope: only the vector `encoding: list[float]` enroll/verify/identify (what
-attendance capture actually sends) is exposed here. The image/sample/liveness
-capture endpoints merged in from `10-ms-face-auth` (`/enroll-image`,
-`/identify-image`, `/enroll-sample`, `/identify-sample`, `/liveness-*`) stay
-REST-only — they are a multi-step enrollment UI flow, not a single
-request/response attendance event, and were out of scope for this change.
+Scope: the vector `encoding: list[float]` enroll/verify/identify (what
+attendance capture actually sends), `facial.identify_image` (an image
+identify that consumes a completed liveness token) and
+`fingerprint.identify_sample` (a raw-sample identify, the attendance
+counterpart of `/identify-sample`) are exposed here. The remaining
+image/sample/liveness endpoints merged in from `10-ms-face-auth`
+(`/enroll-image`, `/enroll-sample`, `/liveness-*`) stay REST-only — they are a
+multi-step enrollment UI flow, not a single request/response attendance event.
 """
 from __future__ import annotations
 
@@ -79,25 +81,31 @@ from domain.ports.out.biometric_repository import BiometricRepositoryPort
 from domain.ports.out.match_log_repository import MatchLogRepositoryPort
 from infrastructure.config.dependencies import (
     get_facial_repository_ws,
+    get_fingerprint_match_threshold,
     get_fingerprint_repository_ws,
+    get_liveness_secret,
     get_match_log_repository_ws,
     get_similarity_threshold,
 )
 from infrastructure.config.settings import Settings, get_settings
 from infrastructure.web.routers.facial_router import (
     EnrollFacialRequest,
+    IdentifyFacialImageRequest,
     IdentifyFacialRequest,
     VerifyFacialRequest,
     enroll_facial,
     identify_facial,
+    identify_facial_image,
     verify_facial,
 )
 from infrastructure.web.routers.fingerprint_router import (
     EnrollFingerprintRequest,
     IdentifyFingerprintRequest,
+    IdentifyFingerprintSampleRequest,
     VerifyFingerprintRequest,
     enroll_fingerprint,
     identify_fingerprint,
+    identify_fingerprint_sample,
     verify_fingerprint,
 )
 from infrastructure.web.security import WebSocketAuthError, authenticate_websocket
@@ -113,18 +121,22 @@ PERMISSION = "attendance.record:write"
 FACIAL_ENROLL = "facial.enroll"
 FACIAL_VERIFY = "facial.verify"
 FACIAL_IDENTIFY = "facial.identify"
+FACIAL_IDENTIFY_IMAGE = "facial.identify_image"
 FINGERPRINT_ENROLL = "fingerprint.enroll"
 FINGERPRINT_VERIFY = "fingerprint.verify"
 FINGERPRINT_IDENTIFY = "fingerprint.identify"
+FINGERPRINT_IDENTIFY_SAMPLE = "fingerprint.identify_sample"
 PING = "ping"
 
 _PAYLOAD_MODELS: dict[str, type[BaseModel]] = {
     FACIAL_ENROLL: EnrollFacialRequest,
     FACIAL_VERIFY: VerifyFacialRequest,
     FACIAL_IDENTIFY: IdentifyFacialRequest,
+    FACIAL_IDENTIFY_IMAGE: IdentifyFacialImageRequest,
     FINGERPRINT_ENROLL: EnrollFingerprintRequest,
     FINGERPRINT_VERIFY: VerifyFingerprintRequest,
     FINGERPRINT_IDENTIFY: IdentifyFingerprintRequest,
+    FINGERPRINT_IDENTIFY_SAMPLE: IdentifyFingerprintSampleRequest,
 }
 
 
@@ -191,6 +203,9 @@ async def _dispatch(
     fingerprint_repo: BiometricRepositoryPort,
     match_logs: MatchLogRepositoryPort,
     threshold: float,
+    fp_threshold: int,
+    secret: str,
+    settings: Settings,
     correlation_id: str,
 ) -> tuple[dict[str, Any], dict[str, Any] | None]:
     """Validate `raw_payload` and call the matching REST route handler directly.
@@ -227,6 +242,36 @@ async def _dispatch(
         )
         return result, None
 
+    if message_type == FACIAL_IDENTIFY_IMAGE:
+        result = await identify_facial_image(
+            data, fake_request, facial_repo, match_logs, threshold, secret, settings
+        )
+        event = {
+            "event_type": direction,
+            "person_id": result["person_id"],
+            "biometric_type": "FACIAL",
+            "finger_number": None,
+            "score": result["score"],
+            "timestamp": _now_iso(),
+            "correlation_id": correlation_id,
+        }
+        return result, event
+
+    if message_type == FINGERPRINT_IDENTIFY_SAMPLE:
+        result = await identify_fingerprint_sample(
+            data, fake_request, fingerprint_repo, match_logs, fp_threshold, settings
+        )
+        event = {
+            "event_type": direction,
+            "person_id": result["person_id"],
+            "biometric_type": "FINGERPRINT",
+            "finger_number": result.get("finger_number"),
+            "score": result["score"],
+            "timestamp": _now_iso(),
+            "correlation_id": correlation_id,
+        }
+        return result, event
+
     # facial.identify / fingerprint.identify
     result = (
         await identify_fingerprint(data, fake_request, fingerprint_repo, match_logs, threshold)
@@ -253,8 +298,11 @@ async def _handle_frame(
     fingerprint_repo: BiometricRepositoryPort,
     match_logs: MatchLogRepositoryPort,
     threshold: float,
+    fp_threshold: int,
     idempotency: IdempotencyCache,
     manager: ConnectionManager,
+    secret: str,
+    settings: Settings,
 ) -> None:
     try:
         envelope = WsEnvelope.model_validate_json(raw)
@@ -289,6 +337,9 @@ async def _handle_frame(
             fingerprint_repo=fingerprint_repo,
             match_logs=match_logs,
             threshold=threshold,
+            fp_threshold=fp_threshold,
+            secret=secret,
+            settings=settings,
             correlation_id=str(uuid4()),
         )
     except ValidationError:
@@ -298,6 +349,19 @@ async def _handle_frame(
         response = _error_frame(
             envelope.client_message_id, _error_code_for_status(exc.status_code), str(exc.detail)
         )
+        if envelope.client_message_id:
+            idempotency.set(envelope.client_message_id, response)
+        await websocket.send_json(response)
+        return
+    except Exception:  # noqa: BLE001 - last-resort guard, see module docstring.
+        # Anything else (a dlib RuntimeError, a Mongo connection error, ...)
+        # would otherwise propagate out of this coroutine and, per FastAPI's
+        # WebSocket handling, drop the connection entirely. The frontend's
+        # reconnect-and-resend logic would then reconnect and resend the exact
+        # same poison message forever. Degrade to an error frame instead, same
+        # as the HTTPException branch above, and keep the connection open.
+        logger.exception("unexpected error handling ws frame type=%s", envelope.type)
+        response = _error_frame(envelope.client_message_id, "InternalError", "internal error")
         if envelope.client_message_id:
             idempotency.set(envelope.client_message_id, response)
         await websocket.send_json(response)
@@ -319,6 +383,8 @@ async def biometric_ws(
     fingerprint_repo: BiometricRepositoryPort = Depends(get_fingerprint_repository_ws),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository_ws),
     threshold: float = Depends(get_similarity_threshold),
+    fp_threshold: int = Depends(get_fingerprint_match_threshold),
+    secret: str = Depends(get_liveness_secret),
     settings: Settings = Depends(get_settings),
 ) -> None:
     await websocket.accept()
@@ -352,8 +418,11 @@ async def biometric_ws(
                 fingerprint_repo=fingerprint_repo,
                 match_logs=match_logs,
                 threshold=threshold,
+                fp_threshold=fp_threshold,
                 idempotency=idempotency,
                 manager=manager,
+                secret=secret,
+                settings=settings,
             )
     except WebSocketDisconnect:
         logger.info("biometric ws disconnected user=%s", user_id)

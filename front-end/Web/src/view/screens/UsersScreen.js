@@ -19,9 +19,15 @@
 import React from "react";
 import { useRoute } from "@react-navigation/native";
 import UsersView from "../UsersView";
+import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../NotAuthorized";
+import { useRolePermissions } from "../../viewmodels/useRolePermissions";
 
 export default function UsersScreen() {
     const route = useRoute();
+    const permissions = useRolePermissions();
+    if (!permissions.visibleTabs.includes("users")) {
+        return <NotAuthorized type={AUTH_EXCEPTION_TYPES.INSUFFICIENT_PERMISSIONS} />;
+    }
     const section = route.params?.section;
     const attendanceFilter = route.params?.attendanceFilter; // "gt" | "lt" | null
     const searchQuery = route.params?.searchQuery; // Término de búsqueda inicial

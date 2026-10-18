@@ -5,14 +5,14 @@
 //  en Expo, horneada en el bundle estático). Si no se fijó una
 //  URL explícita, se infiere del host con el que se cargó la
 //  página (mismo patrón que Mobile en src/config/env.js): abrir
-//  http://10.0.0.5:8090 asume Kong en http://10.0.0.5:8080. Así
+//  http://10.0.0.5:8090 asume Kong en http://10.0.0.5:8000. Así
 //  un cambio de IP de LAN no exige reconstruir la imagen Docker.
 //
 //  Caso especial: VS Code Dev Tunnels (*.devtunnels.ms) no exponen el
 //  puerto como "host:puerto" — cada puerto forwardeado tiene su propio
 //  subdominio "<id>-<puerto>.<region>.devtunnels.ms", y solo existe si
 //  se forwardeó ese puerto explícitamente en el panel de Ports. Pedirle
-//  al usuario que forwardee también el puerto de Kong (8080) — con el
+//  al usuario que forwardee también el puerto de Kong (8000) — con el
 //  mismo nivel de visibilidad que 8090, o las peticiones quedan bloqueadas
 //  igual — era un error fácil de cometer y la causa real de fallos "no
 //  carga nada" bajo devtunnels. Se evita del todo quedándose en el mismo
@@ -24,8 +24,11 @@
 //  (ver apiClient).
 // ============================================================
 
-const GATEWAY_PORT = 8080;
+const GATEWAY_PORT = 8000;
 const DEV_TUNNEL_HOST = /^.+-\d+\.[^.]+\.devtunnels\.ms$/i;
+
+// Este valor es reemplazado por Expo durante el build si EXPO_PUBLIC_API_URL está definida
+declare const process: { env: { EXPO_PUBLIC_API_URL?: string } };
 
 function inferApiBaseUrl(): string {
     if (typeof window === "undefined" || !window.location?.hostname) {
@@ -40,11 +43,20 @@ function inferApiBaseUrl(): string {
 
 /** Base del API Gateway Kong. Sin slash final. */
 export function getApiBaseUrl(): string {
-    const nodeEnv = (
-        globalThis as { process?: { env?: Record<string, string | undefined> } }
-    ).process?.env;
-    const explicit = nodeEnv?.EXPO_PUBLIC_API_URL?.trim();
-    const base = explicit || inferApiBaseUrl();
+    // Intenta leer de (en orden de precedencia):
+    // 1. Variable global inyectada en runtime (window.__FACEATTEND_API_URL__)
+    // 2. Variable de entorno baked en build time (EXPO_PUBLIC_API_URL, reemplazada por Expo)
+    // 3. Fallback a inferApiBaseUrl()
+
+    const globalUrl = (globalThis as any).__FACEATTEND_API_URL__?.trim();
+    if (globalUrl) return globalUrl.endsWith("/") ? globalUrl.slice(0, -1) : globalUrl;
+
+    // EXPO_PUBLIC_API_URL será reemplazada por Expo durante el build
+    const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+    if (envUrl) return envUrl.endsWith("/") ? envUrl.slice(0, -1) : envUrl;
+
+    // Fallback a inferencia del URL basado en el hostname
+    const base = inferApiBaseUrl();
     return base.endsWith("/") ? base.slice(0, -1) : base;
 }
 

@@ -48,6 +48,13 @@ export const EnrollmentService = {
     return unwrap(data).map(Enrollment.fromApi);
   },
 
+  // Ruta anidada (filtra en el servidor): GET /api/v1/academic-actors/:id/enrollments.
+  listByActor: async (academicActorId) => {
+    if (!academicActorId) return [];
+    const data = await request({ method: GET, url: `api/v1/academic-actors/${academicActorId}/enrollments`, requiresAuth: false });
+    return unwrap(data).map((x) => Enrollment.fromApi(toSnakeDeep(x)));
+  },
+
   create: async (enrollmentData) => {
     const data = await request({ method: POST, url: ENDPOINT, data: enrollmentData.toApi(), requiresAuth: false });
     return Enrollment.fromApi(data);

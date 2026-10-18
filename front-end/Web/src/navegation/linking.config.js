@@ -39,6 +39,7 @@ export const linkingConfig = {
             FaceAttendEDU: '',  // Landing page en /
             'FaceAttendEDU-Login': 'login',
             'FaceAttendEDU-Register': 'register',
+            'FaceAttendEDU-Recovery': 'recovery',
             
             // ── Rutas autenticadas DIRECTAS ───────────────────
             Dashboard: 'app',  // /app → Dashboard
@@ -62,6 +63,9 @@ export const linkingConfig = {
             SchoolInfo: 'app/school-info',  // /app/school-info
             Academic: 'app/academic',  // /app/academic
             Contacts: 'app/contacts',  // /app/contacts
+            Roles: 'app/roles',  // /app/roles (matriz rol x permiso)
+            Alerts: 'app/alerts',  // /app/alerts (bandeja de alertas)
+            AttendanceKiosk: 'app/kiosk',  // /app/kiosk (kiosco de asistencia)
             Biometrics: {
                 // /app/biometrics, /app/biometrics/face-login, /app/biometrics/fingerprint
                 path: 'app/biometrics/:section?',
@@ -137,6 +141,7 @@ export function buildUrl(screen, params = {}) {
         'FaceAttendEDU': '/',
         'FaceAttendEDU-Login': '/login',
         'FaceAttendEDU-Register': '/register',
+        'FaceAttendEDU-Recovery': '/recovery',
         'Dashboard': '/app',
         'Users': params.section ? `/app/users/${params.section}` : '/app/users',
         'Courses': '/app/courses',
@@ -147,6 +152,10 @@ export function buildUrl(screen, params = {}) {
         'SchoolInfo': '/app/school-info',
         'Academic': '/app/academic',
         'Contacts': '/app/contacts',
+        'Schools': '/app/schools',
+        'Roles': '/app/roles',
+        'Alerts': '/app/alerts',
+        'AttendanceKiosk': '/app/kiosk',
         'Biometrics': params.section ? `/app/biometrics/${params.section}` : '/app/biometrics',
         'Settings': params.section ? `/app/settings/${params.section}` : '/app/settings',
     };

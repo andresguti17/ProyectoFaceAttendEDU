@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -47,6 +48,40 @@ func envOr(key, fallback string) string {
 }
 
 var sessionIDPattern = regexp.MustCompile(`(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
+
+// Caché positiva de autenticación (TTL corto). Cada request autenticado
+// costaba 1-2 introspecciones secuenciales; bajo fan-out eso saturaba
+// identity/authorization y el gateway respondía 503. Solo se cachean
+// resultados POSITIVOS: cualquier fallo se revalida en vivo (fail-secure).
+// Ventana de revocación/logout: authCacheTTL.
+const authCacheTTL = 10 * time.Second
+const authCacheMax = 5000
+
+type cacheEntry struct {
+	value   string
+	expires time.Time
+}
+
+var authCache = struct {
+	sync.RWMutex
+	session map[string]cacheEntry
+	eval    map[string]cacheEntry
+}{session: map[string]cacheEntry{}, eval: map[string]cacheEntry{}}
+
+func cacheGet(m map[string]cacheEntry, key string) (string, bool) {
+	v, ok := m[key]
+	if !ok || time.Now().After(v.expires) {
+		return "", false
+	}
+	return v.value, true
+}
+
+func cachePut(m map[string]cacheEntry, key, value string) {
+	if len(m) > authCacheMax {
+		clear(m)
+	}
+	m[key] = cacheEntry{value: value, expires: time.Now().Add(authCacheTTL)}
+}
 
 // NotificationPermission maps a request to the permission it needs ("" = any
 // valid session). Alerts are readable by every role, staff resolves them; creating or deleting them
@@ -94,34 +129,55 @@ func AuthMiddleware(cfg AuthConfig, rule func(method, path string) string) gin.H
 			SessionStatus string `json:"sessionStatus"`
 			UserID        string `json:"userId"`
 		}
-		status, err := getJSON(c.Request.Context(), cfg.Client, cfg.IdentityURL+"/api/v1/sessions/"+token, token, &session)
-		if err != nil {
-			abort(c, http.StatusServiceUnavailable, "Cannot verify session")
-			return
-		}
-		if status != http.StatusOK || session.SessionStatus != "Active" || session.UserID == "" {
-			abort(c, http.StatusUnauthorized, "Invalid or expired session")
-			return
+		var userID string
+		authCache.RLock()
+		cachedUserID, sessionHit := cacheGet(authCache.session, token)
+		authCache.RUnlock()
+		if sessionHit {
+			userID = cachedUserID
+		} else {
+			status, err := getJSON(c.Request.Context(), cfg.Client, cfg.IdentityURL+"/api/v1/sessions/"+token, token, &session)
+			if err != nil {
+				abort(c, http.StatusServiceUnavailable, "Cannot verify session")
+				return
+			}
+			if status != http.StatusOK || session.SessionStatus != "Active" || session.UserID == "" {
+				abort(c, http.StatusUnauthorized, "Invalid or expired session")
+				return
+			}
+			userID = session.UserID
+			authCache.Lock()
+			cachePut(authCache.session, token, userID)
+			authCache.Unlock()
 		}
 
 		if permission := rule(c.Request.Method, path); permission != "" {
-			var result struct {
-				Allowed bool `json:"allowed"`
-			}
-			target := cfg.AuthorizationURL + "/api/v1/auth/evaluate?userId=" + url.QueryEscape(session.UserID) +
-				"&permission=" + url.QueryEscape(permission)
-			status, err := getJSON(c.Request.Context(), cfg.Client, target, token, &result)
-			if err != nil {
-				abort(c, http.StatusServiceUnavailable, "Cannot verify permissions")
-				return
-			}
-			if status != http.StatusOK || !result.Allowed {
-				abort(c, http.StatusForbidden, "Forbidden: requires "+permission)
-				return
+			evalKey := token + "\n" + userID + "\n" + permission
+			authCache.RLock()
+			_, evalHit := cacheGet(authCache.eval, evalKey)
+			authCache.RUnlock()
+			if !evalHit {
+				var result struct {
+					Allowed bool `json:"allowed"`
+				}
+				target := cfg.AuthorizationURL + "/api/v1/auth/evaluate?userId=" + url.QueryEscape(userID) +
+					"&permission=" + url.QueryEscape(permission)
+				status, err := getJSON(c.Request.Context(), cfg.Client, target, token, &result)
+				if err != nil {
+					abort(c, http.StatusServiceUnavailable, "Cannot verify permissions")
+					return
+				}
+				if status != http.StatusOK || !result.Allowed {
+					abort(c, http.StatusForbidden, "Forbidden: requires "+permission)
+					return
+				}
+				authCache.Lock()
+				cachePut(authCache.eval, evalKey, "1")
+				authCache.Unlock()
 			}
 		}
 		if cfg.AcademicURL != "" && isAlertPath(path) {
-			scope, err := resolveActorScope(c.Request.Context(), cfg, session.UserID, token)
+			scope, err := resolveActorScope(c.Request.Context(), cfg, userID, token)
 			if err != nil {
 				abort(c, http.StatusServiceUnavailable, "Cannot resolve actor scope")
 				return
@@ -130,7 +186,7 @@ func AuthMiddleware(cfg AuthConfig, rule func(method, path string) string) gin.H
 				c.Set(actorScopeKey, scope)
 			}
 		}
-		c.Set("userID", session.UserID)
+		c.Set("userID", userID)
 		c.Next()
 	}
 }

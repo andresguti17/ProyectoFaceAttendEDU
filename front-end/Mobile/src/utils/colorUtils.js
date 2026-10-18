@@ -84,77 +84,77 @@ export function evaluateColor(hex) {
     if (bestContrast >= 7)        wcagLevel = 'AAA';
     else if (bestContrast >= 4.5) wcagLevel = 'AA';
     else if (bestContrast >= 3)   wcagLevel = 'A';
-    else                          wcagLevel = 'Falla';
+    else                          wcagLevel = 'fail';
 
     // Legibilidad
     let readability;
     if (contrastVsWhite >= 7)
-        readability = 'Texto blanco encima se ve perfecto';
+        readability = 'appearance.read.excellent';
     else if (contrastVsWhite >= 4.5)
-        readability = 'Texto blanco es legible sin problema';
+        readability = 'appearance.read.good';
     else if (contrastVsWhite >= 3)
-        readability = 'Texto blanco se ve, pero cuesta leerlo';
+        readability = 'appearance.read.weak';
     else
-        readability = 'Texto blanco no se lee bien — color demasiado claro';
+        readability = 'appearance.read.poor';
 
     // Vibe
     let vibe;
     if (satPct < 15)
-        vibe = 'Tono neutro — discreto';
+        vibe = 'appearance.vibe.neutral';
     else if (hueDeg < 30 || hueDeg >= 340)
-        vibe = 'Rojo — enérgico y llamativo';
+        vibe = 'appearance.vibe.red';
     else if (hueDeg < 60)
-        vibe = 'Naranja / dorado — cálido y amigable';
+        vibe = 'appearance.vibe.orange';
     else if (hueDeg < 150)
-        vibe = 'Verde — fresco y confiable';
+        vibe = 'appearance.vibe.green';
     else if (hueDeg < 200)
-        vibe = 'Cian / turquesa — moderno';
+        vibe = 'appearance.vibe.cyan';
     else if (hueDeg < 260)
-        vibe = 'Azul — profesional';
+        vibe = 'appearance.vibe.blue';
     else if (hueDeg < 310)
-        vibe = 'Violeta — creativo y sofisticado';
+        vibe = 'appearance.vibe.violet';
     else
-        vibe = 'Rosa / magenta — expresivo';
+        vibe = 'appearance.vibe.pink';
 
     // Adecuación UI
     let uiFit;
     if (lumPct > 80)
-        uiFit = 'Muy claro — puede perderse sobre fondos blancos';
+        uiFit = 'appearance.uiFit.light';
     else if (lumPct < 20)
-        uiFit = 'Muy oscuro — puede confundirse con el texto';
+        uiFit = 'appearance.uiFit.dark';
     else if (satPct < 15)
-        uiFit = 'Poco saturado — funciona como neutro';
+        uiFit = 'appearance.uiFit.desaturated';
     else if (satPct > 95 && lumPct > 60)
-        uiFit = 'Muy vibrante — puede cansar en uso prolongado';
+        uiFit = 'appearance.uiFit.vibrant';
     else
-        uiFit = 'Proporciones equilibradas — ideal para botones y tabs';
+        uiFit = 'appearance.uiFit.balanced';
 
     // Consejo
     let tip;
     if (contrastVsWhite < 3 && lumPct > 70)
-        tip = 'Baja la luminosidad 15–20 pts para que el texto blanco sea legible';
+        tip = 'appearance.tip.lowerLum15';
     else if (contrastVsWhite < 4.5 && lumPct > 55)
-        tip = 'Baja la luminosidad 8–10 pts para mejorar la legibilidad';
+        tip = 'appearance.tip.lowerLum8';
     else if (satPct < 15 && lumPct > 50)
-        tip = 'Sube la saturación para que el acento resalte';
+        tip = 'appearance.tip.raiseSat';
     else if (lumPct > 80)
-        tip = 'Este tono es muy pálido — bájalo para que se vea como acento real';
+        tip = 'appearance.tip.tooPale';
     else
-        tip = 'Este color funciona bien — no necesita ajustes';
+        tip = 'appearance.tip.fine';
 
     // Score
     let score;
     let scoreTone;
     if (contrastVsWhite >= 4.5 && satPct >= 15 && lumPct >= 20 && lumPct <= 78) {
-        score = 'excelente';   scoreTone = 'success';
+        score = 'appearance.score.excellent';   scoreTone = 'success';
     } else if (contrastVsWhite >= 3 && satPct >= 10 && lumPct >= 18 && lumPct <= 82) {
-        score = 'bueno';       scoreTone = 'success';
+        score = 'appearance.score.good';       scoreTone = 'success';
     } else if (contrastVsWhite >= 2.5 || contrastVsBlack >= 4.5) {
-        score = 'aceptable';   scoreTone = 'warning';
+        score = 'appearance.score.acceptable';   scoreTone = 'warning';
     } else if (lumPct > 80 || lumPct < 15) {
-        score = 'precaución';  scoreTone = 'warning';
+        score = 'appearance.score.caution';  scoreTone = 'warning';
     } else {
-        score = 'problemático'; scoreTone = 'danger';
+        score = 'appearance.score.problematic'; scoreTone = 'danger';
     }
 
     return {

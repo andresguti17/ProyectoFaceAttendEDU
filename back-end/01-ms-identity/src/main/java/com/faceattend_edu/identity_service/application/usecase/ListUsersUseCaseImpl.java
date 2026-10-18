@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -22,5 +24,15 @@ public class ListUsersUseCaseImpl implements ListUsersUseCase {
     @Override
     public long countUsers() {
         return listUsersPort.countUsers();
+    }
+
+    @Override
+    public List<User> listUsers(int pageIndex, int limit, Set<UUID> personIds) {
+        return listUsersPort.listUsers(pageIndex, limit, personIds);
+    }
+
+    @Override
+    public long countUsers(Set<UUID> personIds) {
+        return listUsersPort.countUsers(personIds);
     }
 }

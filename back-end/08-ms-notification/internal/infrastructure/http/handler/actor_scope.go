@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -13,13 +14,20 @@ import (
 )
 
 // Actor scope of the caller, same rule as the Java services (05-attendance
-// CallerScopeResolver): admins see every alert (nil scope); everyone else sees
-// the alerts of their own academic actors plus, for instructors, the active
-// students of the cohorts they teach. Cached 60 s per user.
+// CallerScopeResolver): Super Administrador sees every alert (nil scope, no
+// school of its own); Administrador sees only the alerts of actors in its own
+// school; everyone else sees the alerts of their own academic actors plus,
+// for instructors, the active students of the cohorts they teach. Cached 60 s
+// per user.
 
 const actorScopeKey = "actorScope"
 
-var adminRoles = map[string]bool{"Administrador": true, "Super Administrador": true}
+const actorPageSize = 100
+
+const (
+	superAdminRole  = "Super Administrador"
+	schoolAdminRole = "Administrador"
+)
 
 type cachedScope struct {
 	actors    map[int64]bool
@@ -39,10 +47,18 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 	if _, err := getJSONStrict(ctx, cfg, cfg.AuthorizationURL+"/api/v1/users/"+url.PathEscape(userID)+"/roles", token, &roles); err != nil {
 		return nil, err
 	}
+	isSuperAdmin := false
+	isSchoolAdmin := false
 	for _, r := range roles {
-		if adminRoles[r.RoleName] {
-			return nil, nil
+		switch r.RoleName {
+		case superAdminRole:
+			isSuperAdmin = true
+		case schoolAdminRole:
+			isSchoolAdmin = true
 		}
+	}
+	if isSuperAdmin {
+		return nil, nil
 	}
 	if hit, ok := scopeCache.Load(userID); ok && hit.(cachedScope).expiresAt.After(time.Now()) {
 		return hit.(cachedScope).actors, nil
@@ -57,12 +73,12 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 	var actors []struct {
 		AcademicActorID int64  `json:"academicActorId"`
 		PersonID        string `json:"personId"`
+		SchoolID        *int64 `json:"schoolId"`
 	}
 	if user.PersonID == "" {
 		return map[int64]bool{}, nil
 	}
-	// ?personId= filtra en academic: el listado con ?limit se corta en 100 filas y el actor
-	// del llamante quedaba fuera (el instructor veía un alcance vacío).
+	// ?personId= filtra en academic: el actor del llamante sin recorrer el listado capado.
 	if _, err := getJSONStrict(ctx, cfg, cfg.AcademicURL+"/api/v1/academic-actors?personId="+url.QueryEscape(user.PersonID), token, &actors); err != nil {
 		return nil, err
 	}
@@ -74,6 +90,54 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 			own = append(own, a.AcademicActorID)
 		}
 	}
+
+	if isSchoolAdmin {
+		// Administrador de sede: la sede se deduce del listado completo, recorrido por páginas.
+		var all []struct {
+			AcademicActorID int64  `json:"academicActorId"`
+			PersonID        string `json:"personId"`
+			SchoolID        *int64 `json:"schoolId"`
+		}
+		for offset := 0; ; offset += actorPageSize {
+			var page []struct {
+				AcademicActorID int64  `json:"academicActorId"`
+				PersonID        string `json:"personId"`
+				SchoolID        *int64 `json:"schoolId"`
+			}
+			pageURL := fmt.Sprintf("%s/api/v1/academic-actors?limit=%d&offset=%d", cfg.AcademicURL, actorPageSize, offset)
+			if _, err := getJSONStrict(ctx, cfg, pageURL, token, &page); err != nil {
+				return nil, err
+			}
+			all = append(all, page...)
+			if len(page) < actorPageSize {
+				break
+			}
+		}
+
+		// Administrador de sede: solo los actores de su propia sede, nunca los
+		// de otras instituciones (a diferencia de Super Administrador = nil).
+		ownSchools := map[int64]bool{}
+		for _, a := range all {
+			if scope[a.AcademicActorID] && a.SchoolID != nil {
+				ownSchools[*a.SchoolID] = true
+			}
+		}
+		adminScope := map[int64]bool{}
+		if len(ownSchools) > 0 {
+			for _, a := range all {
+				if a.SchoolID != nil && ownSchools[*a.SchoolID] {
+					adminScope[a.AcademicActorID] = true
+				}
+			}
+		} else {
+			// Sin sede propia (no debería ocurrir para un Administrador): falla
+			// seguro, solo sus propios actores en vez de caer a "ver todo".
+			adminScope = scope
+		}
+		scopeCache.Store(userID, cachedScope{actors: adminScope, expiresAt: time.Now().Add(time.Minute)})
+		return adminScope, nil
+	}
+
 	for _, actorID := range own {
 		var blocks []struct {
 			CohortID int64 `json:"cohortId"`
@@ -103,6 +167,30 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 // getJSONStrict is getJSON that treats any non-200 answer as an error: a
 // partial scope must never widen what the caller can see.
 func getJSONStrict(ctx context.Context, cfg AuthConfig, target, token string, out any) (int, error) {
+	status, err := getJSONOnce(ctx, cfg, target, token, out)
+	if err != nil && isTransient(status) {
+		// One retry after a short pause: under load a single slow or reset
+		// inter-service call was enough to answer 503. A second failure still
+		// propagates, so the scope keeps failing secure.
+		select {
+		case <-time.After(retryPause):
+		case <-ctx.Done():
+			return status, err
+		}
+		status, err = getJSONOnce(ctx, cfg, target, token, out)
+	}
+	if err != nil {
+		log.Printf("actor scope: %v", err)
+	}
+	return status, err
+}
+
+const retryPause = 250 * time.Millisecond
+
+// isTransient: transport failure (status 0) or a 5xx answer; 4xx are final.
+func isTransient(status int) bool { return status == 0 || status >= 500 }
+
+func getJSONOnce(ctx context.Context, cfg AuthConfig, target, token string, out any) (int, error) {
 	status, err := getJSON(ctx, cfg.Client, target, token, out)
 	if err == nil && status != http.StatusOK {
 		err = fmt.Errorf("GET %s answered %d", target, status)

@@ -68,17 +68,17 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
         setProfileError('');
 
         if (!name.trim() || !email.trim() || !phone.trim()) {
-            setProfileError(t('profile.profileModal.errorRequired', 'Completa todos los campos'));
+            setProfileError(t('profile.profileModal.errorRequired'));
             return;
         }
 
         if (!validateEmail(email)) {
-            setProfileError(t('profile.profileModal.errorEmail', 'Correo electrónico no válido'));
+            setProfileError(t('profile.profileModal.errorEmail'));
             return;
         }
 
         if (phone.length < 7) {
-            setProfileError(t('profile.profileModal.errorPhone', 'Teléfono debe tener al menos 7 dígitos'));
+            setProfileError(t('profile.profileModal.errorPhone'));
             return;
         }
 
@@ -123,13 +123,13 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
                 try { await onSaved(); } catch {}
             }
             showSuccess(
-                t('profile.profileModal.successTitle', 'Perfil actualizado'),
-                t('profile.profileModal.successMessage', 'Tu información ha sido actualizada correctamente')
+                t('profile.profileModal.successTitle'),
+                t('profile.profileModal.successMessage')
             );
             closeProfileModal();
         } catch (error) {
             setProfileLoading(false);
-            showError(t('profile.profileModal.errorGeneric', 'No se pudo actualizar. Intenta de nuevo.'));
+            showError(t('profile.profileModal.errorGeneric'));
         }
     };
 
@@ -143,7 +143,7 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
             >
                 <View style={{ flex: 1 }}>
                     <Text style={[stylesCommon.passwordSettingsTitle, { color: colors.text }]}>
-                        {t('profile.profileModal.editTitle', 'Editar información personal')}
+                        {t('profile.profileModal.editTitle')}
                     </Text>
                 </View>
                 <Text style={{ fontSize: 20, color: colors.textSecondary, marginLeft: 4 }}>›</Text>
@@ -175,10 +175,10 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
                                     },
                                 ]}>
                                     <Text style={[stylesCommon.passwordModalTitle, { color: colors.text }]}>
-                                        {t('profile.profileModal.editTitle', 'Editar información personal')}
+                                        {t('profile.profileModal.editTitle')}
                                     </Text>
                                     <Text style={[stylesCommon.passwordModalDescription, { color: colors.textSecondary }]}>
-                                        {t('profile.profileModal.help', 'Actualiza tu información de perfil.')}
+                                        {t('profile.profileModal.help')}
                                     </Text>
 
                                     <View style={[
@@ -187,28 +187,26 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
                                     ]} />
 
                                     {/* Inputs */}
-                                    <Text style={{marginBottom: 10, color: colors.text}}>Ingrese su Correo
-                                        Electronico</Text>
+                                    <Text style={{marginBottom: 10, color: colors.text}}>{t('profile.profileModal.enterEmail')}</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
                                             borderColor: colors.border,
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }]}
-                                        placeholder={t('profile.profileModal.emailPlaceholder', 'Correo electrónico')}
+                                        placeholder={t('profile.profileModal.emailPlaceholder')}
                                         placeholderTextColor={colors.textSecondary}
                                         keyboardType="email-address"
                                         onChangeText={setEmail}
                                     />
-                                    <Text style={{marginBottom: 10, color: colors.text, marginTop: 20}}>Ingrese su
-                                        numero Telefonico</Text>
+                                    <Text style={{marginBottom: 10, color: colors.text, marginTop: 20}}>{t('profile.profileModal.enterPhone')}</Text>
                                     <TextInput
                                         style={[stylesCommon.passwordModalInput, {
                                             borderColor: colors.border,
                                             color: colors.text,
                                             backgroundColor: colors.background,
                                         }]}
-                                        placeholder={t('profile.profileModal.phonePlaceholder', 'Teléfono')}
+                                        placeholder={t('profile.profileModal.phonePlaceholder')}
                                         placeholderTextColor={colors.textSecondary}
                                         keyboardType="phone-pad"
                                         onChangeText={setPhone}
@@ -235,8 +233,8 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
                                             <PrimaryButton
                                                 title={
                                                     profileLoading
-                                                        ? t('profile.profileModal.saving', 'Guardando...')
-                                                        : t('profile.profileModal.saveButton', 'Guardar cambios')
+                                                        ? t('profile.profileModal.saving')
+                                                        : t('profile.profileModal.saveButton')
                                                 }
                                                 onPress={handleProfileUpdate}
                                                 disabled={profileLoading}
@@ -247,7 +245,7 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
                                             style={stylesCommon.passwordModalCancelButton}
                                         >
                                             <Text style={[stylesCommon.passwordModalCancelText, { color: colors.primary }]}>
-                                                {t('profile.profileModal.cancel', 'Cancelar')}
+                                                {t('profile.profileModal.cancel')}
                                             </Text>
                                         </TouchableOpacity>
                                     </View>

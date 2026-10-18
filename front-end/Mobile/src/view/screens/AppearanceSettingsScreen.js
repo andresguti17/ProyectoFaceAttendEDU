@@ -29,6 +29,7 @@ import {readableOn} from '../../theme/contrast';
 //  Sub-componente: barra de presets de color
 // ─────────────────────────────────────────────────────────────
 function ColorPresetBar({presets, currentHex, onSelect, colors}) {
+    const {t} = useTranslation();
     return (
         <View style={{gap: 6}}>
             <View style={{
@@ -82,7 +83,7 @@ function ColorPresetBar({presets, currentHex, onSelect, colors}) {
                                 fontWeight: active ? '700' : '400',
                                 color: active ? colors.primary : colors.textSecondary,
                             }}>
-                                {preset.label}
+                                {t(preset.labelKey)}
                             </Text>
                         </View>
                     );
@@ -93,68 +94,10 @@ function ColorPresetBar({presets, currentHex, onSelect, colors}) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Sub-componente: slider HSL nativo (sin dependencias externas)
-// ─────────────────────────────────────────────────────────────
-function HSLSliderRow({label, value, min, max, step = 1, onValueChange, trackColor, colors}) {
-    const [barWidth, setBarWidth] = React.useState(1);
-    const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
-
-    const panResponder = React.useRef(
-        PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
-            onMoveShouldSetPanResponder: () => true,
-            onPanResponderGrant: (evt) => {
-                const x   = evt.nativeEvent.locationX;
-                const raw = Math.round((x / barWidth) * (max - min) / step) * step + min;
-                onValueChange(Math.max(min, Math.min(max, raw)));
-            },
-            onPanResponderMove: (evt) => {
-                const x   = evt.nativeEvent.locationX;
-                const raw = Math.round((x / barWidth) * (max - min) / step) * step + min;
-                onValueChange(Math.max(min, Math.min(max, raw)));
-            },
-        })
-    ).current;
-
-    return (
-        <View style={{gap: 4}}>
-            <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                <Text style={{fontSize: 13, color: colors.textSecondary}}>{label}</Text>
-                <Text style={{fontSize: 13, fontWeight: '600', color: colors.text}}>{value}</Text>
-            </View>
-            <View
-                style={{height: 36, justifyContent: 'center'}}
-                onLayout={(e) => setBarWidth(e.nativeEvent.layout.width || 1)}
-                {...panResponder.panHandlers}
-            >
-                <View style={{height: 6, borderRadius: 3, backgroundColor: colors.border}}>
-                    <View style={{
-                        position: 'absolute', left: 0, top: 0, bottom: 0,
-                        width: `${pct * 100}%`,
-                        backgroundColor: trackColor,
-                        borderRadius: 3,
-                    }} />
-                    <View style={{
-                        position: 'absolute', top: -7,
-                        left: `${pct * 100}%`, marginLeft: -10,
-                        width: 20, height: 20, borderRadius: 10,
-                        backgroundColor: trackColor,
-                        borderWidth: 2, borderColor: colors.backgroundWhite,
-                        shadowColor: '#000',
-                        shadowOffset: {width: 0, height: 1},
-                        shadowOpacity: 0.25, shadowRadius: 3,
-                        elevation: 3,
-                    }} />
-                </View>
-            </View>
-        </View>
-    );
-}
-
-// ─────────────────────────────────────────────────────────────
 //  Sub-componente: tarjeta de evaluación del color
 // ─────────────────────────────────────────────────────────────
 function ColorEvaluatorCard({verdict, colors}) {
+    const {t} = useTranslation();
     if (!verdict) return null;
     return (
         <View style={{
@@ -172,18 +115,18 @@ function ColorEvaluatorCard({verdict, colors}) {
                     backgroundColor: colors[verdict.scoreTone],
                 }} />
                 <Text style={{fontSize: 13, fontWeight: '700', color: colors[verdict.scoreTone], textTransform: 'capitalize'}}>
-                    {verdict.score}
+                    {t(verdict.score)}
                 </Text>
                 <Text style={{fontSize: 12, color: colors.textSecondary, marginLeft: 'auto'}}>
-                    WCAG {verdict.wcagLevel}  ·  {verdict.contrastRatio}:1
+                    WCAG {verdict.wcagLevel === 'fail' ? t('appearance.wcagFail') : verdict.wcagLevel}  ·  {verdict.contrastRatio}:1
                 </Text>
             </View>
 
             {[
-                {icon: '👁️', text: verdict.readability},
-                {icon: '🎨', text: verdict.vibe},
-                {icon: '📐', text: verdict.uiFit},
-                {icon: '💡', text: verdict.tip},
+                {text: t(verdict.readability)},
+                {text: t(verdict.vibe)},
+                {text: t(verdict.uiFit)},
+                {text: t(verdict.tip)},
             ].map(({icon, text}, i) => (
                 <View key={i} style={{flexDirection: 'row', gap: 8, alignItems: 'flex-start'}}>
                     <Text style={{fontSize: 13}}>{icon}</Text>
@@ -362,7 +305,7 @@ export default function AppearanceSettingsScreen() {
                             fontSize: 12, color: colors.textSecondary,
                             lineHeight: 18, marginBottom: 16,
                         }}>
-                            {VISION_DESCRIPTIONS[visionMode]}
+                            {t(VISION_DESCRIPTIONS[visionMode])}
                         </Text>
 
                         {/* ── Selector de presets ──────────────────── */}
@@ -378,91 +321,11 @@ export default function AppearanceSettingsScreen() {
 
                         <View style={{height: 20}} />
 
-                        {/* ── Sliders HSL ──────────────────────────── */}
-                        <Text style={[labelStyle, {marginBottom: 10}]}>
-                            {t('settings.fineAdjust')}
-                        </Text>
-                        <View style={{
-                            backgroundColor: colors.card, borderRadius: 14,
-                            padding: 16, borderWidth: 1, borderColor: colors.border,
-                            gap: 14, marginBottom: 16,
-                        }}>
-                            <HSLSliderRow
-                                label={t('settings.hue')}
-                                value={hue} min={0} max={360}
-                                onValueChange={(v) => applyHSL(v, sat, lum)}
-                                trackColor={currentHex} colors={colors}
-                            />
-                            <HSLSliderRow
-                                label={t('settings.saturation')}
-                                value={sat} min={0} max={100}
-                                onValueChange={(v) => applyHSL(hue, v, lum)}
-                                trackColor={currentHex} colors={colors}
-                            />
-                            <HSLSliderRow
-                                label={t('settings.luminosity')}
-                                value={lum} min={0} max={100}
-                                onValueChange={(v) => applyHSL(hue, sat, v)}
-                                trackColor={currentHex} colors={colors}
-                            />
-                        </View>
-
-                        {/* ── Input HEX manual ─────────────────────── */}
-                        <Text style={[labelStyle, {marginBottom: 6}]}>
-                            {t('settings.hexCode')}
-                        </Text>
-                        <View style={{
-                            flexDirection: 'row', alignItems: 'center',
-                            gap: 10, marginBottom: 16,
-                        }}>
-                            <View style={{
-                                width: 36, height: 36, borderRadius: 8,
-                                backgroundColor: (/^#[0-9A-Fa-f]{6}$/.test(hexInputValue)
-                                    ? hexInputValue : colors.border),
-                                borderWidth: 1, borderColor: colors.border,
-                            }} />
-                            <TextInput
-                                value={hexInputValue}
-                                onChangeText={(v) => {
-                                    setHexInputValue(v);
-                                    handleHexInput(v);
-                                }}
-                                placeholder="#1392ED"
-                                placeholderTextColor={colors.textSecondary}
-                                autoCapitalize="characters"
-                                maxLength={7}
-                                style={{
-                                    flex: 1, borderWidth: 1,
-                                    borderColor: colors.border, borderRadius: 10,
-                                    paddingHorizontal: 14, paddingVertical: 10,
-                                    fontSize: 14, fontFamily: 'monospace',
-                                    color: colors.text, backgroundColor: colors.card,
-                                }}
-                            />
-                        </View>
-
                         {/* ── Evaluador de color ───────────────────── */}
                         <Text style={[labelStyle, {marginBottom: 8}]}>
                             {t('settings.colorEvaluation')}
                         </Text>
                         <ColorEvaluatorCard verdict={verdict} colors={colors} />
-
-                        {/* ── Info ─────────────────────────────────── */}
-                        <View style={{
-                            flexDirection: 'row', alignItems: 'flex-start',
-                            gap: 8,
-                            backgroundColor: colors.primary + '18',
-                            borderRadius: 12, padding: 12,
-                            marginTop: 16, marginBottom: 8,
-                        }}>
-                            <Text style={{fontSize: 14}}>ℹ️</Text>
-                            <Text style={{
-                                fontSize: 12, color: colors.primary,
-                                flex: 1, lineHeight: 18,
-                            }}>
-                                {t('settings.accentInfoMsg')}
-                            </Text>
-                        </View>
 
                         {/* ══════════════════════════════════════════ */}
                         {/* ALERTA / FEEDBACK                          */}

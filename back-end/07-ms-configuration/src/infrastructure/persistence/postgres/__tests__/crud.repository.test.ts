@@ -220,6 +220,17 @@ describe('PostgresCrudRepository', () => {
       );
     });
 
+    it('list() with op "in" binds an array and compares it with = ANY(...)', async () => {
+      mockRunQuery.mockResolvedValueOnce([]);
+
+      await repo.list({ filters: [{ column: 'name', value: ['Alice', 'Bob'], op: 'in' }] });
+
+      expect(mockRunQuery).toHaveBeenCalledWith(
+        `SELECT ${SELECT_COLUMNS} FROM test_schema.test_entity WHERE deleted_at IS NULL AND name = ANY($1) ORDER BY id ASC`,
+        [['Alice', 'Bob']],
+      );
+    });
+
     it('list() rejects a filter column that is not in the static whitelist (defence in depth)', async () => {
       await expect(
         repo.list({ filters: [{ column: 'sql_injection_attempt', value: 1 }] }),

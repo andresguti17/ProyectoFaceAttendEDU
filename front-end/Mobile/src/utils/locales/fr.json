@@ -39,7 +39,8 @@
     "activate": "Activer",
     "deactivate": "Désactiver",
     "logoLabel": "Logo de FaceAttend",
-    "logoPlaceholder": "logo"
+    "logoPlaceholder": "logo",
+    "confirm": "Confirmer"
   },
   "login": {
     "title": "Connexion",
@@ -706,7 +707,8 @@
     "justificationUpdated": "Type de justificatif mis à jour.",
     "newJustificationType": "Nouveau type de justificatif",
     "editJustificationType": "Modifier le type de justificatif",
-    "updateJustification": "Enregistrer les modifications"
+    "updateJustification": "Enregistrer les modifications",
+    "categoryGeneral": "Général"
   },
   "justifications": {
     "validList": "Justifications Valides",
@@ -780,7 +782,9 @@
       "saveButton": "Enregistrer les modifications",
       "saving": "Enregistrement...",
       "successMessage": "Profil mis à jour avec succès",
-      "successTitle": "Profil mis à jour"
+      "successTitle": "Profil mis à jour",
+      "enterEmail": "Saisissez votre adresse e-mail",
+      "enterPhone": "Saisissez votre numéro de téléphone"
     },
     "schoolInfo": "Informations de l'école",
     "schoolName": "Nom de l'école",
@@ -1023,7 +1027,8 @@
     "sending": "Envoi du code",
     "sendA11y": "Envoyer le code de récupération",
     "emailHint": "Saisissez votre e-mail pour recevoir le code de récupération",
-    "waitSeconds": "Patientez {{seconds}} secondes"
+    "waitSeconds": "Patientez {{seconds}} secondes",
+    "retryIn": "Réessayer dans {{seconds}} s"
   },
   "passwordUpdate": {
     "title": "Nouveau mot de passe",
@@ -1049,7 +1054,9 @@
     "a11yRequirementsHint": "Au moins 8 caractères, avec majuscules, minuscules, chiffres et caractères spéciaux.",
     "a11yShowConfirmation": "Afficher la confirmation",
     "a11yHideConfirmation": "Masquer la confirmation",
-    "a11yCancel": "Annuler et ignorer les modifications"
+    "a11yCancel": "Annuler et ignorer les modifications",
+    "enterNew": "Saisissez votre nouveau mot de passe",
+    "confirmNew": "Confirmez le mot de passe saisi"
   },
   "verifyCode": {
     "title": "Consultez votre e-mail",
@@ -1068,7 +1075,10 @@
     "resendIn": "Renvoyer le code dans {{seconds}} secondes",
     "resentTitle": "Code renvoyé",
     "resentMessage": "Consultez votre e-mail pour voir le nouveau code.",
-    "resendError": "Impossible de renvoyer le code."
+    "resendError": "Impossible de renvoyer le code.",
+    "lockedWait": "Patientez {{seconds}} s",
+    "noCodeQuestion": "Vous n'avez pas reçu le code ?",
+    "resendCountdown": "Renvoyer dans {{seconds}} s"
   },
   "manageAmbientes": {
     "title": "Gestion des environnements",
@@ -1221,5 +1231,109 @@
     "sessionNotCreated": "Le serveur n’a pas pu créer votre session. Veuillez réessayer.",
     "sessionNotSaved": "La session n’a pas pu être enregistrée sur cet appareil. Vérifiez l’espace disponible et réessayez.",
     "sessionNotRenewable": "Votre session ne peut pas être renouvelée. Veuillez vous reconnecter."
+  },
+  "codeInput": {
+    "digitLabel": "Chiffre {{n}} sur 6",
+    "hint": "Saisissez le code de 6 caractères"
+  },
+  "datePicker": {
+    "selectDate": "Sélectionnez une date"
+  },
+  "manageEnvironment": {
+    "capacityLine": "{{location}} • Cap. {{capacity}}"
+  },
+  "passwordStrength": {
+    "veryWeak": "Très faible",
+    "weak": "Faible",
+    "fair": "Moyen",
+    "strong": "Fort",
+    "veryStrong": "Très fort"
+  },
+  "documentTypes": {
+    "cc": "Carte d'identité citoyenne (CC)",
+    "ti": "Carte d'identité des mineurs (TI)",
+    "ce": "Carte d'étranger (CE)"
+  },
+  "appearance": {
+    "colors": {
+      "azul": "Bleu",
+      "verde": "Vert",
+      "violeta": "Violet",
+      "naranja": "Orange",
+      "neutro": "Neutre",
+      "dorado": "Doré",
+      "celeste": "Bleu ciel",
+      "amarillo": "Jaune",
+      "rojo": "Rouge",
+      "rosa": "Rose",
+      "gris-osc": "Gris foncé",
+      "gris-med": "Gris moyen",
+      "gris-cla": "Gris clair",
+      "carbon": "Anthracite"
+    },
+    "visionDesc": {
+      "normal": "Palette de base, optimisée pour une vision standard.",
+      "deuteranopia": "Type le plus courant (~6 % des hommes). Affecte la perception du vert. Utilisez bleu + doré + violet.",
+      "protanopia": "Affecte la perception du rouge (~1 % des hommes). Bleu + jaune sont les plus distinguables.",
+      "tritanopia": "Affecte la perception du bleu/jaune (~0,01 %). Rouge + vert sont les plus distinguables.",
+      "achromatopsia": "Absence de perception des couleurs (très rare). Seul le contraste de luminosité est efficace."
+    },
+    "wcagFail": "Échec",
+    "read": {
+      "excellent": "Le texte blanc dessus est parfait",
+      "good": "Le texte blanc est lisible sans problème",
+      "weak": "Le texte blanc est visible mais difficile à lire",
+      "poor": "Le texte blanc se lit mal — couleur trop claire"
+    },
+    "vibe": {
+      "neutral": "Ton neutre — discret",
+      "red": "Rouge — énergique et frappant",
+      "orange": "Orange / doré — chaleureux et amical",
+      "green": "Vert — frais et fiable",
+      "cyan": "Cyan / turquoise — moderne",
+      "blue": "Bleu — professionnel",
+      "violet": "Violet — créatif et raffiné",
+      "pink": "Rose / magenta — expressif"
+    },
+    "uiFit": {
+      "light": "Très clair — peut se perdre sur fond blanc",
+      "dark": "Très foncé — peut se confondre avec le texte",
+      "desaturated": "Peu saturé — fonctionne comme un neutre",
+      "vibrant": "Très vif — peut fatiguer en usage prolongé",
+      "balanced": "Proportions équilibrées — idéal pour les boutons et onglets"
+    },
+    "tip": {
+      "lowerLum15": "Baissez la luminosité de 15 à 20 pts pour que le texte blanc soit lisible",
+      "lowerLum8": "Baissez la luminosité de 8 à 10 pts pour améliorer la lisibilité",
+      "raiseSat": "Augmentez la saturation pour que l'accent ressorte",
+      "tooPale": "Cette teinte est très pâle — assombrissez-la pour qu'elle ressorte comme un vrai accent",
+      "fine": "Cette couleur fonctionne bien — aucun ajustement nécessaire"
+    },
+    "score": {
+      "excellent": "excellent",
+      "good": "bon",
+      "acceptable": "acceptable",
+      "caution": "prudence",
+      "problematic": "problématique"
+    }
+  },
+  "countries": {
+    "loadError": "Impossible de charger les pays.",
+    "connectionError": "Erreur de connexion lors du chargement des pays.",
+    "citiesLoadError": "Impossible de charger les villes.",
+    "citiesConnectionError": "Erreur de connexion lors du chargement des villes."
+  },
+  "weekdays": {
+    "1": "Lundi",
+    "2": "Mardi",
+    "3": "Mercredi",
+    "4": "Jeudi",
+    "5": "Vendredi",
+    "6": "Samedi",
+    "7": "Dimanche"
+  },
+  "errors": {
+    "missingPerson": "Le profil de la personne de l'utilisateur est manquant.",
+    "missingSchool": "L'établissement sélectionné est manquant."
   }
 }

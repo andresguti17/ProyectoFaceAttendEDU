@@ -1,11 +1,13 @@
 import React, {useState} from 'react';
 import {Platform, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import {useTranslation} from 'react-i18next';
 import {useTheme} from './ThemeContext';
 import {normalizeTypography} from '../../../utils/typography';
 
 export const DatePickerInput = ({ value, onChange, placeholder, hint }) => {
     const { colors } = useTheme();
+    const { t } = useTranslation();
 
     const parseValue = () => {
         if (value && value.length === 10) {
@@ -56,7 +58,7 @@ export const DatePickerInput = ({ value, onChange, placeholder, hint }) => {
                         { color: value ? colors.text : colors.textSecondary },
                     ]}
                 >
-                    {value || placeholder || 'Selecciona una fecha'}
+                    {value || placeholder || t('datePicker.selectDate')}
                 </Text>
             </TouchableOpacity>
 
@@ -98,7 +100,7 @@ export const DatePickerInput = ({ value, onChange, placeholder, hint }) => {
                         onPress={confirmIOS}
                     >
                         <Text style={[styles.iosConfirmText, { color: colors.onPrimary }]}>
-                            Confirmar
+                            {t('common.confirm')}
                         </Text>
                     </TouchableOpacity>
                 </View>

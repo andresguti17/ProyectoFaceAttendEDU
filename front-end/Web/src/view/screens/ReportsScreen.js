@@ -18,9 +18,15 @@
 import React from "react";
 import { useRoute } from "@react-navigation/native";
 import ReportsView from "../ReportsView";
+import { NotAuthorized, AUTH_EXCEPTION_TYPES } from "../NotAuthorized";
+import { useRolePermissions } from "../../viewmodels/useRolePermissions";
 
 export default function ReportsScreen() {
     const route = useRoute();
+    const permissions = useRolePermissions();
+    if (!permissions.visibleTabs.includes("reports")) {
+        return <NotAuthorized type={AUTH_EXCEPTION_TYPES.INSUFFICIENT_PERMISSIONS} />;
+    }
     
     // Parámetros para la nueva estructura de secciones
     const section = route.params?.section; // No default, para detectar vista padre

@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-const API_PORT = 8080;
+const API_PORT = 8000;
 const DEFAULT_HOST = '192.168.1.3';
 
 /**
@@ -15,7 +15,7 @@ const DEFAULT_HOST = '192.168.1.3';
  * 4. En Android emulator sin hostUri, 10.0.2.2 es la forma de llegar al host.
  * 5. Último recurso: la IP LAN por defecto.
  *
- * Todo el tráfico Mobile pasa por el gateway Kong (:8080). Los puertos directos
+ * Todo el tráfico Mobile pasa por el gateway Kong (:8000). Los puertos directos
  * de microservicios (:8083, :8084, ...) no se publican en todos los entornos
  * (ms-identity expone solo 8081/tcp interno) y el firewall del dispositivo los
  * bloquea, lo que dejaba el login colgado en los 3 roles.

@@ -1,3 +1,4 @@
+import BackButton from '../components/common/BackButton';
 import React, {useMemo} from 'react';
 import {
   Image,
@@ -75,18 +76,7 @@ export default function MenuJustifyScreen() {
               contentContainerStyle={[styles.ScrollViewContent, { paddingBottom: 24 }]}
               showsVerticalScrollIndicator={false}
           >
-            <TouchableOpacity
-                onPress={handleBack}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel={t('common.back')}
-                style={{ alignSelf: 'flex-start', padding: 6, marginBottom: 4 }}
-            >
-              <Image
-                  source={require('../../assets/images/flecha-volver.png')}
-                  style={{ width: 26, height: 26, tintColor: colors.text }}
-              />
-            </TouchableOpacity>
+            <BackButton onPress={handleBack} />
             <View style={styles.containerMenuJustify}>
               <View style={styles.mainContent}>
                 <Header title={isStudent ? t('justify.title') : t('admin.justificationManagement')} />

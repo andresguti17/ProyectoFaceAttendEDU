@@ -64,7 +64,7 @@ export function resolveDatabaseConfig(env: NodeJS.ProcessEnv = process.env): Dat
     password: env.POSTGRES_PASSWORD || 'postgres',
     database: env.POSTGRES_DB || 'faceattend_db',
     schema,
-    max: Number(env.POSTGRES_POOL_MAX) || 10,
+    max: Number(env.POSTGRES_POOL_MAX) || 25,
   };
 }
 

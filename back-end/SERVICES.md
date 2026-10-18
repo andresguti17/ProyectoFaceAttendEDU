@@ -15,7 +15,7 @@ ms/
 ├── 07-ms-configuration/     → Configuration (parámetros + biometric_update_case) TS Fastify 8087
 ├── 08-ms-notification/      → Notification (alertas)                           Go Gin 8088
 ├── 09-ms-quality/           → Quality (instrumento ISO 25010, evaluaciones)    TS Fastify 8089
-├── 99-api-gateway/          → API Gateway (Kong OSS DB-less + Redis)           Kong 8080/8001
+├── 99-api-gateway/          → API Gateway (Kong OSS DB-less + Redis)           Kong 8000/8001
 └── ../database/             → Migraciones Liquibase (8 schemas, 1 BD faceattend_db)
 ```
 
@@ -46,7 +46,7 @@ Todos los servicios 01-08 siguen hexagonal (`_stacks/java-spring.md`, `node-type
 | Biometric 06 | Python 3.12 | FastAPI | 8086 | MongoDB biometric | OpenCV/pymongo vector — único viable |
 | Configuration 07 | TypeScript | Fastify | 8087 | PostgreSQL configuration | CRUD trivial 3 tablas |
 | Notification 08 | Go 1.22 | Gin | 8088 | PostgreSQL notification | Binario 5-10 MB para 2 tablas |
-| Gateway 99 | — | Kong OSS 3.6 DB-less + Redis 7 | 8080/8001 | Redis cache | Plugins JWT/rate-limit/CORS, kong.yml declarativo (ADR-007) |
+| Gateway 99 | — | Kong OSS 3.6 DB-less + Redis 7 | 8000/8001 | Redis cache | Plugins JWT/rate-limit/CORS, kong.yml declarativo (ADR-007) |
 
 Ver `ADR-005-technology-stack.md` para scoring y `ADR-007-api-gateway.md` para gateway.
 
@@ -66,7 +66,7 @@ Polyglot modular monolith: JVM + Node + Python + Go + Kong. 4 runtimes + gateway
 
 | Tipo | Mecanismo | Uso |
 |------|-----------|-----|
-| Sincrona | REST via Kong 8080 | CRUD |
+| Sincrona | REST via Kong 8000 | CRUD |
 | Asincrona | Kafka | Domain Events |
 | Cross-context | UUID sin FK | Referencias entre schemas |
 
@@ -113,7 +113,7 @@ Polyglot modular monolith: JVM + Node + Python + Go + Kong. 4 runtimes + gateway
 ### 3.9 Quality (`09-ms-quality`) — TS Fastify 8089
 **Responsabilidad:** Instrumento ISO/IEC 25010 (24 ítems) + CRUD de evaluaciones y promedios por servicio — Ver `09-ms-quality/SERVICE.md` + `ISO25010_QUALITY_REPORT.md`
 
-### 3.10 Gateway (`99-api-gateway`) — Kong OSS 8080
+### 3.10 Gateway (`99-api-gateway`) — Kong OSS 8000
 **Responsabilidad:** Routing, JWT RS256, rate-limit, CORS, TLS. Kong DB-less `kong/kong.yml` + Redis. Ver `99-api-gateway/SERVICE.md` y `ADR-007-api-gateway.md`.
 
 ---
@@ -121,7 +121,7 @@ Polyglot modular monolith: JVM + Node + Python + Go + Kong. 4 runtimes + gateway
 ## 4. Diagrama de Dependencias
 
 ```
-                 Kong 99 (8080)  [Redis]
+                 Kong 99 (8000)  [Redis]
                       │
         ┌─────────────┼─────────────┐
         ▼             ▼             ▼
@@ -211,7 +211,7 @@ docker compose up -d && curl http://localhost:8001/
 docker exec -it faceattend-postgres psql -U postgres -d faceattend_db
 \dn
 \dt academic.*
-curl http://localhost:8080/api/v1/persons  # via Kong
+curl http://localhost:8000/api/v1/persons  # via Kong
 ```
 
 ---

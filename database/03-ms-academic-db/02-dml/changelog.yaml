@@ -3,5 +3,8 @@ databaseChangeLog:
       file: 001-seed-academic-actor-type-table.yaml
       relativeToChangelogFile: true
   - include:
+      file: 003-seed-admin-actor-type.yaml
+      relativeToChangelogFile: true
+  - include:
       file: 002-sync-catalog-sequences.yaml
       relativeToChangelogFile: true

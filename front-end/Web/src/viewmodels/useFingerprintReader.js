@@ -90,7 +90,7 @@ function normalizeSample(value) {
 const deviceKey = (value) =>
     value && (typeof value === "string" ? value : value.deviceId || value.id || value.name || String(value));
 
-export function useFingerprintReader({ vm }) {
+export function useFingerprintReader({ vm, socket, onIdentified } = {}) {
     const { t } = useTranslation();
     const { run, setStatus, requirePersonId, refreshSummary } = vm;
 
@@ -329,18 +329,26 @@ export function useFingerprintReader({ vm }) {
         () =>
             run(async () => {
                 const sample = takeSample();
-                const data = await biometricCaptureApi.identifyFingerprint({
-                    sampleFormat: sample.format,
-                    data: sample.data,
-                    quality: sample.quality,
-                });
+                const data = socket
+                    ? await socket.send("fingerprint.identify_sample", {
+                          sample_format: sample.format,
+                          data_base64: sample.data,
+                          quality: sample.quality,
+                          finger_number: sample.fingerNumber,
+                      })
+                    : await biometricCaptureApi.identifyFingerprint({
+                          sampleFormat: sample.format,
+                          data: sample.data,
+                          quality: sample.quality,
+                      });
+                onIdentified?.(data);
                 consumeSample();
                 const persons = await personMap();
                 const name = fullName(persons.get(data.person_id)) || data.person_id;
                 setStatus(`${t("Huella reconocida")}: ${name}`, "ok");
             }),
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [run, setStatus, t]
+        [run, setStatus, socket, onIdentified, t]
     );
 
     return {
@@ -356,5 +364,9 @@ export function useFingerprintReader({ vm }) {
         stopCapture,
         saveFingerprint,
         loginFingerprint,
+        __setSampleForTest: (sample) => {
+            stateRef.current.sample = sample;
+            setSampleReady(true);
+        },
     };
 }

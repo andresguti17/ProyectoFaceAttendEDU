@@ -7,7 +7,7 @@ import { useTheme } from '../common/ThemeContext';
 import { createAuthStyles } from './style/Style';
 import { useCustomAlert } from '../common/useCustomAlert';
 import CustomAlert from '../common/CustomAlert';
-import { removeToken } from "../../../storage/TokenStorage";
+import { removeToken } from "../../storage/TokenStorage";
 
 export default function DangerButton({ title, disabled = false, onLogout }) {
     const navigation = useNavigation();

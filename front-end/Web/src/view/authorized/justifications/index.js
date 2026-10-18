@@ -8,3 +8,4 @@ export { StudentJustifications } from "./StudentJustifications";
 export { ReviewJustifications } from "./ReviewJustifications";
 export { SubmitJustificationModal } from "./SubmitJustificationModal";
 export { JustificationDetailModal } from "./JustificationDetailModal";
+export { JustificationTypesManager } from "./JustificationTypesManager";

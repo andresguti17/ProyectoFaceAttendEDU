@@ -61,6 +61,8 @@ export const authApi = {
     createPerson: (b) => request(endpoints.identity.persons, { method: "POST", body: b }),
     updatePerson: (id, b) => request(endpoints.identity.personById(id), { method: "PUT", body: b }),
     deletePerson: (id) => request(endpoints.identity.personById(id), { method: "DELETE" }),
+    setPersonStatus: (id, status) =>
+        request(endpoints.identity.personStatus(id), { method: "PATCH", query: { status } }),
 
     // ── Usuarios ────────────────────────────────────────
     listUsers: (params) => request(endpoints.identity.users, { method: "GET", query: params }),
@@ -70,6 +72,8 @@ export const authApi = {
     createUser: (b) => request(endpoints.identity.users, { method: "POST", body: b }),
     updateUser: (id, b) => request(endpoints.identity.userById(id), { method: "PUT", body: b }),
     deleteUser: (id) => request(endpoints.identity.userById(id), { method: "DELETE" }),
+    setUserStatus: (id, status) =>
+        request(endpoints.identity.userStatus(id), { method: "PATCH", query: { status } }),
 
     // ── Sesiones de usuario ─────────────────────────────
     listSessions: (params) => request(endpoints.identity.sessions, { method: "GET", query: params }),

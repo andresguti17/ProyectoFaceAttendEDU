@@ -96,7 +96,12 @@ export function useProfileViewModel({ onLogout } = {}) {
             if (person?.person_id) {
                 try {
                     const actors = await ActorService.getByPerson(person.person_id);
-                    const actor = actors?.[0] || null;
+                    // Actor acorde al rol (un usuario puede tener varios): 1 aprendiz, 2 instructor.
+                    const kind = String(role || "").toLowerCase();
+                    const wantType = kind.includes("docente") || kind.includes("teacher") || kind.includes("instructor") ? 2
+                        : kind.includes("estudiante") || kind.includes("student") || kind.includes("aprendiz") ? 1
+                        : null;
+                    const actor = (wantType != null ? actors?.find((a) => a?.actorTypeId === wantType) : null) || actors?.[0] || null;
                     academicActorId = actor?.academicActorId || null;
                     actorCode = actor?.actorCode || '';
                     joinDate = formatJoinDate(actor?.startedOn || userCreatedAt);

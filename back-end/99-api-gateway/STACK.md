@@ -1,6 +1,6 @@
 # STACK — 99-api-gateway
 
-> **Stack ADR-005 §10 + ADR-007:** `Kong OSS 3.6 DB-less + Redis 7` · **Puerto:** `8080 proxy / 8001 admin`
+> **Stack ADR-005 §10 + ADR-007:** `Kong OSS 3.6 DB-less + Redis 7` · **Puerto:** `8000 proxy / 8001 admin`
 > **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-007-api-gateway.md` + `ADR-005-technology-stack.md`
 > **Infra:** No hexagonal — Kong declarative `kong/kong.yml` + `docker-compose.yml`
 
@@ -37,5 +37,5 @@ Requiere el stack `FULL/` ya levantado (crea las redes externas
 `faceattend-edge` y `faceattend-app`); este archivo solo reinicia Kong.
 
 ```bash
-docker compose up -d && curl http://localhost:8001/ && curl http://localhost:8080/api/v1/persons
+docker compose up -d && curl http://localhost:8001/ && curl http://localhost:8000/api/v1/persons
 ```

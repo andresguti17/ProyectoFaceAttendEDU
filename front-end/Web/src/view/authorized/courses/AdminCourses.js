@@ -9,11 +9,12 @@
 //  Los modales están en /modals/
 // ============================================================
 
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { Card, Badge, Button, ProgressBar, EmptyState, useAttendanceColor } from "../../components/common";
+import { Card, Badge, Button, ProgressBar, EmptyState, Alert, useAttendanceColor } from "../../components/common";
+import { ConfirmModal } from "../../components/common/modals/ConfirmModal";
 import { Navbar as PageHeader } from "../../components/common/navigation/Navbar";
 import { useTheme } from "../../components/hooks/useTheme";
 import { useResponsive } from "../../components/hooks/useResponsive";
@@ -21,7 +22,7 @@ import { useCoursesViewModel } from "../../../viewmodels/useCoursesViewModel";
 import { useRolePermissions } from "../../../viewmodels/useRolePermissions";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useCourseDetails } from "../../../core/hooks/useCourseDetails";
-import { CourseDetailModal, RegisterCourseModal } from "./modals";
+import { CourseDetailModal, RegisterCourseModal, EditCourseModal, ImportCoursesModal } from "./modals";
 
 // ── CourseCard (diseño original con datos dinámicos) ──────────────────────────
 
@@ -41,7 +42,7 @@ export function CourseCard({ course, onPress, onStudentsPress, onReportsPress })
     const barColor = useAttendanceColor(courseAvgAttendance);
 
     return (
-        <TouchableOpacity onPress={onPress} style={{ flex: 1, minWidth: 260 }}>
+        <TouchableOpacity onPress={onPress} style={{ flex: 1 }}>
             <Card padding={0} style={{ overflow: "hidden", height: "100%" }}>
                 <View style={{ height: 5, backgroundColor: course.color }} />
                 <View style={{ padding: 16, flex: 1 }}>
@@ -182,7 +183,7 @@ export function CourseCard({ course, onPress, onStudentsPress, onReportsPress })
 // ── AdminCourses Component ────────────────────────────────
 
 export function AdminCourses({ vm: vmProp }) {
-    const { isSmall } = useResponsive();
+    const { isSmall, isMedium } = useResponsive();
     const { theme } = useTheme();
     const c = theme.colors;
     const vmLocal = useCoursesViewModel();
@@ -192,6 +193,38 @@ export function AdminCourses({ vm: vmProp }) {
     const navigation = useNavigation();
 
     const canManage = permissions.canManageCourses;
+    const canDelete = permissions.canDeleteCourse ?? false;
+
+    const [pendingDelete, setPendingDelete] = useState(null);
+    const [pendingToggle, setPendingToggle] = useState(null);
+    const [busy, setBusy] = useState(false);
+    const [actionError, setActionError] = useState(null);
+
+    async function confirmDelete() {
+        if (!pendingDelete) return;
+        setBusy(true);
+        setActionError(null);
+        const err = await vm.removeCourse?.(pendingDelete);
+        setBusy(false);
+        if (err) {
+            setActionError(err);
+            return;
+        }
+        setPendingDelete(null);
+    }
+
+    async function confirmToggle() {
+        if (!pendingToggle) return;
+        setBusy(true);
+        setActionError(null);
+        const err = await vm.toggleCourseStatus?.(pendingToggle);
+        setBusy(false);
+        if (err) {
+            setActionError(err);
+            return;
+        }
+        setPendingToggle(null);
+    }
 
     // Colores dinámicos para las estadísticas
     const avgAttendanceColor = useAttendanceColor(vm.avgAttendance);
@@ -397,7 +430,11 @@ export function AdminCourses({ vm: vmProp }) {
                     {vm.filtered.map((course) => (
                         <View
                             key={course.id}
-                            style={{ flexBasis: isSmall ? "100%" : "30%", flexGrow: 1 }}
+                            style={{
+                                flexBasis: isSmall ? "100%" : isMedium ? "48%" : "31%",
+                                flexGrow: 0,
+                                flexShrink: 1,
+                            }}
                         >
                             <CourseCard
                                 course={course}
@@ -415,14 +452,58 @@ export function AdminCourses({ vm: vmProp }) {
                 course={vm.selected}
                 onClose={vm.clearSelection}
                 canManage={canManage}
+                canDeleteCourse={canDelete}
+                onEdit={vm.openEditModal}
+                onRemove={(course) => setPendingDelete(course)}
+                onToggleStatus={(course) => setPendingToggle(course)}
             />
 
-            {canManage && (
-                <RegisterCourseModal
-                    visible={vm.showRegisterModal}
-                    onClose={vm.closeRegisterModal}
-                    onSubmit={vm.registerCourse}
+            <ConfirmModal
+                visible={pendingDelete != null}
+                onClose={() => (busy ? null : setPendingDelete(null))}
+                onConfirm={confirmDelete}
+                loading={busy}
+                variant="danger"
+                title={t("Eliminar curso")}
+                message={t("Se eliminará el curso. ¿Continuar?")}
+                confirmText={t("Eliminar")}
+            />
+            {pendingToggle != null && (
+                <ConfirmModal
+                    visible
+                    onClose={() => (busy ? null : setPendingToggle(null))}
+                    onConfirm={confirmToggle}
+                    loading={busy}
+                    variant="default"
+                    title={t("Cambiar estado")}
+                    message={t("Se cambiará el estado del curso. ¿Continuar?")}
+                    confirmText={t("Confirmar")}
                 />
+            )}
+            {actionError && (
+                <Alert type="error" message={actionError} />
+            )}
+
+            {canManage && (
+                <>
+                    <RegisterCourseModal
+                        visible={vm.showRegisterModal}
+                        onClose={vm.closeRegisterModal}
+                        onSubmit={vm.registerCourse}
+                    />
+
+                    <EditCourseModal
+                        course={vm.editingCourse}
+                        onClose={vm.closeEditModal}
+                        onSubmit={vm.editCourse}
+                    />
+
+                    <ImportCoursesModal
+                        visible={vm.showImportModal}
+                        onClose={vm.closeImportModal}
+                        onImport={vm.importCourses}
+                    />
+                </>
             )}
         </ScrollView>
     );

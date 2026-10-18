@@ -338,7 +338,7 @@ const SubmitButton = ({
                 <ActivityIndicator color={labels.colors.onPrimary} size="small" />
             ) : cooldown.isActive ? (
                 <Text style={styles.recoveryPrimaryButtonText}>
-                    Reintentar en {cooldown.remaining}s
+                    {t('forgotPassword.retryIn', {seconds: cooldown.remaining})}
                 </Text>
             ) : (
                 <Text style={styles.recoveryPrimaryButtonText}>

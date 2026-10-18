@@ -80,12 +80,17 @@ async function usersFromApi() {
 
     const seen = new Set();
     const users = [];
+    // Actor de la sede activa por persona: lo mismo que ata la cuenta a la sede
+    // aporta el código real del actor (DOC-…) y su school_id, que la lista de
+    // usuarios antes descartaba y que la edición necesita mostrar.
+    const actorByPerson = new Map();
     for (const actor of actors) {
         const user = usersByPerson.get(actor.personId);
         // Una persona puede ser actor en varias sedes: su cuenta es una sola.
         if (!user || seen.has(user.userId)) continue;
         seen.add(user.userId);
         users.push(user);
+        actorByPerson.set(actor.personId, actor);
     }
 
     // Roles: una sola petición por lote a GET /user-roles. Antes se pedía uno por
@@ -103,6 +108,7 @@ async function usersFromApi() {
 
     return users.map((user, index) => {
         const person = persons.get(user.personId);
+        const actor = actorByPerson.get(user.personId) ?? null;
         const role = toUiRole(roles[index]);
         const courseNames = teacherCourses.get(user.personId) ?? [];
 
@@ -110,8 +116,19 @@ async function usersFromApi() {
             id: user.userId,
             name: fullName(person) || user.username,
             email: person?.email ?? "",
+            documentNumber: person?.documentNumber ?? "",
+            documentType: person?.documentType ?? "",
+            bloodType: person?.bloodType ?? "",
+            birthDate: person?.birthDate ? String(person.birthDate).slice(0, 10) : "",
+            address: person?.address ?? "",
+            phone: person?.phone ?? "",
             role,
             code: user.username, // no hay "code" en el backend
+            // Vínculo académico (desde academic_actor) para mostrar en la edición:
+            // el backend no expone PATCH sobre el actor, así que son de solo lectura.
+            actorId: actor?.academicActorId ?? null,
+            actorCode: actor?.actorCode ?? "",
+            schoolId: actor?.schoolId != null ? String(actor.schoolId) : null,
             department: null, // no expuesto por el backend
             course: role === "teacher" && courseNames.length ? courseNames.join(", ") : null,
             status: normalizeStatus(user.status),

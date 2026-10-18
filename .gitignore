@@ -58,3 +58,7 @@ Thumbs.db
 
 # Local database backups (database/scripts/backup.sh)
 database/backups/
+
+# Subagent-driven-development scratch workspace (ledgers, briefs, review packages)
+.superpowers/
+.vercel

@@ -223,6 +223,7 @@ class EnvironmentControllerTest {
             renamed.setCapacity((short) 40);
             renamed.setStatus(true);
             renamed.setRowVersion(2L);
+            when(getUseCase.getById(10)).thenReturn(lab101);
             when(updateUseCase.update(eq(10), any(Environment.class))).thenReturn(renamed);
 
             // Act & Assert
@@ -240,6 +241,9 @@ class EnvironmentControllerTest {
         @Test
         @DisplayName("givenExistingId_whenDeleteEnvironment_thenReturn204")
         void givenExistingId_whenDeleteEnvironment_thenReturn204() throws Exception {
+            // Arrange: delete() now fetches first (ownership check before deleting).
+            when(getUseCase.getById(10)).thenReturn(lab101);
+
             // Act & Assert
             mockMvc.perform(delete("/api/v1/environments/10"))
                     .andExpect(status().isNoContent());
@@ -250,14 +254,15 @@ class EnvironmentControllerTest {
         @Test
         @DisplayName("givenMissingId_whenDeleteEnvironment_thenReturn404")
         void givenMissingId_whenDeleteEnvironment_thenReturn404() throws Exception {
-            // Arrange
-            doThrow(new EntityNotFoundException("Environment", 999))
-                    .when(deleteUseCase).delete(999);
+            // Arrange: the missing-id check now happens on the fetch, before deleteUseCase is ever called.
+            when(getUseCase.getById(999)).thenThrow(new EntityNotFoundException("Environment", 999));
 
             // Act & Assert
             mockMvc.perform(delete("/api/v1/environments/999"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error").value("Environment not found with identifier=999"));
+
+            verify(deleteUseCase, never()).delete(999);
         }
     }
 }

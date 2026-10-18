@@ -23,7 +23,7 @@ export default function BiometricsScreen() {
     const navigation = useNavigation();
     const permissions = useRolePermissions();
 
-    if (!permissions.canRegisterFace) {
+    if (!permissions.canEnrollOthersFace && !permissions.canRegisterFace) {
         return <NotAuthorized type={AUTH_EXCEPTION_TYPES.INSUFFICIENT_PERMISSIONS} />;
     }
 

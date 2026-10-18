@@ -1,6 +1,7 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserWebMapper;
+import com.faceattend_edu.identity_service.adapter.in.web.security.AuthTokenFilter;
 import com.faceattend_edu.identity_service.application.port.in.ActivateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ChangeUserStatusUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase;
@@ -26,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -191,6 +193,25 @@ class UserControllerTest {
                     .andExpect(jsonPath("$.meta.limit").value(20))
                     .andExpect(jsonPath("$.meta.total").value(42))
                     .andExpect(jsonPath("$.meta.totalPages").value(3));
+        }
+
+        @Test
+        @DisplayName("givenSchoolScope_whenListUsers_thenReturnOnlyScopedAccounts")
+        void givenSchoolScope_whenListUsers_thenReturnOnlyScopedAccounts() throws Exception {
+            // Arrange: el filtro ya resolvió el alcance de la sede del Administrador
+            Set<UUID> scope = Set.of(personId);
+            when(listUsersUseCase.listUsers(0, 20, scope)).thenReturn(List.of(carolina));
+            when(listUsersUseCase.countUsers(scope)).thenReturn(1L);
+
+            // Act & Assert
+            mockMvc.perform(get("/api/v1/users")
+                            .requestAttr(AuthTokenFilter.PERSON_SCOPE_ATTRIBUTE, scope))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data[0].username").value("carolina.mendoza"))
+                    .andExpect(jsonPath("$.meta.total").value(1))
+                    .andExpect(jsonPath("$.meta.totalPages").value(1));
+
+            verify(listUsersUseCase).listUsers(0, 20, scope);
         }
 
         @Test
