@@ -82,11 +82,6 @@ func resolveActorScope(ctx context.Context, cfg AuthConfig, userID, token string
 	if _, err := getJSONStrict(ctx, cfg, cfg.AcademicURL+"/api/v1/academic-actors?personId="+url.QueryEscape(user.PersonID), token, &actors); err != nil {
 		return nil, err
 	}
-		actors = append(actors, page...)
-		if len(page) < actorPageSize {
-			break
-		}
-	}
 	scope := map[int64]bool{}
 	var own []int64
 	for _, a := range actors {
