@@ -10,7 +10,10 @@ import com.faceattend_edu.identity_service.application.port.in.AuthenticateUserU
 import com.faceattend_edu.identity_service.application.port.in.CloseUserSessionUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetUserByUsernameUseCase;
 import com.faceattend_edu.identity_service.application.port.in.RefreshSessionUseCase;
+import com.faceattend_edu.identity_service.domain.exception.EntityNotFoundException;
+import com.faceattend_edu.identity_service.domain.exception.UnauthorizedException;
 import com.faceattend_edu.identity_service.domain.exception.ValidationException;
+import com.faceattend_edu.identity_service.domain.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -63,13 +66,27 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Perfil de la propia cuenta. Exige sesión (el filtro ya no lo deja público) y solo
+     * resuelve la cuenta de quien llama: un identificador ajeno responde 404 para no
+     * revelar si existe.
+     */
     @GetMapping("/me")
     public ResponseEntity<UserDto> me(@RequestParam(required = false) String username,
-                                      @RequestParam(required = false) String email) {
+                                      @RequestParam(required = false) String email,
+                                      HttpServletRequest request) {
+        Object caller = request.getAttribute("X-User-Id");
+        if (caller == null) {
+            throw new UnauthorizedException("Authentication required");
+        }
         String identifier = username != null && !username.isBlank() ? username : email;
         if (identifier == null || identifier.isBlank()) {
             throw new ValidationException("username or email is required");
         }
-        return ResponseEntity.ok(userWebMapper.toDto(getUserByUsernameUseCase.getUserByUsername(identifier)));
+        User user = getUserByUsernameUseCase.getUserByUsername(identifier);
+        if (user.getUserId() == null || !user.getUserId().toString().equalsIgnoreCase(String.valueOf(caller))) {
+            throw new EntityNotFoundException("User", identifier);
+        }
+        return ResponseEntity.ok(userWebMapper.toDto(user));
     }
 }

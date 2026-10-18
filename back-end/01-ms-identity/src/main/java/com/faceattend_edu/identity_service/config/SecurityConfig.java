@@ -33,7 +33,6 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/logout",
                                  "/api/v1/auth/refresh", "/api/v1/auth/forgot-password",
                                  "/api/v1/auth/verify-code", "/api/v1/auth/reset-password").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").permitAll()
                 // Lectura de sesión por UUID (ver AuthTokenFilter.isPublic): rompe la
                 // recursión de validación entre microservicios. Solo un segmento: /sessions/user/{id}
                 // lista sesiones ajenas y sigue exigiendo autenticación.

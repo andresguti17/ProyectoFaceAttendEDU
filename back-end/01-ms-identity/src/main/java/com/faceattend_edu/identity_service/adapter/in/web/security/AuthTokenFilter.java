@@ -33,7 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Exige Bearer con sessionId opaco en todo /api/** salvo login/logout/me (bootstrap).
+ * Exige Bearer con sessionId opaco en todo /api/** salvo login/logout/refresh y recuperación de contraseña (bootstrap).
  * Valida la sesión contra el propio store vía identity, resuelve roles y evalúa
  * el permiso requerido contra authorization. Propaga X-User-Id / X-User-Roles.
  *
@@ -57,6 +57,10 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     private static final Pattern PERSON_ITEM = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})$");
     private static final Pattern USER_ITEM = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})$");
+    /** Persona y sus sub-recursos de escritura: PUT /persons/{id}, PATCH /persons/{id}/status. */
+    private static final Pattern PERSON_SCOPED = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})(?:/status)?$");
+    /** Cuenta y sub-recursos de escritura: PUT /users/{id}, PATCH .../status, POST .../activate. */
+    private static final Pattern USER_SCOPED = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})(?:/status|/activate)?$");
     private static final Pattern USER_SESSIONS = Pattern.compile("^/api/v1/sessions/user/([0-9a-fA-F-]{36})$");
     private static final String WRITE = "identity.person:write";
 
@@ -190,12 +194,15 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         // resuelve la persona del llamante justo con esa auto-llamada: sin esta
         // excepción la resolución de alcance (→ academic-actors → identity
         // users/{id}) se llama a sí misma hasta agotar timeouts (503).
-        Matcher userItemPath = USER_ITEM.matcher(path);
+        boolean read = request.getMethod().equalsIgnoreCase("GET");
+        Matcher userItemPath = (read ? USER_ITEM : USER_SCOPED).matcher(path);
         boolean ownUserItem = userItemPath.matches() && userItemPath.group(1).equalsIgnoreCase(caller);
-        if (request.getMethod().equalsIgnoreCase("GET")
-                && (path.startsWith("/api/v1/persons") || path.equals("/api/v1/users")
+        boolean scoped = read
+                ? (path.startsWith("/api/v1/persons") || path.equals("/api/v1/users")
                         || (userItemPath.matches() && !ownUserItem))
-                && !applyPersonScope(request, response, path, caller, roles, rawToken)) {
+                // Las escrituras sobre una persona/cuenta concreta también quedan acotadas a la sede.
+                : (PERSON_SCOPED.matcher(path).matches() || (userItemPath.matches() && !ownUserItem));
+        if (scoped && !applyPersonScope(request, response, path, caller, roles, rawToken)) {
             return;
         }
 
@@ -216,7 +223,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         for (String prefix : PUBLIC_PREFIXES) {
             if (path.equals(prefix) || path.startsWith(prefix)) return true;
         }
-        // Bootstrap: login/logout/me públicos; el resto de /api/** exige sesión.
+        // Bootstrap: login/logout públicos; el resto de /api/** exige sesión.
         if (path.equals("/api/v1/auth/login") && method.equalsIgnoreCase("POST")) return true;
         if (path.equals("/api/v1/auth/logout") && method.equalsIgnoreCase("POST")) return true;
         // Rotación de sesión (refresh token): el sessionId viejo viaja en el cuerpo
@@ -227,7 +234,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         if (path.equals("/api/v1/auth/forgot-password") && method.equalsIgnoreCase("POST")) return true;
         if (path.equals("/api/v1/auth/verify-code") && method.equalsIgnoreCase("POST")) return true;
         if (path.equals("/api/v1/auth/reset-password") && method.equalsIgnoreCase("POST")) return true;
-        if (path.equals("/api/v1/auth/me") && method.equalsIgnoreCase("GET")) return true;
         // Lectura de sesión por UUID: la usa el propio filtro (fetchSession) en cada
         // MS. Sin bypass, la validación se llamaría a sí misma por HTTP en bucle
         // hasta agotar timeouts y toda petición autenticada terminaría en 401.
@@ -269,12 +275,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             return false;
         }
         if (scope.all()) return true;
-        Matcher item = PERSON_ITEM.matcher(path);
+        Matcher item = PERSON_SCOPED.matcher(path);
         if (item.matches() && !scope.allows(UUID.fromString(item.group(1)))) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: person outside your scope", path);
             return false;
         }
-        Matcher userItem = USER_ITEM.matcher(path);
+        Matcher userItem = USER_SCOPED.matcher(path);
         if (userItem.matches() && !userItem.group(1).equalsIgnoreCase(caller)) {
             // Una cuenta ajena se ve solo si su persona cae en el alcance del llamante.
             LoadUserPort port = loadUserPort.getIfAvailable();
