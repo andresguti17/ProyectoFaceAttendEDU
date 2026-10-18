@@ -139,3 +139,22 @@ func TestSchoolAdminSeesOnlyOwnSchoolAlerts(t *testing.T) {
 	assert.Len(t, body.Alerts, 1)
 	assert.Equal(t, int64(2), body.Alerts[0].AcademicActorID)
 }
+
+// The session cache answers the second request: the scope must still be
+// resolved for the cached user (it used to be resolved for an empty id → 503).
+func TestActorScopeSurvivesCachedSession(t *testing.T) {
+	scopeCache.Delete("admin")
+	gin.SetMode(gin.TestMode)
+	alerts := &fakeAlerts{}
+	r := gin.New()
+	r.Use(AuthMiddleware(schoolAdminBackends(t), NotificationPermission))
+	NewAlertHandler(alerts, alerts, alerts, alerts).Register(r)
+
+	for i := 0; i < 3; i++ {
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/alerts", nil)
+		req.Header.Set("Authorization", "Bearer "+teacherSession)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusOK, w.Code, "request %d", i+1)
+	}
+}
