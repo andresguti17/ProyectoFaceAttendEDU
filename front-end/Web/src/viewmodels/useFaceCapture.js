@@ -11,8 +11,9 @@
 //  Solo web: usa getUserMedia, <video> y <canvas>.
 // ============================================================
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
+import { NavigationContext } from "@react-navigation/native";
 import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
 import { personMap, fullName } from "../services/api/referenceData";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
@@ -41,6 +42,11 @@ export function useFaceCapture({ vm, socket, onIdentified } = {}) {
 
     const videoRef = useRef(null);
     const streamRef = useRef(null);
+    // La pantalla sigue montada bajo la siguiente del stack al cambiar de
+    // sección, así que el cleanup de desmontaje no basta para soltar la cámara.
+    const navigation = useContext(NavigationContext);
+    const unfocusedRef = useRef(false);
+    const resumeOnFocusRef = useRef(false);
     const [cameraReady, setCameraReady] = useState(false);
     const [livenessAction, setLivenessAction] = useState("");
     const [livenessProgress, setLivenessProgress] = useState(null); // { done, total }
@@ -48,6 +54,7 @@ export function useFaceCapture({ vm, socket, onIdentified } = {}) {
     const stopCamera = useCallback(() => {
         streamRef.current?.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
+        if (videoRef.current) videoRef.current.srcObject = null;
         setCameraReady(false);
     }, []);
 
@@ -73,6 +80,11 @@ export function useFaceCapture({ vm, socket, onIdentified } = {}) {
                 video: { width: { ideal: 960 }, height: { ideal: 540 }, facingMode: "user" },
                 audio: false,
             });
+            // El permiso pudo resolverse cuando ya se había salido de la pantalla.
+            if (unfocusedRef.current) {
+                stream.getTracks().forEach((track) => track.stop());
+                return;
+            }
             streamRef.current = stream;
             const video = videoRef.current;
             if (!video) {
@@ -95,6 +107,28 @@ export function useFaceCapture({ vm, socket, onIdentified } = {}) {
             setStatus(reason, "error");
         }
     }, [setStatus, t]);
+
+    // Al salir de la sección se apaga la cámara; al volver se reanuda solo si
+    // estaba encendida (el kiosco la enciende sola, Biometría la enciende a mano).
+    useEffect(() => {
+        if (!navigation?.addListener) return undefined;
+        const unsubscribeBlur = navigation.addListener("blur", () => {
+            unfocusedRef.current = true;
+            resumeOnFocusRef.current = streamRef.current != null;
+            stopCamera();
+        });
+        const unsubscribeFocus = navigation.addListener("focus", () => {
+            unfocusedRef.current = false;
+            if (resumeOnFocusRef.current) {
+                resumeOnFocusRef.current = false;
+                startCamera();
+            }
+        });
+        return () => {
+            unsubscribeBlur();
+            unsubscribeFocus();
+        };
+    }, [navigation, startCamera, stopCamera]);
 
     const captureFrame = useCallback(() => {
         const video = videoRef.current;
