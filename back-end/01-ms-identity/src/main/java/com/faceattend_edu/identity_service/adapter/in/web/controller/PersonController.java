@@ -39,8 +39,17 @@ public class PersonController {
     private final PersonWebMapper personWebMapper;
 
     @PostMapping
-    public ResponseEntity<PersonDto> createPerson(@Valid @RequestBody PersonDto personDto) {
-        Person created = createPersonUseCase.createPerson(personWebMapper.toDomain(personDto));
+    public ResponseEntity<PersonDto> createPerson(@Valid @RequestBody PersonDto personDto,
+                                                  HttpServletRequest request) {
+        Person toCreate = personWebMapper.toDomain(personDto);
+        if (request.getAttribute("X-User-Id") != null) {
+            try {
+                toCreate.setCreatedBy(UUID.fromString(String.valueOf(request.getAttribute("X-User-Id"))));
+            } catch (IllegalArgumentException ignored) {
+                // identificador de sesión ajeno al formato UUID: se deja sin autor
+            }
+        }
+        Person created = createPersonUseCase.createPerson(toCreate);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}").buildAndExpand(created.getPersonId()).toUri();
         return ResponseEntity.created(location).body(personWebMapper.toDto(created));

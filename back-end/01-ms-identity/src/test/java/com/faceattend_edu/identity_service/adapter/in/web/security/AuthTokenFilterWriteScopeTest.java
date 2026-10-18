@@ -1,5 +1,6 @@
 package com.faceattend_edu.identity_service.adapter.in.web.security;
 
+import com.faceattend_edu.identity_service.application.port.out.LoadPersonPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserPort;
 import com.faceattend_edu.identity_service.domain.model.Person;
 import com.faceattend_edu.identity_service.domain.model.User;
@@ -37,6 +38,7 @@ class AuthTokenFilterWriteScopeTest {
     private static final UUID SAME_SCHOOL_PERSON = UUID.fromString("b0000000-0000-4000-8000-0000000000b1");
     private static final UUID OTHER_SCHOOL_PERSON = UUID.fromString("c0000000-0000-4000-8000-0000000000c1");
     private static final UUID OTHER_SCHOOL_USER = UUID.fromString("c0000000-0000-4000-8000-0000000000c2");
+    private static final UUID CREATED_BY_ADMIN = UUID.fromString("e0000000-0000-4000-8000-0000000000e1");
     private static final String TOKEN = "d0000000-0000-4000-8000-000000000001";
 
     private AuthTokenFilter filter() {
@@ -59,7 +61,15 @@ class AuthTokenFilterWriteScopeTest {
         ObjectProvider<CallerScopeResolver> resolverProvider =
                 new StaticListableBeanFactory(Map.of("resolver", resolver)).getBeanProvider(CallerScopeResolver.class);
 
-        AuthTokenFilter filter = new AuthTokenFilter(userProvider, resolverProvider);
+        LoadPersonPort persons = id -> {
+            Person p = new Person();
+            p.setPersonId(id);
+            if (CREATED_BY_ADMIN.equals(id)) p.setCreatedBy(ADMIN_USER);
+            return p;
+        };
+        ObjectProvider<LoadPersonPort> personProvider =
+                new StaticListableBeanFactory(Map.of("persons", persons)).getBeanProvider(LoadPersonPort.class);
+        AuthTokenFilter filter = new AuthTokenFilter(userProvider, resolverProvider, personProvider);
         RestTemplate rest = mock(RestTemplate.class);
         when(rest.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(Map.class))).thenAnswer(inv -> {
             String url = inv.getArgument(0);
@@ -113,6 +123,13 @@ class AuthTokenFilterWriteScopeTest {
         FilterChain chain = mock(FilterChain.class);
         MockHttpServletResponse response = run("PUT", "/api/v1/persons/" + SAME_SCHOOL_PERSON, chain);
         assertEquals(200, response.getStatus());
+        verify(chain).doFilter(any(), any());
+    }
+
+    @Test
+    void personTheAdminCreatedStaysEditableBeforeItHasASchool() throws Exception {
+        FilterChain chain = mock(FilterChain.class);
+        assertEquals(200, run("PUT", "/api/v1/persons/" + CREATED_BY_ADMIN, chain).getStatus());
         verify(chain).doFilter(any(), any());
     }
 

@@ -4,7 +4,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import com.faceattend_edu.identity_service.application.port.out.LoadPersonPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserPort;
+import com.faceattend_edu.identity_service.domain.model.Person;
 import com.faceattend_edu.identity_service.domain.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +70,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     // Perezoso: los tests @WebMvcTest cargan el filtro sin la capa de persistencia.
     private final ObjectProvider<LoadUserPort> loadUserPort;
     private final ObjectProvider<CallerScopeResolver> scopeResolver;
+    private final ObjectProvider<LoadPersonPort> loadPersonPort;
 
     /**
     * Caché positiva de autenticación (TTL corto). Cada request autenticado
@@ -119,8 +122,10 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Value("${faceattend.auth.authorization-url:http://localhost:8082}")
     private String authorizationUrl;
 
-    public AuthTokenFilter(ObjectProvider<LoadUserPort> loadUserPort, ObjectProvider<CallerScopeResolver> scopeResolver) {
+    public AuthTokenFilter(ObjectProvider<LoadUserPort> loadUserPort, ObjectProvider<CallerScopeResolver> scopeResolver,
+                           ObjectProvider<LoadPersonPort> loadPersonPort) {
         this.loadUserPort = loadUserPort;
+        this.loadPersonPort = loadPersonPort;
         this.scopeResolver = scopeResolver;
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(3000);
@@ -276,7 +281,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         }
         if (scope.all()) return true;
         Matcher item = PERSON_SCOPED.matcher(path);
-        if (item.matches() && !scope.allows(UUID.fromString(item.group(1)))) {
+        if (item.matches() && !scope.allows(UUID.fromString(item.group(1)))
+                && !createdByCaller(UUID.fromString(item.group(1)), caller)) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: person outside your scope", path);
             return false;
         }
@@ -294,6 +300,17 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         }
         request.setAttribute(PERSON_SCOPE_ATTRIBUTE, scope.personIds());
         return true;
+    }
+
+    /**
+     * A person has no school of its own (it hangs off academic_actor), so one an
+     * Administrador just created stays theirs to complete until it is assigned.
+     */
+    private boolean createdByCaller(UUID personId, String caller) {
+        LoadPersonPort port = loadPersonPort.getIfAvailable();
+        Person person = port == null ? null : port.loadPerson(personId);
+        return person != null && person.getCreatedBy() != null
+                && person.getCreatedBy().toString().equalsIgnoreCase(caller);
     }
 
     private boolean isOwnPerson(String method, String path, String caller) {
