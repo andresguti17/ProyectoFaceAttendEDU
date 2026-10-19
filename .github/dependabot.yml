@@ -1,9 +1,16 @@
 version: 2
 
+# PAUSADO: open-pull-requests-limit: 0 en todas las entradas, asi que Dependabot no abre
+# PRs de actualizacion de versiones. Para reactivarlo, subir ese limite (p. ej. a 3).
+# Las alertas de seguridad de GitHub no dependen de este limite.
+#
 # Politica comun a todas las entradas:
-#  - mensual y como maximo 3 PRs abiertos por directorio (antes: semanal, sin limite).
+#  - mensual; al reactivarlo, maximo 3 PRs abiertos por directorio (antes: semanal, sin limite).
 #  - PRs contra develop, nunca contra main.
 #  - minor y patch agrupados en un solo PR por directorio.
+#  - imagenes Docker de Java (maven, eclipse-temurin), Python y Node: ignoradas por
+#    completo. Cambiar de runtime (Java 21->26, Python 3.12->3.14, Node 20->26) es una
+#    decision de plataforma y se hace a mano, no con un PR automatico.
 #  - sin saltos de version mayor (Node 20->26, TypeScript 5->7, Zod 3->4...): se
 #    suben a mano, con QA, cuando el equipo lo decida.
 
@@ -13,7 +20,7 @@ updates:
     directory: /back-end/01-ms-identity
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -25,7 +32,7 @@ updates:
     directory: /back-end/02-ms-authorization
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -37,7 +44,7 @@ updates:
     directory: /back-end/04-ms-scheduling
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -49,7 +56,7 @@ updates:
     directory: /back-end/05-ms-attendance
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -63,7 +70,7 @@ updates:
     directory: /back-end/03-ms-academic
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -75,7 +82,7 @@ updates:
     directory: /back-end/07-ms-configuration
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -87,7 +94,7 @@ updates:
     directory: /back-end/08-ms-notification
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -99,7 +106,7 @@ updates:
     directory: /back-end/09-ms-quality
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -111,7 +118,7 @@ updates:
     directory: /front-end/Mobile
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -123,7 +130,7 @@ updates:
     directory: /front-end/Web
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -135,7 +142,7 @@ updates:
     directory: /tools/seed-api-test-data
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -149,7 +156,7 @@ updates:
     directory: /back-end/06-ms-biometric
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -163,7 +170,7 @@ updates:
     directory: /back-end/01-ms-identity
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -171,11 +178,15 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "maven"
+      - dependency-name: "eclipse-temurin"
+      - dependency-name: "python"
+      - dependency-name: "node"
   - package-ecosystem: docker
     directory: /back-end/02-ms-authorization
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -183,11 +194,15 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "maven"
+      - dependency-name: "eclipse-temurin"
+      - dependency-name: "python"
+      - dependency-name: "node"
   - package-ecosystem: docker
     directory: /back-end/03-ms-academic
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -195,11 +210,15 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "maven"
+      - dependency-name: "eclipse-temurin"
+      - dependency-name: "python"
+      - dependency-name: "node"
   - package-ecosystem: docker
     directory: /back-end/04-ms-scheduling
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -207,11 +226,15 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "maven"
+      - dependency-name: "eclipse-temurin"
+      - dependency-name: "python"
+      - dependency-name: "node"
   - package-ecosystem: docker
     directory: /back-end/05-ms-attendance
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -219,11 +242,15 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "maven"
+      - dependency-name: "eclipse-temurin"
+      - dependency-name: "python"
+      - dependency-name: "node"
   - package-ecosystem: docker
     directory: /back-end/06-ms-biometric
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -231,11 +258,15 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "maven"
+      - dependency-name: "eclipse-temurin"
+      - dependency-name: "python"
+      - dependency-name: "node"
   - package-ecosystem: docker
     directory: /back-end/07-ms-configuration
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -243,11 +274,15 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "maven"
+      - dependency-name: "eclipse-temurin"
+      - dependency-name: "python"
+      - dependency-name: "node"
   - package-ecosystem: docker
     directory: /back-end/08-ms-notification
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -255,11 +290,15 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "maven"
+      - dependency-name: "eclipse-temurin"
+      - dependency-name: "python"
+      - dependency-name: "node"
   - package-ecosystem: docker
     directory: /back-end/09-ms-quality
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -267,11 +306,15 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "maven"
+      - dependency-name: "eclipse-temurin"
+      - dependency-name: "python"
+      - dependency-name: "node"
   - package-ecosystem: docker
     directory: /front-end/Web
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
@@ -279,13 +322,17 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "maven"
+      - dependency-name: "eclipse-temurin"
+      - dependency-name: "python"
+      - dependency-name: "node"
 
   # -- GitHub Actions --
   - package-ecosystem: github-actions
     directory: /
     target-branch: develop
     schedule: { interval: monthly }
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message: { prefix: "build(deps)" }
     groups:
       minor-and-patch:
