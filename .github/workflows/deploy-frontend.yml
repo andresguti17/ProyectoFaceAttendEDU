@@ -4,6 +4,13 @@ name: Deploy frontend (Vercel)
 # validar el workflow antes de que exista en main (workflow_dispatch solo
 # funciona con el archivo en la rama por defecto).
 on:
+  # Reutilizable desde deploy-production.yml (se ejecuta después del backend).
+  workflow_call:
+    inputs:
+      environment:
+        description: "GitHub environment que aprueba el despliegue"
+        type: string
+        default: preview
   workflow_dispatch:
     inputs:
       environment:

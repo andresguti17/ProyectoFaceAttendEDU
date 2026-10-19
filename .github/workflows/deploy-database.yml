@@ -1,0 +1,81 @@
+name: Deploy database (Neon)
+
+# Ejecuta las migraciones Liquibase de database/docker-compose.neon.yml contra Neon.
+# Reutilizable (workflow_call) desde deploy-production.yml, y manual (workflow_dispatch).
+# Liquibase solo hace `update`: nunca `rollback` ni `drop` automáticos.
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "GitHub environment que aprueba el despliegue"
+        type: string
+        default: production
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Destino del despliegue"
+        type: choice
+        options: [production]
+        default: production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-database-${{ inputs.environment || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: liquibase / neon / ${{ inputs.environment || 'production' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'production' }}
+    env:
+      NEON_JDBC_URL: ${{ secrets.NEON_JDBC_URL }}
+      NEON_USER: ${{ secrets.NEON_USER }}
+      NEON_PASSWORD: ${{ secrets.NEON_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validar secrets de Neon
+        run: |
+          for var in NEON_JDBC_URL NEON_USER NEON_PASSWORD; do
+            if [ -z "${!var}" ]; then
+              echo "::error::Falta el secret $var en el environment ${{ inputs.environment || 'production' }}"
+              exit 1
+            fi
+          done
+
+      - name: Descargar imágenes de Liquibase
+        working-directory: database
+        run: docker compose -f docker-compose.neon.yml pull --quiet
+
+      # `up` sin flags de abort: los servicios se encadenan con depends_on
+      # (service_completed_successfully), así que cada changelog corre en orden.
+      # El código de salida real se verifica en el paso siguiente.
+      - name: Ejecutar migraciones (update)
+        working-directory: database
+        run: docker compose -f docker-compose.neon.yml up --no-color
+
+      - name: Verificar que todas las migraciones terminaron bien
+        working-directory: database
+        run: |
+          failed=0
+          for id in $(docker compose -f docker-compose.neon.yml ps -aq); do
+            name=$(docker inspect -f '{{.Name}}' "$id")
+            status=$(docker inspect -f '{{.State.Status}}' "$id")
+            code=$(docker inspect -f '{{.State.ExitCode}}' "$id")
+            if [ "$status" != "exited" ] || [ "$code" != "0" ]; then
+              echo "::error::$name terminó con estado=$status exit=$code"
+              failed=1
+            else
+              echo "OK $name"
+            fi
+          done
+          exit $failed
+
+      - name: Limpiar contenedores
+        if: always()
+        working-directory: database
+        run: docker compose -f docker-compose.neon.yml down --remove-orphans
