@@ -55,7 +55,7 @@ jobs:
         working-directory: front-end/Web
         run: |
           if [ "$TARGET" = "production" ]; then
-            npx --yes vercel@64.5.0 deploy --prod --yes --token "$VERCEL_TOKEN"
+            npx --yes vercel@64.5.0 deploy --prod --yes --scope face-attend-edu --token "$VERCEL_TOKEN"
           else
-            npx --yes vercel@64.5.0 deploy --yes --token "$VERCEL_TOKEN"
+            npx --yes vercel@64.5.0 deploy --yes --scope face-attend-edu --token "$VERCEL_TOKEN"
           fi
