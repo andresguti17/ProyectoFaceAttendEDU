@@ -7,8 +7,8 @@ packages = [{include = "domain"}, {include = "application"}, {include = "infrast
 
 [tool.poetry.dependencies]
 python = "^3.12"
-fastapi = "^0.110.0"
-uvicorn = {extras = ["standard"], version = "^0.28.0"}
+fastapi = ">=0.110,<0.144"
+uvicorn = {extras = ["standard"], version = ">=0.28,<0.55"}
 pydantic = "^2.6.0"
 pydantic-settings = "^2.1.0"
 motor = "^3.3.0"
@@ -35,13 +35,13 @@ face-recognition-models = {git = "https://github.com/ageitgey/face_recognition_m
 # so this must stay pinned below that, not just present.
 setuptools = "<81"
 Pillow = "^10.0.0"
-python-multipart = "^0.0.9"
+python-multipart = ">=0.0.9,<0.0.33"
 structlog = "^24.1.0"
-httpx = "^0.27.0"
+httpx = ">=0.27,<0.29"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
-pytest-asyncio = "^0.23.0"
+pytest-asyncio = ">=0.23,<0.27"
 testcontainers = {extras = ["mongodb"], version = "^4.0.0"}
 
 [build-system]
