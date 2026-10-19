@@ -1,0 +1,8 @@
+# Caddy de producción: solo termina TLS delante de Kong.
+# El frontend vive en Vercel, así que aquí no se sirve ningún sitio web.
+# API_DOMAIN (en .env.prod): nombre DNS que apunta a este host, p. ej.
+# faceattend.duckdns.org. Caddy obtiene y renueva el certificado de Let's Encrypt
+# solo; necesita los puertos 80 y 443 abiertos al público.
+{$API_DOMAIN} {
+	reverse_proxy kong-gateway:8000
+}
