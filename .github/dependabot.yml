@@ -1,83 +1,295 @@
 version: 2
 
+# Politica comun a todas las entradas:
+#  - mensual y como maximo 3 PRs abiertos por directorio (antes: semanal, sin limite).
+#  - PRs contra develop, nunca contra main.
+#  - minor y patch agrupados en un solo PR por directorio.
+#  - sin saltos de version mayor (Node 20->26, TypeScript 5->7, Zod 3->4...): se
+#    suben a mano, con QA, cuando el equipo lo decida.
+
 updates:
-  # ── Java (Maven) ──
+  # -- Java (Maven) --
   - package-ecosystem: maven
     directory: /back-end/01-ms-identity
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: maven
     directory: /back-end/02-ms-authorization
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: maven
     directory: /back-end/04-ms-scheduling
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: maven
     directory: /back-end/05-ms-attendance
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
-  # ── TypeScript/Node (npm) ──
+  # -- TypeScript/Node (npm) --
   - package-ecosystem: npm
     directory: /back-end/03-ms-academic
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: npm
     directory: /back-end/07-ms-configuration
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: npm
+    directory: /back-end/08-ms-notification
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: npm
     directory: /back-end/09-ms-quality
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: npm
     directory: /front-end/Mobile
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: npm
     directory: /front-end/Web
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: npm
     directory: /tools/seed-api-test-data
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
-  # ── Python (poetry) ──
+  # -- Python (poetry) --
   - package-ecosystem: pip
     directory: /back-end/06-ms-biometric
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
-  # ── Go ──
-  - package-ecosystem: gomod
-    directory: /back-end/08-ms-notification
-    schedule: { interval: weekly }
-
-  # ── Docker base images (one entry per Dockerfile) ──
+  # -- Docker base images (one entry per Dockerfile) --
   - package-ecosystem: docker
     directory: /back-end/01-ms-identity
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: docker
     directory: /back-end/02-ms-authorization
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: docker
     directory: /back-end/03-ms-academic
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: docker
     directory: /back-end/04-ms-scheduling
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: docker
     directory: /back-end/05-ms-attendance
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: docker
     directory: /back-end/06-ms-biometric
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: docker
     directory: /back-end/07-ms-configuration
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: docker
     directory: /back-end/08-ms-notification
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: docker
     directory: /back-end/09-ms-quality
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: docker
     directory: /front-end/Web
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
-  # ── GitHub Actions ──
+  # -- GitHub Actions --
   - package-ecosystem: github-actions
     directory: /
-    schedule: { interval: weekly }
+    target-branch: develop
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: "build(deps)" }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
