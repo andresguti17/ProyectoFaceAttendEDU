@@ -33,11 +33,11 @@ jobs:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: front-end/Web/package-lock.json
 
@@ -55,7 +55,7 @@ jobs:
         working-directory: front-end/Web
         run: |
           if [ "$TARGET" = "production" ]; then
-            npx --yes vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN"
+            npx --yes vercel@64.5.0 deploy --prod --yes --token "$VERCEL_TOKEN"
           else
-            npx --yes vercel@latest deploy --yes --token "$VERCEL_TOKEN"
+            npx --yes vercel@64.5.0 deploy --yes --token "$VERCEL_TOKEN"
           fi
