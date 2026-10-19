@@ -5,6 +5,8 @@ import type { IAlertRepository } from '../../domain/ports/out/IAlertRepository';
 import type { IAlertTypeRepository } from '../../domain/ports/out/IAlertTypeRepository';
 import { actorAllowed, resolveActorScope, ScopeError } from './actorScope';
 import { notifyWebhook, webhookConfigFromEnv, WEBHOOK_NOT_CONFIGURED, type WebhookPayload } from '../webhook/notifier';
+import { sendEmail, SMTP_NOT_CONFIGURED, type SmtpConfig } from '../email/sender';
+import { render, subjectFor, TEMPLATE_VERIFICATION_CODE } from '../email/render';
 
 /**
  * HTTP adapters — 08-ms-notification.
@@ -219,4 +221,64 @@ export async function registerNotificationRoutes(
 
   registerAlertTypeRoutes('/api/v1/alert-types');
   registerAlertTypeRoutes('/alert-types');
+}
+
+const sendEmailBody = z.object({
+  to: z.string().email(),
+  template: z.string().min(1),
+  data: z.record(z.string()).optional(),
+});
+
+/**
+ * Internal email delivery route — ports `internal/infrastructure/http/handler/email_handler.go`.
+ *
+ * Registered separately from `registerNotificationRoutes` (from `main.ts`)
+ * since it depends on the SMTP sender/config, not the alert repositories.
+ * No `/emails` alias: unlike alerts/alert-types, spec §2.2 only defines
+ * `/api/v1/emails` and Kong never exposes it outside the compose network.
+ */
+export function registerEmailRoute(app: FastifyInstance, cfg: SmtpConfig): void {
+  app.post('/api/v1/emails', async (req, reply) => {
+    if (cfg.internalToken) {
+      const token = (req.headers as any)['x-internal-token'];
+      if (token !== cfg.internalToken) {
+        return reply.code(403).send({ error: 'FORBIDDEN', message: 'missing or invalid internal token' });
+      }
+    }
+
+    const parsed = sendEmailBody.safeParse((req as any).body);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: 'VALIDATION_ERROR', message: parsed.error.message });
+    }
+
+    const { to, template, data } = parsed.data;
+    if (template !== TEMPLATE_VERIFICATION_CODE) {
+      return reply.code(400).send({ error: 'VALIDATION_ERROR', message: 'unsupported template' });
+    }
+
+    let body: { text: string; html: string };
+    try {
+      body = render(template, data ?? {});
+    } catch (err) {
+      return reply.code(400).send({ error: 'VALIDATION_ERROR', message: err instanceof Error ? err.message : String(err) });
+    }
+
+    try {
+      const result = await sendEmail(cfg, {
+        to,
+        subject: subjectFor(template),
+        textBody: body.text,
+        htmlBody: body.html,
+      });
+      if (result === SMTP_NOT_CONFIGURED) {
+        app.log.warn({ to, template }, 'email skipped, SMTP_HOST is empty');
+        return reply.code(202).send({ status: 'skipped', reason: 'smtp_not_configured' });
+      }
+    } catch (err) {
+      app.log.error({ err, to, template }, 'email delivery failed');
+      return reply.code(502).send({ error: 'DELIVERY_FAILED', message: 'email delivery failed' });
+    }
+
+    return reply.code(202).send({ status: 'accepted' });
+  });
 }
