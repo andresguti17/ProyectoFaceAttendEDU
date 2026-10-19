@@ -3,9 +3,9 @@ import { pgSchema, smallserial, bigserial, bigint, smallint, varchar, timestamp,
 export const notificationSchema = pgSchema('notification');
 
 const audit = {
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-  deletedAt: timestamp('deleted_at'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdBy: uuid('created_by'),
   updatedBy: uuid('updated_by'),
   deletedBy: uuid('deleted_by'),
