@@ -1,7 +1,8 @@
 name: Deploy frontend (Vercel)
 
-# Fase 1: solo disparo manual. Despliega el frontend web a Vercel.
-# Se activará desde push a main cuando el orquestador esté listo.
+# Fase 1: despliegue manual a Vercel. El push a la rama de prueba sirve para
+# validar el workflow antes de que exista en main (workflow_dispatch solo
+# funciona con el archivo en la rama por defecto).
 on:
   workflow_dispatch:
     inputs:
@@ -10,20 +11,24 @@ on:
         type: choice
         options: [preview, production]
         default: preview
+  push:
+    branches: [feature/github-actions-deploy]
+    paths: [".github/workflows/deploy-frontend.yml", "front-end/Web/**"]
 
 permissions:
   contents: read
 
 concurrency:
-  group: deploy-frontend-${{ inputs.environment }}
+  group: deploy-frontend-${{ inputs.environment || 'preview' }}
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: vercel / ${{ inputs.environment }}
+    name: vercel / ${{ inputs.environment || 'preview' }}
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: ${{ inputs.environment || 'preview' }}
     env:
+      TARGET: ${{ inputs.environment || 'preview' }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -49,7 +54,7 @@ jobs:
       - name: Deploy to Vercel
         working-directory: front-end/Web
         run: |
-          if [ "${{ inputs.environment }}" = "production" ]; then
+          if [ "$TARGET" = "production" ]; then
             npx --yes vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN"
           else
             npx --yes vercel@latest deploy --yes --token "$VERCEL_TOKEN"
