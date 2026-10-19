@@ -1,0 +1,56 @@
+name: Deploy frontend (Vercel)
+
+# Fase 1: solo disparo manual. Despliega el frontend web a Vercel.
+# Se activará desde push a main cuando el orquestador esté listo.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Destino del despliegue"
+        type: choice
+        options: [preview, production]
+        default: preview
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-frontend-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: vercel / ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: front-end/Web/package-lock.json
+
+      - name: npm ci
+        working-directory: front-end/Web
+        run: npm ci
+
+      - name: npm test
+        working-directory: front-end/Web
+        run: npm test
+
+      # Build remoto en Vercel: usa las variables del proyecto (EXPO_PUBLIC_API_URL
+      # debe estar definida en Vercel → Settings → Environment Variables).
+      - name: Deploy to Vercel
+        working-directory: front-end/Web
+        run: |
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            npx --yes vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN"
+          else
+            npx --yes vercel@latest deploy --yes --token "$VERCEL_TOKEN"
+          fi
