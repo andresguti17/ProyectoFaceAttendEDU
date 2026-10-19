@@ -58,8 +58,9 @@ jobs:
 
       # Build remoto en Vercel: usa las variables del proyecto (EXPO_PUBLIC_API_URL
       # debe estar definida en Vercel → Settings → Environment Variables).
+      # Se ejecuta desde la raíz del repo: el proyecto ya tiene Root Directory
+      # front-end/Web, y desde esa carpeta la CLI duplicaba la ruta.
       - name: Deploy to Vercel
-        working-directory: front-end/Web
         run: |
           if [ "$TARGET" = "production" ]; then
             npx --yes vercel@64.5.0 deploy --prod --yes --scope face-attend-edu --token "$VERCEL_TOKEN"
