@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-002-create-attendance-schema
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS attendance;
+      rollback:
+        - sql:
+            sql: DROP SCHEMA IF EXISTS attendance CASCADE;

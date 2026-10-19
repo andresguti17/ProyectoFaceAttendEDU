@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-004-create-attendance-record-table
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE attendance.attendance_record (
+                attendance_record_id BIGSERIAL NOT NULL,
+                class_session_id BIGINT NOT NULL, -- Cross-context reference to Scheduling.class_session (NO FK)
+                academic_actor_id BIGINT NOT NULL, -- Cross-context reference to Academic.academic_actor (NO FK)
+                attendance_status attendance.attendance_status NOT NULL,
+                captured_at TIMESTAMP NULL,
+                capture_method attendance.capture_method NOT NULL,
+                match_score DECIMAL(5,4) NULL,
+                created_at TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL,
+                updated_by UUID NULL,
+                deleted_by UUID NULL,
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT attendance_record_pkey PRIMARY KEY (attendance_record_id)
+              )
+        - sql:
+            sql: ALTER TABLE attendance.attendance_record ADD CONSTRAINT uq_attendance_session_actor UNIQUE (class_session_id, academic_actor_id)
+        - sql:
+            sql: ALTER TABLE attendance.attendance_record ADD CONSTRAINT chk_match_score CHECK (match_score IS NULL OR match_score BETWEEN 0 AND 1)
+        - createIndex:
+            schemaName: attendance
+            tableName: attendance_record
+            indexName: idx_attendance_actor
+            columns:
+              - column:
+                  name: academic_actor_id
+        - createIndex:
+            schemaName: attendance
+            tableName: attendance_record
+            indexName: idx_attendance_deleted
+            columns:
+              - column:
+                  name: deleted_at
+      rollback:
+        - dropTable:
+            schemaName: attendance
+            tableName: attendance_record

@@ -1,0 +1,88 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-005-create-course-table
+      author: Andres Gutierrez
+      changes:
+        - createTable:
+            schemaName: academic
+            tableName: course
+            columns:
+              - column:
+                  name: course_id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: program_id
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: credit_hours
+                  type: SMALLINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE academic.course ADD CONSTRAINT uq_course_code_program UNIQUE (program_id, code)
+        - sql:
+            sql: ALTER TABLE academic.course ADD CONSTRAINT fk_course_program FOREIGN KEY (program_id) REFERENCES academic.program (program_id) ON DELETE CASCADE
+        - sql:
+            sql: ALTER TABLE academic.course ADD CONSTRAINT chk_course_credit_hours CHECK (credit_hours > 0)
+      rollback:
+        - dropTable:
+            schemaName: academic
+            tableName: course

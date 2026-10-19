@@ -1,0 +1,48 @@
+server:
+  port: 8084
+spring:
+  config:
+    # Host runs (mvn/IDE) also read the repo-root .env, so one file governs
+    # Docker and local runs alike. The optional paths are anchored at the
+    # working directory (service dir or repo root); in Docker compose injects
+    # the environment, so this import stays a no-op.
+    import: "optional:file:${user.dir}/../../.env[.properties],optional:file:${user.dir}/.env[.properties]"
+  application:
+    name: scheduling-service
+  datasource:
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/faceattend_db?stringtype=unspecified
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    hikari:
+      # Fan-out del frontend (introspecciones + negocio en paralelo): el default
+      # de 10 conexiones encolaba hilos y cada request pagaba ~700 ms.
+      maximum-pool-size: 25
+      minimum-idle: 5
+      connection-timeout: 5000
+      schema: scheduling
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.default_schema: scheduling
+      hibernate.globally_quoted_identifiers: true
+      hibernate.hbm2ddl.create_namespaces: true
+  kafka:
+    bootstrap-servers: localhost:9092
+  liquibase:
+    # Las migraciones viven en ../database/ (fuente canonica); el servicio no auto-migra.
+    enabled: false
+faceattend:
+  auth:
+    identity-url: http://localhost:8081
+    authorization-url: http://localhost:8082
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

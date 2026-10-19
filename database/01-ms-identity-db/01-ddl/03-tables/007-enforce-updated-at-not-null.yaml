@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-009-enforce-updated-at-not-null
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              UPDATE identity.person SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE identity.person ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE identity.app_user SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE identity.app_user ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE identity.user_session SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE identity.user_session ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE identity.password_policy SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE identity.password_policy ALTER COLUMN updated_at SET NOT NULL;
+      rollback:
+        - sql:
+            sql: ALTER TABLE identity.person ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE identity.app_user ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE identity.user_session ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE identity.password_policy ALTER COLUMN updated_at DROP NOT NULL;

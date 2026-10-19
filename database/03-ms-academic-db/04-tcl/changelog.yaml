@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: 001-triggers-audit-timestamps.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 002-triggers-enrollment-status-validation.yaml
+      relativeToChangelogFile: true

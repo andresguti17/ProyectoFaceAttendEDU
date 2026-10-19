@@ -1,0 +1,41 @@
+# Overlay opcional: termina TLS delante de frontend-web y kong-gateway con
+# Caddy (certificados automáticos via Let's Encrypt si DOMAIN es un dominio
+# real con DNS apuntando a este host; si no, CA local propia de Caddy).
+#
+# Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d
+#
+# No reemplaza los puertos 8000/8090 en HTTP plano del compose base (siguen
+# disponibles para no romper el flujo de desarrollo actual); para forzar
+# solo-HTTPS en un despliegue real, quita esas líneas `ports:` del compose
+# base una vez que Caddy esté validado.
+#
+# DOMAIN (en .env): dominio real con DNS -> este host. Sin DOMAIN, usa
+# "localhost" con el certificado local de Caddy (ver Caddyfile).
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: faceattend-caddy
+    restart: unless-stopped
+    depends_on:
+      kong-gateway:
+        condition: service_healthy
+      frontend-web:
+        condition: service_healthy
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+      - "0.0.0.0:443:443/udp" # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - faceattend-edge
+
+volumes:
+  caddy_data:
+  caddy_config:

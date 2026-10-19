@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-001-create-enrollment-status-type
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE academic.enrollment_status AS ENUM ('Active', 'Withdrawn', 'Completed')
+      rollback:
+        - sql:
+            sql: DROP TYPE IF EXISTS academic.enrollment_status

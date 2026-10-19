@@ -1,0 +1,108 @@
+databaseChangeLog:
+  # ── Dominio Quality (09-ms-quality) ─────────────────────────────
+  # `created_at`, `updated_at` y `row_version` son propiedad exclusiva de estos
+  # triggers: el servicio nunca los escribe en SQL (CONVENCIONES.md §2).
+  - changeSet:
+      id: qual-014-create-fn-audit-timestamps-quality
+      author: Andres Gutierrez
+      changes:
+        - sqlFile:
+            path: 002-create-fn-audit-timestamps-quality.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+      rollback:
+        - sqlFile:
+            path: 002-create-fn-audit-timestamps-quality-rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+  - changeSet:
+      id: qual-015-create-triggers-audit-quality-project
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_quality_project
+              BEFORE INSERT OR UPDATE ON quality.quality_project
+              FOR EACH ROW
+              EXECUTE FUNCTION quality.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_quality_project ON quality.quality_project;
+  - changeSet:
+      id: qual-016-create-triggers-audit-quality-evaluation
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_quality_evaluation
+              BEFORE INSERT OR UPDATE ON quality.quality_evaluation
+              FOR EACH ROW
+              EXECUTE FUNCTION quality.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_quality_evaluation ON quality.quality_evaluation;
+  - changeSet:
+      id: qual-017-create-triggers-audit-quality-evaluation-item
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_quality_evaluation_item
+              BEFORE INSERT OR UPDATE ON quality.quality_evaluation_item
+              FOR EACH ROW
+              EXECUTE FUNCTION quality.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_quality_evaluation_item ON quality.quality_evaluation_item;
+  - changeSet:
+      id: qual-018-create-triggers-audit-process-assessment
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_process_assessment
+              BEFORE INSERT OR UPDATE ON quality.process_assessment
+              FOR EACH ROW
+              EXECUTE FUNCTION quality.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_process_assessment ON quality.process_assessment;
+  - changeSet:
+      id: qual-019-create-triggers-audit-process-assessment-rating
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_process_assessment_rating
+              BEFORE INSERT OR UPDATE ON quality.process_assessment_rating
+              FOR EACH ROW
+              EXECUTE FUNCTION quality.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_process_assessment_rating ON quality.process_assessment_rating;
+  - changeSet:
+      id: qual-020-create-triggers-audit-istqb-assessment
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_istqb_assessment
+              BEFORE INSERT OR UPDATE ON quality.istqb_assessment
+              FOR EACH ROW
+              EXECUTE FUNCTION quality.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_istqb_assessment ON quality.istqb_assessment;
+  - changeSet:
+      id: qual-021-create-triggers-audit-istqb-assessment-item
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_istqb_assessment_item
+              BEFORE INSERT OR UPDATE ON quality.istqb_assessment_item
+              FOR EACH ROW
+              EXECUTE FUNCTION quality.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_istqb_assessment_item ON quality.istqb_assessment_item;

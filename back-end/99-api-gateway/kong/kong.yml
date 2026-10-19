@@ -1,0 +1,275 @@
+_format_version: "3.0"
+_transform: true
+
+# Kong DB-less ï¿½ FaceAttend EDU ï¿½ ADR-007 + ADR-005
+services:
+  - name: identity-service
+    url: http://ms-identity:8081
+    routes:
+      - name: identity-route
+        paths: [/api/v1/persons, /api/v1/users, /api/v1/auth, /api/v1/sessions, /api/v1/password-policies]
+        strip_path: false
+      # Canonical school lives in academic-service; identity SchoolController kept direct-only for backward compat
+      - name: identity-nested-route
+        paths: ["~/api/v1/users/.+/activate"]
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+          headers: [Authorization, Content-Type]
+          credentials: true
+      - name: rate-limiting
+        config:
+          minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+          fault_tolerant: true
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 0
+          policy: redis
+  - name: authorization-service
+    url: http://ms-authorization:8082
+    routes:
+      - name: authorization-route
+        paths: [/api/v1/roles, /api/v1/permissions, /api/v1/user-roles]
+        strip_path: false
+      - name: authorization-nested-route
+        paths: ["~/api/v1/users/.+/roles", /api/v1/auth/evaluate]
+        strip_path: false
+    plugins:
+      # JWT retirado: AuthTokenFilter valida sesión + evaluate en el MS.
+      - name: rate-limiting
+        config:
+          minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+          fault_tolerant: true
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 0
+          policy: redis
+  - name: academic-service
+    url: http://ms-academic:8083
+    routes:
+      - name: academic-route
+        paths: [/api/v1/schools, /api/v1/programs, /api/v1/academic-periods, /api/v1/periods, /api/v1/cohorts, /api/v1/courses, /api/v1/actor-types, /api/v1/academic-actors, /api/v1/enrollments]
+        strip_path: false
+    # Sin plugins propios: el enforcement lo hace el MS (ver scheduling-nested-route).
+  - name: scheduling-service
+    url: http://ms-scheduling:8084
+    routes:
+      - name: scheduling-route
+        paths: [/api/v1/environments, /api/v1/schedule-blocks, /api/v1/class-sessions]
+        strip_path: false
+      - name: scheduling-nested-route
+        paths: ["~/api/v1/cohorts/.+/blocks", "~/api/v1/environments/.+/blocks", "~/api/v1/actors/.+/blocks", "~/api/v1/blocks/.+/sessions"]
+        strip_path: false
+    # Sin plugins propios: el enforcement lo hace AuthTokenFilter en cada MS
+    # (la sesión opaca no es JWT; reintroducir jwt con RS256 según ADR-007).
+  - name: attendance-service
+    url: http://ms-attendance:8085
+    routes:
+      - name: attendance-route
+        paths: [/api/v1/attendance-records, /api/v1/attendance-reports, /api/v1/justifications, /api/v1/justification-types, /api/v1/supporting-documents]
+        strip_path: false
+      - name: attendance-nested-route
+        paths: ["~/api/v1/class-sessions/.+/attendance", "~/api/v1/academic-actors/.+/attendance", "~/api/v1/attendance/.+/justification", "~/api/v1/justifications/.+/documents"]
+        strip_path: false
+    plugins:
+      # JWT retirado: AuthTokenFilter valida sesión + evaluate en el MS.
+      - name: rate-limiting
+        config:
+          minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+          fault_tolerant: true
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 0
+          policy: redis
+  # Incluye registro/reconocimiento facial y de huella (rostro -> encoding vía
+  # dlib, huella -> keypoints OpenCV), fusionado desde el antiguo face-auth-api;
+  # read_timeout elevado por el costo de ese cómputo en /enroll-image,
+  # /identify-image, /enroll-sample e /identify-sample.
+  - name: biometric-service
+    url: http://ms-biometric:8086
+    read_timeout: 60000
+    routes:
+      - name: biometric-route
+        paths: [/api/v1/biometric]
+        strip_path: false
+    # Sin plugins propios: el enforcement lo hace el MS (require_permission).
+  - name: configuration-service
+    url: http://ms-configuration:8087
+    routes:
+      - name: configuration-route
+        paths: [/api/v1/academic-configurations, /api/v1/security-configurations, /api/v1/biometric-update-cases, /api/v1/configurations]
+        strip_path: false
+      - name: configuration-nested-route
+        paths: ["~/api/v1/schools/.+/configurations", "~/api/v1/persons/.+/biometric-cases"]
+        strip_path: false
+    # Sin plugins propios: el enforcement lo hace el MS.
+  - name: notification-service
+    url: http://ms-notification:8088
+    routes:
+      - name: notification-route
+        paths: [/api/v1/alert-types, /api/v1/alerts]
+        strip_path: false
+    # Sin plugins propios: el enforcement lo hace el MS.
+  # ── ISO/IEC 9001 Quality Health Endpoints ────────────────────
+  - name: quality-health
+    url: http://ms-academic:8083
+    routes:
+      - name: quality-health-route
+        paths: [/health/quality]
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: [GET]
+          headers: [Content-Type]
+  # ── Quality Service (ISO 25010/29110) ──────────────────────
+  - name: quality-service
+    url: http://ms-quality:8089
+    routes:
+      - name: quality-route
+        paths: [/api/v1/quality]
+        strip_path: false
+    plugins:
+      # JWT retirado: el enforcement vive en cada MS.
+      - name: rate-limiting
+        config:
+          minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+          fault_tolerant: true
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 0
+          policy: redis
+# No consumers here: the jwt plugin is not enabled (only rate-limiting and
+# cors are), and Kong cannot interpolate env vars in declarative config, so a
+# committed secret would be the only way to keep one. Provision RS256 keys
+# through the Admin API when jwt is enabled (ADR-007: identity-service).
+# TLS termination (production): mount cert/key and uncomment:
+# certificates:
+#   - cert: /kong/ssl/faceattend.crt
+#     key: /kong/ssl/faceattend.key
+#     snis: ["api.faceattend.local"]
+plugins:
+  # Edge authentication: the bearer is an opaque session UUID, so it is checked
+  # against identity (GET /sessions/{id}) instead of a JWT signature. Mirrors the
+  # public paths of each MS AuthTokenFilter; permissions are still evaluated there.
+  # Needs KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES=resty.http on the gateway.
+  - name: pre-function
+    config:
+      access:
+        - |
+          local method = kong.request.get_method()
+          if method == "OPTIONS" then return end
+
+          local path = kong.request.get_path()
+          local public_prefixes = { "/health", "/api/v1/health", "/api/health" }
+          for _, prefix in ipairs(public_prefixes) do
+            if path:sub(1, #prefix) == prefix then return end
+          end
+          local public_posts = {
+            ["/api/v1/auth/login"] = true, ["/api/v1/auth/logout"] = true,
+            ["/api/v1/auth/refresh"] = true, ["/api/v1/auth/forgot-password"] = true,
+            ["/api/v1/auth/verify-code"] = true, ["/api/v1/auth/reset-password"] = true,
+          }
+          if method == "POST" and public_posts[path] then
+            -- Logout: invalida la entrada cacheada para que el token
+            -- deje de pasar el edge de inmediato (los servicios conservan
+            -- su ventana de 10 s).
+            if path == "/api/v1/auth/logout" then
+              pcall(function()
+                local args = kong.request.get_query()
+                local sid = args and args.sessionId
+                if type(sid) == "string" and #sid > 0 then
+                  kong.cache:invalidate("faceattend:session:" .. sid)
+                end
+              end)
+            end
+            return
+          end
+
+          local header = kong.request.get_header("authorization")
+          local token = header and header:match("^[Bb]earer%s+(%S+)$")
+          -- El navegador no puede poner cabeceras en el handshake de un
+          -- WebSocket: el kiosco manda la sesión como ?token=. Solo el canal
+          -- biométrico lo admite (el MS lo valida igual); el resto de rutas
+          -- sigue exigiendo la cabecera para no dejar tokens en URLs ni logs.
+          if not token and method == "GET" and path == "/api/v1/biometric/ws" then
+            local ws_args = kong.request.get_query()
+            local ws_token = ws_args and ws_args.token
+            if type(ws_token) == "string" then token = ws_token end
+          end
+          if not token or not token:match("^%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$") then
+            return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Missing or invalid bearer token", path = path })
+          end
+
+          local httpc = require("resty.http").new()
+          httpc:set_timeouts(2000, 2000, 3000)
+          -- Caché positiva de sesión (TTL 10s): sin ella cada request
+          -- autenticado costaba una introspección a identity, y bajo fan-out
+          -- del frontend los timeouts se volvían 503 "Cannot verify session".
+          -- Solo se cachean sesiones ACTIVAS; cualquier fallo se revalida en
+          -- vivo (fail-secure). Ventana de revocación/logout: 10 segundos.
+          local valid = nil
+          local cache_ok, cached = pcall(function()
+            return kong.cache:get("faceattend:session:" .. token, { ttl = 10 }, function()
+              local inner = require("resty.http").new()
+              inner:set_timeouts(2000, 2000, 3000)
+              local r = inner:request_uri("http://ms-identity:8081/api/v1/sessions/" .. token, {
+                method = "GET",
+                headers = { Authorization = "Bearer " .. token },
+              })
+              if not r then return nil end
+              if r.status ~= 200 or not r.body or not r.body:find('"sessionStatus"%s*:%s*"Active"') then return nil end
+              return true
+            end)
+          end)
+          if cache_ok and cached then
+            return
+          elseif not cache_ok then
+            -- Sin caché disponible: verificación directa (comportamiento anterior).
+            local res = httpc:request_uri("http://ms-identity:8081/api/v1/sessions/" .. token, {
+              method = "GET",
+              headers = { Authorization = "Bearer " .. token },
+            })
+            if not res then
+              return kong.response.exit(503, { status = 503, error = "Service Unavailable", message = "Cannot verify session", path = path })
+            end
+            if res.status ~= 200 or not res.body or not res.body:find('"sessionStatus"%s*:%s*"Active"') then
+              return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Invalid or expired session", path = path })
+            end
+            return
+          end
+          local res = httpc:request_uri("http://ms-identity:8081/api/v1/sessions/" .. token, {
+            method = "GET",
+            headers = { Authorization = "Bearer " .. token },
+          })
+          if not res then
+            return kong.response.exit(503, { status = 503, error = "Service Unavailable", message = "Cannot verify session", path = path })
+          end
+          if res.status ~= 200 or not res.body or not res.body:find('"sessionStatus"%s*:%s*"Active"') then
+            return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Invalid or expired session", path = path })
+          end
+  - name: cors
+    config:
+      # "*" + credentials true: Kong refleja el Origin real de cada petición
+      # (el navegador prohíbe "*" literal junto con credenciales), igual que
+      # ya hacía identity-service. Antes solo :3000/:5173/:8090 pasaban, así
+      # que abrir el frontend desde otra IP de la LAN (u otro puerto) dejaba
+      # bloqueadas por CORS las 6 rutas sin cors propio (academic, scheduling,
+      # attendance, authorization, biometric, configuration, notification).
+      origins: ["*"]
+      methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+      headers: [Authorization, Content-Type, X-Requested-With]
+      credentials: true
+      max_age: 3600
+  - name: rate-limiting
+    config:
+      minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+      fault_tolerant: true
+      redis_host: redis
+      redis_port: 6379
+      redis_database: 0
+      policy: redis

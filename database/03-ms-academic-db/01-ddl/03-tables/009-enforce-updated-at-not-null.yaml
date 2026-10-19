@@ -1,0 +1,54 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-010-enforce-updated-at-not-null
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              UPDATE academic.school SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE academic.school ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE academic.program SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE academic.program ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE academic.academic_period SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE academic.academic_period ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE academic.cohort SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE academic.cohort ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE academic.course SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE academic.course ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE academic.academic_actor_type SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE academic.academic_actor_type ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE academic.academic_actor SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE academic.academic_actor ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE academic.enrollment SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE academic.enrollment ALTER COLUMN updated_at SET NOT NULL;
+      rollback:
+        - sql:
+            sql: ALTER TABLE academic.school ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE academic.program ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE academic.academic_period ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE academic.cohort ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE academic.course ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE academic.academic_actor_type ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE academic.academic_actor ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE academic.enrollment ALTER COLUMN updated_at DROP NOT NULL;

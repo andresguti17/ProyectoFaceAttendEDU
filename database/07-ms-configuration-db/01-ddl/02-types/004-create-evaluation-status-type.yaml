@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: qual-003-create-evaluation-status-type
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE quality.evaluation_status AS ENUM ('Draft', 'Completed')
+      rollback:
+        - sql:
+            sql: DROP TYPE IF EXISTS quality.evaluation_status

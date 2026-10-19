@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-001-create-academic-schema
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS academic;
+      rollback:
+        - sql:
+            sql: DROP SCHEMA IF EXISTS academic CASCADE;

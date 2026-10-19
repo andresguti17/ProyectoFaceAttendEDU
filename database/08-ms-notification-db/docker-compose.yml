@@ -1,0 +1,15 @@
+services:
+  liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-notification-liquibase
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://${LIQUIBASE_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    volumes:
+      - .:/liquibase/project
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: qual-005-create-quality-level-type
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE quality.quality_level AS ENUM ('Deficiente', 'En proceso', 'Aceptable', 'Bueno', 'Excelente')
+      rollback:
+        - sql:
+            sql: DROP TYPE IF EXISTS quality.quality_level

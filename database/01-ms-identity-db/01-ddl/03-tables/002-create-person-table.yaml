@@ -1,0 +1,124 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-002-create-person-table
+      author: Andres Gutierrez
+      changes:
+        - createTable:
+            schemaName: identity
+            tableName: person
+            columns:
+              - column:
+                  name: person_id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: document_number
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: phone
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: document_type
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: true
+                  remarks: "CC / TI / CE / PP"
+              - column:
+                  name: blood_type
+                  type: VARCHAR(5)
+                  constraints:
+                    nullable: true
+                  remarks: "A+, A-, B+, B-, AB+, AB-, O+, O-"
+              - column:
+                  name: birth_date
+                  type: DATE
+                  constraints:
+                    nullable: true
+              - column:
+                  name: address
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: status
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE identity.person ADD CONSTRAINT uq_person_document UNIQUE (document_number)
+        - createIndex:
+            schemaName: identity
+            tableName: person
+            indexName: idx_person_email
+            columns:
+              - column:
+                  name: email
+        - createIndex:
+            schemaName: identity
+            tableName: person
+            indexName: idx_person_deleted
+            columns:
+              - column:
+                  name: deleted_at
+      rollback:
+        - dropTable:
+            schemaName: identity
+            tableName: person

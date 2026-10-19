@@ -1,0 +1,30 @@
+// ============================================================
+//  GeneralSettings — modal contenedor de configuración general
+//
+//  Recibe sections[] y las renderiza en orden con separadores.
+//  No sabe nada del rol ni de qué bloques contiene.
+//
+//  Props:
+//   - sections : ReactNode[]  — bloques a mostrar en orden
+//   - title    : string       — título de la sección (opcional)
+// ============================================================
+import React from "react";
+import { View, Text } from "react-native";
+import { Divider } from "../../../components/common";
+import { useSettingsSectionStyles } from "./useSettingsSectionStyles";
+
+export function GeneralSettings({ sections = [], title }) {
+    const { sectionTitle } = useSettingsSectionStyles();
+
+    return (
+        <View style={{ gap: 14 }}>
+            {title && <Text style={sectionTitle}>{title}</Text>}
+            {sections.map((section, i) => (
+                <React.Fragment key={i}>
+                    {i > 0 && <Divider />}
+                    {section}
+                </React.Fragment>
+            ))}
+        </View>
+    );
+}

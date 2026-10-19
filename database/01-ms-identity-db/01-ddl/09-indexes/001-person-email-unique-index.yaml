@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-008-person-email-unique-index
+      author: Andres Gutierrez
+      comment: >-
+        Replaces idx_person_email with a partial unique index so the login can resolve an
+        email to a single app_user. NULLs are still allowed and a soft-deleted person frees
+        its email for reuse.
+      changes:
+        - sql:
+            sql: DROP INDEX IF EXISTS identity.idx_person_email
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_person_email ON identity.person (email) WHERE deleted_at IS NULL
+      rollback:
+        - sql:
+            sql: DROP INDEX IF EXISTS identity.uq_person_email
+        - sql:
+            sql: CREATE INDEX idx_person_email ON identity.person (email)

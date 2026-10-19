@@ -1,0 +1,105 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-scheduling-schema
+      author: faceattend
+      changes:
+        - createSchema:
+            schemaName: scheduling
+  - changeSet:
+      id: 002-create-scheduling-tables
+      author: faceattend
+      changes:
+        - createTable:
+            schemaName: scheduling
+            tableName: environment
+            columns:
+              - column: {name: environment_id, type: SERIAL, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_environment}}
+              - column: {name: school_id, type: INT, constraints: {nullable: false}}
+              - column: {name: code, type: VARCHAR(50), constraints: {nullable: false}}
+              - column: {name: name, type: VARCHAR(255), constraints: {nullable: false}}
+              - column: {name: capacity, type: SMALLINT, constraints: {nullable: false}}
+              - column: {name: status, type: BOOLEAN, constraints: {nullable: false}}
+              - column: {name: created_at, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: updated_at, type: TIMESTAMPTZ}
+              - column: {name: deleted_at, type: TIMESTAMPTZ}
+              - column: {name: created_by, type: UUID}
+              - column: {name: updated_by, type: UUID}
+              - column: {name: deleted_by, type: UUID}
+              - column: {name: row_version, type: BIGINT, constraints: {nullable: false}}
+        - createTable:
+            schemaName: scheduling
+            tableName: schedule_block
+            columns:
+              - column: {name: schedule_block_id, type: BIGSERIAL, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_schedule_block}}
+              - column: {name: cohort_id, type: BIGINT, constraints: {nullable: false}}
+              - column: {name: course_id, type: INT, constraints: {nullable: false}}
+              - column: {name: environment_id, type: INT, constraints: {nullable: false}}
+              - column: {name: instructor_actor_id, type: BIGINT, constraints: {nullable: false}}
+              - column: {name: day_of_week, type: SMALLINT, constraints: {nullable: false}}
+              - column: {name: starts_at, type: TIME, constraints: {nullable: false}}
+              - column: {name: ends_at, type: TIME, constraints: {nullable: false}}
+              - column: {name: created_at, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: updated_at, type: TIMESTAMPTZ}
+              - column: {name: deleted_at, type: TIMESTAMPTZ}
+              - column: {name: created_by, type: UUID}
+              - column: {name: updated_by, type: UUID}
+              - column: {name: deleted_by, type: UUID}
+              - column: {name: row_version, type: BIGINT, constraints: {nullable: false}}
+        - createTable:
+            schemaName: scheduling
+            tableName: class_session
+            columns:
+              - column: {name: class_session_id, type: BIGSERIAL, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_class_session}}
+              - column: {name: schedule_block_id, type: BIGINT, constraints: {nullable: false}}
+              - column: {name: session_date, type: DATE, constraints: {nullable: false}}
+              - column: {name: opened_by, type: BIGINT}
+              - column: {name: opened_at, type: TIMESTAMPTZ}
+              - column: {name: closed_by, type: BIGINT}
+              - column: {name: closed_at, type: TIMESTAMPTZ}
+              - column: {name: session_status, type: VARCHAR(50), constraints: {nullable: false}}
+              - column: {name: created_at, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: updated_at, type: TIMESTAMPTZ}
+              - column: {name: deleted_at, type: TIMESTAMPTZ}
+              - column: {name: created_by, type: UUID}
+              - column: {name: updated_by, type: UUID}
+              - column: {name: deleted_by, type: UUID}
+              - column: {name: row_version, type: BIGINT, constraints: {nullable: false}}
+        - addUniqueConstraint:
+            constraintName: uq_environment_code_school
+            schemaName: scheduling
+            tableName: environment
+            columnNames: school_id,code
+        - addUniqueConstraint:
+            constraintName: uq_block_environment_slot
+            schemaName: scheduling
+            tableName: schedule_block
+            columnNames: environment_id,day_of_week,starts_at
+        - addUniqueConstraint:
+            constraintName: uq_block_instructor_slot
+            schemaName: scheduling
+            tableName: schedule_block
+            columnNames: instructor_actor_id,day_of_week,starts_at
+        - addUniqueConstraint:
+            constraintName: uq_session_block_date
+            schemaName: scheduling
+            tableName: class_session
+            columnNames: schedule_block_id,session_date
+        - createIndex:
+            indexName: idx_block_cohort
+            schemaName: scheduling
+            tableName: schedule_block
+            columns: [{column: {name: cohort_id}}]
+        - createIndex:
+            indexName: idx_block_course
+            schemaName: scheduling
+            tableName: schedule_block
+            columns: [{column: {name: course_id}}]
+        - createIndex:
+            indexName: idx_session_date
+            schemaName: scheduling
+            tableName: class_session
+            columns: [{column: {name: session_date}}]
+      rollback:
+        - dropTable: {schemaName: scheduling, tableName: class_session}
+        - dropTable: {schemaName: scheduling, tableName: schedule_block}
+        - dropTable: {schemaName: scheduling, tableName: environment}

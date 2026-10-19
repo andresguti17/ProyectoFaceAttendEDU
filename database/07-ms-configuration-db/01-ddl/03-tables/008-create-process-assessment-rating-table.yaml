@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: qual-011-create-process-assessment-rating-table
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE quality.process_assessment_rating (
+                process_rating_id BIGSERIAL NOT NULL,
+                assessment_id BIGINT NOT NULL,
+                objective_code VARCHAR(20) NOT NULL, -- Id de objetivo del catálogo ISO/IEC 29110 definido en código (09-ms-quality/src/domain/iso29110.ts), ej. 'PM.O1'. NO FK.
+                objective_rating quality.objective_rating NOT NULL, -- N/P/L/F del objetivo
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                updated_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                deleted_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT process_assessment_rating_pkey PRIMARY KEY (process_rating_id)
+              )
+        - sql:
+            sql: ALTER TABLE quality.process_assessment_rating ADD CONSTRAINT uq_process_assessment_rating_objective UNIQUE (assessment_id, objective_code)
+        - sql:
+            sql: ALTER TABLE quality.process_assessment_rating ADD CONSTRAINT fk_process_assessment_rating_assessment FOREIGN KEY (assessment_id) REFERENCES quality.process_assessment (assessment_id) ON DELETE CASCADE
+      rollback:
+        - dropTable:
+            schemaName: quality
+            tableName: process_assessment_rating

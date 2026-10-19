@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: config-001-create-fn-audit-timestamps
+      author: Andres Gutierrez
+      changes:
+        - sqlFile:
+            path: 001-create-fn-audit-timestamps.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+      rollback:
+        - sqlFile:
+            path: 001-create-fn-audit-timestamps-rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+  - changeSet:
+      id: config-002-create-triggers-audit-academic-configuration
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_academic_configuration
+              BEFORE INSERT OR UPDATE ON configuration.academic_configuration
+              FOR EACH ROW
+              EXECUTE FUNCTION configuration.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_academic_configuration ON configuration.academic_configuration;
+  - changeSet:
+      id: config-003-create-triggers-audit-security-configuration
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_security_configuration
+              BEFORE INSERT OR UPDATE ON configuration.security_configuration
+              FOR EACH ROW
+              EXECUTE FUNCTION configuration.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_security_configuration ON configuration.security_configuration;
+  - changeSet:
+      id: config-004-create-triggers-audit-biometric-update-case
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_biometric_update_case
+              BEFORE INSERT OR UPDATE ON configuration.biometric_update_case
+              FOR EACH ROW
+              EXECUTE FUNCTION configuration.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_biometric_update_case ON configuration.biometric_update_case;

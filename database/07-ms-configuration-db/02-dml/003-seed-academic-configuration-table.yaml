@@ -1,0 +1,69 @@
+databaseChangeLog:
+  - changeSet:
+      id: config-003-seed-academic-configuration-table
+      author: Andres Gutierrez
+      context: seed
+      # Accepts the original checksum too: on machines where this seed already
+      # ran, `valueDate: { dateFunction: now }` silently inserted NULLs.
+      validCheckSum: any
+      changes:
+        - insert:
+            schemaName: configuration
+            tableName: academic_configuration
+            columns:
+              - column: { name: configuration_id, value: 1 }
+              - column: { name: school_id, value: 1 }
+              - column: { name: configuration_name, value: 'tardy_tolerance_minutes' }
+              - column: { name: configuration_value, value: '15' }
+              - column: { name: description, value: 'Minutes after start before marking late' }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: row_version, value: 1 }
+        - insert:
+            schemaName: configuration
+            tableName: academic_configuration
+            columns:
+              - column: { name: configuration_id, value: 2 }
+              - column: { name: school_id, value: 1 }
+              - column: { name: configuration_name, value: 'min_attendance_percent' }
+              - column: { name: configuration_value, value: '80' }
+              - column: { name: description, value: 'Minimum attendance percentage to pass' }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: row_version, value: 1 }
+        - insert:
+            schemaName: configuration
+            tableName: academic_configuration
+            columns:
+              - column: { name: configuration_id, value: 3 }
+              - column: { name: school_id, value: 1 }
+              - column: { name: configuration_name, value: 'days_until_sanction' }
+              - column: { name: configuration_value, value: '15' }
+              - column: { name: description, value: 'Days before sanction is applied' }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: row_version, value: 1 }
+        - insert:
+            schemaName: configuration
+            tableName: academic_configuration
+            columns:
+              - column: { name: configuration_id, value: 4 }
+              - column: { name: school_id, value: 1 }
+              - column: { name: configuration_name, value: 'confidence_threshold' }
+              - column: { name: configuration_value, value: '85' }
+              - column: { name: description, value: 'Minimum facial recognition confidence (0-100)' }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: row_version, value: 1 }
+        - insert:
+            schemaName: configuration
+            tableName: academic_configuration
+            columns:
+              - column: { name: configuration_id, value: 5 }
+              - column: { name: school_id, value: 1 }
+              - column: { name: configuration_name, value: 'session_time_minutes' }
+              - column: { name: configuration_value, value: '60' }
+              - column: { name: description, value: 'Default session duration' }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: row_version, value: 1 }

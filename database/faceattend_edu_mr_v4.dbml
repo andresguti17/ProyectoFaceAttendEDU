@@ -1,0 +1,947 @@
+﻿////////////////////////////////////////////////////////////
+// FACEATTEND-EDU â€” MODELO RELACIONAL CORREGIDO (3FN)
+// v4: UnificaciÃ³n de facial_update_case + fingerprint_update_case
+//     en biometric_update_case (Configuration context)
+// v5: city seeds removed (external API), permission refactored,
+//     justification_type per-school, security_configuration trimmed,
+//     alert_type severity/channel added
+// v6: person extended (document_type, blood_type, birth_date, address),
+//     city table removed, school extended (district, country, city_name),
+//     justification resolution_notes, attendance_report, CHECKs, two_factor
+////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////
+// IDENTITY
+////////////////////////////////////////////////////////////
+
+Table person {
+  person_id uuid [pk, not null]
+  document_number varchar [not null]
+  name varchar [not null]
+  last_name varchar [not null]
+  email varchar [null]
+  phone varchar [null]
+  document_type varchar [null, note: 'CC / TI / CE / PP']
+  blood_type varchar [null, note: 'A+, A-, B+, B-, AB+, AB-, O+, O-']
+  birth_date date [null]
+  address varchar [null]
+  status boolean [not null, default: true]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    (document_type, document_number) [unique, name: 'uq_person_document']
+    // Login por correo: unicidad del email entre filas vivas (los NULL siguen
+    // permitidos y un soft-delete libera el correo para reutilizarlo).
+    email [unique, name: 'uq_person_email', where: 'deleted_at IS NULL']
+    deleted_at [name: 'idx_person_deleted']
+  }
+}
+
+Table app_user {
+  user_id uuid [pk, not null]
+  person_id uuid [not null, unique]
+  username varchar [not null]
+  password_hash varchar [not null]
+  authentication_type varchar [not null, note: 'Local, Windows, External']
+  status boolean [not null, default: true]
+  last_access datetime [null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    username [unique, name: 'uq_user_username']
+  }
+}
+
+Table user_session {
+  session_id uuid [pk, not null]
+  user_id uuid [not null]
+  start_date datetime [not null]
+  end_date datetime [null]
+  source_ip varchar [null]
+  session_status varchar [not null, note: 'Active or Closed']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    user_id [name: 'idx_session_user']
+    session_status [name: 'idx_session_status']
+  }
+}
+
+Table password_policy {
+  policy_id int [pk, increment]
+  min_length int [not null, default: 8]
+  max_length int [not null, default: 20]
+  requires_uppercase boolean [not null, default: true]
+  requires_numbers boolean [not null, default: true]
+  requires_symbols boolean [not null, default: true]
+  expiration_days int [not null, default: 90]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+}
+
+// Relaciones internas (Identity)
+Ref: app_user.person_id - person.person_id
+Ref: user_session.user_id > app_user.user_id
+
+
+////////////////////////////////////////////////////////////
+// AUTHORIZATION
+////////////////////////////////////////////////////////////
+
+Table role {
+  role_id int [pk, increment]
+  role_name varchar [not null, unique]
+  description varchar [null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+}
+
+Table permission {
+  permission_id int [pk, increment]
+  permission_name varchar [not null, unique]
+  description varchar [null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+}
+
+Table role_permission {
+  role_id int [not null]
+  permission_id int [not null]
+  assignment_date datetime [not null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (role_id, permission_id) [pk] }
+}
+
+Table user_role {
+  user_id uuid [not null]
+  role_id int [not null]
+  assignment_date datetime [not null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (user_id, role_id) [pk] }
+}
+
+Ref: role_permission.role_id > role.role_id
+Ref: role_permission.permission_id > permission.permission_id
+Ref: user_role.role_id > role.role_id
+// user_id -> Identity.app_user.user_id (cross-context, sin FK real)
+
+
+////////////////////////////////////////////////////////////
+// ACADEMIC
+////////////////////////////////////////////////////////////
+
+Table school {
+  school_id int [pk, increment]
+  code varchar [not null, unique]
+  name varchar [not null]
+  city_id varchar [null, note: 'External catalog via countriesnow API, no FK']
+  address varchar [null]
+  district varchar [null]
+  country varchar [null]
+  city_name varchar [null]
+  phone varchar [null]
+  email varchar [null]
+  status boolean [not null, default: true]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+}
+
+Table program {
+  program_id int [pk, increment]
+  school_id int [not null]
+  code varchar [not null]
+  name varchar [not null]
+  status boolean [not null, default: true]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (school_id, code) [unique, name: 'uq_program_code_school'] }
+}
+
+Table academic_period {
+  academic_period_id int [pk, increment]
+  school_id int [not null]
+  name varchar [not null]
+  starts_on date [not null]
+  ends_on date [not null]
+  is_active boolean [not null, default: false]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (school_id, name) [unique, name: 'uq_period_name_school'] }
+}
+
+Table cohort {
+  cohort_id bigint [pk, increment]
+  program_id int [not null]
+  academic_period_id int [not null]
+  code varchar [not null, unique]
+  status boolean [not null, default: true]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+}
+
+Table course {
+  course_id int [pk, increment]
+  program_id int [not null]
+  code varchar [not null]
+  name varchar [not null]
+  credit_hours smallint [not null]
+  status boolean [not null, default: true]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (program_id, code) [unique, name: 'uq_course_code_program'] }
+}
+
+Table academic_actor_type {
+  actor_type_id smallint [pk, increment]
+  code varchar [not null, unique, note: 'STUDENT / INSTRUCTOR / ADMIN (administrador de sede)']
+  name varchar [not null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+}
+
+Table academic_actor {
+  academic_actor_id bigint [pk, increment]
+  person_id uuid [not null]
+  actor_type_id smallint [not null]
+  school_id int [not null]
+  actor_code varchar [not null, note: 'Código de aprendiz, instructor o administrador']
+  started_on date [not null]
+  ended_on date [null]
+  status boolean [not null, default: true]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    (school_id, actor_type_id, actor_code) [unique, name: 'uq_actor_code_school_type']
+    (person_id, actor_type_id, school_id) [unique, name: 'uq_actor_person_type_school']
+    deleted_at [name: 'idx_actor_deleted']
+  }
+}
+
+Table enrollment {
+  enrollment_id bigint [pk, increment]
+  academic_actor_id bigint [not null]
+  cohort_id bigint [not null]
+  enrolled_on date [not null]
+  enrollment_status varchar [not null, note: 'ENUM: Active / Withdrawn / Completed']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    (academic_actor_id, cohort_id) [unique, name: 'uq_enrollment_actor_cohort']
+    cohort_id [name: 'idx_enrollment_cohort']
+    deleted_at [name: 'idx_enrollment_deleted']
+  }
+}
+
+// Relaciones internas (Academic)
+Ref: program.school_id > school.school_id
+Ref: academic_period.school_id > school.school_id
+Ref: cohort.program_id > program.program_id
+Ref: cohort.academic_period_id > academic_period.academic_period_id
+Ref: course.program_id > program.program_id
+Ref: academic_actor.actor_type_id > academic_actor_type.actor_type_id
+Ref: academic_actor.school_id > school.school_id
+Ref: enrollment.academic_actor_id > academic_actor.academic_actor_id
+Ref: enrollment.cohort_id > cohort.cohort_id
+
+// Cross-context (sin FK): academic_actor.person_id -> Identity.person
+
+
+////////////////////////////////////////////////////////////
+// SCHEDULING
+////////////////////////////////////////////////////////////
+
+Table environment {
+  environment_id int [pk, increment]
+  school_id int [not null]
+  code varchar [not null]
+  name varchar [not null]
+  capacity smallint [not null]
+  status boolean [not null, default: true]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (school_id, code) [unique, name: 'uq_environment_code_school'] }
+}
+
+Table schedule_block {
+  schedule_block_id bigint [pk, increment]
+  cohort_id bigint [not null]
+  course_id int [not null]
+  environment_id int [not null]
+  instructor_actor_id bigint [not null]
+  day_of_week smallint [not null, note: '1..7']
+  starts_at time [not null]
+  ends_at time [not null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    (environment_id, day_of_week, starts_at) [unique, name: 'uq_block_environment_slot']
+    (instructor_actor_id, day_of_week, starts_at) [unique, name: 'uq_block_instructor_slot']
+    cohort_id [name: 'idx_block_cohort']
+    course_id [name: 'idx_block_course']
+  }
+}
+
+Table class_session {
+  class_session_id bigint [pk, increment]
+  schedule_block_id bigint [not null]
+  session_date date [not null]
+  opened_by bigint [null, note: 'academic_actor_id (instructor) que abriÃ³ la clase']
+  opened_at datetime [null]
+  closed_by bigint [null, note: 'academic_actor_id (instructor) que cerrÃ³ la clase']
+  closed_at datetime [null]
+  session_status varchar [not null, note: 'ENUM: Open / Closed / Cancelled']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    (schedule_block_id, session_date) [unique, name: 'uq_session_block_date']
+    session_date [name: 'idx_session_date']
+  }
+}
+
+// Relaciones internas (Scheduling)
+Ref: schedule_block.environment_id > environment.environment_id
+Ref: class_session.schedule_block_id > schedule_block.schedule_block_id
+
+// Cross-context (sin FK):
+// environment.school_id -> Academic.school
+// schedule_block.cohort_id -> Academic.cohort
+// schedule_block.course_id -> Academic.course
+// schedule_block.instructor_actor_id -> Academic.academic_actor
+// class_session.opened_by -> Academic.academic_actor
+// class_session.closed_by -> Academic.academic_actor
+
+
+////////////////////////////////////////////////////////////
+// ATTENDANCE
+////////////////////////////////////////////////////////////
+
+Table attendance_record {
+  attendance_record_id bigint [pk, increment]
+  class_session_id bigint [not null]
+  academic_actor_id bigint [not null]
+  attendance_status varchar [not null, note: 'ENUM: Present / Absent / Late / Justified']
+  captured_at datetime [null]
+  capture_method varchar [not null, note: 'ENUM: FACIAL / MANUAL / IOT / IMPORT']
+  match_score decimal(5,4) [null, note: 'Score del reconocimiento facial o dactilar']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    (class_session_id, academic_actor_id) [unique, name: 'uq_attendance_session_actor']
+    academic_actor_id [name: 'idx_attendance_actor']
+    deleted_at [name: 'idx_attendance_deleted']
+  }
+}
+
+Table justification_type {
+  justification_type_id int [pk, increment]
+  school_id int [null, note: 'NULL = global type, NOT NULL = per-school custom type']
+  name varchar [not null]
+  description varchar [null]
+  requires_attachment boolean [not null, default: false]
+  status boolean [not null, default: true]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    (school_id, name) [unique, name: 'uq_justification_type_school_name']
+    school_id [name: 'idx_justification_type_school']
+    (name) [unique, name: 'uq_justification_type_global_name', where: 'school_id IS NULL']
+  }
+}
+
+Table justification {
+  justification_id bigint [pk, increment]
+  attendance_record_id bigint [not null, unique]
+  justification_type_id int [not null]
+  reason text [not null]
+  submitted_at datetime [not null]
+  reviewed_by uuid [null, note: 'app_user.user_id (cross-context)']
+  reviewed_at datetime [null]
+  review_status varchar [not null, note: 'ENUM: Pending / Approved / Rejected']
+  resolution_notes text [null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    justification_type_id [name: 'idx_justification_type']
+    reviewed_by [name: 'idx_justification_reviewer']
+  }
+}
+
+Table supporting_document {
+  supporting_document_id bigint [pk, increment]
+  justification_id bigint [not null]
+  file_name varchar [not null]
+  storage_uri varchar [not null]
+  mime_type varchar [not null]
+  size_bytes bigint [not null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { justification_id [name: 'idx_document_justification'] }
+}
+
+Table attendance_report {
+  report_id uuid [pk, not null]
+  school_id int [null, note: 'Cross-context to Academic.school']
+  cohort_id bigint [null, note: 'Cross-context to Academic.cohort']
+  generated_by uuid [null, note: 'Cross-context to Identity.app_user']
+  report_type varchar [not null]
+  filters jsonb [null]
+  result jsonb [null]
+  generated_at datetime [not null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    school_id [name: 'idx_report_school']
+    cohort_id [name: 'idx_report_cohort']
+  }
+}
+
+// Relaciones internas (Attendance)
+Ref: justification.attendance_record_id > attendance_record.attendance_record_id
+Ref: justification.justification_type_id > justification_type.justification_type_id
+Ref: supporting_document.justification_id > justification.justification_id
+
+// Cross-context (sin FK):
+// attendance_record.class_session_id -> Scheduling.class_session
+// attendance_record.academic_actor_id -> Academic.academic_actor
+// justification.reviewed_by -> Identity.app_user
+
+
+////////////////////////////////////////////////////////////
+// BIOMETRIC (NoSQL â€” colecciones documentales, fuera del modelo SQL)
+////////////////////////////////////////////////////////////
+// facial_embedding (collection)      -> person_id, template_version, encoding, model_version, enrolled_at, is_active
+// fingerprint_embedding (collection) -> person_id, finger_number, template_version, encoding, model_version, enrolled_at, is_active
+//
+// Estas colecciones NO se modelan como Table en este DBML relacional.
+// Su referencia lÃ³gica desde SQL se documenta como texto libre (current_embedding_ref),
+// nunca como Ref: real, por ser cross-paradigm (SQL -> NoSQL).
+
+
+////////////////////////////////////////////////////////////
+// NOTIFICATION
+////////////////////////////////////////////////////////////
+
+Table alert_type {
+  alert_type_id smallint [pk, increment]
+  code varchar [not null, unique]
+  name varchar [not null]
+  severity varchar [not null, note: 'INFO / WARNING / CRITICAL']
+  channel varchar [not null, note: 'DASHBOARD / EMAIL / PUSH', default: 'DASHBOARD']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+}
+
+Table alert {
+  alert_id bigint [pk, increment]
+  academic_actor_id bigint [not null]
+  alert_type_id smallint [not null]
+  raised_at datetime [not null]
+  resolved_at datetime [null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    academic_actor_id [name: 'idx_alert_actor']
+    alert_type_id [name: 'idx_alert_type']
+  }
+}
+
+// Relaciones internas (Notification)
+Ref: alert.alert_type_id > alert_type.alert_type_id
+
+// Cross-context (sin FK): alert.academic_actor_id -> Academic.academic_actor
+
+
+////////////////////////////////////////////////////////////
+// CONFIGURATION
+////////////////////////////////////////////////////////////
+
+Table academic_configuration {
+  configuration_id int [pk, increment]
+  school_id int [not null]
+  configuration_name varchar [not null, note: 'e.g., tardy_tolerance_minutes']
+  configuration_value varchar [not null]
+  description varchar [null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (school_id, configuration_name) [unique, name: 'uq_academic_configuration'] }
+}
+
+Table security_configuration {
+  configuration_id int [pk, increment]
+  configuration_name varchar [not null, unique]
+  configuration_value varchar [not null]
+  description varchar [null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+}
+
+Table biometric_update_case {
+  case_id uuid [pk, not null]
+  person_id uuid [not null]
+  biometric_type varchar [not null, note: 'ENUM: FACIAL / FINGERPRINT']
+  finger_number smallint [null, note: 'Obligatorio solo si biometric_type = FINGERPRINT (1..10); nulo si es FACIAL']
+  chk_finger_number finger_number [note: 'CHECK: (biometric_type = FINGERPRINT AND finger_number BETWEEN 1 AND 10) OR (biometric_type = FACIAL AND finger_number IS NULL)']
+  current_embedding_ref varchar [null, note: '_id lÃ³gico del documento activo en facial_embedding o fingerprint_embedding (NoSQL). Sin FK real: cross-paradigm.']
+  reason text [not null]
+  update_status varchar [not null, default: 'Pending', note: 'ENUM: Pending / In_Review / Approved / Rejected']
+  requested_by uuid [not null, note: 'app_user.user_id (cross-context)']
+  requested_at datetime [not null]
+  reviewed_by uuid [null, note: 'app_user.user_id (cross-context)']
+  reviewed_at datetime [null]
+  resolution_notes text [null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    person_id [name: 'idx_biometric_case_person']
+    (person_id, biometric_type) [name: 'idx_biometric_case_person_type']
+    update_status [name: 'idx_biometric_case_status']
+  }
+}
+
+// Cross-context (sin FK):
+// academic_configuration.school_id -> Academic.school
+// biometric_update_case.person_id -> Identity.person
+// biometric_update_case.requested_by -> Identity.app_user
+// biometric_update_case.reviewed_by -> Identity.app_user
+// biometric_update_case.current_embedding_ref -> Biometric.facial_embedding / Biometric.fingerprint_embedding (NoSQL, cross-paradigm)
+
+
+////////////////////////////////////////////////////////////
+// QUALITY
+// Instrumento ISO/IEC 25010, ISO/IEC 29110 e ISTQB de 09-ms-quality.
+// Hospedaje físico transitorio en el schema `quality` dentro de
+// 07-ms-configuration-db (no existe changelog propio para 09-ms-quality).
+// Catálogos de subcaracterísticas/objetivos/ítems viven en código
+// (09-ms-quality/src/domain/{iso25010,iso29110,istqb}.ts), no en tablas.
+////////////////////////////////////////////////////////////
+
+Table quality_project {
+  project_id bigint [pk, increment]
+  project_name varchar [not null]
+  description varchar [null]
+  customer varchar [null, note: 'Cliente/usuario que acepta la entrega (evidencia WP10)']
+  planned_start_on date [null]
+  planned_end_on date [null]
+  chk_quality_project_dates planned_start_on [note: 'CHECK: planned_start_on <= planned_end_on']
+  project_status varchar [not null, default: 'Planned', note: 'ENUM: Planned / Active / Closed']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    project_status [name: 'idx_quality_project_status']
+    deleted_at [name: 'idx_quality_project_deleted']
+  }
+}
+
+Table quality_evaluation {
+  evaluation_id bigint [pk, increment]
+  service_name varchar [not null, note: 'Microservicio evaluado, ej. 03-ms-academic (sin FK)']
+  evaluator_name varchar [not null]
+  evaluation_scope varchar [not null]
+  project_id bigint [null, note: 'Trazabilidad ISO/IEC 29110 SI.O2']
+  evaluation_status varchar [not null, default: 'Draft', note: 'ENUM: Draft / Completed']
+  comments text [null]
+  global_score decimal [null, note: 'Puntaje ponderado 1-5, derivado de quality_evaluation_item']
+  percentage decimal [null]
+  quality_level varchar [null, note: 'ENUM: Deficiente / En proceso / Aceptable / Bueno / Excelente']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    service_name [name: 'idx_quality_evaluation_service']
+    evaluation_status [name: 'idx_quality_evaluation_status']
+    project_id [name: 'idx_quality_evaluation_project']
+    deleted_at [name: 'idx_quality_evaluation_deleted']
+  }
+}
+
+Table quality_evaluation_item {
+  evaluation_item_id bigint [pk, increment]
+  evaluation_id bigint [not null]
+  subcharacteristic_code varchar [not null, note: 'Catálogo ISO/IEC 25010 en código, sin FK']
+  score smallint [not null, note: 'CHECK: 1..5']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (evaluation_id, subcharacteristic_code) [unique, name: 'uq_quality_evaluation_item_code'] }
+}
+
+Table process_assessment {
+  assessment_id bigint [pk, increment]
+  project_id bigint [not null]
+  process_code varchar [not null, note: 'ENUM: PM (Gestión de Proyecto) / SI (Implementación de Software)']
+  assessor_name varchar [not null]
+  assessment_status varchar [not null, default: 'Draft', note: 'ENUM: Draft / Completed']
+  comments text [null]
+  process_score decimal [null, note: '% de logro 0-100, derivado de process_assessment_rating']
+  process_rating varchar [null, note: 'ENUM: N / P / L / F']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    project_id [name: 'idx_process_assessment_project']
+    process_code [name: 'idx_process_assessment_process']
+    deleted_at [name: 'idx_process_assessment_deleted']
+  }
+}
+
+Table process_assessment_rating {
+  process_rating_id bigint [pk, increment]
+  assessment_id bigint [not null]
+  objective_code varchar [not null, note: 'Catálogo ISO/IEC 29110 en código, ej. PM.O1, sin FK']
+  objective_rating varchar [not null, note: 'ENUM: N / P / L / F']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (assessment_id, objective_code) [unique, name: 'uq_process_assessment_rating_objective'] }
+}
+
+Table istqb_assessment {
+  istqb_assessment_id bigint [pk, increment]
+  service_name varchar [not null, note: 'Microservicio evaluado (sin FK)']
+  evaluator_name varchar [not null]
+  assessment_scope varchar [not null]
+  project_id bigint [null, note: 'Trazabilidad ISO/IEC 29110 SI.O2/SI.O7']
+  assessment_status varchar [not null, default: 'Draft', note: 'ENUM: Draft / Completed']
+  comments text [null]
+  global_score decimal [null]
+  percentage decimal [null]
+  quality_level varchar [null, note: 'ENUM: Deficiente / En proceso / Aceptable / Bueno / Excelente']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    service_name [name: 'idx_istqb_assessment_service']
+    assessment_status [name: 'idx_istqb_assessment_status']
+    project_id [name: 'idx_istqb_assessment_project']
+    deleted_at [name: 'idx_istqb_assessment_deleted']
+  }
+}
+
+Table istqb_assessment_item {
+  istqb_assessment_item_id bigint [pk, increment]
+  istqb_assessment_id bigint [not null]
+  item_code varchar [not null, note: 'Catálogo ISTQB CTFL v4.0 en código, sin FK']
+  score smallint [not null, note: 'CHECK: 1..5']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes { (istqb_assessment_id, item_code) [unique, name: 'uq_istqb_assessment_item_code'] }
+}
+
+// Relaciones internas (Quality)
+Ref: quality_evaluation.project_id > quality_project.project_id
+Ref: quality_evaluation_item.evaluation_id > quality_evaluation.evaluation_id
+Ref: process_assessment.project_id > quality_project.project_id
+Ref: process_assessment_rating.assessment_id > process_assessment.assessment_id
+Ref: istqb_assessment.project_id > quality_project.project_id
+Ref: istqb_assessment_item.istqb_assessment_id > istqb_assessment.istqb_assessment_id
+
+
+////////////////////////////////////////////////////////////
+// BOUNDED CONTEXTS (AgrupaciÃ³n visual)
+////////////////////////////////////////////////////////////
+
+TableGroup Identity [color: #3498DB] {
+  person
+  app_user
+  user_session
+  password_policy
+}
+
+TableGroup Authorization [color: #2980B9] {
+  role
+  permission
+  role_permission
+  user_role
+}
+
+TableGroup Academic [color: #0a9e48] {
+  school
+  program
+  academic_period
+  cohort
+  course
+  academic_actor_type
+  academic_actor
+  enrollment
+}
+
+TableGroup Scheduling [color: #16a085] {
+  environment
+  schedule_block
+  class_session
+}
+
+TableGroup Attendance [color: #e67e22] {
+  attendance_record
+  justification_type
+  justification
+  supporting_document
+  attendance_report
+}
+
+TableGroup Notification [color: #f1c40f] {
+  alert_type
+  alert
+}
+
+TableGroup Configuration [color: #34495e] {
+  academic_configuration
+  security_configuration
+  biometric_update_case
+}
+
+TableGroup Quality [color: #8e44ad] {
+  quality_project
+  quality_evaluation
+  quality_evaluation_item
+  process_assessment
+  process_assessment_rating
+  istqb_assessment
+  istqb_assessment_item
+}
+
+// Nota: el grupo "Biometric" ya no contiene tablas SQL en este archivo.
+// facial_embedding y fingerprint_embedding viven como colecciones NoSQL
+// documentadas aparte (modelo_conceptual.md), fuera del alcance de este DBML.
+// El grupo "Audit" fue removido: la observabilidad la provee la plataforma.

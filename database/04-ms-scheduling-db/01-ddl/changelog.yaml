@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - include:
+      file: 01-schemas/001-create-scheduling-schema.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 02-types/001-create-class-session-status-type.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/001-create-environment-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/002-create-schedule-block-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/003-create-class-session-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/004-enforce-updated-at-not-null.yaml
+      relativeToChangelogFile: true

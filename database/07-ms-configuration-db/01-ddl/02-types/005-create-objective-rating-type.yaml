@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: qual-004-create-objective-rating-type
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE quality.objective_rating AS ENUM ('N', 'P', 'L', 'F')
+      rollback:
+        - sql:
+            sql: DROP TYPE IF EXISTS quality.objective_rating

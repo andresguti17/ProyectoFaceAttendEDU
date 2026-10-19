@@ -1,0 +1,126 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-001-create-fn-audit-timestamps
+      author: Andres Gutierrez
+      changes:
+        - sqlFile:
+            path: 001-create-fn-audit-timestamps.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+      rollback:
+        - sqlFile:
+            path: 001-create-fn-audit-timestamps-rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+
+  - changeSet:
+      id: acad-002-create-trigger-school-audit
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: >
+              CREATE TRIGGER trg_school_audit_timestamps
+              BEFORE INSERT OR UPDATE ON academic.school
+              FOR EACH ROW
+              EXECUTE FUNCTION academic.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_school_audit_timestamps ON academic.school;
+
+  - changeSet:
+      id: acad-003-create-trigger-program-audit
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: >
+              CREATE TRIGGER trg_program_audit_timestamps
+              BEFORE INSERT OR UPDATE ON academic.program
+              FOR EACH ROW
+              EXECUTE FUNCTION academic.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_program_audit_timestamps ON academic.program;
+
+  - changeSet:
+      id: acad-004-create-trigger-academic-period-audit
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: >
+              CREATE TRIGGER trg_academic_period_audit_timestamps
+              BEFORE INSERT OR UPDATE ON academic.academic_period
+              FOR EACH ROW
+              EXECUTE FUNCTION academic.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_academic_period_audit_timestamps ON academic.academic_period;
+
+  - changeSet:
+      id: acad-005-create-trigger-cohort-audit
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: >
+              CREATE TRIGGER trg_cohort_audit_timestamps
+              BEFORE INSERT OR UPDATE ON academic.cohort
+              FOR EACH ROW
+              EXECUTE FUNCTION academic.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_cohort_audit_timestamps ON academic.cohort;
+
+  - changeSet:
+      id: acad-006-create-trigger-course-audit
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: >
+              CREATE TRIGGER trg_course_audit_timestamps
+              BEFORE INSERT OR UPDATE ON academic.course
+              FOR EACH ROW
+              EXECUTE FUNCTION academic.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_course_audit_timestamps ON academic.course;
+
+  - changeSet:
+      id: acad-007-create-trigger-academic-actor-type-audit
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: >
+              CREATE TRIGGER trg_academic_actor_type_audit_timestamps
+              BEFORE INSERT OR UPDATE ON academic.academic_actor_type
+              FOR EACH ROW
+              EXECUTE FUNCTION academic.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_academic_actor_type_audit_timestamps ON academic.academic_actor_type;
+
+  - changeSet:
+      id: acad-008-create-trigger-academic-actor-audit
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: >
+              CREATE TRIGGER trg_academic_actor_audit_timestamps
+              BEFORE INSERT OR UPDATE ON academic.academic_actor
+              FOR EACH ROW
+              EXECUTE FUNCTION academic.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_academic_actor_audit_timestamps ON academic.academic_actor;
+
+  - changeSet:
+      id: acad-009-create-trigger-enrollment-audit
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: >
+              CREATE TRIGGER trg_enrollment_audit_timestamps
+              BEFORE INSERT OR UPDATE ON academic.enrollment
+              FOR EACH ROW
+              EXECUTE FUNCTION academic.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_enrollment_audit_timestamps ON academic.enrollment;

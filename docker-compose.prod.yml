@@ -1,0 +1,43 @@
+# FaceAttend EDU — Producción con Neon (PostgreSQL externo)
+# Incluye: Liquibase, Microservicios, MongoDB, Redis, Kafka, Kong, Portainer
+# PostgreSQL 17 corre en Neon (no local)
+# Uso: docker compose -f docker-compose.prod.yml --env-file .env.prod up --build -d
+include:
+  - ./database/docker-compose.neon.yml
+  - ./back-end/docker-compose.yml
+  - ./back-end/docker-compose.neon-overrides.yml
+
+services:
+  # Portainer CE — accesible solo por túnel SSH (:9443)
+  portainer:
+    image: portainer/portainer-ce:lts
+    container_name: faceattend-portainer
+    mem_limit: 512m
+    cpus: "0.5"
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - faceattend-edge
+      - faceattend-app
+
+networks:
+  faceattend-edge:
+    name: faceattend-edge
+    driver: bridge
+  faceattend-app:
+    name: faceattend-app
+    driver: bridge
+  faceattend-data:
+    name: faceattend-data
+    driver: bridge
+    # Este network no está alcanzable desde edge (aislamiento)
+
+volumes:
+  portainer_data:
+  mongo_data:
+  redis_data:
+  kafka_data:

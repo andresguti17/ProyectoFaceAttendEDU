@@ -1,0 +1,143 @@
+# FaceAttend EDU — root orchestrator (run every stack command from FULL/).
+# Full reference: COMPOSE.md (files, startup order, networks, ports, .env).
+# Includes database/ (postgres + liquibase) and back-end/ (microservices +
+# Kong). Interpolation variables for ALL included files resolve from FULL/.env
+# (see .env.example). Start everything with:  docker compose up --build -d
+#
+# Networks — one bridge per tier, so the data tier is unreachable from the
+# browser-facing one:
+#   faceattend-edge  frontend-web <-> Kong proxy
+#   faceattend-app   Kong <-> microservices <-> Redis
+#   faceattend-data  microservices <-> PostgreSQL / MongoDB / Kafka + Liquibase
+include:
+  - ./database/docker-compose.yml
+  - ./back-end/docker-compose.yml
+  # frontend-web (:8090 → nginx :80) y kong-gateway (:8000) se sirven desde aquí.
+  # Solo frontend + gateway (tras primer build del backend):
+  #   docker compose up frontend-web kong-gateway
+
+services:
+  authorization-liquibase:
+    depends_on:
+      identity-liquibase:
+        condition: service_completed_successfully
+
+  academic-liquibase:
+    depends_on:
+      authorization-liquibase:
+        condition: service_completed_successfully
+
+  scheduling-liquibase:
+    depends_on:
+      academic-liquibase:
+        condition: service_completed_successfully
+
+  attendance-liquibase:
+    depends_on:
+      scheduling-liquibase:
+        condition: service_completed_successfully
+
+  biometric-liquibase:
+    depends_on:
+      attendance-liquibase:
+        condition: service_completed_successfully
+
+  configuration-liquibase:
+    depends_on:
+      biometric-liquibase:
+        condition: service_completed_successfully
+
+  notification-liquibase:
+    depends_on:
+      configuration-liquibase:
+        condition: service_completed_successfully
+
+  ms-identity:
+    depends_on:
+      identity-liquibase:
+        condition: service_completed_successfully
+
+  ms-authorization:
+    depends_on:
+      authorization-liquibase:
+        condition: service_completed_successfully
+
+  ms-academic:
+    depends_on:
+      academic-liquibase:
+        condition: service_completed_successfully
+
+  ms-scheduling:
+    depends_on:
+      scheduling-liquibase:
+        condition: service_completed_successfully
+
+  ms-attendance:
+    depends_on:
+      attendance-liquibase:
+        condition: service_completed_successfully
+
+  ms-biometric:
+    depends_on:
+      biometric-liquibase:
+        condition: service_completed_successfully
+
+  ms-configuration:
+    depends_on:
+      configuration-liquibase:
+        condition: service_completed_successfully
+
+  ms-notification:
+    depends_on:
+      notification-liquibase:
+        condition: service_completed_successfully
+
+  # quality has no changelog of its own: start it once the whole
+  # database is migrated (postgres is healthy through the liquibase chain).
+  ms-quality:
+    depends_on:
+      notification-liquibase:
+        condition: service_completed_successfully
+
+  # ──────────────────────────────────────────────────────────────
+  # Frontend — Expo Web estático + nginx (SPA /, /login, /register,
+  # /dashboard). Lives here (not in back-end/): it is a presentation
+  # concern and consumes the backend only via gateway Kong :8000.
+  # ──────────────────────────────────────────────────────────────
+  frontend-web:
+    build:
+      context: ./front-end/Web
+      dockerfile: Dockerfile
+      args:
+        # Vacío por defecto: el bundle infiere el host de Kong desde
+        # location.hostname en runtime (ver front-end/Web/src/config/env.ts).
+        # Solo fijar EXPO_PUBLIC_API_URL en .env si el gateway vive en un
+        # host distinto al que sirve este frontend.
+        EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-}
+    image: faceattend/frontend-web:latest
+    container_name: faceattend-frontend-web
+    mem_limit: 128m
+    cpus: "0.5"
+    depends_on:
+      kong-gateway:
+        condition: service_healthy
+    ports:
+      # 0.0.0.0: browsers (and phones on the LAN) must reach the SPA.
+      - "0.0.0.0:${FRONTEND_PORT:-8090}:80"
+    networks:
+      - faceattend-edge
+    restart: unless-stopped
+    healthcheck:
+      # nginx binds IPv4 only; `localhost` also resolves to ::1 in the
+      # container and would be refused, marking it unhealthy.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+# Browser-facing tier. `faceattend-app` and `faceattend-data` are declared by
+# back-end/docker-compose.yml and database/docker-compose.yml (same project).
+networks:
+  faceattend-edge:
+    driver: bridge

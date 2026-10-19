@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: config-006-enforce-updated-at-not-null
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              UPDATE configuration.academic_configuration SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE configuration.academic_configuration ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE configuration.security_configuration SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE configuration.security_configuration ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE configuration.biometric_update_case SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE configuration.biometric_update_case ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE quality.quality_project SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE quality.quality_project ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE quality.quality_evaluation SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE quality.quality_evaluation ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE quality.quality_evaluation_item SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE quality.quality_evaluation_item ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE quality.process_assessment SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE quality.process_assessment ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE quality.process_assessment_rating SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE quality.process_assessment_rating ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE quality.istqb_assessment SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE quality.istqb_assessment ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE quality.istqb_assessment_item SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE quality.istqb_assessment_item ALTER COLUMN updated_at SET NOT NULL;
+      rollback:
+        - sql:
+            sql: ALTER TABLE configuration.academic_configuration ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE configuration.security_configuration ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE configuration.biometric_update_case ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE quality.quality_project ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE quality.quality_evaluation ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE quality.quality_evaluation_item ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE quality.process_assessment ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE quality.process_assessment_rating ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE quality.istqb_assessment ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE quality.istqb_assessment_item ALTER COLUMN updated_at DROP NOT NULL;

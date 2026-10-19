@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: sched-001-create-class-session-status-type
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE scheduling.class_session_status AS ENUM ('Open', 'Closed', 'Cancelled')
+      rollback:
+        - sql:
+            sql: DROP TYPE IF EXISTS scheduling.class_session_status

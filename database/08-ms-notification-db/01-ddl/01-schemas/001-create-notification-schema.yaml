@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: notif-001-create-notification-schema
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS notification;
+      rollback:
+        - sql:
+            sql: DROP SCHEMA IF EXISTS notification CASCADE;

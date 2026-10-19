@@ -1,0 +1,100 @@
+databaseChangeLog:
+  - changeSet:
+      id: notif-002-create-alert-table
+      author: Andres Gutierrez
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                schemaName: notification
+                tableName: alert
+      changes:
+        - createTable:
+            schemaName: notification
+            tableName: alert
+            columns:
+              - column:
+                  name: alert_id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_alert
+                    nullable: false
+              - column:
+                  name: academic_actor_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                  remarks: "Cross-context reference to Academic.academic_actor (NO FK)"
+              - column:
+                  name: alert_type_id
+                  type: SMALLINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: raised_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: resolved_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - createIndex:
+            schemaName: notification
+            tableName: alert
+            indexName: idx_alert_actor
+            columns:
+              - column:
+                  name: academic_actor_id
+        - createIndex:
+            schemaName: notification
+            tableName: alert
+            indexName: idx_alert_type
+            columns:
+              - column:
+                  name: alert_type_id
+        - sql:
+            sql: ALTER TABLE notification.alert ADD CONSTRAINT fk_alert_alert_type FOREIGN KEY (alert_type_id) REFERENCES notification.alert_type (alert_type_id)
+      rollback:
+        - dropTable:
+            schemaName: notification
+            tableName: alert

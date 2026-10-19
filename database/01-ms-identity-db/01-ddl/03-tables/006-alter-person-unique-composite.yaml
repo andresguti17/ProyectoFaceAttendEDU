@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-007-alter-person-unique-composite
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: ALTER TABLE identity.person DROP CONSTRAINT uq_person_document
+        - sql:
+            sql: ALTER TABLE identity.person ADD CONSTRAINT uq_person_document UNIQUE (document_type, document_number)
+      rollback:
+        - sql:
+            sql: ALTER TABLE identity.person DROP CONSTRAINT uq_person_document
+        - sql:
+            sql: ALTER TABLE identity.person ADD CONSTRAINT uq_person_document UNIQUE (document_number)

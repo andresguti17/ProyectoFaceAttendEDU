@@ -1,0 +1,72 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-authorization-schema
+      author: faceattend
+      changes:
+        - createSchema:
+            schemaName: authorization
+  - changeSet:
+      id: 002-create-authorization-tables
+      author: faceattend
+      changes:
+        - createTable:
+            schemaName: authorization
+            tableName: role
+            columns:
+              - column: {name: role_id, type: SERIAL, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_role}}
+              - column: {name: role_name, type: VARCHAR(255), constraints: {nullable: false, unique: true, uniqueConstraintName: uq_role_name}}
+              - column: {name: description, type: VARCHAR(500)}
+              - column: {name: created_at, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: updated_at, type: TIMESTAMPTZ}
+              - column: {name: deleted_at, type: TIMESTAMPTZ}
+              - column: {name: created_by, type: UUID}
+              - column: {name: updated_by, type: UUID}
+              - column: {name: deleted_by, type: UUID}
+              - column: {name: row_version, type: BIGINT, constraints: {nullable: false}}
+        - createTable:
+            schemaName: authorization
+            tableName: permission
+            columns:
+              - column: {name: permission_id, type: SERIAL, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_permission}}
+              - column: {name: permission_name, type: VARCHAR(255), constraints: {nullable: false, unique: true, uniqueConstraintName: uq_permission_name}}
+              - column: {name: description, type: VARCHAR(500)}
+              - column: {name: created_at, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: updated_at, type: TIMESTAMPTZ}
+              - column: {name: deleted_at, type: TIMESTAMPTZ}
+              - column: {name: created_by, type: UUID}
+              - column: {name: updated_by, type: UUID}
+              - column: {name: deleted_by, type: UUID}
+              - column: {name: row_version, type: BIGINT, constraints: {nullable: false}}
+        - createTable:
+            schemaName: authorization
+            tableName: role_permission
+            columns:
+              - column: {name: role_id, type: INT, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_role_permission}}
+              - column: {name: permission_id, type: INT, constraints: {nullable: false, primaryKey: true}}
+              - column: {name: assignment_date, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: created_at, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: updated_at, type: TIMESTAMPTZ}
+              - column: {name: deleted_at, type: TIMESTAMPTZ}
+              - column: {name: created_by, type: UUID}
+              - column: {name: updated_by, type: UUID}
+              - column: {name: deleted_by, type: UUID}
+              - column: {name: row_version, type: BIGINT, constraints: {nullable: false}}
+        - createTable:
+            schemaName: authorization
+            tableName: user_role
+            columns:
+              - column: {name: user_id, type: UUID, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_user_role}}
+              - column: {name: role_id, type: INT, constraints: {nullable: false, primaryKey: true}}
+              - column: {name: assignment_date, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: created_at, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: updated_at, type: TIMESTAMPTZ}
+              - column: {name: deleted_at, type: TIMESTAMPTZ}
+              - column: {name: created_by, type: UUID}
+              - column: {name: updated_by, type: UUID}
+              - column: {name: deleted_by, type: UUID}
+              - column: {name: row_version, type: BIGINT, constraints: {nullable: false}}
+      rollback:
+        - dropTable: {schemaName: authorization, tableName: user_role}
+        - dropTable: {schemaName: authorization, tableName: role_permission}
+        - dropTable: {schemaName: authorization, tableName: permission}
+        - dropTable: {schemaName: authorization, tableName: role}

@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-006-create-justification-table
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE attendance.justification (
+                justification_id BIGSERIAL NOT NULL,
+                attendance_record_id BIGINT NOT NULL,
+                justification_type_id INT NOT NULL,
+                reason TEXT NOT NULL,
+                submitted_at TIMESTAMP NOT NULL,
+                reviewed_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                reviewed_at TIMESTAMP NULL,
+                review_status attendance.review_status NOT NULL DEFAULT 'Pending',
+                resolution_notes TEXT NULL,
+                created_at TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL,
+                updated_by UUID NULL,
+                deleted_by UUID NULL,
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT justification_pkey PRIMARY KEY (justification_id)
+              )
+        - sql:
+            sql: ALTER TABLE attendance.justification ADD CONSTRAINT uq_justification_attendance_record UNIQUE (attendance_record_id)
+        - sql:
+            sql: ALTER TABLE attendance.justification ADD CONSTRAINT fk_justification_attendance_record FOREIGN KEY (attendance_record_id) REFERENCES attendance.attendance_record (attendance_record_id) ON DELETE CASCADE
+        - sql:
+            sql: ALTER TABLE attendance.justification ADD CONSTRAINT fk_justification_type FOREIGN KEY (justification_type_id) REFERENCES attendance.justification_type (justification_type_id)
+        - createIndex:
+            schemaName: attendance
+            tableName: justification
+            indexName: idx_justification_type
+            columns:
+              - column:
+                  name: justification_type_id
+        - createIndex:
+            schemaName: attendance
+            tableName: justification
+            indexName: idx_justification_reviewer
+            columns:
+              - column:
+                  name: reviewed_by
+      rollback:
+        - dropTable:
+            schemaName: attendance
+            tableName: justification

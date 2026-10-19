@@ -1,0 +1,81 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-002-create-program-table
+      author: Andres Gutierrez
+      changes:
+        - createTable:
+            schemaName: academic
+            tableName: program
+            columns:
+              - column:
+                  name: program_id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: school_id
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE academic.program ADD CONSTRAINT uq_program_code_school UNIQUE (school_id, code)
+        - sql:
+            sql: ALTER TABLE academic.program ADD CONSTRAINT fk_program_school FOREIGN KEY (school_id) REFERENCES academic.school (school_id) ON DELETE CASCADE
+      rollback:
+        - dropTable:
+            schemaName: academic
+            tableName: program

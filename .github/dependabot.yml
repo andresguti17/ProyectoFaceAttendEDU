@@ -1,0 +1,83 @@
+version: 2
+
+updates:
+  # ── Java (Maven) ──
+  - package-ecosystem: maven
+    directory: /back-end/01-ms-identity
+    schedule: { interval: weekly }
+  - package-ecosystem: maven
+    directory: /back-end/02-ms-authorization
+    schedule: { interval: weekly }
+  - package-ecosystem: maven
+    directory: /back-end/04-ms-scheduling
+    schedule: { interval: weekly }
+  - package-ecosystem: maven
+    directory: /back-end/05-ms-attendance
+    schedule: { interval: weekly }
+
+  # ── TypeScript/Node (npm) ──
+  - package-ecosystem: npm
+    directory: /back-end/03-ms-academic
+    schedule: { interval: weekly }
+  - package-ecosystem: npm
+    directory: /back-end/07-ms-configuration
+    schedule: { interval: weekly }
+  - package-ecosystem: npm
+    directory: /back-end/09-ms-quality
+    schedule: { interval: weekly }
+  - package-ecosystem: npm
+    directory: /front-end/Mobile
+    schedule: { interval: weekly }
+  - package-ecosystem: npm
+    directory: /front-end/Web
+    schedule: { interval: weekly }
+  - package-ecosystem: npm
+    directory: /tools/seed-api-test-data
+    schedule: { interval: weekly }
+
+  # ── Python (poetry) ──
+  - package-ecosystem: pip
+    directory: /back-end/06-ms-biometric
+    schedule: { interval: weekly }
+
+  # ── Go ──
+  - package-ecosystem: gomod
+    directory: /back-end/08-ms-notification
+    schedule: { interval: weekly }
+
+  # ── Docker base images (one entry per Dockerfile) ──
+  - package-ecosystem: docker
+    directory: /back-end/01-ms-identity
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directory: /back-end/02-ms-authorization
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directory: /back-end/03-ms-academic
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directory: /back-end/04-ms-scheduling
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directory: /back-end/05-ms-attendance
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directory: /back-end/06-ms-biometric
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directory: /back-end/07-ms-configuration
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directory: /back-end/08-ms-notification
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directory: /back-end/09-ms-quality
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directory: /front-end/Web
+    schedule: { interval: weekly }
+
+  # ── GitHub Actions ──
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }

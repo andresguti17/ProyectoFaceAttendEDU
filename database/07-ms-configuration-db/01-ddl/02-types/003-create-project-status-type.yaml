@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: qual-002-create-project-status-type
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE quality.project_status AS ENUM ('Planned', 'Active', 'Closed')
+      rollback:
+        - sql:
+            sql: DROP TYPE IF EXISTS quality.project_status

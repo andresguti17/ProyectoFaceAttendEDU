@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: config-001-create-biometric-type
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE configuration.biometric_type AS ENUM ('FACIAL', 'FINGERPRINT')
+      rollback:
+        - sql:
+            sql: DROP TYPE IF EXISTS configuration.biometric_type

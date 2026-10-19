@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-001-create-fn-validate-enrollment-status
+      author: Andres Gutierrez
+      changes:
+        - sqlFile:
+            path: 001-create-fn-validate-enrollment-status.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+      rollback:
+        - sqlFile:
+            path: 001-create-fn-validate-enrollment-status-rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+
+  - changeSet:
+      id: acad-002-create-trigger-enrollment-status-validation
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: >
+              CREATE TRIGGER trg_validate_enrollment_status
+              BEFORE INSERT OR UPDATE ON academic.enrollment
+              FOR EACH ROW
+              EXECUTE FUNCTION academic.fn_validate_enrollment_status();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_validate_enrollment_status ON academic.enrollment;

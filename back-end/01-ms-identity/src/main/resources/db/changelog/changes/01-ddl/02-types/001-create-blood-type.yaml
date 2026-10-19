@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-blood-type
+      author: copilot
+      changes:
+        - createType:
+            typeName: blood_type
+            asEnum: "A+;A-;B+;B-;AB+;AB-;O+;O-"
+      rollback:
+        - dropType:
+            typeName: blood_type

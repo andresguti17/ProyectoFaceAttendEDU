@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: sched-004-enforce-updated-at-not-null
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              UPDATE scheduling.environment SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE scheduling.environment ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE scheduling.schedule_block SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE scheduling.schedule_block ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE scheduling.class_session SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE scheduling.class_session ALTER COLUMN updated_at SET NOT NULL;
+      rollback:
+        - sql:
+            sql: ALTER TABLE scheduling.environment ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE scheduling.schedule_block ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE scheduling.class_session ALTER COLUMN updated_at DROP NOT NULL;

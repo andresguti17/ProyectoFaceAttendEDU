@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: qual-001-create-quality-schema
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS quality;
+      rollback:
+        - sql:
+            sql: DROP SCHEMA IF EXISTS quality CASCADE;
