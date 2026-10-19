@@ -1,9 +1,9 @@
 # FaceAttend EDU — Producción con Neon (PostgreSQL externo)
-# Incluye: Liquibase, Microservicios, MongoDB, Redis, Kafka, Kong, Portainer
+# Incluye: Microservicios, MongoDB, Redis, Kafka, Kong, Portainer
+# Las migraciones Liquibase NO van aqui: las ejecuta el job deploy-database contra Neon.
 # PostgreSQL 17 corre en Neon (no local)
 # Uso: docker compose -f docker-compose.prod.yml --env-file .env.prod up --build -d
 include:
-  - ./database/docker-compose.neon.yml
   # Base y overrides en una sola entrada: Compose los fusiona antes de validar.
   # Como includes separados, el base se valida solo y falla por depender de un
   # servicio `postgres` que en producción no existe (la base está en Neon).
@@ -28,20 +28,8 @@ services:
       - faceattend-edge
       - faceattend-app
 
-networks:
-  faceattend-edge:
-    name: faceattend-edge
-    driver: bridge
-  faceattend-app:
-    name: faceattend-app
-    driver: bridge
-  faceattend-data:
-    name: faceattend-data
-    driver: bridge
-    # Este network no está alcanzable desde edge (aislamiento)
-
+# Las redes (faceattend-edge/app/data) y los volumenes mongo_data, redis_data y
+# kafka_data ya los define back-end/docker-compose.yml, que se importa arriba.
+# Volver a declararlos aqui da "conflicts with imported resource" en Compose 2.40.
 volumes:
   portainer_data:
-  mongo_data:
-  redis_data:
-  kafka_data:
