@@ -15,6 +15,15 @@ function fakeAlertRepo() {
     async update(id: number, patch: any) { const row = store.get(id); if (!row) return null; Object.assign(row, patch); return row; },
     async softDelete(id: number) { return store.delete(id); },
     async findByActorAndType() { return []; },
+    async findFiltered(filter: any) {
+      let rows = [...store.values()];
+      if (filter.actorId !== undefined) rows = rows.filter((r) => r.academicActorId === filter.actorId);
+      if (filter.typeId !== undefined) rows = rows.filter((r) => r.alertTypeId === filter.typeId);
+      if (filter.resolved !== undefined) rows = rows.filter((r) => (r.resolvedAt != null) === filter.resolved);
+      const offset = filter.offset ?? 0;
+      const limit = filter.limit;
+      return limit !== undefined ? rows.slice(offset, offset + limit) : rows.slice(offset);
+    },
   };
 }
 function fakeAlertTypeRepo(row: any) {
@@ -43,5 +52,33 @@ describe('alert routes — scope filtering', () => {
     await app.inject({ method: 'POST', url: '/api/v1/alerts', payload: { academicActorId: 1, alertTypeId: 1 } });
     await new Promise((r) => setImmediate(r));
     expect(spy).toHaveBeenCalled();
+  });
+
+  it('filters actorId at the repository layer before paginating, like the Go FindAll', async () => {
+    const app = Fastify();
+    const alerts = fakeAlertRepo();
+    // Nine other actors' alerts come first; actor 5's alert would be pushed
+    // off a limit=5 unfiltered page if the filter were applied in-memory
+    // after pagination instead of in the (fake) SQL layer.
+    for (let actorId = 10; actorId < 19; actorId++) {
+      await alerts.create({ academicActorId: actorId, alertTypeId: 1 });
+    }
+    await alerts.create({ academicActorId: 5, alertTypeId: 1 });
+    jest.spyOn(actorScope, 'resolveActorScope').mockResolvedValue(null);
+    await registerNotificationRoutes(app, { alerts: alerts as any, alertTypes: fakeAlertTypeRepo({ alertTypeId: 1, channel: 'DASHBOARD' }) });
+    const res = await app.inject({ method: 'GET', url: '/api/v1/alerts?actorId=5&limit=5' });
+    expect(res.json().alerts).toHaveLength(1);
+    expect(res.json().alerts[0].academicActorId).toBe(5);
+  });
+
+  it('POST /api/v1/alerts 404s on a nonexistent alertTypeId and persists nothing', async () => {
+    const app = Fastify();
+    const alerts = fakeAlertRepo();
+    const createSpy = jest.spyOn(alerts, 'create');
+    await registerNotificationRoutes(app, { alerts: alerts as any, alertTypes: fakeAlertTypeRepo(null) });
+    const res = await app.inject({ method: 'POST', url: '/api/v1/alerts', payload: { academicActorId: 1, alertTypeId: 999 } });
+    expect(res.statusCode).toBe(404);
+    expect(createSpy).not.toHaveBeenCalled();
+    expect(await alerts.list()).toHaveLength(0);
   });
 });

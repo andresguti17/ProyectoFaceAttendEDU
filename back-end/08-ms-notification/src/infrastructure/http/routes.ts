@@ -90,6 +90,8 @@ export async function registerNotificationRoutes(
       if (!parsed.success) return send400(reply, 'Invalid alert payload', parsed.error.flatten());
 
       const alertType = await repos.alertTypes.findById(parsed.data.alertTypeId);
+      if (!alertType) return notFound(reply);
+
       const created = await repos.alerts.create({
         academicActorId: parsed.data.academicActorId,
         alertTypeId: parsed.data.alertTypeId,
@@ -131,17 +133,14 @@ export async function registerNotificationRoutes(
       const typeId = query?.typeId !== undefined ? Number(query.typeId) : undefined;
       const resolved = resolvedFilterFrom(query);
 
-      const all = await repos.alerts.list({ limit, offset });
-      const filtered = all.filter((a) => {
-        if (actorId !== undefined && a.academicActorId !== actorId) return false;
-        if (typeId !== undefined && a.alertTypeId !== typeId) return false;
-        if (resolved !== undefined) {
-          const isResolved = a.resolvedAt != null;
-          if (isResolved !== resolved) return false;
-        }
-        return actorAllowed(scope, a.academicActorId);
-      });
-      return reply.send({ alerts: filtered });
+      // actorId/typeId/resolved narrow the SQL query itself, combined with
+      // limit/offset — matching the Go `AlertRepository.FindAll`. Only the
+      // caller's actor scope is filtered afterward, in memory, because it is
+      // derived at request time and not a column the repository can push
+      // into its own WHERE clause (same as the Go handler's `actorAllowed`).
+      const page = await repos.alerts.findFiltered({ actorId, typeId, resolved, limit, offset });
+      const visible = page.filter((a) => actorAllowed(scope, a.academicActorId));
+      return reply.send({ alerts: visible });
     });
 
     app.get(`${base}/:id`, async (req, reply) => {
