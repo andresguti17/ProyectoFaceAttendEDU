@@ -1,0 +1,86 @@
+name: Deploy backend (EC2)
+
+# Despliega los microservicios + Kong + infraestructura en EC2 por SSH.
+# Usa ssh/scp del propio runner (sin acciones de terceros para la clave).
+# Reutilizable (workflow_call) desde deploy-production.yml, y manual (workflow_dispatch).
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "GitHub environment que aprueba el despliegue"
+        type: string
+        default: production
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Destino del despliegue"
+        type: choice
+        options: [production]
+        default: production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-backend-${{ inputs.environment || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: ec2 / ${{ inputs.environment || 'production' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'production' }}
+    env:
+      EC2_HOST: ${{ vars.EC2_HOST }}
+      EC2_USER: ${{ vars.EC2_USER }}
+      EC2_DEPLOY_DIR: ${{ vars.EC2_DEPLOY_DIR }}
+      EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+      EC2_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+      ENV_PROD_FILE: ${{ secrets.ENV_PROD_FILE }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validar configuración de EC2
+        run: |
+          for var in EC2_HOST EC2_USER EC2_DEPLOY_DIR EC2_SSH_KEY EC2_KNOWN_HOSTS; do
+            if [ -z "${!var}" ]; then
+              echo "::error::Falta la variable/secret $var en el environment ${{ inputs.environment || 'production' }}"
+              exit 1
+            fi
+          done
+
+      - name: Preparar clave SSH y known_hosts
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$EC2_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      # Solo si el secret ENV_PROD_FILE está definido. Si no, se usa el .env.prod que ya existe en el host.
+      - name: Sincronizar .env.prod en EC2
+        if: env.ENV_PROD_FILE != ''
+        run: |
+          printf '%s\n' "$ENV_PROD_FILE" | ssh \
+            -i ~/.ssh/deploy_key \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "$EC2_USER@$EC2_HOST" \
+            "umask 077 && cat > '$EC2_DEPLOY_DIR/.env.prod'"
+
+      - name: Desplegar en EC2
+        run: |
+          ssh \
+            -i ~/.ssh/deploy_key \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "$EC2_USER@$EC2_HOST" \
+            "DEPLOY_DIR='$EC2_DEPLOY_DIR' DEPLOY_SHA='$GITHUB_SHA' bash -s" \
+            < .github/scripts/deploy-backend-remote.sh
+
+      - name: Limpiar clave SSH
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

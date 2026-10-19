@@ -1,0 +1,56 @@
+name: Deploy production
+
+# Orquestador de producción. Orden: CI → Neon (migraciones) → EC2 (backend) → Vercel (frontend).
+# Cada job de despliegue usa el environment `production`, que exige aprobación manual.
+# push a main: despliega todo. workflow_dispatch: elige `target`.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Qué desplegar"
+        type: choice
+        options: [all, database, backend, frontend]
+        default: all
+
+permissions:
+  contents: read
+
+# Un solo despliegue de producción a la vez.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    name: ci
+    uses: ./.github/workflows/ci.yml
+
+  database:
+    name: database
+    needs: ci
+    if: ${{ needs.ci.result == 'success' && (github.event_name == 'push' || inputs.target == 'all' || inputs.target == 'database') }}
+    uses: ./.github/workflows/deploy-database.yml
+    with:
+      environment: production
+    secrets: inherit
+
+  backend:
+    name: backend
+    needs: [ci, database]
+    if: ${{ always() && needs.ci.result == 'success' && (needs.database.result == 'success' || needs.database.result == 'skipped') && (github.event_name == 'push' || inputs.target == 'all' || inputs.target == 'backend') }}
+    uses: ./.github/workflows/deploy-backend.yml
+    with:
+      environment: production
+    secrets: inherit
+
+  frontend:
+    name: frontend
+    needs: [ci, backend]
+    if: ${{ always() && needs.ci.result == 'success' && (needs.backend.result == 'success' || needs.backend.result == 'skipped') && (github.event_name == 'push' || inputs.target == 'all' || inputs.target == 'frontend') }}
+    uses: ./.github/workflows/deploy-frontend.yml
+    with:
+      environment: production
+    secrets: inherit
