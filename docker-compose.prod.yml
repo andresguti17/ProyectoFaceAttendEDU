@@ -28,8 +28,33 @@ services:
       - faceattend-edge
       - faceattend-app
 
+  # Caddy — TLS (Let's Encrypt) delante de Kong. Sirve https://$API_DOMAIN.
+  caddy:
+    image: caddy:2-alpine
+    container_name: faceattend-caddy
+    mem_limit: 128m
+    cpus: "0.25"
+    restart: unless-stopped
+    depends_on:
+      kong-gateway:
+        condition: service_healthy
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?API_DOMAIN is required (DNS name pointing to this host)}
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+      - "0.0.0.0:443:443/udp" # HTTP/3
+    volumes:
+      - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - faceattend-edge
+
 # Las redes (faceattend-edge/app/data) y los volumenes mongo_data, redis_data y
 # kafka_data ya los define back-end/docker-compose.yml, que se importa arriba.
 # Volver a declararlos aqui da "conflicts with imported resource" en Compose 2.40.
 volumes:
   portainer_data:
+  caddy_data:
+  caddy_config:
