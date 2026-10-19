@@ -1,15 +1,17 @@
-FROM golang:1.25-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
-COPY go.mod go.sum* ./
+COPY package*.json ./
+RUN npm ci
 COPY . .
-RUN go mod tidy && go mod download
-RUN CGO_ENABLED=0 go build -o /app/server ./cmd/server
+RUN npm run build
 
-# Runtime con shell para que el healthcheck (wget/curl) funcione.
-# distroless no tiene shell y rompe healthcheck -> usar alpine.
-FROM alpine:3.20
-RUN apk add --no-cache ca-certificates curl wget && addgroup -S app && adduser -S app -G app
-COPY --from=builder /app/server /server
-USER app
+FROM node:20-slim
+RUN apt-get update && apt-get install -y wget curl && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+COPY --from=builder /app/dist ./dist
+RUN chown -R node:node /app
+USER node
 EXPOSE 8088
-ENTRYPOINT ["/server"]
+CMD ["node","dist/main.js"]
