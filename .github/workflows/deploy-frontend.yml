@@ -49,14 +49,6 @@ jobs:
         working-directory: front-end/Web
         run: npm test
 
-      # DIAGNÓSTICO TEMPORAL: quitar después de resolver el acceso al token.
-      - name: Diagnose Vercel token
-        run: |
-          npx --yes vercel@64.5.0 whoami --token "$VERCEL_TOKEN" 2>&1 | sed 's/[A-Za-z0-9]\{20,\}/[redacted]/g' || true
-          npx --yes vercel@64.5.0 teams ls --token "$VERCEL_TOKEN" 2>&1 | head -20 || true
-          npx --yes vercel@64.5.0 project inspect faceattend-frontend --scope face-attend-edu --token "$VERCEL_TOKEN" 2>&1 | head -20 || true
-          npx --yes vercel@64.5.0 project inspect "$VERCEL_PROJECT_ID" --scope face-attend-edu --token "$VERCEL_TOKEN" 2>&1 | head -20 || true
-
       # Build remoto en Vercel: usa las variables del proyecto (EXPO_PUBLIC_API_URL
       # debe estar definida en Vercel → Settings → Environment Variables).
       - name: Deploy to Vercel
