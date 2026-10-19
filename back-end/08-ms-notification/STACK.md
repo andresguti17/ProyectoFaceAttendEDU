@@ -1,44 +1,52 @@
 # STACK — 08-ms-notification
 
-> **Stack ADR-005:** `Go 1.22 + Gin` · **Guía:** `../../fae-docs/_stacks/go.md`
+> **Stack ADR-005:** `TypeScript 5 + Node 20 + Fastify 4` · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
 > **Database:** `../database/08-ms-notification-db` (schema `notification`) · **Puerto:** `8088` · **Dominio:** `06-data/domains/07-notification.md`
 
 ## Decisión (ADR-005 §7)
 
-**Best option: Go 1.22 + Gin (17/25)** — lightweight 2 tables, tiny binary.
+**Implementado: TS + Fastify (22/25)** — lightweight 2 tables, fastest to implement. La opción Go + Gin (17/25) del análisis original fue descartada en la reescritura.
 
 | # | Option | Perf | Eco | Learn | Lib | Ops | Total | Notes |
 |---|--------|:----:|:---:|:-----:|:---:|:---:|-------|-------|
-| **1** | **Go + Gin** | 5 | 3 | 2 | 3 | 4 | **17** | 5-10 MB binary, ideal low-complexity. |
-| 2 | TS + Fastify | 4 | 4 | 5 | 4 | 5 | 22 | 20 min coding, fastest to implement. |
+| 1 | Go + Gin | 5 | 3 | 2 | 3 | 4 | 17 | 5-10 MB binary, ideal low-complexity. (descartada) |
+| **2** | **TS + Fastify** | 4 | 4 | 5 | 4 | 5 | **22** | 20 min coding, fastest to implement. (implementada) |
 | 3 | TS + NestJS | 3 | 5 | 4 | 5 | 4 | 21 | Overkill 2 tables. |
 | 4 | Python + FastAPI | 3 | 4 | 4 | 4 | 4 | 19 | Different runtime trivial. |
 | 5 | Java + Spring Boot | 4 | 5 | 2 | 5 | 3 | 19 | 2 tables don't need Spring. |
 
-**Rationale:** Smallest footprint, simplicity for alert lifecycle raised→resolved, low-risk Go learning (5-10 MB).
+**Rationale:** Mismo runtime Node que Academic (03) y Configuration (07), CRUD simple sobre 2 tablas y consumo de eventos Kafka con `kafkajs`.
 
-## Estructura hexagonal (go.md)
+## Estructura hexagonal
 
 ```
-internal/
-├── domain/ entity.go, event.go, port/in.go+out.go
-├── application/usecase/ create_alert.go
-└── infrastructure/
-    ├── http/handler/ alert_handler.go + dto
-    ├── postgres/ alert_repository.go
-    └── config/wire.go
-cmd/server/main.go
-migrations/
+src/
+├── domain/
+│   ├── entities/         Alert.ts, AlertType.ts
+│   └── ports/out/        IAlertRepository.ts, IAlertTypeRepository.ts, ICrudRepository.ts
+├── infrastructure/
+│   ├── http/             routes.ts, authGuard.ts, permissions.ts, actorScope.ts, qualityMiddleware.ts
+│   ├── persistence/      postgres/ (alert, alert-type, crud), schema.ts, errors.ts
+│   ├── messaging/        justification.consumer.ts (kafkajs)
+│   ├── email/            render.ts, sender.ts (nodemailer)
+│   ├── webhook/          notifier.ts
+│   └── db/               database.ts (drizzle + pg)
+└── main.ts
+drizzle/                  migraciones generadas (drizzle-kit)
 ```
 
-## Dependencias (go.mod)
+## Dependencias (package.json)
 
-Gin 1.9, validator 10, pgx 5, golang-migrate 4, otel, zap.
+Fastify 4.26, drizzle-orm 0.36, pg 8.11, kafkajs 2.2, nodemailer 6.9, pino 8.16, zod 3.22.
+Dev: drizzle-kit 0.31, typescript 5.4, jest 29 + ts-jest, supertest, testcontainers.
 
 ## Ejecución
 
 ```bash
-go run ./cmd/server/...  # 8088
-go test ./...
+npm install
+npm run dev     # 8088 (ts-node-dev, src/main.ts)
+npm run build   # tsc -> dist/
+npm start       # node dist/main.js
+npm test        # jest
 ```

@@ -13,7 +13,7 @@ ms/
 ├── 05-ms-attendance/        → Attendance (asistencia, justificaciones)         Java Spring Boot 8085
 ├── 06-ms-biometric/         → Biometric (embeddings facial/dactilar)           Python FastAPI 8086 + MongoDB
 ├── 07-ms-configuration/     → Configuration (parámetros + biometric_update_case) TS Fastify 8087
-├── 08-ms-notification/      → Notification (alertas)                           Go Gin 8088
+├── 08-ms-notification/      → Notification (alertas)                           TS Fastify 8088
 ├── 09-ms-quality/           → Quality (instrumento ISO 25010, evaluaciones)    TS Fastify 8089
 ├── 99-api-gateway/          → API Gateway (Kong OSS DB-less + Redis)           Kong 8000/8001
 └── ../database/             → Migraciones Liquibase (8 schemas, 1 BD faceattend_db)
@@ -27,12 +27,11 @@ Fuente canónica de modelo: `../../fae-docs/06-data/domains/*.md` ; Stack: `ADR-
 
 ### 2.1 Patron: Arquitectura Hexagonal (Puertos y Adaptadores)
 
-Todos los servicios 01-08 siguen hexagonal (`_stacks/java-spring.md`, `node-typescript.md`, `python-fastapi.md`, `go.md`). Gateway 99 es infra (no hexagonal).
+Todos los servicios 01-08 siguen hexagonal (`_stacks/java-spring.md`, `node-typescript.md`, `python-fastapi.md`). Gateway 99 es infra (no hexagonal).
 
 - **Java (01,02,04,05):** `src/main/java/.../domain` (POJO sin Spring) → `application/usecase` → `infrastructure/web,persistence,messaging` — ver `_stacks/java-spring.md`
-- **TypeScript (03,07):** `src/domain` → `application/use-cases` → `infrastructure/http,persistence,messaging` → `main.ts` — ver `_stacks/node-typescript.md`
+- **TypeScript (03,07,08):** `src/domain` → `application/use-cases` → `infrastructure/http,persistence,messaging` → `main.ts` — ver `_stacks/node-typescript.md`
 - **Python (06):** `domain/` → `application/use_cases` → `infrastructure/web,persistence,messaging` → `main.py + alembic/` — ver `_stacks/python-fastapi.md`
-- **Go (08):** `internal/domain` → `internal/application/usecase` → `internal/infrastructure/http,postgres,kafka` → `cmd/server/main.go` — ver `_stacks/go.md`
 
 ### 2.2 Stack Tecnologico Base (ADR-005 + ADR-007)
 
@@ -45,7 +44,7 @@ Todos los servicios 01-08 siguen hexagonal (`_stacks/java-spring.md`, `node-type
 | Attendance 05 | Java 21 | Spring Boot 4.1.1 | 8085 | PostgreSQL attendance | @Transactional ACID crítico |
 | Biometric 06 | Python 3.12 | FastAPI | 8086 | MongoDB biometric | OpenCV/pymongo vector — único viable |
 | Configuration 07 | TypeScript | Fastify | 8087 | PostgreSQL configuration | CRUD trivial 3 tablas |
-| Notification 08 | Go 1.22 | Gin | 8088 | PostgreSQL notification | Binario 5-10 MB para 2 tablas |
+| Notification 08 | TypeScript | Fastify + Drizzle | 8088 | PostgreSQL notification | Mismo stack que Academic/Configuration; 2 tablas |
 | Gateway 99 | — | Kong OSS 3.6 DB-less + Redis 7 | 8000/8001 | Redis cache | Plugins JWT/rate-limit/CORS, kong.yml declarativo (ADR-007) |
 
 Ver `ADR-005-technology-stack.md` para scoring y `ADR-007-api-gateway.md` para gateway.
@@ -55,12 +54,11 @@ Ver `ADR-005-technology-stack.md` para scoring y `ADR-007-api-gateway.md` para g
 | Lenguaje | Servicios | Total | Imagen |
 |----------|-----------|-------|--------|
 | **Java 21** | Identity, Authorization, Scheduling, Attendance | 4/8 | ~200 MB spring-boot |
-| **TypeScript** | Academic (Drizzle), Configuration | 2/8 | ~50 MB node-slim |
+| **TypeScript** | Academic (Drizzle), Configuration, Notification | 3/8 | ~50 MB node-slim |
 | **Python 3.12** | Biometric | 1/8 | ~150 MB python-slim |
-| **Go 1.22** | Notification | 1/8 | ~8 MB distroless |
 | **Kong/Redis** | Gateway 99 (infra) | — | kong:3.6 + redis:7-alpine (compartido, red `faceattend-app`) |
 
-Polyglot modular monolith: JVM + Node + Python + Go + Kong. 4 runtimes + gateway.
+Polyglot modular monolith: JVM + Node + Python + Kong. 3 runtimes + gateway.
 
 ### 2.4 Comunicacion entre Servicios
 
@@ -107,7 +105,7 @@ Polyglot modular monolith: JVM + Node + Python + Go + Kong. 4 runtimes + gateway
 ### 3.7 Configuration (`07-ms-configuration`) — TS Fastify 8087
 **Responsabilidad:** `academic_configuration`, `security_configuration`, `biometric_update_case` — Ver `06-data/domains/08-configuration.md` (dominio 08 mapea a 07 tras reorden)
 
-### 3.8 Notification (`08-ms-notification`) — Go Gin 8088
+### 3.8 Notification (`08-ms-notification`) — TS Fastify 8088
 **Responsabilidad:** `alert_type`, `alert` sobre `academic_actor` — Ver `06-data/domains/07-notification.md` (dominio 07 mapea a 08)
 
 ### 3.9 Quality (`09-ms-quality`) — TS Fastify 8089
@@ -137,7 +135,7 @@ Polyglot modular monolith: JVM + Node + Python + Go + Kong. 4 runtimes + gateway
                8085 Java                  │
                      │                    ▼
               BIOMETRIC  ←──────── NOTIFICATION
-              8086 Python         8088 Go
+              8086 Python         8088 TS
 ```
 
 Audit eliminado. Gateway es edge; Attendance es critical path ACID; Biometric es MongoDB vector.
@@ -192,14 +190,11 @@ cd back-end/99-api-gateway && docker compose up -d  # solo Kong (requiere el sta
 # Java 01,02,04,05
 ./mvnw spring-boot:run
 
-# TS 03,07
+# TS 03,07,08
 npm run dev
 
 # Python 06
 uvicorn main:app --reload --port 8086
-
-# Go 08
-go run cmd/server/main.go
 
 # Kong 99
 docker compose up -d && curl http://localhost:8001/
@@ -227,7 +222,7 @@ curl http://localhost:8000/api/v1/persons  # via Kong
 | Attendance 05 | `05-ms-attendance/...` | Java Spring Boot | Pendiente |
 | Biometric 06 | `06-ms-biometric/...` | Python FastAPI | Pendiente |
 | Configuration 07 | `07-ms-configuration/...` | TS Fastify | Pendiente |
-| Notification 08 | `08-ms-notification/...` | Go Gin | Pendiente |
+| Notification 08 | `08-ms-notification/...` | TS Fastify+Drizzle | Pendiente |
 | Gateway 99 | `99-api-gateway/SERVICE.md` + `kong/kong.yml` | Kong OSS | Infra |
 
 Audit excluido por solicitud. Ver `DATABASE.md` y `../../fae-docs/06-data/domains` + `ADR-005/007` + `_stacks/`.
