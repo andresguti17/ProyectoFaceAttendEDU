@@ -76,7 +76,7 @@ Restricciones conocidas:
 - Variable de build: `EXPO_PUBLIC_API_URL` (apunta al Kong de EC2). Se define en Vercel, no en el repo.
 
 Secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID` (`team_2JCO0Yx1M33zt4GzqEH7tJHl`),
-`VERCEL_PROJECT_ID` (`prj_M7w8tE9MQnciAmdrZyvyAOst5T2N`). Los IDs no son secretos; el token sí.
+`VERCEL_PROJECT_ID` (`prj_oewuFADHAfJ5CE2R3qhqJG0ExX41`). Los IDs no son secretos; el token sí.
 
 ### 2.5 `deploy-production.yml` (orquestador)
 

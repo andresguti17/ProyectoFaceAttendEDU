@@ -66,7 +66,7 @@ El directorio `EC2_DEPLOY_DIR` debe ser un clon de este repo con `origin` accesi
 |---|---|---|
 | `VERCEL_TOKEN` | secret | token creado en Vercel → Account Settings → Tokens |
 | `VERCEL_ORG_ID` | secret | `team_2JCO0Yx1M33zt4GzqEH7tJHl` |
-| `VERCEL_PROJECT_ID` | secret | `prj_M7w8tE9MQnciAmdrZyvyAOst5T2N` |
+| `VERCEL_PROJECT_ID` | secret | `prj_oewuFADHAfJ5CE2R3qhqJG0ExX41` |
 
 `EXPO_PUBLIC_API_URL` se define en Vercel (Settings → Environment Variables), apuntando al Kong de EC2.
 
