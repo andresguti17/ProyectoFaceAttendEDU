@@ -9,21 +9,28 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_URL": "http://localhost:8000"
-      }
+      },
+      "channel": "development"
     },
     "preview": {
       "distribution": "internal",
-      "android": { "buildType": "apk" },
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://ec2-77-113-116-1.us-east-2.compute.amazonaws.com:8000"
-      }
+        "EXPO_PUBLIC_API_URL": "https://faceattend-edu.duckdns.org"
+      },
+      "channel": "preview"
     },
     "production": {
       "autoIncrement": true,
-      "android": { "buildType": "apk" },
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://ec2-77-113-116-1.us-east-2.compute.amazonaws.com:8000"
-      }
+        "EXPO_PUBLIC_API_URL": "https://faceattend-edu.duckdns.org"
+      },
+      "channel": "production"
     }
   },
   "submit": {
