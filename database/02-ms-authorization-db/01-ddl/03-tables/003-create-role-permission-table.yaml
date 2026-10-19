@@ -1,0 +1,72 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-003-create-role-permission-table
+      author: Andres Gutierrez
+      changes:
+        - createTable:
+            tableName: role_permission
+            schemaName: authorization
+            columns:
+              - column:
+                  name: role_id
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: permission_id
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: assignment_date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValue: 1
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: role_permission
+            schemaName: authorization
+            columnNames: role_id, permission_id
+        - sql:
+            sql: ALTER TABLE "authorization".role_permission ADD CONSTRAINT fk_role_permission_role_id FOREIGN KEY (role_id) REFERENCES "authorization".role (role_id) ON DELETE CASCADE
+        - sql:
+            sql: ALTER TABLE "authorization".role_permission ADD CONSTRAINT fk_role_permission_permission_id FOREIGN KEY (permission_id) REFERENCES "authorization".permission (permission_id) ON DELETE CASCADE
+      rollback:
+        - dropTable:
+            tableName: role_permission
+            schemaName: authorization

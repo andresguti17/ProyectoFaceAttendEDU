@@ -1,0 +1,79 @@
+databaseChangeLog:
+  - changeSet:
+      id: sched-001-create-environment-table
+      author: Andres Gutierrez
+      changes:
+        - createTable:
+            schemaName: scheduling
+            tableName: environment
+            columns:
+              - column:
+                  name: environment_id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: school_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    remarks: "Cross-context reference to Academic.school (NO FK)"
+              - column:
+                  name: code
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: capacity
+                  type: SMALLINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+              - column:
+                  name: updated_by
+                  type: UUID
+              - column:
+                  name: deleted_by
+                  type: UUID
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE scheduling.environment ADD CONSTRAINT uq_environment_code_school UNIQUE (school_id, code)
+        - sql:
+            sql: ALTER TABLE scheduling.environment ADD CONSTRAINT chk_environment_capacity CHECK (capacity > 0)
+      rollback:
+        - dropTable:
+            schemaName: scheduling
+            tableName: environment

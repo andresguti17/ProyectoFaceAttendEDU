@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - include:
+      file: ../01-ddl/changelog.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: ../04-tcl/changelog.yaml
+      relativeToChangelogFile: true
+  # Después de los triggers: el bootstrap de 02-dml no fija updated_at a mano,
+  # depende de fn_audit_timestamps() (04-tcl) para completarlo. Antes de este
+  # reordenamiento, una base nueva fallaba en el primer INSERT con
+  # "null value in column updated_at violates not-null constraint" porque
+  # 02-dml corría antes de que el trigger existiera.
+  - include:
+      file: ../02-dml/changelog.yaml
+      relativeToChangelogFile: true
+  # Drop diferido: trg_city_audit_timestamps (04-tcl) necesita que identity.city
+  # todavía exista para poder crearse. DROP TABLE se lleva el trigger consigo,
+  # así que el resultado final es el mismo, solo que ahora el orden es correcto.
+  - include:
+      file: ../01-ddl/03-tables/008-drop-city-table.yaml
+      relativeToChangelogFile: true

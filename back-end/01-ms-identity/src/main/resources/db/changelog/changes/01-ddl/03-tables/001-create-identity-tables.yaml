@@ -1,0 +1,247 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-identity-tables
+      author: copilot
+      changes:
+        - createTable:
+            tableName: school
+            columns:
+              - column:
+                  name: school_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_school
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: nit
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uq_school_nit
+              - column:
+                  name: address
+                  type: VARCHAR(255)
+              - column:
+                  name: district
+                  type: VARCHAR(255)
+                  remarks: Distrito / zona a la que pertenece el colegio
+              - column:
+                  name: phone
+                  type: VARCHAR(50)
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+              - column:
+                  name: status
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+        - createTable:
+            tableName: person
+            columns:
+              - column:
+                  name: person_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_person
+              - column:
+                  name: school_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+              - column:
+                  name: phone
+                  type: VARCHAR(50)
+              - column:
+                  name: rh
+                  type: blood_type
+              - column:
+                  name: status
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+        - createTable:
+            tableName: '"user"'
+            columns:
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_user
+              - column:
+                  name: person_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uq_user_person
+              - column:
+                  name: username
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uq_user_username
+              - column:
+                  name: password_hash
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: authentication_type
+                  type: VARCHAR(50)
+                  remarks: Local, Windows, External
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: last_access
+                  type: TIMESTAMP
+        - createTable:
+            tableName: user_session
+            columns:
+              - column:
+                  name: session_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_user_session
+              - column:
+                  name: user_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_date
+                  type: TIMESTAMP
+              - column:
+                  name: source_ip
+                  type: VARCHAR(45)
+              - column:
+                  name: session_status
+                  type: VARCHAR(50)
+                  remarks: Active or Closed
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            constraintName: uq_person_email_school
+            tableName: person
+            columnNames: school_id,email
+        - createIndex:
+            indexName: idx_person_school
+            tableName: person
+            columns:
+              - column:
+                  name: school_id
+        - createIndex:
+            indexName: idx_session_user
+            tableName: user_session
+            columns:
+              - column:
+                  name: user_id
+        - createIndex:
+            indexName: idx_session_status
+            tableName: user_session
+            columns:
+              - column:
+                  name: session_status
+        - addForeignKeyConstraint:
+            constraintName: fk_person_school
+            baseTableName: person
+            baseColumnNames: school_id
+            referencedTableName: school
+            referencedColumnNames: school_id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            constraintName: fk_user_person
+            baseTableName: '"user"'
+            baseColumnNames: person_id
+            referencedTableName: person
+            referencedColumnNames: person_id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            constraintName: fk_user_session_user
+            baseTableName: user_session
+            baseColumnNames: user_id
+            referencedTableName: '"user"'
+            referencedColumnNames: user_id
+            onDelete: CASCADE
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: user_session
+            constraintName: fk_user_session_user
+        - dropForeignKeyConstraint:
+            baseTableName: '"user"'
+            constraintName: fk_user_person
+        - dropForeignKeyConstraint:
+            baseTableName: person
+            constraintName: fk_person_school
+        - dropTable:
+            tableName: user_session
+        - dropTable:
+            tableName: '"user"'
+        - dropTable:
+            tableName: person
+        - dropTable:
+            tableName: school

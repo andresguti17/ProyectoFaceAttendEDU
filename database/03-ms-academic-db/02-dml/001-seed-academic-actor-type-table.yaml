@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-001-seed-academic-actor-type-table
+      author: Andres Gutierrez
+      context: seed
+      splitStatements: false
+      changes:
+        - sql:
+            sql: >
+              INSERT INTO academic.academic_actor_type (actor_type_id, code, name, created_at, updated_at, row_version)
+              VALUES
+                (1, 'STUDENT', 'Estudiante/Aprendiz', NOW(), NOW(), 1),
+                (2, 'INSTRUCTOR', 'Docente/Instructor', NOW(), NOW(), 1);
+      rollback:
+        - sql:
+            sql: DELETE FROM academic.academic_actor_type WHERE actor_type_id IN (1, 2);

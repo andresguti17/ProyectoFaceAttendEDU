@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-001-seed-role-table
+      author: Andres Gutierrez
+      context: seed
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO "authorization".role (role_id, role_name, description, created_at, updated_at, row_version) VALUES
+                (1, 'SUPER_ADMIN', 'Super administrador del sistema', NOW(), NOW(), 1),
+                (2, 'SCHOOL_ADMIN', 'Administrador de sede', NOW(), NOW(), 1),
+                (3, 'INSTRUCTOR', 'Docente/Instructor', NOW(), NOW(), 1),
+                (4, 'STUDENT', 'Estudiante/Aprendiz', NOW(), NOW(), 1)
+      rollback:
+        - sql:
+            sql: DELETE FROM "authorization".role;

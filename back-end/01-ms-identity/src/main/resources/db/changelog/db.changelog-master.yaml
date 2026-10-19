@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - include:
+      file: classpath:db/changelog/changes/01-ddl/02-types/001-create-blood-type.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: classpath:db/changelog/changes/01-ddl/03-tables/001-create-identity-tables.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: classpath:db/changelog/changes/01-ddl/03-tables/002-create-city-policy-tables.yaml
+      relativeToChangelogFile: false

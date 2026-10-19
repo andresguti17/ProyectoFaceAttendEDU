@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-002-create-authentication-type
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE identity.authentication_type AS ENUM ('Local', 'Windows', 'External')
+      rollback:
+        - sql:
+            sql: DROP TYPE IF EXISTS identity.authentication_type

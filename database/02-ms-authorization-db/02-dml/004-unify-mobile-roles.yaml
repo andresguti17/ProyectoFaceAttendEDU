@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-004-unify-mobile-roles
+      author: FaceAttendEDU
+      context: seed
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              -- 1. Merge legacy roles into mobile names when both exist (idempotent:
+              -- safe on fresh DBs and on retries). NULL subqueries match nothing.
+              DELETE FROM "authorization".role_permission WHERE role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'SUPER_ADMIN') AND EXISTS (SELECT 1 FROM "authorization".role WHERE role_name = 'Administrador');
+              DELETE FROM "authorization".user_role ur WHERE ur.role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'SUPER_ADMIN') AND EXISTS (SELECT 1 FROM "authorization".user_role ur2 WHERE ur2.user_id = ur.user_id AND ur2.role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'Administrador'));
+              UPDATE "authorization".user_role SET role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'Administrador') WHERE role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'SUPER_ADMIN') AND EXISTS (SELECT 1 FROM "authorization".role WHERE role_name = 'Administrador');
+              DELETE FROM "authorization".role WHERE role_name = 'SUPER_ADMIN' AND EXISTS (SELECT 1 FROM "authorization".role WHERE role_name = 'Administrador');
+              UPDATE "authorization".role SET role_name = 'Administrador', description = 'Rol Mobile: acceso total', updated_at = NOW() WHERE role_name = 'SUPER_ADMIN';
+              DELETE FROM "authorization".role_permission WHERE role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'INSTRUCTOR') AND EXISTS (SELECT 1 FROM "authorization".role WHERE role_name = 'Instructor');
+              DELETE FROM "authorization".user_role ur WHERE ur.role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'INSTRUCTOR') AND EXISTS (SELECT 1 FROM "authorization".user_role ur2 WHERE ur2.user_id = ur.user_id AND ur2.role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'Instructor'));
+              UPDATE "authorization".user_role SET role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'Instructor') WHERE role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'INSTRUCTOR') AND EXISTS (SELECT 1 FROM "authorization".role WHERE role_name = 'Instructor');
+              DELETE FROM "authorization".role WHERE role_name = 'INSTRUCTOR' AND EXISTS (SELECT 1 FROM "authorization".role WHERE role_name = 'Instructor');
+              UPDATE "authorization".role SET role_name = 'Instructor', description = 'Rol Mobile: docencia y asistencia', updated_at = NOW() WHERE role_name = 'INSTRUCTOR';
+              DELETE FROM "authorization".role_permission WHERE role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'STUDENT') AND EXISTS (SELECT 1 FROM "authorization".role WHERE role_name = 'Aprendiz');
+              DELETE FROM "authorization".user_role ur WHERE ur.role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'STUDENT') AND EXISTS (SELECT 1 FROM "authorization".user_role ur2 WHERE ur2.user_id = ur.user_id AND ur2.role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'Aprendiz'));
+              UPDATE "authorization".user_role SET role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'Aprendiz') WHERE role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'STUDENT') AND EXISTS (SELECT 1 FROM "authorization".role WHERE role_name = 'Aprendiz');
+              DELETE FROM "authorization".role WHERE role_name = 'STUDENT' AND EXISTS (SELECT 1 FROM "authorization".role WHERE role_name = 'Aprendiz');
+              UPDATE "authorization".role SET role_name = 'Aprendiz', description = 'Rol Mobile: consulta propia', updated_at = NOW() WHERE role_name = 'STUDENT';
+              -- 2. Ensure the 3 mobile roles exist (renames above already cover the fresh-DB case).
+              INSERT INTO "authorization".role (role_name, description, created_at, updated_at, row_version) VALUES
+                ('Administrador', 'Rol Mobile: acceso total', NOW(), NOW(), 1),
+                ('Instructor', 'Rol Mobile: docencia y asistencia', NOW(), NOW(), 1),
+                ('Aprendiz', 'Rol Mobile: consulta propia', NOW(), NOW(), 1)
+              ON CONFLICT (role_name) DO NOTHING;
+              DELETE FROM "authorization".user_role ur WHERE ur.role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'SCHOOL_ADMIN') AND EXISTS (SELECT 1 FROM "authorization".user_role ur2 WHERE ur2.user_id = ur.user_id AND ur2.role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'Administrador'));
+              UPDATE "authorization".user_role SET role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'Administrador') WHERE role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'SCHOOL_ADMIN');
+              DELETE FROM "authorization".role_permission WHERE role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'SCHOOL_ADMIN');
+              DELETE FROM "authorization".role WHERE role_name = 'SCHOOL_ADMIN';
+              INSERT INTO "authorization".role_permission (role_id, permission_id, assignment_date, created_at, updated_at, row_version)
+              SELECT r.role_id, p.permission_id, NOW(), NOW(), NOW(), 1 FROM "authorization".role r CROSS JOIN "authorization".permission p WHERE r.role_name = 'Administrador'
+              ON CONFLICT DO NOTHING;
+              INSERT INTO "authorization".role_permission (role_id, permission_id, assignment_date, created_at, updated_at, row_version)
+              SELECT r.role_id, p.permission_id, NOW(), NOW(), NOW(), 1 FROM "authorization".role r CROSS JOIN "authorization".permission p WHERE r.role_name = 'Instructor' AND p.permission_name IN ('identity.person:read', 'scheduling.session:manage', 'attendance.record:read', 'attendance.record:write', 'attendance.justification:approve', 'biometric.case:request', 'biometric.case:review', 'notification.alert:read')
+              ON CONFLICT DO NOTHING;
+              INSERT INTO "authorization".role_permission (role_id, permission_id, assignment_date, created_at, updated_at, row_version)
+              SELECT r.role_id, p.permission_id, NOW(), NOW(), NOW(), 1 FROM "authorization".role r CROSS JOIN "authorization".permission p WHERE r.role_name = 'Aprendiz' AND p.permission_name IN ('identity.person:read', 'attendance.record:read', 'biometric.case:request', 'notification.alert:read')
+              ON CONFLICT DO NOTHING;
+              SELECT setval(pg_get_serial_sequence('authorization.role', 'role_id'), COALESCE((SELECT MAX(role_id) FROM "authorization".role), 0) + 1, false);
+      rollback:
+        - sql:
+            splitStatements: true
+            sql: |
+              DELETE FROM "authorization".role_permission WHERE role_id IN (SELECT role_id FROM "authorization".role WHERE role_name IN ('Administrador', 'Instructor', 'Aprendiz'));

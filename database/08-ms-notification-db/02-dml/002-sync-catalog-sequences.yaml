@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: notif-002-sync-catalog-sequences
+      author: Andres Gutierrez
+      context: seed
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              SELECT setval(
+                pg_get_serial_sequence('notification.alert_type', 'alert_type_id'),
+                COALESCE((SELECT MAX(alert_type_id) FROM notification.alert_type), 0) + 1,
+                false
+              );
+      rollback:
+        - sql:
+            sql: SELECT setval(pg_get_serial_sequence('notification.alert_type', 'alert_type_id'), 1, false);

@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - include:
+      file: 001-seed-role-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 002-seed-permission-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 003-sync-catalog-sequences.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 004-unify-mobile-roles.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 005-bootstrap-admin-role-assignment.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 006-bootstrap-demo-role-assignments.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 007-split-super-admin-role.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 008-justification-request-permission.yaml
+      relativeToChangelogFile: true

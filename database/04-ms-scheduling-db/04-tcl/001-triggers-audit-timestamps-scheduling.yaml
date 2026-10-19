@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: sched-001-triggers-audit-timestamps-scheduling
+      author: Andres Gutierrez
+      changes:
+        - sqlFile:
+            path: 001-triggers-audit-timestamps-scheduling.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_timestamps
+              BEFORE INSERT OR UPDATE ON scheduling.environment
+              FOR EACH ROW
+              EXECUTE FUNCTION scheduling.fn_audit_timestamps();
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_timestamps
+              BEFORE INSERT OR UPDATE ON scheduling.schedule_block
+              FOR EACH ROW
+              EXECUTE FUNCTION scheduling.fn_audit_timestamps();
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_timestamps
+              BEFORE INSERT OR UPDATE ON scheduling.class_session
+              FOR EACH ROW
+              EXECUTE FUNCTION scheduling.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_timestamps ON scheduling.environment;
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_timestamps ON scheduling.schedule_block;
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_timestamps ON scheduling.class_session;
+        - sqlFile:
+            path: 001-triggers-audit-timestamps-scheduling-rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false

@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-007-split-super-admin-role
+      author: FaceAttendEDU
+      context: seed
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              -- 1. The unified catalog (004) left a single "Administrador" for both
+              -- the global admin and per-school admins. Reintroduce an explicit
+              -- global role (idempotent: safe on fresh DBs and retries).
+              INSERT INTO "authorization".role (role_name, description, created_at, updated_at, row_version)
+              VALUES ('Super Administrador', 'Rol Web: administrador global sin sede', NOW(), NOW(), 1)
+              ON CONFLICT (role_name) DO NOTHING;
+              INSERT INTO "authorization".role_permission (role_id, permission_id, assignment_date, created_at, updated_at, row_version)
+              SELECT r.role_id, p.permission_id, NOW(), NOW(), NOW(), 1 FROM "authorization".role r CROSS JOIN "authorization".permission p WHERE r.role_name = 'Super Administrador'
+              ON CONFLICT DO NOTHING;
+              -- 2. The bootstrap admin (admin.faceattend) becomes the global super
+              -- admin; every other Administrador keeps managing its own school.
+              DELETE FROM "authorization".user_role WHERE user_id = '22222222-2222-4222-8222-222222222222' AND role_id IN (SELECT role_id FROM "authorization".role WHERE role_name = 'Administrador');
+              INSERT INTO "authorization".user_role (user_id, role_id, assignment_date, created_at, updated_at, row_version)
+              SELECT '22222222-2222-4222-8222-222222222222', role_id, NOW(), NOW(), NOW(), 1 FROM "authorization".role WHERE role_name = 'Super Administrador'
+              ON CONFLICT DO NOTHING;
+              SELECT setval(pg_get_serial_sequence('authorization.role', 'role_id'), COALESCE((SELECT MAX(role_id) FROM "authorization".role), 0) + 1, false);
+      rollback:
+        - sql:
+            splitStatements: true
+            sql: |
+              UPDATE "authorization".user_role SET role_id = (SELECT role_id FROM "authorization".role WHERE role_name = 'Administrador')
+              WHERE user_id = '22222222-2222-4222-8222-222222222222' AND role_id IN (SELECT role_id FROM "authorization".role WHERE role_name = 'Super Administrador');
+              DELETE FROM "authorization".role_permission WHERE role_id IN (SELECT role_id FROM "authorization".role WHERE role_name = 'Super Administrador');
+              DELETE FROM "authorization".role WHERE role_name = 'Super Administrador';

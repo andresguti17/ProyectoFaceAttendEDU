@@ -1,0 +1,70 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-010-drop-city-table
+      author: Andres Gutierrez
+      comment: >
+        identity.city is deprecated per AGENTS.md: cities come from the external
+        countriesnow.space API, not from a local catalog. Unused by both frontends
+        (Mobile calls the external API directly; Web's listCities()/cityById()
+        wrappers have no call sites) and unreferenced by any other table.
+      changes:
+        - dropTable:
+            schemaName: identity
+            tableName: city
+      rollback:
+        - createTable:
+            schemaName: identity
+            tableName: city
+            columns:
+              - column:
+                  name: city_id
+                  type: INT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: department
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false

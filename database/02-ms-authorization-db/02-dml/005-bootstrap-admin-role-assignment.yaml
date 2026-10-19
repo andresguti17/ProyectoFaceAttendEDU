@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-005-bootstrap-admin-role-assignment
+      author: FaceAttendEDU
+      context: seed
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO "authorization".user_role (user_id, role_id, assignment_date, created_at, updated_at, row_version)
+              SELECT '22222222-2222-4222-8222-222222222222', role_id, NOW(), NOW(), NOW(), 1 FROM "authorization".role WHERE role_name = 'Administrador'
+              ON CONFLICT DO NOTHING;
+      rollback:
+        - sql:
+            sql: DELETE FROM "authorization".user_role WHERE user_id = '22222222-2222-4222-8222-222222222222';

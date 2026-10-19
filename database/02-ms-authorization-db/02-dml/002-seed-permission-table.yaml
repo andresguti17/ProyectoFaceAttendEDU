@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-002-seed-permission-table
+      author: Andres Gutierrez
+      context: seed
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO "authorization".permission (permission_id, permission_name, description, created_at, updated_at, row_version) VALUES
+                (1, 'identity.person:read', 'View persons', NOW(), NOW(), 1),
+                (2, 'identity.person:write', 'Create/update persons', NOW(), NOW(), 1),
+                (3, 'academic.school:manage', 'Manage schools', NOW(), NOW(), 1),
+                (4, 'academic.enrollment:manage', 'Manage enrollments', NOW(), NOW(), 1),
+                (5, 'scheduling.session:manage', 'Manage sessions and schedule', NOW(), NOW(), 1),
+                (6, 'attendance.record:read', 'View attendance records', NOW(), NOW(), 1),
+                (7, 'attendance.record:write', 'Create/update attendance', NOW(), NOW(), 1),
+                (8, 'attendance.justification:approve', 'Approve justifications', NOW(), NOW(), 1),
+                (9, 'biometric.case:request', 'Request biometric update', NOW(), NOW(), 1),
+                (10, 'biometric.case:review', 'Review biometric updates', NOW(), NOW(), 1),
+                (11, 'configuration:manage', 'Manage configuration', NOW(), NOW(), 1),
+                (12, 'notification.alert:read', 'View alerts', NOW(), NOW(), 1)
+      rollback:
+        - sql:
+            sql: DELETE FROM "authorization".permission;

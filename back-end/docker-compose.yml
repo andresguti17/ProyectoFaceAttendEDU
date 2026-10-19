@@ -1,0 +1,586 @@
+# FaceAttend EDU — application tier (microservices + Kong + MongoDB/Redis/Kafka).
+# Not standalone: run it from FULL/ (docker compose up), which includes this
+# file together with database/docker-compose.yml — PostgreSQL lives THERE
+# (data layer, Liquibase migrations). Only MongoDB, Redis and Kafka are defined
+# here; the 8 bounded-context schemas are created by ../database/database-init.
+services:
+  # ──────────────────────────────────────────────────────────────
+  # Infrastructure — MongoDB, Redis, Kafka (KRaft)
+  # ADR-003 MongoDB, ADR-006 Kafka, ADR-015 Redis, DB per service
+  # ──────────────────────────────────────────────────────────────
+  mongodb:
+    image: mongo:7
+    container_name: faceattend-mongo
+    # Was 768m: it now also hosts ms-biometric's facial/fingerprint
+    # templates + match logs + the merged face-auth collections, and was
+    # observed pinned at the limit (760Mi/768Mi) — tight enough that the
+    # healthcheck's own `mongosh` process couldn't start in time, which
+    # cascaded into every dependent service staying stuck at "Created".
+    mem_limit: 1536m
+    cpus: "1.0"
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-mongoadmin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-mongopass}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-faceattend_biometric}
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - faceattend-data
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --eval \"db.adminCommand('ping')\" --quiet || mongosh --eval \"db.adminCommand('ping')\" --quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    container_name: faceattend-redis
+    mem_limit: 128m
+    cpus: "0.5"
+    restart: unless-stopped
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - faceattend-app
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Kafka KRaft (sin Zookeeper) — apache/kafka reemplaza bitnami/kafka:3.7 (imagen eliminada de Docker Hub)
+  kafka:
+    image: apache/kafka:3.8.0
+    container_name: faceattend-kafka
+    mem_limit: 1g
+    cpus: "1.0"
+    restart: unless-stopped
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${KAFKA_PORT:-9092}:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: "faceattend-kraft-cluster-id-0001"
+    volumes:
+      - kafka_data:/var/lib/kraft-combined-logs
+    networks:
+      - faceattend-data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ──────────────────────────────────────────────────────────────
+  # Java — Spring Boot 4.1.1 / JDK 21 (ADR-005 §1,2,4,5)
+  # 01 identity 8081, 02 authorization 8082, 04 scheduling 8084, 05 attendance 8085
+  # Hexagonal: _stacks/java-spring.md
+  # ──────────────────────────────────────────────────────────────
+  ms-identity:
+    build:
+      context: ./01-ms-identity
+      dockerfile: Dockerfile
+    image: faceattend/ms-identity:latest
+    container_name: faceattend-ms-identity
+    mem_limit: 1g
+    cpus: "1.0"
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      # El canal de correo (recuperación de contraseña) sale hacia notification.
+      ms-notification:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db?stringtype=unspecified}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-postgres}
+      SPRING_DATASOURCE_HIKARI_SCHEMA: identity
+      SPRING_DATA_REDIS_HOST: redis
+      FACEATTEND_RECOVERY_STORE: redis
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_CREATE_NAMESPACES: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
+      FACEATTEND_AUTH_IDENTITY_URL: http://ms-identity:8081
+      FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8082
+      # Alcance por rol de /persons: fichas (scheduling) y matrículas (academic).
+      FACEATTEND_AUTH_ACADEMIC_URL: http://ms-academic:8083
+      FACEATTEND_AUTH_SCHEDULING_URL: http://ms-scheduling:8084
+      # Canal de correo: identity llama por HTTP a POST /api/v1/emails (SERVICE.md §4.4).
+      FACEATTEND_NOTIFICATION_BASE_URL: http://ms-notification:8088
+      FACEATTEND_NOTIFICATION_INTERNAL_TOKEN: "${EMAIL_INTERNAL_TOKEN:-}"
+      SERVER_PORT: 8081
+    ports:
+      - "${BIND_IP:-127.0.0.1}:8081:8081"
+    networks:
+      - faceattend-app
+      - faceattend-data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8081/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  ms-authorization:
+    build:
+      context: ./02-ms-authorization
+      dockerfile: Dockerfile
+    image: faceattend/ms-authorization:latest
+    container_name: faceattend-ms-authorization
+    mem_limit: 1g
+    cpus: "1.0"
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-postgres}
+      SPRING_DATASOURCE_HIKARI_SCHEMA: authorization
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_CREATE_NAMESPACES: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
+      FACEATTEND_AUTH_IDENTITY_URL: http://ms-identity:8081
+      FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8082
+      SERVER_PORT: 8082
+    ports:
+      - "${BIND_IP:-127.0.0.1}:8082:8082"
+    networks:
+      - faceattend-app
+      - faceattend-data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8082/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  ms-scheduling:
+    build:
+      context: ./04-ms-scheduling
+      dockerfile: Dockerfile
+    image: faceattend/ms-scheduling:latest
+    container_name: faceattend-ms-scheduling
+    mem_limit: 1g
+    cpus: "1.0"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db?stringtype=unspecified}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-postgres}
+      SPRING_DATASOURCE_HIKARI_SCHEMA: scheduling
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_CREATE_NAMESPACES: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
+      FACEATTEND_AUTH_IDENTITY_URL: http://ms-identity:8081
+      FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8082
+      FACEATTEND_AUTH_ACADEMIC_URL: http://ms-academic:8083
+      SERVER_PORT: 8084
+    ports:
+      - "${BIND_IP:-127.0.0.1}:8084:8084"
+    networks:
+      - faceattend-app
+      - faceattend-data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8084/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  ms-attendance:
+    build:
+      context: ./05-ms-attendance
+      dockerfile: Dockerfile
+    image: faceattend/ms-attendance:latest
+    container_name: faceattend-ms-attendance
+    mem_limit: 1g
+    cpus: "1.0"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      JAVA_OPTS: "-Xmx768m"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}?stringtype=unspecified
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_HIKARI_SCHEMA: attendance
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER:-mongoadmin}:${MONGO_PASSWORD:-mongopass}@mongodb:27017/${MONGO_DB:-faceattend_biometric}?authSource=admin
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_CREATE_NAMESPACES: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
+      FACEATTEND_AUTH_IDENTITY_URL: http://ms-identity:8081
+      FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8082
+      # Alcance por actor: matrículas (academic) y fichas que dicta el instructor (scheduling).
+      FACEATTEND_AUTH_ACADEMIC_URL: http://ms-academic:8083
+      FACEATTEND_AUTH_SCHEDULING_URL: http://ms-scheduling:8084
+      SERVER_PORT: 8085
+    ports:
+      - "${BIND_IP:-127.0.0.1}:8085:8085"
+    networks:
+      - faceattend-app
+      - faceattend-data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health | grep -q '\"status\":\"UP\"' || curl -sf http://localhost:8085/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ──────────────────────────────────────────────────────────────
+  # TypeScript — Fastify + Drizzle / pg (ADR-005 §3, §9)
+  # 03 academic 8083 (Drizzle), 07 configuration 8087
+  # Hexagonal: _stacks/node-typescript.md
+  # ──────────────────────────────────────────────────────────────
+  ms-academic:
+    build:
+      context: ./03-ms-academic
+      dockerfile: Dockerfile
+    image: faceattend/ms-academic:latest
+    container_name: faceattend-ms-academic
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      PG_SCHEMA: academic
+      PORT: 8083
+      # Session + RBAC guard: sessions come from identity, permissions from authorization.
+      IDENTITY_URL: http://ms-identity:8081
+      AUTHORIZATION_URL: http://ms-authorization:8082
+      KAFKA_BROKERS: kafka:29092
+      NODE_ENV: production
+    ports:
+      - "${BIND_IP:-127.0.0.1}:8083:8083"
+    networks:
+      - faceattend-app
+      - faceattend-data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  ms-configuration:
+    build:
+      context: ./07-ms-configuration
+      dockerfile: Dockerfile
+    image: faceattend/ms-configuration:latest
+    container_name: faceattend-ms-configuration
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      PG_SCHEMA: configuration
+      PORT: 8087
+      # Session + RBAC guard: sessions come from identity, permissions from authorization.
+      IDENTITY_URL: http://ms-identity:8081
+      AUTHORIZATION_URL: http://ms-authorization:8082
+      # Biometric case scope (caseScope.ts): school of the caller, via academic_actor.
+      ACADEMIC_URL: http://ms-academic:8083
+      KAFKA_BROKERS: kafka:29092
+      NODE_ENV: production
+    ports:
+      - "${BIND_IP:-127.0.0.1}:8087:8087"
+    networks:
+      - faceattend-app
+      - faceattend-data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ──────────────────────────────────────────────────────────────
+  # Python — FastAPI + Motor (ADR-005 §6)
+  # 06 biometric 8086 — MongoDB vector search, OpenCV/dlib (incluye lo que antes
+  # era 10-ms-face-auth / github.com/Jonas7891/face-auth: registro de rostro,
+  # reconocimiento facial y huella, ahora bajo /api/v1/biometric/*)
+  # Hexagonal: _stacks/python-fastapi.md
+  # ──────────────────────────────────────────────────────────────
+  ms-biometric:
+    build:
+      context: ./06-ms-biometric
+      dockerfile: Dockerfile
+    image: faceattend/ms-biometric:latest
+    container_name: faceattend-ms-biometric
+    mem_limit: 1g
+    cpus: "1.0"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      MONGODB_URL: mongodb://${MONGO_USER:-mongoadmin}:${MONGO_PASSWORD:-mongopass}@mongodb:27017/${MONGO_DB:-faceattend_biometric}?authSource=admin
+      PORT: 8086
+      # Session + RBAC guard: sessions come from identity, permissions from authorization.
+      IDENTITY_URL: http://ms-identity:8081
+      AUTHORIZATION_URL: http://ms-authorization:8082
+      # Alcance de update-request (sede del llamante/persona), vía academic_actor.
+      ACADEMIC_URL: http://ms-academic:8083
+      # Casos de actualización biométrica (RN-29) para re-registrar el propio rostro.
+      CONFIGURATION_URL: http://ms-configuration:8087
+      KAFKA_BROKERS: kafka:29092
+      BIOMETRIC_FINGERPRINT_MATCH_THRESHOLD: ${BIOMETRIC_FINGERPRINT_MATCH_THRESHOLD:-8}
+      # >= 32 chars; firma los retos de prueba de vida (liveness), nunca un JWT
+      # de sesión — el servicio no emite sesiones, delega en identity/authorization.
+      # Sin fallback a propósito, igual que el resto de secretos del stack.
+      BIOMETRIC_LIVENESS_CHALLENGE_SECRET: ${BIOMETRIC_LIVENESS_CHALLENGE_SECRET:?Set BIOMETRIC_LIVENESS_CHALLENGE_SECRET in .env (>= 32 random chars)}
+      BIOMETRIC_LIVENESS_TTL_SECONDS: ${BIOMETRIC_LIVENESS_TTL_SECONDS:-120}
+      BIOMETRIC_RATE_LIMIT_MAX_ATTEMPTS: ${BIOMETRIC_RATE_LIMIT_MAX_ATTEMPTS:-20}
+      BIOMETRIC_RATE_LIMIT_WINDOW_SECONDS: ${BIOMETRIC_RATE_LIMIT_WINDOW_SECONDS:-60}
+      BIOMETRIC_MAX_IMAGE_BYTES: ${BIOMETRIC_MAX_IMAGE_BYTES:-3145728}
+      BIOMETRIC_MAX_IMAGE_PIXELS: ${BIOMETRIC_MAX_IMAGE_PIXELS:-16000000}
+      # WebSocket channel (SERVICE.md §4.5): all optional, compose defaults match Settings.
+      BIOMETRIC_WS_IDLE_TIMEOUT_SECONDS: "${BIOMETRIC_WS_IDLE_TIMEOUT_SECONDS:-60}"
+      BIOMETRIC_WS_IDEMPOTENCY_TTL_SECONDS: "${BIOMETRIC_WS_IDEMPOTENCY_TTL_SECONDS:-300}"
+      BIOMETRIC_WS_IDEMPOTENCY_MAX_ENTRIES: "${BIOMETRIC_WS_IDEMPOTENCY_MAX_ENTRIES:-2000}"
+    ports:
+      - "${BIND_IP:-127.0.0.1}:8086:8086"
+    networks:
+      - faceattend-app
+      - faceattend-data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ──────────────────────────────────────────────────────────────
+  # Go — Gin (ADR-005 §7)
+  # 08 notification 8088 — 5-10 MB distroless
+  # Hexagonal: _stacks/go.md
+  # ──────────────────────────────────────────────────────────────
+  ms-notification:
+    build:
+      context: ./08-ms-notification
+      dockerfile: Dockerfile
+    image: faceattend/ms-notification:latest
+    container_name: faceattend-ms-notification
+    mem_limit: 128m
+    cpus: "0.5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}?sslmode=disable
+      PG_SCHEMA: notification
+      PORT: 8088
+      # Session + RBAC guard: sessions come from identity, permissions from authorization.
+      IDENTITY_URL: http://ms-identity:8081
+      AUTHORIZATION_URL: http://ms-authorization:8082
+      # Alcance de alertas por actor (aprendiz: propias; instructor: sus fichas).
+      ACADEMIC_URL: http://ms-academic:8083
+      SCHEDULING_URL: http://ms-scheduling:8084
+      KAFKA_BROKERS: kafka:29092
+      # Canal de correo SMTP (SERVICE.md §9.1): SMTP_HOST vacío = deshabilitado y
+      # POST /api/v1/emails responde 202 {"status":"skipped"}. Los valores por
+      # defecto de dev (MailHog) viven en .env.example; vacío = seguro.
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USERNAME: "${SMTP_USERNAME:-}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
+      SMTP_FROM: "${SMTP_FROM:-}"
+      SMTP_STARTTLS: "${SMTP_STARTTLS:-true}"
+      SMTP_TIMEOUT_SECONDS: "${SMTP_TIMEOUT_SECONDS:-10}"
+      EMAIL_INTERNAL_TOKEN: "${EMAIL_INTERNAL_TOKEN:-}"
+      # Webhook de alertas EMAIL/PUSH (SERVICE.md §9.2): WEBHOOK_URL vacío =
+      # entrega deshabilitada (no-op), igual que SMTP_HOST arriba.
+      WEBHOOK_URL: "${WEBHOOK_URL:-}"
+      WEBHOOK_SECRET: "${WEBHOOK_SECRET:-}"
+      WEBHOOK_TIMEOUT_SECONDS: "${WEBHOOK_TIMEOUT_SECONDS:-5}"
+    ports:
+      - "${BIND_IP:-127.0.0.1}:8088:8088"
+    extra_hosts:
+      # Docker Engine en Linux no resuelve host.docker.internal (el valor por
+      # defecto de SMTP_HOST en .env.example): se mapea al host vía host-gateway.
+      # En Docker Desktop (Windows/macOS) es inocuo, ya lo resuelve él solo.
+      - "host.docker.internal:host-gateway"
+    networks:
+      - faceattend-app
+      - faceattend-data
+    restart: unless-stopped
+    healthcheck:
+      # distroless no tiene shell/wget: usar TCP check vía busybox-less workaround — base alpine lo soporta
+      # healthcheck se ejecuta en el host docker, no dentro del contenedor distroless estricto, así que usamos CMD-SHELL con wget del host
+      # Alternativa real: la app Go debe exponer /health; el check se hace con curl desde fuera — para distroless usamos tcp
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8088/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ──────────────────────────────────────────────────────────────
+  # TypeScript — Fastify (ISO/IEC 25010)
+  # 09 quality 8089 — assessment CRUD, in-memory + best-effort Kafka hook
+  # ──────────────────────────────────────────────────────────────
+  ms-quality:
+    build:
+      context: ./09-ms-quality
+      dockerfile: Dockerfile
+    image: faceattend/ms-quality:latest
+    container_name: faceattend-ms-quality
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      PG_SCHEMA: quality
+      PORT: 8089
+      # Session + RBAC guard: sessions come from identity, permissions from authorization.
+      IDENTITY_URL: http://ms-identity:8081
+      AUTHORIZATION_URL: http://ms-authorization:8082
+      KAFKA_BROKERS: kafka:29092
+      NODE_ENV: production
+    ports:
+      - "${BIND_IP:-127.0.0.1}:8089:8089"
+    networks:
+      - faceattend-app
+      - faceattend-data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8089/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ──────────────────────────────────────────────────────────────
+  # API Gateway — Kong OSS 3.6 DB-less + Redis (ADR-007, ADR-005 §10)
+  # 99 gateway 8000 proxy / 8001 admin
+  # ──────────────────────────────────────────────────────────────
+  kong-gateway:
+    image: kong:3.6
+    container_name: faceattend-kong
+    mem_limit: 2g
+    cpus: "1.0"
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      ms-identity:
+        condition: service_healthy
+      ms-authorization:
+        condition: service_healthy
+      ms-academic:
+        condition: service_healthy
+      ms-scheduling:
+        condition: service_healthy
+      ms-attendance:
+        condition: service_healthy
+      ms-biometric:
+        condition: service_healthy
+      ms-configuration:
+        condition: service_healthy
+      ms-notification:
+        condition: service_healthy
+      ms-quality:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      # Docker's embedded DNS blackholes SRV queries (~8s cold-start latency
+      # per upstream host). Same value as the standalone gateway file.
+      KONG_DNS_ORDER: 'LAST,A,AAAA,CNAME'
+      # Lets the pre-function token check call identity through resty.http.
+      KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
+    ports:
+      - "0.0.0.0:${KONG_PROXY_PORT:-8000}:8000"
+      - "${BIND_IP:-127.0.0.1}:${KONG_ADMIN_PORT:-8001}:8001"
+    volumes:
+      - ./99-api-gateway/kong/kong.yml:/kong/kong.yml:ro
+    networks:
+      - faceattend-edge
+      - faceattend-app
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Frontend web lives in FULL/docker-compose.yml (presentation concern,
+  # context ./front-end/Web). It is intentionally NOT defined here.
+networks:
+  # edge â€” browser tier: frontend-web <-> Kong proxy (:8000).
+  faceattend-edge:
+    driver: bridge
+  # app â€” service tier: Kong <-> microservices <-> Redis.
+  faceattend-app:
+    driver: bridge
+  # data â€” data tier: microservices <-> MongoDB/Kafka (PostgreSQL lives in database/).
+  faceattend-data:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  redis_data:
+  kafka_data:

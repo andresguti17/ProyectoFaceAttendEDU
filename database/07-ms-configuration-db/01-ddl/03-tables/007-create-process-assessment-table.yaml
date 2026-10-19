@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: qual-010-create-process-assessment-table
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE quality.process_assessment (
+                assessment_id BIGSERIAL NOT NULL,
+                project_id BIGINT NOT NULL, -- Proyecto ISO/IEC 29110 al que pertenece la valoración de proceso
+                process_code quality.iso29110_process NOT NULL, -- 'PM' Gestión de Proyecto | 'SI' Implementación de Software
+                assessor_name VARCHAR(200) NOT NULL,
+                assessment_status quality.evaluation_status NOT NULL DEFAULT 'Draft',
+                comments TEXT NULL,
+                process_score DECIMAL(5,1) NULL, -- % de logro del proceso 0-100 (derivado de process_assessment_rating)
+                process_rating quality.objective_rating NULL, -- Calificación agregada N/P/L/F derivada de process_score
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                updated_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                deleted_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT process_assessment_pkey PRIMARY KEY (assessment_id)
+              )
+        - createIndex:
+            schemaName: quality
+            tableName: process_assessment
+            indexName: idx_process_assessment_project
+            columns:
+              - column:
+                  name: project_id
+        - createIndex:
+            schemaName: quality
+            tableName: process_assessment
+            indexName: idx_process_assessment_process
+            columns:
+              - column:
+                  name: process_code
+        - createIndex:
+            schemaName: quality
+            tableName: process_assessment
+            indexName: idx_process_assessment_deleted
+            columns:
+              - column:
+                  name: deleted_at
+        - sql:
+            sql: ALTER TABLE quality.process_assessment ADD CONSTRAINT fk_process_assessment_project FOREIGN KEY (project_id) REFERENCES quality.quality_project (project_id) ON DELETE CASCADE
+      rollback:
+        - dropTable:
+            schemaName: quality
+            tableName: process_assessment

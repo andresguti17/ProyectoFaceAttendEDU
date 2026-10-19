@@ -1,0 +1,13 @@
+{
+  "name": "seed-api-test-data",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Seed test data into FaceAttendEDU microservices for frontend-backend API testing",
+  "scripts": {
+    "seed": "node seed.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

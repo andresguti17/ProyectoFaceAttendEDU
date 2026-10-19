@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: notif-003-seed-justification-result-alert-types
+      author: Jonathan Steven Rizo Solano
+      context: seed
+      splitStatements: false
+      comment: ERF 6.3 - alerta al aprendiz cuando su justificación se aprueba o rechaza (evento JustificationReviewed).
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO notification.alert_type (code, name, severity, channel, created_at, updated_at, row_version)
+              SELECT v.code, v.name, 'INFO', 'DASHBOARD', NOW(), NOW(), 1
+                FROM (VALUES ('JUSTIFICATION_APPROVED', 'Justification approved'),
+                             ('JUSTIFICATION_REJECTED', 'Justification rejected')) AS v(code, name)
+               WHERE NOT EXISTS (SELECT 1 FROM notification.alert_type t WHERE t.code = v.code);
+      rollback:
+        - sql:
+            sql: DELETE FROM notification.alert_type WHERE code IN ('JUSTIFICATION_APPROVED', 'JUSTIFICATION_REJECTED');

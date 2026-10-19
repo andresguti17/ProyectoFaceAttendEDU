@@ -1,0 +1,84 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-001-create-audit-timestamps-function
+      author: Andres Gutierrez
+      changes:
+        - sqlFile:
+            path: 001-create-audit-timestamps-function.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+      rollback:
+        - sqlFile:
+            path: 001-create-audit-timestamps-function-rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+
+  - changeSet:
+      id: id-002-create-trigger-city
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_city_audit_timestamps
+              BEFORE INSERT OR UPDATE ON identity.city
+              FOR EACH ROW
+              EXECUTE FUNCTION identity.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_city_audit_timestamps ON identity.city;
+
+  - changeSet:
+      id: id-003-create-trigger-person
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_person_audit_timestamps
+              BEFORE INSERT OR UPDATE ON identity.person
+              FOR EACH ROW
+              EXECUTE FUNCTION identity.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_person_audit_timestamps ON identity.person;
+
+  - changeSet:
+      id: id-004-create-trigger-app-user
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_app_user_audit_timestamps
+              BEFORE INSERT OR UPDATE ON identity.app_user
+              FOR EACH ROW
+              EXECUTE FUNCTION identity.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_app_user_audit_timestamps ON identity.app_user;
+
+  - changeSet:
+      id: id-005-create-trigger-user-session
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_user_session_audit_timestamps
+              BEFORE INSERT OR UPDATE ON identity.user_session
+              FOR EACH ROW
+              EXECUTE FUNCTION identity.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_user_session_audit_timestamps ON identity.user_session;
+
+  - changeSet:
+      id: id-006-create-trigger-password-policy
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_password_policy_audit_timestamps
+              BEFORE INSERT OR UPDATE ON identity.password_policy
+              FOR EACH ROW
+              EXECUTE FUNCTION identity.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_password_policy_audit_timestamps ON identity.password_policy;

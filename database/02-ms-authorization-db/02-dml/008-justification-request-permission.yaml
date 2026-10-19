@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-008-justification-request-permission
+      author: FaceAttendEDU
+      context: seed
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              -- Aprendiz files justifications for its own absences (HU-JUS-001) but
+              -- lacks attendance.record:write; a dedicated permission keeps record
+              -- writes for staff only.
+              SELECT setval(pg_get_serial_sequence('authorization.permission', 'permission_id'), COALESCE((SELECT MAX(permission_id) FROM "authorization".permission), 0) + 1, false);
+              INSERT INTO "authorization".permission (permission_name, description, created_at, updated_at, row_version)
+              SELECT 'attendance.justification:request', 'Submit justifications and supporting documents', NOW(), NOW(), 1
+              WHERE NOT EXISTS (SELECT 1 FROM "authorization".permission WHERE permission_name = 'attendance.justification:request');
+              INSERT INTO "authorization".role_permission (role_id, permission_id, assignment_date, created_at, updated_at, row_version)
+              SELECT r.role_id, p.permission_id, NOW(), NOW(), NOW(), 1
+              FROM "authorization".role r CROSS JOIN "authorization".permission p
+              WHERE r.role_name IN ('Super Administrador', 'Administrador', 'Instructor', 'Aprendiz')
+                AND p.permission_name = 'attendance.justification:request'
+              ON CONFLICT DO NOTHING;
+      rollback:
+        - sql:
+            splitStatements: true
+            sql: |
+              DELETE FROM "authorization".role_permission WHERE permission_id IN (SELECT permission_id FROM "authorization".permission WHERE permission_name = 'attendance.justification:request');
+              DELETE FROM "authorization".permission WHERE permission_name = 'attendance.justification:request';

@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-002-create-capture-method-type
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE attendance.capture_method AS ENUM ('FACIAL', 'MANUAL', 'IOT', 'IMPORT')
+      rollback:
+        - sql:
+            sql: DROP TYPE IF EXISTS attendance.capture_method

@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-001-create-identity-schema
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS identity;
+      rollback:
+        - sql:
+            sql: DROP SCHEMA IF EXISTS identity CASCADE;

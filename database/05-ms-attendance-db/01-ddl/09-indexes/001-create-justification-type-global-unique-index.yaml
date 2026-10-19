@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-009-create-justification-type-global-unique-index
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_justification_type_global_name ON attendance.justification_type (name) WHERE school_id IS NULL
+      rollback:
+        - sql:
+            sql: DROP INDEX attendance.uq_justification_type_global_name

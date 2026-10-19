@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-002-sync-catalog-sequences
+      author: Andres Gutierrez
+      context: seed
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              SELECT setval(
+                pg_get_serial_sequence('academic.academic_actor_type', 'actor_type_id'),
+                COALESCE((SELECT MAX(actor_type_id) FROM academic.academic_actor_type), 0) + 1,
+                false
+              );
+      rollback:
+        - sql:
+            sql: SELECT setval(pg_get_serial_sequence('academic.academic_actor_type', 'actor_type_id'), 1, false);

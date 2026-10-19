@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: 001-triggers-audit-timestamps.yaml
+      relativeToChangelogFile: true

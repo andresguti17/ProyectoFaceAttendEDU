@@ -1,0 +1,83 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-005-create-justification-type-table
+      author: Andres Gutierrez
+      changes:
+        - createTable:
+            schemaName: attendance
+            tableName: justification_type
+            columns:
+              - column:
+                  name: justification_type_id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: school_id
+                  type: INT
+                  constraints:
+                    nullable: true
+                  remarks: "NULL = global type, NOT NULL = per-school custom"
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(500)
+              - column:
+                  name: requires_attachment
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+              - column:
+                  name: updated_by
+                  type: UUID
+              - column:
+                  name: deleted_by
+                  type: UUID
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE attendance.justification_type ADD CONSTRAINT uq_justification_type_school_name UNIQUE (school_id, name)
+        - createIndex:
+            schemaName: attendance
+            tableName: justification_type
+            indexName: idx_justification_type_school
+            columns:
+              - column:
+                  name: school_id
+      rollback:
+        - dropTable:
+            schemaName: attendance
+            tableName: justification_type

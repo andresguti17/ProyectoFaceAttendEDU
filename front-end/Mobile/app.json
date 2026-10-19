@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "faceattend-edu",
+    "slug": "faceattend-edu",
+    "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "enabled": false
+    },
+    "orientation": "portrait",
+    "icon": "./src/assets/images/logoFaceAttend.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": false,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "edu.faceattend.app"
+    },
+    "android": {
+      "usesCleartextTraffic": true,
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "edu.faceattend.app",
+      "statusBar": {
+        "translucent": true,
+        "backgroundColor": "#00000000"
+      }
+    },
+    "plugins": [
+      "expo-localization",
+      "@react-native-community/datetimepicker",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FaceAttend EDU needs camera access to capture your face for attendance verification."
+        }
+      ]
+    ]
+  }
+}

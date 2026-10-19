@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "biometric-service"
+version = "0.1.0"
+description = "FaceAttend EDU Biometric Service — Python FastAPI per ADR-005"
+authors = ["FaceAttend EDU Team"]
+packages = [{include = "domain"}, {include = "application"}, {include = "infrastructure"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.110.0"
+uvicorn = {extras = ["standard"], version = "^0.28.0"}
+pydantic = "^2.6.0"
+pydantic-settings = "^2.1.0"
+motor = "^3.3.0"
+pymongo = "^4.6.0"
+# headless avoids pulling libGL/X11 into the runtime image (opencv-python does not)
+opencv-python-headless = "^4.9.0"
+numpy = "^1.26.0"
+# Face image -> embedding computation (ported from 10-ms-face-auth); dlib-backed,
+# compiles from source — see the Dockerfile builder stage and CI's system_deps.
+face-recognition = "^1.3.0"
+# face-recognition does NOT pull this in on its own (the model-data package is
+# too large for a normal PyPI dependency resolution and must be pinned to its
+# git source); without it, `import face_recognition` fails at runtime with
+# "Please install face_recognition_models". Confirmed by actually installing
+# in a container: pinning this explicitly was required.
+face-recognition-models = {git = "https://github.com/ageitgey/face_recognition_models.git"}
+# face_recognition_models still imports the deprecated `pkg_resources` API
+# (setuptools) at module load time; modern venvs/Python no longer bundle
+# setuptools by default, so without this, importing face_recognition fails
+# with a misleading "install face_recognition_models" error even though it IS
+# installed — the real cause is `ModuleNotFoundError: No module named
+# 'pkg_resources'`. setuptools itself REMOVED pkg_resources starting with
+# v81 (confirmed: v84 installed without it and reproduced the same failure),
+# so this must stay pinned below that, not just present.
+setuptools = "<81"
+Pillow = "^10.0.0"
+python-multipart = "^0.0.9"
+structlog = "^24.1.0"
+httpx = "^0.27.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+pytest-asyncio = "^0.23.0"
+testcontainers = {extras = ["mongodb"], version = "^4.0.0"}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

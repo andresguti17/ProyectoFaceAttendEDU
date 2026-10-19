@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: conf-002-sync-catalog-sequences
+      author: Andres Gutierrez
+      context: seed
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              SELECT setval(
+                pg_get_serial_sequence('configuration.security_configuration', 'configuration_id'),
+                COALESCE((SELECT MAX(configuration_id) FROM configuration.security_configuration), 0) + 1,
+                false
+              );
+      rollback:
+        - sql:
+            sql: SELECT setval(pg_get_serial_sequence('configuration.security_configuration', 'configuration_id'), 1, false);

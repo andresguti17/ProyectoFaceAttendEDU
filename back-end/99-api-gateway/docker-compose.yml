@@ -1,0 +1,45 @@
+# Kong gateway — standalone developer file (optional).
+# The canonical gateway service (`kong-gateway`) lives in
+# back-end/docker-compose.yml and runs inside the FULL/ stack. Use THIS file
+# only to restart Kong alone against an already-running shared stack:
+#   cd FULL/back-end/99-api-gateway && docker compose up -d
+# Joins the shared `faceattend-edge` (frontend proxy) and `faceattend-app`
+# (microservices + `faceattend-redis` rate-limiting storage, see kong/kong.yml)
+# networks, which the FULL/ project must have created first. Same
+# container/ports/vars as the canonical definition; do not run both at once
+# (name/port collision).
+services:
+  kong:
+    image: kong:3.6
+    container_name: faceattend-kong
+    environment:
+      KONG_DATABASE: 'off'
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      # Same as back-end/docker-compose.yml: Docker embedded DNS blackholes
+      # SRV queries (~8s cold-start latency per upstream host).
+      KONG_DNS_ORDER: 'LAST,A,AAAA,CNAME'
+      KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
+    ports:
+      - '0.0.0.0:${KONG_PROXY_PORT:-8000}:8000'
+      - '${BIND_IP:-127.0.0.1}:${KONG_ADMIN_PORT:-8001}:8001'
+    volumes:
+      - ./kong/kong.yml:/kong/kong.yml:ro
+    networks:
+      - faceattend-edge
+      - faceattend-app
+    healthcheck:
+      test: ['CMD', 'kong', 'health']
+      interval: 10s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  faceattend-edge:
+    external: true
+  faceattend-app:
+    external: true

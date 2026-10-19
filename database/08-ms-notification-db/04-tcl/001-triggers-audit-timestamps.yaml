@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: notif-001-create-audit-timestamps-function
+      author: Andres Gutierrez
+      changes:
+        - sqlFile:
+            path: 001-create-audit-timestamps-function.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+      rollback:
+        - sqlFile:
+            path: 001-create-audit-timestamps-function-rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+
+  - changeSet:
+      id: notif-002-create-trigger-alert-type
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_alert_type_audit_timestamps
+              BEFORE INSERT OR UPDATE ON notification.alert_type
+              FOR EACH ROW
+              EXECUTE FUNCTION notification.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_alert_type_audit_timestamps ON notification.alert_type;
+
+  - changeSet:
+      id: notif-003-create-trigger-alert
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_alert_audit_timestamps
+              BEFORE INSERT OR UPDATE ON notification.alert
+              FOR EACH ROW
+              EXECUTE FUNCTION notification.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_alert_audit_timestamps ON notification.alert;

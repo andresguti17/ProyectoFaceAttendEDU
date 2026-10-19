@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-003-fix-fn-audit-timestamps-insert-and-attach-report
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE OR REPLACE FUNCTION attendance.fn_audit_timestamps()
+              RETURNS TRIGGER AS $$
+              BEGIN
+                IF TG_OP = 'INSERT' THEN
+                  NEW.created_at = COALESCE(NEW.created_at, now());
+                  NEW.updated_at = COALESCE(NEW.updated_at, now());
+                  NEW.row_version = COALESCE(NEW.row_version, 1);
+                  RETURN NEW;
+                ELSIF TG_OP = 'UPDATE' THEN
+                  NEW.updated_at = now();
+                  NEW.row_version = COALESCE(NEW.row_version, 1) + 1;
+                  RETURN NEW;
+                END IF;
+                RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_timestamps
+              BEFORE INSERT OR UPDATE ON attendance.attendance_report
+              FOR EACH ROW
+              EXECUTE FUNCTION attendance.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_timestamps ON attendance.attendance_report;
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE OR REPLACE FUNCTION attendance.fn_audit_timestamps()
+              RETURNS TRIGGER AS $$
+              BEGIN
+                IF TG_OP = 'INSERT' THEN
+                  NEW.created_at = COALESCE(NEW.created_at, now());
+                  NEW.row_version = COALESCE(NEW.row_version, 1);
+                  RETURN NEW;
+                ELSIF TG_OP = 'UPDATE' THEN
+                  NEW.updated_at = now();
+                  NEW.row_version = COALESCE(NEW.row_version, 1) + 1;
+                  RETURN NEW;
+                END IF;
+                RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;

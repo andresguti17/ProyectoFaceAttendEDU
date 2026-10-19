@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-003-sync-catalog-sequences
+      author: Andres Gutierrez
+      context: seed
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              SELECT setval(
+                pg_get_serial_sequence('authorization.role', 'role_id'),
+                COALESCE((SELECT MAX(role_id) FROM "authorization".role), 0) + 1,
+                false
+              );
+              SELECT setval(
+                pg_get_serial_sequence('authorization.permission', 'permission_id'),
+                COALESCE((SELECT MAX(permission_id) FROM "authorization".permission), 0) + 1,
+                false
+              );
+      rollback:
+        - sql:
+            sql: |
+              SELECT setval(pg_get_serial_sequence('authorization.role', 'role_id'), 1, false);
+              SELECT setval(pg_get_serial_sequence('authorization.permission', 'permission_id'), 1, false);

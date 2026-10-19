@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: qual-013-create-istqb-assessment-item-table
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE quality.istqb_assessment_item (
+                istqb_assessment_item_id BIGSERIAL NOT NULL,
+                istqb_assessment_id BIGINT NOT NULL,
+                item_code VARCHAR(60) NOT NULL, -- Id de ítem del catálogo ISTQB CTFL v4.0 definido en código (09-ms-quality/src/domain/istqb.ts), ej. 'tech-bva'. NO FK.
+                score SMALLINT NOT NULL, -- Likert 1-5
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                updated_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                deleted_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT istqb_assessment_item_pkey PRIMARY KEY (istqb_assessment_item_id)
+              )
+        - sql:
+            sql: ALTER TABLE quality.istqb_assessment_item ADD CONSTRAINT uq_istqb_assessment_item_code UNIQUE (istqb_assessment_id, item_code)
+        - sql:
+            sql: ALTER TABLE quality.istqb_assessment_item ADD CONSTRAINT fk_istqb_assessment_item_assessment FOREIGN KEY (istqb_assessment_id) REFERENCES quality.istqb_assessment (istqb_assessment_id) ON DELETE CASCADE
+        - sql:
+            sql: ALTER TABLE quality.istqb_assessment_item ADD CONSTRAINT chk_istqb_assessment_item_score CHECK (score BETWEEN 1 AND 5)
+      rollback:
+        - dropTable:
+            schemaName: quality
+            tableName: istqb_assessment_item

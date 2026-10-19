@@ -1,0 +1,128 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-attendance-schema
+      author: faceattend
+      changes:
+        - createSchema:
+            schemaName: attendance
+  - changeSet:
+      id: 002-create-attendance-tables
+      author: faceattend
+      changes:
+        - createTable:
+            schemaName: attendance
+            tableName: attendance_record
+            columns:
+              - column: {name: attendance_record_id, type: BIGSERIAL, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_attendance_record}}
+              - column: {name: class_session_id, type: BIGINT, constraints: {nullable: false}}
+              - column: {name: academic_actor_id, type: BIGINT, constraints: {nullable: false}}
+              - column: {name: attendance_status, type: VARCHAR(50), constraints: {nullable: false}}
+              - column: {name: capture_method, type: VARCHAR(50), constraints: {nullable: false}}
+              - column: {name: captured_at, type: TIMESTAMPTZ}
+              - column: {name: match_score, type: DECIMAL(5,4)}
+              - column: {name: created_at, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: updated_at, type: TIMESTAMPTZ}
+              - column: {name: deleted_at, type: TIMESTAMPTZ}
+              - column: {name: created_by, type: UUID}
+              - column: {name: updated_by, type: UUID}
+              - column: {name: deleted_by, type: UUID}
+              - column: {name: row_version, type: BIGINT, constraints: {nullable: false}}
+        - createTable:
+            schemaName: attendance
+            tableName: justification_type
+            columns:
+              - column: {name: justification_type_id, type: SERIAL, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_justification_type}}
+              - column: {name: school_id, type: INT}
+              - column: {name: name, type: VARCHAR(255), constraints: {nullable: false}}
+              - column: {name: description, type: VARCHAR(500)}
+              - column: {name: requires_attachment, type: BOOLEAN, constraints: {nullable: false}}
+              - column: {name: status, type: BOOLEAN, constraints: {nullable: false}}
+              - column: {name: created_at, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: updated_at, type: TIMESTAMPTZ}
+              - column: {name: deleted_at, type: TIMESTAMPTZ}
+              - column: {name: created_by, type: UUID}
+              - column: {name: updated_by, type: UUID}
+              - column: {name: deleted_by, type: UUID}
+              - column: {name: row_version, type: BIGINT, constraints: {nullable: false}}
+        - createTable:
+            schemaName: attendance
+            tableName: justification
+            columns:
+              - column: {name: justification_id, type: BIGSERIAL, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_justification}}
+              - column: {name: attendance_record_id, type: BIGINT, constraints: {nullable: false, unique: true, uniqueConstraintName: uq_justification_attendance_record}}
+              - column: {name: justification_type_id, type: INT, constraints: {nullable: false}}
+              - column: {name: reason, type: TEXT, constraints: {nullable: false}}
+              - column: {name: submitted_at, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: reviewed_by, type: UUID}
+              - column: {name: reviewed_at, type: TIMESTAMPTZ}
+              - column: {name: review_status, type: VARCHAR(50), constraints: {nullable: false}}
+              - column: {name: resolution_notes, type: TEXT}
+              - column: {name: created_at, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: updated_at, type: TIMESTAMPTZ}
+              - column: {name: deleted_at, type: TIMESTAMPTZ}
+              - column: {name: created_by, type: UUID}
+              - column: {name: updated_by, type: UUID}
+              - column: {name: deleted_by, type: UUID}
+              - column: {name: row_version, type: BIGINT, constraints: {nullable: false}}
+        - createTable:
+            schemaName: attendance
+            tableName: supporting_document
+            columns:
+              - column: {name: supporting_document_id, type: BIGSERIAL, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_supporting_document}}
+              - column: {name: justification_id, type: BIGINT, constraints: {nullable: false}}
+              - column: {name: file_name, type: VARCHAR(255), constraints: {nullable: false}}
+              - column: {name: storage_uri, type: VARCHAR(500), constraints: {nullable: false}}
+              - column: {name: mime_type, type: VARCHAR(100), constraints: {nullable: false}}
+              - column: {name: size_bytes, type: BIGINT, constraints: {nullable: false}}
+              - column: {name: created_at, type: TIMESTAMPTZ, constraints: {nullable: false}}
+              - column: {name: updated_at, type: TIMESTAMPTZ}
+              - column: {name: deleted_at, type: TIMESTAMPTZ}
+              - column: {name: created_by, type: UUID}
+              - column: {name: updated_by, type: UUID}
+              - column: {name: deleted_by, type: UUID}
+              - column: {name: row_version, type: BIGINT, constraints: {nullable: false}}
+        - addUniqueConstraint:
+            constraintName: uq_attendance_session_actor
+            schemaName: attendance
+            tableName: attendance_record
+            columnNames: class_session_id,academic_actor_id
+        - addUniqueConstraint:
+            constraintName: uq_justification_type_school_name
+            schemaName: attendance
+            tableName: justification_type
+            columnNames: school_id,name
+        - createIndex:
+            indexName: idx_attendance_actor
+            schemaName: attendance
+            tableName: attendance_record
+            columns: [{column: {name: academic_actor_id}}]
+        - createIndex:
+            indexName: idx_attendance_deleted
+            schemaName: attendance
+            tableName: attendance_record
+            columns: [{column: {name: deleted_at}}]
+        - createIndex:
+            indexName: idx_justification_type
+            schemaName: attendance
+            tableName: justification
+            columns: [{column: {name: justification_type_id}}]
+        - createIndex:
+            indexName: idx_justification_reviewer
+            schemaName: attendance
+            tableName: justification
+            columns: [{column: {name: reviewed_by}}]
+        - createIndex:
+            indexName: idx_justification_type_school
+            schemaName: attendance
+            tableName: justification_type
+            columns: [{column: {name: school_id}}]
+        - createIndex:
+            indexName: idx_document_justification
+            schemaName: attendance
+            tableName: supporting_document
+            columns: [{column: {name: justification_id}}]
+      rollback:
+        - dropTable: {schemaName: attendance, tableName: supporting_document}
+        - dropTable: {schemaName: attendance, tableName: justification}
+        - dropTable: {schemaName: attendance, tableName: justification_type}
+        - dropTable: {schemaName: attendance, tableName: attendance_record}

@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-001-create-audit-timestamps-trigger
+      author: Andres Gutierrez
+      changes:
+        - sqlFile:
+            path: 001-create-audit-timestamps-trigger.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+      rollback:
+        - sqlFile:
+            path: 001-create-audit-timestamps-trigger-rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+  - changeSet:
+      id: auth-002-create-trigger-role
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: >
+              CREATE TRIGGER trg_audit_timestamps_role
+              BEFORE INSERT OR UPDATE ON "authorization".role
+              FOR EACH ROW
+              EXECUTE FUNCTION "authorization".fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_timestamps_role ON "authorization".role;
+  - changeSet:
+      id: auth-003-create-trigger-permission
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: >
+              CREATE TRIGGER trg_audit_timestamps_permission
+              BEFORE INSERT OR UPDATE ON "authorization".permission
+              FOR EACH ROW
+              EXECUTE FUNCTION "authorization".fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_timestamps_permission ON "authorization".permission;
+  - changeSet:
+      id: auth-004-create-trigger-role-permission
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: >
+              CREATE TRIGGER trg_audit_timestamps_role_permission
+              BEFORE INSERT OR UPDATE ON "authorization".role_permission
+              FOR EACH ROW
+              EXECUTE FUNCTION "authorization".fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_timestamps_role_permission ON "authorization".role_permission;
+  - changeSet:
+      id: auth-005-create-trigger-user-role
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: >
+              CREATE TRIGGER trg_audit_timestamps_user_role
+              BEFORE INSERT OR UPDATE ON "authorization".user_role
+              FOR EACH ROW
+              EXECUTE FUNCTION "authorization".fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_timestamps_user_role ON "authorization".user_role;

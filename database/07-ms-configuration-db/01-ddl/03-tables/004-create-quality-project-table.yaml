@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: qual-007-create-quality-project-table
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE quality.quality_project (
+                project_id BIGSERIAL NOT NULL,
+                project_name VARCHAR(200) NOT NULL, -- Nombre del proyecto de software evaluado (ISO/IEC 29110)
+                description VARCHAR(1000) NULL,
+                customer VARCHAR(200) NULL, -- Cliente/usuario que acepta la entrega (evidencia WP10)
+                planned_start_on DATE NULL,
+                planned_end_on DATE NULL,
+                project_status quality.project_status NOT NULL DEFAULT 'Planned',
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                updated_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                deleted_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT quality_project_pkey PRIMARY KEY (project_id)
+              )
+        - createIndex:
+            schemaName: quality
+            tableName: quality_project
+            indexName: idx_quality_project_status
+            columns:
+              - column:
+                  name: project_status
+        - createIndex:
+            schemaName: quality
+            tableName: quality_project
+            indexName: idx_quality_project_deleted
+            columns:
+              - column:
+                  name: deleted_at
+        - sql:
+            sql: ALTER TABLE quality.quality_project ADD CONSTRAINT chk_quality_project_dates CHECK (planned_start_on IS NULL OR planned_end_on IS NULL OR planned_start_on <= planned_end_on)
+      rollback:
+        - dropTable:
+            schemaName: quality
+            tableName: quality_project
