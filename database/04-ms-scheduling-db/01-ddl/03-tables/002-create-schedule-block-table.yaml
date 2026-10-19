@@ -1,0 +1,111 @@
+databaseChangeLog:
+  - changeSet:
+      id: sched-002-create-schedule-block-table
+      author: Andres Gutierrez
+      changes:
+        - createTable:
+            schemaName: scheduling
+            tableName: schedule_block
+            columns:
+              - column:
+                  name: schedule_block_id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: cohort_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    remarks: "Cross-context reference to Academic.cohort (NO FK)"
+              - column:
+                  name: course_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    remarks: "Cross-context reference to Academic.course (NO FK)"
+              - column:
+                  name: environment_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    references: scheduling.environment(environment_id)
+                    foreignKeyName: fk_block_environment
+              - column:
+                  name: instructor_actor_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    remarks: "Cross-context reference to Academic.academic_actor (NO FK)"
+              - column:
+                  name: day_of_week
+                  type: SMALLINT
+                  constraints:
+                    nullable: false
+                    remarks: "1..7"
+              - column:
+                  name: starts_at
+                  type: TIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ends_at
+                  type: TIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+              - column:
+                  name: updated_by
+                  type: UUID
+              - column:
+                  name: deleted_by
+                  type: UUID
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE scheduling.schedule_block ADD CONSTRAINT uq_block_environment_slot UNIQUE (environment_id, day_of_week, starts_at)
+        - sql:
+            sql: ALTER TABLE scheduling.schedule_block ADD CONSTRAINT uq_block_instructor_slot UNIQUE (instructor_actor_id, day_of_week, starts_at)
+        - sql:
+            sql: ALTER TABLE scheduling.schedule_block ADD CONSTRAINT chk_block_day_of_week CHECK (day_of_week BETWEEN 1 AND 7)
+        - sql:
+            sql: ALTER TABLE scheduling.schedule_block ADD CONSTRAINT chk_block_time CHECK (starts_at < ends_at)
+        - createIndex:
+            schemaName: scheduling
+            tableName: schedule_block
+            indexName: idx_block_cohort
+            columns:
+              - column:
+                  name: cohort_id
+        - createIndex:
+            schemaName: scheduling
+            tableName: schedule_block
+            indexName: idx_block_course
+            columns:
+              - column:
+                  name: course_id
+      rollback:
+        - dropTable:
+            schemaName: scheduling
+            tableName: schedule_block

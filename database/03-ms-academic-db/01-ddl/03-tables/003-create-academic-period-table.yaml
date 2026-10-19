@@ -1,0 +1,88 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-003-create-academic-period-table
+      author: Andres Gutierrez
+      changes:
+        - createTable:
+            schemaName: academic
+            tableName: academic_period
+            columns:
+              - column:
+                  name: academic_period_id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: school_id
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: starts_on
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ends_on
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE academic.academic_period ADD CONSTRAINT uq_period_name_school UNIQUE (school_id, name)
+        - sql:
+            sql: ALTER TABLE academic.academic_period ADD CONSTRAINT fk_academic_period_school FOREIGN KEY (school_id) REFERENCES academic.school (school_id) ON DELETE CASCADE
+        - sql:
+            sql: ALTER TABLE academic.academic_period ADD CONSTRAINT chk_period_dates CHECK (starts_on < ends_on)
+      rollback:
+        - dropTable:
+            schemaName: academic
+            tableName: academic_period

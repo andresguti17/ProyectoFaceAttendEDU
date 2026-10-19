@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-001-create-user-session-status-type
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE identity.user_session_status AS ENUM ('Active', 'Closed')
+      rollback:
+        - sql:
+            sql: DROP TYPE IF EXISTS identity.user_session_status

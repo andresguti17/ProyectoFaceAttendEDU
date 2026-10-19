@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: sched-001-create-scheduling-schema
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS scheduling;
+      rollback:
+        - sql:
+            sql: DROP SCHEMA IF EXISTS scheduling CASCADE;

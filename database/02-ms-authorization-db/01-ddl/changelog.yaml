@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - include:
+      file: 01-schemas/001-create-authorization-schema.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/001-create-role-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/002-create-permission-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/003-create-role-permission-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/004-create-user-role-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/005-enforce-updated-at-not-null.yaml
+      relativeToChangelogFile: true

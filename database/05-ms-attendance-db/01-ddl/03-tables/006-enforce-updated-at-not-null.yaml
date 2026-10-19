@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-010-enforce-updated-at-not-null
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              UPDATE attendance.attendance_record SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE attendance.attendance_record ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE attendance.justification_type SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE attendance.justification_type ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE attendance.justification SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE attendance.justification ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE attendance.supporting_document SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE attendance.supporting_document ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE attendance.attendance_report SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE attendance.attendance_report ALTER COLUMN updated_at SET NOT NULL;
+      rollback:
+        - sql:
+            sql: ALTER TABLE attendance.attendance_record ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE attendance.justification_type ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE attendance.justification ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE attendance.supporting_document ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE attendance.attendance_report ALTER COLUMN updated_at DROP NOT NULL;

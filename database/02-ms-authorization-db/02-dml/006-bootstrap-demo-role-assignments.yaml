@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-006-bootstrap-demo-role-assignments
+      author: FaceAttendEDU
+      context: seed
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO "authorization".user_role (user_id, role_id, assignment_date, created_at, updated_at, row_version)
+              SELECT '44444444-4444-4444-8444-444444444444', role_id, NOW(), NOW(), NOW(), 1 FROM "authorization".role WHERE role_name = 'Instructor'
+              ON CONFLICT DO NOTHING;
+              INSERT INTO "authorization".user_role (user_id, role_id, assignment_date, created_at, updated_at, row_version)
+              SELECT '66666666-6666-4666-8666-666666666666', role_id, NOW(), NOW(), NOW(), 1 FROM "authorization".role WHERE role_name = 'Aprendiz'
+              ON CONFLICT DO NOTHING;
+      rollback:
+        - sql:
+            sql: DELETE FROM "authorization".user_role WHERE user_id IN ('44444444-4444-4444-8444-444444444444', '66666666-6666-4666-8666-666666666666');

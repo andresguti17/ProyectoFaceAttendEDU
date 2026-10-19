@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: qual-009-create-quality-evaluation-item-table
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE quality.quality_evaluation_item (
+                evaluation_item_id BIGSERIAL NOT NULL,
+                evaluation_id BIGINT NOT NULL,
+                subcharacteristic_code VARCHAR(60) NOT NULL, -- Id de subcaracterística del catálogo ISO/IEC 25010 definido en código (09-ms-quality/src/domain/iso25010.ts). NO FK: el instrumento es inmutable y vive en código.
+                score SMALLINT NOT NULL, -- Likert 1-5
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                updated_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                deleted_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT quality_evaluation_item_pkey PRIMARY KEY (evaluation_item_id)
+              )
+        - sql:
+            sql: ALTER TABLE quality.quality_evaluation_item ADD CONSTRAINT uq_quality_evaluation_item_code UNIQUE (evaluation_id, subcharacteristic_code)
+        - sql:
+            sql: ALTER TABLE quality.quality_evaluation_item ADD CONSTRAINT fk_quality_evaluation_item_evaluation FOREIGN KEY (evaluation_id) REFERENCES quality.quality_evaluation (evaluation_id) ON DELETE CASCADE
+        - sql:
+            sql: ALTER TABLE quality.quality_evaluation_item ADD CONSTRAINT chk_quality_evaluation_item_score CHECK (score BETWEEN 1 AND 5)
+      rollback:
+        - dropTable:
+            schemaName: quality
+            tableName: quality_evaluation_item

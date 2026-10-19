@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: classpath:db/changelog/changes/01-ddl/03-tables/001-create-attendance-tables.yaml
+      relativeToChangelogFile: false

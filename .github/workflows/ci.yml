@@ -1,0 +1,155 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  java-services:
+    name: java / ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - 01-ms-identity
+          - 02-ms-authorization
+          - 04-ms-scheduling
+          - 05-ms-attendance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: back-end/${{ matrix.service }}/pom.xml
+      - name: mvn test
+        working-directory: back-end/${{ matrix.service }}
+        run: mvn -B test
+
+  node-services:
+    name: node / ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - 03-ms-academic
+          - 07-ms-configuration
+          - 08-ms-notification
+          - 09-ms-quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: back-end/${{ matrix.service }}/package-lock.json
+      - name: npm ci
+        working-directory: back-end/${{ matrix.service }}
+        run: npm ci
+      - name: npm test
+        working-directory: back-end/${{ matrix.service }}
+        run: npm test
+      - name: npm run build
+        working-directory: back-end/${{ matrix.service }}
+        run: npm run build
+      # Informational only: several high-severity findings today are transitive
+      # build-tooling deps with no fix available yet. Dependabot (see
+      # .github/dependabot.yml) tracks these over time; this step just keeps
+      # them visible on every PR without turning CI red for pre-existing debt.
+      - name: npm audit (informational)
+        working-directory: back-end/${{ matrix.service }}
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  python-services:
+    name: python / ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: 06-ms-biometric
+            system_deps: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install system build dependencies
+        if: matrix.system_deps
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential cmake pkg-config libopenblas-dev liblapack-dev
+      - name: Install poetry
+        run: pip install --no-cache-dir poetry==1.8.3
+      # dlib (a face-recognition dependency, merged in from the former
+      # 10-ms-face-auth service) compiles from source and takes a long time;
+      # cache the venv keyed on the lockfile so only a changed lockfile pays
+      # that cost again.
+      - name: Cache poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: back-end/${{ matrix.service }}/.venv
+          key: poetry-${{ runner.os }}-${{ matrix.service }}-${{ hashFiles(format('back-end/{0}/poetry.lock', matrix.service)) }}
+      - name: poetry install
+        working-directory: back-end/${{ matrix.service }}
+        run: poetry config virtualenvs.in-project true && poetry install --no-root
+      - name: pytest
+        working-directory: back-end/${{ matrix.service }}
+        run: poetry run pytest
+      - name: bandit (informational)
+        working-directory: back-end/${{ matrix.service }}
+        run: poetry run pip install --quiet bandit && poetry run bandit -r . -x ./tests,./.venv
+        continue-on-error: true
+
+  mobile:
+    name: mobile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: front-end/Mobile/package-lock.json
+      - name: npm ci
+        working-directory: front-end/Mobile
+        run: npm ci
+      - name: npm test
+        working-directory: front-end/Mobile
+        run: npm test
+      - name: npm audit (informational)
+        working-directory: front-end/Mobile
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  web:
+    name: web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: front-end/Web/package-lock.json
+      - name: npm ci
+        working-directory: front-end/Web
+        run: npm ci
+      - name: npm test
+        working-directory: front-end/Web
+        run: npm test
+      - name: expo export --platform web
+        working-directory: front-end/Web
+        run: npx expo export --platform web
+      - name: npm audit (informational)
+        working-directory: front-end/Web
+        run: npm audit --audit-level=high
+        continue-on-error: true

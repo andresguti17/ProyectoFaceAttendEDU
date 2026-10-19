@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-002-triggers-audit-timestamps-attendance
+      author: Andres Gutierrez
+      changes:
+        - sqlFile:
+            path: 002-triggers-audit-timestamps-attendance.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_timestamps
+              BEFORE INSERT OR UPDATE ON attendance.attendance_record
+              FOR EACH ROW
+              EXECUTE FUNCTION attendance.fn_audit_timestamps();
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_timestamps
+              BEFORE INSERT OR UPDATE ON attendance.justification_type
+              FOR EACH ROW
+              EXECUTE FUNCTION attendance.fn_audit_timestamps();
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_timestamps
+              BEFORE INSERT OR UPDATE ON attendance.justification
+              FOR EACH ROW
+              EXECUTE FUNCTION attendance.fn_audit_timestamps();
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_audit_timestamps
+              BEFORE INSERT OR UPDATE ON attendance.supporting_document
+              FOR EACH ROW
+              EXECUTE FUNCTION attendance.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_timestamps ON attendance.attendance_record;
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_timestamps ON attendance.justification_type;
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_timestamps ON attendance.justification;
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_audit_timestamps ON attendance.supporting_document;
+        - sqlFile:
+            path: 002-triggers-audit-timestamps-attendance-rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false

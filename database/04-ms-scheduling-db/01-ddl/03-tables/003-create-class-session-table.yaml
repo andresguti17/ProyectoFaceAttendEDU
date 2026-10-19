@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: sched-003-create-class-session-table
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE scheduling.class_session (
+                class_session_id BIGSERIAL NOT NULL,
+                schedule_block_id BIGINT NOT NULL,
+                session_date DATE NOT NULL,
+                opened_by BIGINT NULL, -- Cross-context reference to Academic.academic_actor (NO FK)
+                opened_at TIMESTAMP NULL,
+                closed_by BIGINT NULL, -- Cross-context reference to Academic.academic_actor (NO FK)
+                closed_at TIMESTAMP NULL,
+                session_status scheduling.class_session_status NOT NULL DEFAULT 'Open',
+                created_at TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL,
+                updated_by UUID NULL,
+                deleted_by UUID NULL,
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT class_session_pkey PRIMARY KEY (class_session_id)
+              )
+        - sql:
+            sql: ALTER TABLE scheduling.class_session ADD CONSTRAINT uq_session_block_date UNIQUE (schedule_block_id, session_date)
+        - createIndex:
+            schemaName: scheduling
+            tableName: class_session
+            indexName: idx_session_date
+            columns:
+              - column:
+                  name: session_date
+        - sql:
+            sql: ALTER TABLE scheduling.class_session ADD CONSTRAINT fk_session_schedule_block FOREIGN KEY (schedule_block_id) REFERENCES scheduling.schedule_block (schedule_block_id)
+      rollback:
+        - dropTable:
+            schemaName: scheduling
+            tableName: class_session

@@ -1,0 +1,66 @@
+server:
+  port: 8081
+spring:
+  config:
+    # Host runs (mvn/IDE) also read the repo-root .env, so one file governs
+    # Docker and local runs alike. The optional paths are anchored at the
+    # working directory (service dir or repo root); in Docker compose injects
+    # the environment, so this import stays a no-op.
+    import: "optional:file:${user.dir}/../../.env[.properties],optional:file:${user.dir}/.env[.properties]"
+  application:
+    name: identity-service
+  datasource:
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/faceattend_db?stringtype=unspecified
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    hikari:
+      # Fan-out del frontend (introspecciones + negocio en paralelo): el default
+      # de 10 conexiones encolaba hilos y cada request pagaba ~700 ms.
+      maximum-pool-size: 25
+      minimum-idle: 5
+      connection-timeout: 5000
+      schema: identity
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.default_schema: identity
+      hibernate.globally_quoted_identifiers: true
+      hibernate.hbm2ddl.create_namespaces: true
+  kafka:
+    bootstrap-servers: localhost:9092
+  liquibase:
+    # Las migraciones viven en ../database/ (fuente canonica); el servicio no auto-migra.
+    enabled: false
+faceattend:
+  auth:
+    identity-url: http://localhost:8081
+    authorization-url: http://localhost:8082
+    # start_date + esto = expiración de la sesión (seed: session_timeout_minutes=480).
+    session-timeout-minutes: 480
+  recovery:
+    # memory (default, per process) | redis (survives restarts, shared across replicas).
+    store: memory
+    # Código de recuperación: 6 dígitos, 10 min de vida, 5 intentos, 60 s de espera
+    # entre reenvíos (las mismas constantes que usa el front).
+    code-ttl-minutes: 10
+    max-attempts: 5
+    resend-cooldown-seconds: 60
+  notification:
+    # Canal de correo: 08-ms-notification (SMTP + templates). En compose: http://ms-notification:8088
+    base-url: http://localhost:8088
+    internal-token: ""
+management:
+  health:
+    # Redis is only needed when faceattend.recovery.store=redis; do not fail health without it.
+    redis:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

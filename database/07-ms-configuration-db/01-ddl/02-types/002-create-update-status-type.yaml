@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: config-002-create-update-status-type
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE configuration.update_status AS ENUM ('Pending', 'In_Review', 'Approved', 'Rejected')
+      rollback:
+        - sql:
+            sql: DROP TYPE IF EXISTS configuration.update_status

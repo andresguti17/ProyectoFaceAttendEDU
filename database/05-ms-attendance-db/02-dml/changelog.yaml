@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: 001-seed-justification-type-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 002-sync-catalog-sequences.yaml
+      relativeToChangelogFile: true

@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: config-005-alter-biometric-update-case-mandatory
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: ALTER TABLE configuration.biometric_update_case ALTER COLUMN requested_by SET NOT NULL
+        - sql:
+            sql: ALTER TABLE configuration.biometric_update_case ALTER COLUMN requested_at SET NOT NULL
+        - sql:
+            sql: ALTER TABLE configuration.biometric_update_case ALTER COLUMN resolution_notes TYPE TEXT
+      rollback:
+        - sql:
+            sql: ALTER TABLE configuration.biometric_update_case ALTER COLUMN requested_by DROP NOT NULL
+        - sql:
+            sql: ALTER TABLE configuration.biometric_update_case ALTER COLUMN requested_at DROP NOT NULL
+        - sql:
+            sql: ALTER TABLE configuration.biometric_update_case ALTER COLUMN resolution_notes TYPE VARCHAR(500)

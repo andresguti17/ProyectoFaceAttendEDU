@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: bio-001-create-biometric-schema
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS biometric;
+      rollback:
+        - sql:
+            sql: DROP SCHEMA IF EXISTS biometric CASCADE;

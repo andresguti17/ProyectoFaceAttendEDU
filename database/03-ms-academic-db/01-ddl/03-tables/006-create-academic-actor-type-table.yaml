@@ -1,0 +1,68 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-006-create-academic-actor-type-table
+      author: Andres Gutierrez
+      changes:
+        - createTable:
+            schemaName: academic
+            tableName: academic_actor_type
+            columns:
+              - column:
+                  name: actor_type_id
+                  type: SMALLINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+                  remarks: "STUDENT / INSTRUCTOR"
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            schemaName: academic
+            tableName: academic_actor_type

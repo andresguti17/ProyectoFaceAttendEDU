@@ -1,0 +1,108 @@
+# .gitignore para proyecto Java (Maven) - adaptado a ms-identity
+
+# Compilados y paquetes
+/target/
+/out/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven
+# Archivos generados por Maven
+/pom.xml.tag
+/pom.xml.releaseBackup
+/pom.xml.versionsBackup
+/pom.xml.next
+/release.properties
+/dependency-reduced-pom.xml
+/buildNumber.properties
+/maven-status/
+.mvn/timing.properties
+
+# IDEs
+# IntelliJ
+/.idea/
+*.iws
+*.iml
+*.ipr
+.idea/*
+# Guardar archivos de workspace locales
+/.idea/workspace.xml
+/.idea/tasks.xml
+/.idea/usage.statistics.xml
+/.idea/dictionaries/
+
+# Eclipse / STS
+.classpath
+.project
+.settings/
+.apt_generated
+.factorypath
+.springBeans
+.sts4-cache
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+# VS Code
+.vscode/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs y archivos temporales
+*.log
+logs/
+*.tmp
+*.temp
+*.bak
+tmp/
+temp/
+
+# Tests / informes
+/surefire-reports/
+/failsafe-reports/
+**/surefire-reports/
+
+# Sensibles / credenciales / claves
+.env
+.env.*
+secrets.properties
+credentials.properties
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.crt
+
+# Docker
+docker-compose.override.yml
+
+# Otros
+*~
+*.swp
+*.swo
+
+# Ignorar la carpeta .mvn pero mantener el wrapper de Maven versionado
+/.mvn/
+# Excepto el wrapper y su carpeta
+!.mvn/wrapper/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Mantener archivos de recursos del proyecto (no ignorar por defecto)
+!src/main/resources/
+
+# Archivos de build locales específicos (si existen)
+/.gradle/
+
+# End of .gitignore

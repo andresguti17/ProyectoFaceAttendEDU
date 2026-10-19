@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: config-003-create-biometric-update-case-table
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE configuration.biometric_update_case (
+                case_id UUID NOT NULL,
+                person_id UUID NOT NULL, -- Cross-context reference to Identity.person (NO FK)
+                biometric_type configuration.biometric_type NOT NULL,
+                finger_number SMALLINT NULL, -- Obligatorio solo si biometric_type = FINGERPRINT (1..10); nulo si es FACIAL
+                current_embedding_ref VARCHAR(500) NULL, -- Cross-paradigm ref a Biometric.facial_embedding / fingerprint_embedding (NoSQL, NO FK)
+                reason TEXT NOT NULL,
+                update_status configuration.update_status NOT NULL DEFAULT 'Pending',
+                requested_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                requested_at TIMESTAMP NULL,
+                reviewed_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                reviewed_at TIMESTAMP NULL,
+                resolution_notes VARCHAR(500) NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL,
+                updated_by UUID NULL,
+                deleted_by UUID NULL,
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT biometric_update_case_pkey PRIMARY KEY (case_id)
+              )
+        - createIndex:
+            schemaName: configuration
+            tableName: biometric_update_case
+            indexName: idx_biometric_case_person
+            columns:
+              - column:
+                  name: person_id
+        - createIndex:
+            schemaName: configuration
+            tableName: biometric_update_case
+            indexName: idx_biometric_case_person_type
+            columns:
+              - column:
+                  name: person_id
+              - column:
+                  name: biometric_type
+        - createIndex:
+            schemaName: configuration
+            tableName: biometric_update_case
+            indexName: idx_biometric_case_status
+            columns:
+              - column:
+                  name: update_status
+        - sql:
+            sql: ALTER TABLE configuration.biometric_update_case ADD CONSTRAINT chk_finger_number CHECK ((biometric_type = 'FINGERPRINT' AND finger_number BETWEEN 1 AND 10) OR (biometric_type = 'FACIAL' AND finger_number IS NULL))
+      rollback:
+        - dropTable:
+            schemaName: configuration
+            tableName: biometric_update_case

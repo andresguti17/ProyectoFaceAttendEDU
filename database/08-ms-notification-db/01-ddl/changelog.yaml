@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - include:
+      file: 01-schemas/001-create-notification-schema.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/001-create-alert-type-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/002-create-alert-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/003-enforce-updated-at-not-null.yaml
+      relativeToChangelogFile: true

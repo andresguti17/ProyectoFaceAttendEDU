@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+      file: 01-schemas/001-create-biometric-schema.yaml
+      relativeToChangelogFile: true

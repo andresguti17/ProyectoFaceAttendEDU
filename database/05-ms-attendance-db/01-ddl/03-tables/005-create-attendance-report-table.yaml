@@ -1,0 +1,107 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-008-create-attendance-report-table
+      author: Andres Gutierrez
+      changes:
+        - createTable:
+            schemaName: attendance
+            tableName: attendance_report
+            columns:
+              - column:
+                  name: report_id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: school_id
+                  type: INT
+                  constraints:
+                    nullable: true
+                  remarks: "Cross-context reference to Academic.school (NO FK)"
+              - column:
+                  name: cohort_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+                  remarks: "Cross-context reference to Academic.cohort (NO FK)"
+              - column:
+                  name: generated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+                  remarks: "Cross-context reference to Identity.app_user (NO FK)"
+              - column:
+                  name: report_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: filters
+                  type: JSONB
+                  constraints:
+                    nullable: true
+              - column:
+                  name: result
+                  type: JSONB
+                  constraints:
+                    nullable: true
+              - column:
+                  name: generated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - createIndex:
+            schemaName: attendance
+            tableName: attendance_report
+            indexName: idx_report_school
+            columns:
+              - column:
+                  name: school_id
+        - createIndex:
+            schemaName: attendance
+            tableName: attendance_report
+            indexName: idx_report_cohort
+            columns:
+              - column:
+                  name: cohort_id
+      rollback:
+        - dropTable:
+            schemaName: attendance
+            tableName: attendance_report

@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-007-enforce-updated-at-not-null
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              UPDATE "authorization".role SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE "authorization".role ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE "authorization".permission SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE "authorization".permission ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE "authorization".role_permission SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE "authorization".role_permission ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE "authorization".user_role SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE "authorization".user_role ALTER COLUMN updated_at SET NOT NULL;
+      rollback:
+        - sql:
+            sql: ALTER TABLE "authorization".role ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE "authorization".permission ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE "authorization".role_permission ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE "authorization".user_role ALTER COLUMN updated_at DROP NOT NULL;

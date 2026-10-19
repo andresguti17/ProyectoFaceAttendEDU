@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-003-create-app-user-table
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE identity.app_user (
+                user_id UUID NOT NULL,
+                person_id UUID NOT NULL,
+                username VARCHAR(255) NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                authentication_type identity.authentication_type NOT NULL,
+                status BOOLEAN NOT NULL DEFAULT TRUE,
+                last_access TIMESTAMP NULL,
+                created_at TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL,
+                updated_by UUID NULL,
+                deleted_by UUID NULL,
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT app_user_pkey PRIMARY KEY (user_id)
+              )
+        - sql:
+            sql: ALTER TABLE identity.app_user ADD CONSTRAINT uq_user_username UNIQUE (username)
+        - sql:
+            sql: ALTER TABLE identity.app_user ADD CONSTRAINT uq_app_user_person UNIQUE (person_id)
+        - sql:
+            sql: ALTER TABLE identity.app_user ADD CONSTRAINT fk_app_user_person FOREIGN KEY (person_id) REFERENCES identity.person (person_id) ON DELETE CASCADE
+      rollback:
+        - dropTable:
+            schemaName: identity
+            tableName: app_user

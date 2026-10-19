@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: notif-004-enforce-updated-at-not-null
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              UPDATE notification.alert_type SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE notification.alert_type ALTER COLUMN updated_at SET NOT NULL;
+        - sql:
+            sql: |
+              UPDATE notification.alert SET updated_at = COALESCE(updated_at, created_at, now()) WHERE updated_at IS NULL;
+              ALTER TABLE notification.alert ALTER COLUMN updated_at SET NOT NULL;
+      rollback:
+        - sql:
+            sql: ALTER TABLE notification.alert_type ALTER COLUMN updated_at DROP NOT NULL;
+        - sql:
+            sql: ALTER TABLE notification.alert ALTER COLUMN updated_at DROP NOT NULL;

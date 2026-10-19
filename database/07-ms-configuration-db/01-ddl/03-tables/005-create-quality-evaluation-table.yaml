@@ -1,0 +1,62 @@
+databaseChangeLog:
+  - changeSet:
+      id: qual-008-create-quality-evaluation-table
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE quality.quality_evaluation (
+                evaluation_id BIGSERIAL NOT NULL,
+                service_name VARCHAR(100) NOT NULL, -- Microservicio evaluado (ej. '03-ms-academic'); sin FK, no existe registro de servicios
+                evaluator_name VARCHAR(200) NOT NULL,
+                evaluation_scope VARCHAR(200) NOT NULL, -- Alcance evaluado (ej. 'CRUD enrollments')
+                project_id BIGINT NULL, -- Trazabilidad ISO/IEC 29110 SI.O2 con quality.quality_project
+                evaluation_status quality.evaluation_status NOT NULL DEFAULT 'Draft',
+                comments TEXT NULL,
+                global_score DECIMAL(4,2) NULL, -- Puntaje global ponderado 1-5 (derivado de quality_evaluation_item)
+                percentage DECIMAL(5,1) NULL, -- global_score / 5 * 100
+                quality_level quality.quality_level NULL, -- Nivel derivado de global_score
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                updated_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                deleted_by UUID NULL, -- Cross-context reference to Identity.app_user (NO FK)
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT quality_evaluation_pkey PRIMARY KEY (evaluation_id)
+              )
+        - createIndex:
+            schemaName: quality
+            tableName: quality_evaluation
+            indexName: idx_quality_evaluation_service
+            columns:
+              - column:
+                  name: service_name
+        - createIndex:
+            schemaName: quality
+            tableName: quality_evaluation
+            indexName: idx_quality_evaluation_status
+            columns:
+              - column:
+                  name: evaluation_status
+        - createIndex:
+            schemaName: quality
+            tableName: quality_evaluation
+            indexName: idx_quality_evaluation_project
+            columns:
+              - column:
+                  name: project_id
+        - createIndex:
+            schemaName: quality
+            tableName: quality_evaluation
+            indexName: idx_quality_evaluation_deleted
+            columns:
+              - column:
+                  name: deleted_at
+        - sql:
+            sql: ALTER TABLE quality.quality_evaluation ADD CONSTRAINT fk_quality_evaluation_project FOREIGN KEY (project_id) REFERENCES quality.quality_project (project_id) ON DELETE SET NULL
+      rollback:
+        - dropTable:
+            schemaName: quality
+            tableName: quality_evaluation

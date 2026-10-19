@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-001-seed-justification-type-table
+      author: Andres Gutierrez
+      context: seed
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO attendance.justification_type (justification_type_id, school_id, name, description, requires_attachment, status, created_at, updated_at, row_version) VALUES
+                (1, NULL, 'Medical leave', 'Certified medical incapacity', TRUE, TRUE, NOW(), NOW(), 1),
+                (2, NULL, 'Domestic calamity', 'Domestic calamity justification', TRUE, TRUE, NOW(), NOW(), 1),
+                (3, NULL, 'Academic commitment', 'External academic activity', FALSE, TRUE, NOW(), NOW(), 1)
+      rollback:
+        - sql:
+            sql: DELETE FROM attendance.justification_type;

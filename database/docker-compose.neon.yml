@@ -1,0 +1,199 @@
+# FaceAttend EDU — Liquibase migrations against Neon PostgreSQL (external)
+# Database runs in Neon; this file only orchestrates schema migrations.
+# Use with: docker compose -f docker-compose.prod.yml up
+
+services:
+  identity-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-identity-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    environment:
+      # Neon connection string (env vars from .env)
+      LIQUIBASE_URL: ${NEON_JDBC_URL}
+      LIQUIBASE_USERNAME: ${NEON_USER}
+      LIQUIBASE_PASSWORD: ${NEON_PASSWORD}
+    volumes:
+      - ./01-ms-identity-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=${NEON_JDBC_URL}
+      - --username=${NEON_USER}
+      - --password=${NEON_PASSWORD}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  authorization-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-authorization-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      identity-liquibase:
+        condition: service_completed_successfully
+    environment:
+      LIQUIBASE_URL: ${NEON_JDBC_URL}
+      LIQUIBASE_USERNAME: ${NEON_USER}
+      LIQUIBASE_PASSWORD: ${NEON_PASSWORD}
+    volumes:
+      - ./02-ms-authorization-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=${NEON_JDBC_URL}
+      - --username=${NEON_USER}
+      - --password=${NEON_PASSWORD}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  academic-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-academic-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      authorization-liquibase:
+        condition: service_completed_successfully
+    environment:
+      LIQUIBASE_URL: ${NEON_JDBC_URL}
+      LIQUIBASE_USERNAME: ${NEON_USER}
+      LIQUIBASE_PASSWORD: ${NEON_PASSWORD}
+    volumes:
+      - ./03-ms-academic-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=${NEON_JDBC_URL}
+      - --username=${NEON_USER}
+      - --password=${NEON_PASSWORD}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  scheduling-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-scheduling-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      academic-liquibase:
+        condition: service_completed_successfully
+    environment:
+      LIQUIBASE_URL: ${NEON_JDBC_URL}
+      LIQUIBASE_USERNAME: ${NEON_USER}
+      LIQUIBASE_PASSWORD: ${NEON_PASSWORD}
+    volumes:
+      - ./04-ms-scheduling-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=${NEON_JDBC_URL}
+      - --username=${NEON_USER}
+      - --password=${NEON_PASSWORD}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  attendance-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-attendance-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      scheduling-liquibase:
+        condition: service_completed_successfully
+    environment:
+      LIQUIBASE_URL: ${NEON_JDBC_URL}
+      LIQUIBASE_USERNAME: ${NEON_USER}
+      LIQUIBASE_PASSWORD: ${NEON_PASSWORD}
+    volumes:
+      - ./05-ms-attendance-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=${NEON_JDBC_URL}
+      - --username=${NEON_USER}
+      - --password=${NEON_PASSWORD}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  biometric-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-biometric-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      attendance-liquibase:
+        condition: service_completed_successfully
+    environment:
+      LIQUIBASE_URL: ${NEON_JDBC_URL}
+      LIQUIBASE_USERNAME: ${NEON_USER}
+      LIQUIBASE_PASSWORD: ${NEON_PASSWORD}
+    volumes:
+      - ./06-ms-biometric-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=${NEON_JDBC_URL}
+      - --username=${NEON_USER}
+      - --password=${NEON_PASSWORD}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  configuration-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-configuration-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      biometric-liquibase:
+        condition: service_completed_successfully
+    environment:
+      LIQUIBASE_URL: ${NEON_JDBC_URL}
+      LIQUIBASE_USERNAME: ${NEON_USER}
+      LIQUIBASE_PASSWORD: ${NEON_PASSWORD}
+    volumes:
+      - ./07-ms-configuration-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=${NEON_JDBC_URL}
+      - --username=${NEON_USER}
+      - --password=${NEON_PASSWORD}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  notification-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-notification-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      configuration-liquibase:
+        condition: service_completed_successfully
+    environment:
+      LIQUIBASE_URL: ${NEON_JDBC_URL}
+      LIQUIBASE_USERNAME: ${NEON_USER}
+      LIQUIBASE_PASSWORD: ${NEON_PASSWORD}
+    volumes:
+      - ./08-ms-notification-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=${NEON_JDBC_URL}
+      - --username=${NEON_USER}
+      - --password=${NEON_PASSWORD}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+networks:
+  faceattend-data:
+    name: faceattend-data
+    driver: bridge

@@ -1,0 +1,84 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-city-policy-tables
+      author: faceattend
+      changes:
+        - createTable:
+            tableName: city
+            columns:
+              - column:
+                  name: city_id
+                  type: SERIAL
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_city
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: department
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+        - createTable:
+            tableName: password_policy
+            columns:
+              - column:
+                  name: policy_id
+                  type: SERIAL
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_password_policy
+              - column:
+                  name: min_length
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: max_length
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requires_uppercase
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requires_numbers
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requires_symbols
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expiration_days
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+      rollback:
+        - dropTable:
+            tableName: password_policy
+        - dropTable:
+            tableName: city

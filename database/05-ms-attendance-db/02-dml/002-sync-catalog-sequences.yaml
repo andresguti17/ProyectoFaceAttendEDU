@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-002-sync-catalog-sequences
+      author: Andres Gutierrez
+      context: seed
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              SELECT setval(
+                pg_get_serial_sequence('attendance.justification_type', 'justification_type_id'),
+                COALESCE((SELECT MAX(justification_type_id) FROM attendance.justification_type), 0) + 1,
+                false
+              );
+      rollback:
+        - sql:
+            sql: SELECT setval(pg_get_serial_sequence('attendance.justification_type', 'justification_type_id'), 1, false);

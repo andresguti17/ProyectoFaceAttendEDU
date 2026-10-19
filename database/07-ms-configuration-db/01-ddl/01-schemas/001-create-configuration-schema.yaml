@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: config-001-create-configuration-schema
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS configuration;
+      rollback:
+        - sql:
+            sql: DROP SCHEMA IF EXISTS configuration CASCADE;

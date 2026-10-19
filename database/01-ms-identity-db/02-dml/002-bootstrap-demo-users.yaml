@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-002-bootstrap-demo-users
+      author: FaceAttendEDU
+      context: seed
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO "identity".person (person_id, document_number, name, last_name, email, status, created_at, row_version) VALUES
+                ('33333333-3333-4333-8333-333333333333', 'INSTRUCTOR-001', 'Instructor', 'Demo', 'instructor@faceattend.local', TRUE, NOW(), 1),
+                ('55555555-5555-4555-8555-555555555555', 'APRENDIZ-001', 'Aprendiz', 'Demo', 'aprendiz@faceattend.local', TRUE, NOW(), 1)
+              ON CONFLICT (person_id) DO NOTHING;
+              INSERT INTO "identity".app_user (user_id, person_id, username, password_hash, authentication_type, status, created_at, row_version) VALUES
+                ('44444444-4444-4444-8444-444444444444', '33333333-3333-4333-8333-333333333333', 'instructor.faceattend', crypt('Instructor123!ChangeMe', gen_salt('bf', 12)), 'Local', TRUE, NOW(), 1),
+                ('66666666-6666-4666-8666-666666666666', '55555555-5555-4555-8555-555555555555', 'aprendiz.faceattend', crypt('Aprendiz123!ChangeMe', gen_salt('bf', 12)), 'Local', TRUE, NOW(), 1)
+              ON CONFLICT (user_id) DO NOTHING;
+      rollback:
+        - sql:
+            splitStatements: true
+            sql: |
+              DELETE FROM "identity".app_user WHERE user_id IN ('44444444-4444-4444-8444-444444444444', '66666666-6666-4666-8666-666666666666');
+              DELETE FROM "identity".person WHERE person_id IN ('33333333-3333-4333-8333-333333333333', '55555555-5555-4555-8555-555555555555');

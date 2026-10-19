@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: qual-006-create-iso29110-process-type
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TYPE quality.iso29110_process AS ENUM ('PM', 'SI')
+      rollback:
+        - sql:
+            sql: DROP TYPE IF EXISTS quality.iso29110_process

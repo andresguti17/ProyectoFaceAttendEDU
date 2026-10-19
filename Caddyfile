@@ -1,0 +1,18 @@
+{
+	# Sin DOMAIN real (ver .env), Caddy emite certificados de su CA interna:
+	# el navegador los marca como no confiables salvo que importes esa CA,
+	# pero alcanza para probar el flujo HTTPS en local.
+	local_certs
+}
+
+# Web: nginx (frontend-web) ya hace de /api/* y /face-auth/* hacia Kong
+# internamente (ver front-end/Web/nginx.conf), así que basta con un proxy.
+{$DOMAIN:localhost} {
+	reverse_proxy frontend-web:80
+}
+
+# Mobile (EXPO_PUBLIC_API_URL) habla con Kong directo, sin pasar por el SPA.
+# Con un dominio real, crea el registro DNS api.<DOMAIN> apuntando a este host.
+api.{$DOMAIN:localhost} {
+	reverse_proxy kong-gateway:8000
+}

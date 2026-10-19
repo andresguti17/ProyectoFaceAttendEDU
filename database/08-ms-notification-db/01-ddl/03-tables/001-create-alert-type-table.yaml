@@ -1,0 +1,88 @@
+databaseChangeLog:
+  - changeSet:
+      id: notif-001-create-alert-type-table
+      author: Andres Gutierrez
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                schemaName: notification
+                tableName: alert_type
+      changes:
+        - createTable:
+            schemaName: notification
+            tableName: alert_type
+            columns:
+              - column:
+                  name: alert_type_id
+                  type: SMALLINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_alert_type
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: severity
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+                  remarks: "INFO / WARNING / CRITICAL"
+              - column:
+                  name: channel
+                  type: VARCHAR(20)
+                  defaultValue: "DASHBOARD"
+                  constraints:
+                    nullable: false
+                  remarks: "DASHBOARD / EMAIL / PUSH"
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE notification.alert_type ADD CONSTRAINT uq_alert_type_code UNIQUE (code)
+      rollback:
+        - dropTable:
+            schemaName: notification
+            tableName: alert_type

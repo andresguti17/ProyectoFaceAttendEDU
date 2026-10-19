@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-008-create-enrollment-table
+      author: Andres Gutierrez
+      splitStatements: false
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE academic.enrollment (
+                enrollment_id BIGSERIAL NOT NULL,
+                academic_actor_id BIGINT NOT NULL,
+                cohort_id BIGINT NOT NULL,
+                enrolled_on DATE NOT NULL,
+                enrollment_status academic.enrollment_status NOT NULL DEFAULT 'Active',
+                created_at TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP NULL,
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL,
+                updated_by UUID NULL,
+                deleted_by UUID NULL,
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT enrollment_pkey PRIMARY KEY (enrollment_id)
+              )
+        - sql:
+            sql: ALTER TABLE academic.enrollment ADD CONSTRAINT uq_enrollment_actor_cohort UNIQUE (academic_actor_id, cohort_id)
+        - createIndex:
+            indexName: idx_enrollment_cohort
+            schemaName: academic
+            tableName: enrollment
+            columns:
+              - column:
+                  name: cohort_id
+        - createIndex:
+            indexName: idx_enrollment_deleted
+            schemaName: academic
+            tableName: enrollment
+            columns:
+              - column:
+                  name: deleted_at
+        - sql:
+            sql: ALTER TABLE academic.enrollment ADD CONSTRAINT fk_enrollment_academic_actor FOREIGN KEY (academic_actor_id) REFERENCES academic.academic_actor (academic_actor_id) ON DELETE CASCADE
+        - sql:
+            sql: ALTER TABLE academic.enrollment ADD CONSTRAINT fk_enrollment_cohort FOREIGN KEY (cohort_id) REFERENCES academic.cohort (cohort_id) ON DELETE CASCADE
+      rollback:
+        - dropTable:
+            schemaName: academic
+            tableName: enrollment

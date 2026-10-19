@@ -1,0 +1,81 @@
+databaseChangeLog:
+  - changeSet:
+      id: config-001-create-academic-configuration-table
+      author: Andres Gutierrez
+      changes:
+        - createTable:
+            schemaName: configuration
+            tableName: academic_configuration
+            columns:
+              - column:
+                  name: configuration_id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: school_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    remarks: "Cross-context reference to Academic.school (NO FK)"
+              - column:
+                  name: configuration_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    remarks: "e.g., tardy_tolerance_minutes"
+              - column:
+                  name: configuration_value
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+                    defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    defaultValueNumeric: 1
+        - sql:
+            sql: ALTER TABLE configuration.academic_configuration ADD CONSTRAINT uq_academic_configuration UNIQUE (school_id, configuration_name)
+      rollback:
+        - dropTable:
+            schemaName: configuration
+            tableName: academic_configuration

@@ -1,0 +1,97 @@
+# FaceAttend EDU — overrides para Neon PostgreSQL
+# Usado con: docker compose -f docker-compose.prod.yml up
+# Redefine los depends_on para NO esperar a un postgres: local,
+# y ajusta las conexiones para usar Neon via variables de entorno
+
+services:
+  ms-identity:
+    depends_on:
+      # Quitamos: postgres (service_healthy)
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      ms-notification:
+        condition: service_started
+    environment:
+      # Sobrescribe SPRING_DATASOURCE_URL para usar Neon (de .env.prod)
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD}
+      SPRING_DATASOURCE_HIKARI_SCHEMA: identity
+
+  ms-authorization:
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD}
+      SPRING_DATASOURCE_HIKARI_SCHEMA: authorization
+
+  ms-scheduling:
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD}
+      SPRING_DATASOURCE_HIKARI_SCHEMA: scheduling
+
+  ms-attendance:
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD}
+      SPRING_DATASOURCE_HIKARI_SCHEMA: attendance
+
+  ms-biometric:
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL}
+      SPRING_DATASOURCE_USERNAME: ${NEON_USER}
+      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD}
+      SPRING_DATASOURCE_HIKARI_SCHEMA: biometric
+
+  # ── Node/TypeScript services ──
+  ms-academic:
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@ep-nameless-wind-b6xj3sjk-pooler.neon.tech/${POSTGRES_DB}?schema=academic&sslmode=require
+
+  ms-configuration:
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@ep-nameless-wind-b6xj3sjk-pooler.neon.tech/${POSTGRES_DB}?schema=configuration&sslmode=require
+
+  ms-quality:
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@ep-nameless-wind-b6xj3sjk-pooler.neon.tech/${POSTGRES_DB}?schema=quality&sslmode=require
+
+  # ── Go — ms-notification ──
+  ms-notification:
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@ep-nameless-wind-b6xj3sjk-pooler.neon.tech/${POSTGRES_DB}?schema=notification&sslmode=require

@@ -1,0 +1,202 @@
+# FaceAttend EDU — data layer (standalone: cd database && docker compose up -d).
+# Owns PostgreSQL 17 (1 instance, 8 schemas) + the 8 Liquibase migrations.
+# Also included by FULL/docker-compose.yml, which chains the migrations.
+# Services connect through the `faceattend-data` network (see root compose).
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: faceattend-postgres
+    mem_limit: 1g
+    cpus: "1.0"
+    restart: unless-stopped
+    # Los pools de los servicios suman ~175 conexiones teóricas (4×25 Java +
+    # 3×25 Node + biometric/notification); el default de 100 rechazaba con
+    # "too many clients" bajo fan-out.
+    command: ["postgres", "-c", "max_connections=200"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-faceattend_db}
+    ports:
+      # Loopback only by default: databases must not be reachable from the LAN.
+      - "${BIND_IP:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Creates the 8 bounded-context schemas on first boot only.
+      - ./database-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-faceattend_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - faceattend-data
+
+  identity-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-identity-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./01-ms-identity-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  authorization-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-authorization-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./02-ms-authorization-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  academic-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-academic-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./03-ms-academic-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  scheduling-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-scheduling-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./04-ms-scheduling-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  attendance-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-attendance-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./05-ms-attendance-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  biometric-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-biometric-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./06-ms-biometric-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  configuration-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-configuration-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./07-ms-configuration-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+  notification-liquibase:
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    container_name: faceattend-notification-liquibase
+    mem_limit: 256m
+    cpus: "0.5"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./08-ms-notification-db:/liquibase/project
+    command:
+      - --searchPath=/liquibase/project
+      - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --changeLogFile=changelog/changelog-master.yaml
+      - update
+    networks:
+      - faceattend-data
+
+# Tier 3 — databases and migrations only: nothing from the `edge` or `app`
+# networks can reach this one.
+networks:
+  faceattend-data:
+    driver: bridge
+
+volumes:
+  postgres_data:
