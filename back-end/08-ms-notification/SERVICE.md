@@ -20,50 +20,47 @@ Gestionar tipos de alerta y alertas generadas automaticamente por el sistema sob
 
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
-| Lenguaje | **Go 1.22** | Binario unico ~8MB, bajo consumo de memoria |
-| Framework | **Gin** | Router de alto rendimiento, middleware nativo |
-| Arquitectura | **Hexagonal** | Misma estructura que los demas servicios |
+| Lenguaje | **TypeScript 5 / Node.js 20** | Mismo runtime que Academic y Configuration |
+| Framework | **Fastify 4** | Router de alto rendimiento con validacion por esquema |
+| ORM / SQL | **drizzle-orm 0.36 + pg 8** | Acceso tipado a PostgreSQL; migraciones con drizzle-kit |
+| Arquitectura | **Hexagonal** | Misma estructura que los demas servicios (`src/domain` + `src/infrastructure`) |
 
 ### 3.2 Dependencias Principales
 
-```go
-// go.mod
-require (
-    github.com/gin-gonic/gin v1.9.1            // HTTP framework
-    github.com/jackc/pgx/v5 v5.5.0              // PostgreSQL driver
-    github.com/golang-migrate/migrate/v4        // Migraciones
-    github.com/go-playground/validator/v10      // Validacion de requests
-    go.uber.org/zap v1.26.0                     // Structured logging
-    go.opentelemetry.io/otel v1.24.0            // Observabilidad
-)
+```text
+// package.json (dependencies)
+fastify       ^4.26.0   // HTTP framework
+drizzle-orm   ^0.36.4   // ORM / query builder PostgreSQL
+pg            ^8.11.0   // Driver PostgreSQL
+kafkajs       ^2.2.4    // Consumo de eventos Kafka
+nodemailer    ^6.9.0    // Relay SMTP (canal de correo)
+pino          ^8.16.0   // Structured logging
+zod           ^3.22.0   // Validacion de payloads
 ```
 
-### 3.3 Librerias Recomendadas Adicionales
+### 3.3 Librerias Adicionales
 
 | Libreria | Uso | Por que |
 |----------|-----|---------|
-| **pgx** | PostgreSQL driver | 3x mas rapido que database/sql, soporte nativo PostgreSQL |
-| **zap** | Structured logging | Logs JSON de alta performance |
-| **golang-migrate** | Migraciones | Versionado de DDL por schema |
-| **validator/v10** | Validacion | Validacion de request bodies via tags |
-| **OpenTelemetry** | Trazas y metricas | Observabilidad de requests |
-| **firebase-admin-go** | Push notifications (FCM) | Notificaciones push a moviles |
-| **twilio-go** | SMS | Notificaciones por SMS (alternativa) |
-| **Testcontainers-go** | Tests de integracion | PostgreSQL + Kafka en tests |
-| **gofakeit** | Datos de prueba | Generacion de datos para tests |
+| **kafkajs** | Consumo de eventos Kafka | Cliente Kafka en JS puro |
+| **nodemailer** | Correo (SMTP) | Relay para `POST /api/v1/emails` |
+| **pino** | Structured logging | Logs JSON de alto rendimiento |
+| **zod** | Validacion | Validacion de request bodies y payloads |
+| **drizzle-kit** | Migraciones | Genera el DDL del schema `notification` (`drizzle/`) |
+| **Testcontainers** | Tests de integracion | PostgreSQL + Kafka efimeros en tests |
+| **supertest** | Tests HTTP | Pruebas de rutas Fastify |
 
 ### 3.4 Herramientas de Desarrollo
 
 | Herramienta | Uso |
 |-------------|-----|
-| **Go toolchain** | Build, test, vet, lint |
-| **Docker** | Containerizacion |
-| **VS Code + Go extension** | IDE principal |
+| **Node.js 20 + npm** | Build (`tsc`), tests (`jest`), ejecucion (`npm run dev`) |
+| **Docker** | Containerizacion (`node:20-slim`) |
+| **VS Code** | IDE principal |
 | **DBeaver** | Cliente PostgreSQL |
-| **Firebase Console** | Gestion de FCM |
 | **Postman / Bruno** | Testing REST |
 | **MailHog / Mailtrap** | Testing de emails en desarrollo |
-| **golangci-lint** | Linting automatico |
+| **ESLint** | Linting automatico |
 
 ---
 
@@ -121,9 +118,8 @@ require (
 - **Alcance**: consumido por **01-ms-identity** para los codigos de
   recuperacion de contrasena. La ruta **no esta publicada en Kong**: solo se
   alcanza por la red interna de compose (`http://ms-notification:8088`).
-- **Plantillas**: `internal/infrastructure/email/templates/`
-  (`verification_code.html.tmpl` + `verification_code.txt.tmpl`, ambas
-  embebidas en el binario).
+- **Plantillas**: `src/infrastructure/email/render.ts` (lista cerrada:
+  `verification_code`).
 
 ---
 
@@ -131,7 +127,7 @@ require (
 
 El servicio Notification **consume** eventos de otros servicios para generar alertas:
 
-```go
+```text
 // Consumo de topicos de otros servicios
 kafka.Consume(ctx, []string{
     "attendance-events", "scheduling-events",
@@ -203,9 +199,9 @@ Notification Service genera alert
 
 | Canal | Implementacion | Uso |
 |-------|---------------|-----|
-| **Email** | `net/smtp` + `html/template` (`internal/infrastructure/email`) | Alertas formales, reportes, codigos de verificacion |
-| **Push (FCM)** | firebase-admin-go | Notificaciones en tiempo real a movil |
-| **SMS** | twilio-go (opcional) | Alertas criticas, sin internet |
+| **Email** | `nodemailer` + render propio (`src/infrastructure/email`) | Alertas formales, reportes, codigos de verificacion |
+| **Push (FCM)** | firebase-admin (Node) | Notificaciones en tiempo real a movil |
+| **SMS** | twilio (Node, opcional) | Alertas criticas, sin internet |
 | **In-App** | SSE / WebSocket | Notificaciones dentro de la plataforma |
 
 El canal **Email esta implementado** (endpoint interno `POST /api/v1/emails`,
@@ -314,13 +310,13 @@ Cuerpo del POST:
 
 ## 11. Stack Actual
 
-Notification esta implementado en **Go 1.22 + Gin** con arquitectura hexagonal.
+Notification esta implementado en **TypeScript 5 + Fastify 4** con arquitectura hexagonal (reescrito desde Go 1.22 + Gin; ver `STACK.md`).
 
 ### Justificacion
 
-- **Binario unico ~8MB y bajo consumo de memoria**: ideal para un servicio ligero de 2 tablas (`alert_type`, `alert`) con alta frecuencia de escritura por eventos.
-- **Gin**: Router de alto rendimiento con middleware nativo para validacion de requests.
-- **pgx**: Driver PostgreSQL rapido para persistir alertas.
-- **Canal propio de templates**: `html/template` (estandar de Go) para emails, `firebase-admin-go` para push y `twilio-go` para SMS.
-- **Kafka + zap**: Consumo eficiente de eventos de otros servicios con logs JSON estructurados.
+- **Mismo runtime que Academic y Configuration (Node 20)**: un solo stack TypeScript para los servicios ligeros de datos.
+- **Fastify**: Router rapido con validacion por esquema.
+- **drizzle-orm + pg**: Acceso tipado al schema `notification` (2 tablas: `alert_type`, `alert`).
+- **Canal de correo**: `nodemailer` para el relay SMTP y render propio de plantillas; `firebase-admin` para push y `twilio` para SMS (pendientes).
+- **kafkajs + pino**: Consumo de eventos de otros servicios con logs JSON estructurados.
 

@@ -1,5 +1,5 @@
-# 08-ms-notification — Go Gin
+# 08-ms-notification — TypeScript Fastify
 
-Lightweight 2 tables, 5-10 MB binary per ADR-005 17/25. Fastest minimal footprint.
+Servicio de alertas y correo interno sobre 2 tablas (`alert_type`, `alert`). Ver `SERVICE.md` (responsabilidad y endpoints) y `STACK.md` (stack y estructura).
 
-Run: go run ./cmd/server/... (8088)
+Run: `npm run dev` (8088)
