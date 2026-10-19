@@ -16,7 +16,7 @@
     "pino": "^8.16.0"
   },
   "devDependencies": {
-    "typescript": "^5.4.0",
+    "typescript": "^7.0.2",
     "ts-node": "^10.9.0",
     "ts-node-dev": "^2.0.0",
     "@types/node": "^20.11.0",
