@@ -48,8 +48,10 @@ jobs:
 
   frontend:
     name: frontend
-    needs: [ci, backend]
-    if: ${{ always() && needs.ci.result == 'success' && (needs.backend.result == 'success' || needs.backend.result == 'skipped') && (github.event_name == 'push' || inputs.target == 'all' || inputs.target == 'frontend') }}
+    # database en needs: si falla, backend queda skipped y, sin esta condicion, el frontend
+    # lo confundia con un skip por target y se desplegaba igual.
+    needs: [ci, database, backend]
+    if: ${{ always() && needs.ci.result == 'success' && needs.database.result != 'failure' && needs.database.result != 'cancelled' && (needs.backend.result == 'success' || needs.backend.result == 'skipped') && (github.event_name == 'push' || inputs.target == 'all' || inputs.target == 'frontend') }}
     uses: ./.github/workflows/deploy-frontend.yml
     with:
       environment: production
