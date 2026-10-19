@@ -10,7 +10,17 @@ export type PermissionRule = (method: string, path: string) => string | null;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const PUBLIC_PREFIXES = ['/health', '/api/v1/health', '/api/health', '/api/v1/emails'];
+// routes.ts also registers /alerts and /alert-types without the /api/v1
+// prefix (Kong-free aliases for direct access). They carry the same RBAC
+// requirement as their canonical path, so the guard must cover them too —
+// otherwise they fail open: no auth, no permission check.
+const PROTECTED_ALIAS_PREFIXES = ['/alerts', '/alert-types'];
 const TIMEOUT_MS = 4000;
+
+function isGuardedPath(path: string): boolean {
+  if (path.startsWith('/api/')) return true;
+  return PROTECTED_ALIAS_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
+}
 
 function deny(reply: FastifyReply, status: number, message: string, path: string) {
   return reply.code(status).send({
@@ -83,7 +93,7 @@ export function registerAuthGuard(app: FastifyInstance, requiredPermission: Perm
 
   app.addHook('onRequest', async (req: FastifyRequest, reply: FastifyReply) => {
     const path = req.url.split('?')[0];
-    if (req.method === 'OPTIONS' || !path.startsWith('/api/')) return;
+    if (req.method === 'OPTIONS' || !isGuardedPath(path)) return;
     if (PUBLIC_PREFIXES.some((p) => path === p || path.startsWith(p))) return;
 
     const header = req.headers.authorization;
