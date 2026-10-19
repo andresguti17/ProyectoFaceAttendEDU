@@ -4,8 +4,12 @@
 # Uso: docker compose -f docker-compose.prod.yml --env-file .env.prod up --build -d
 include:
   - ./database/docker-compose.neon.yml
-  - ./back-end/docker-compose.yml
-  - ./back-end/docker-compose.neon-overrides.yml
+  # Base y overrides en una sola entrada: Compose los fusiona antes de validar.
+  # Como includes separados, el base se valida solo y falla por depender de un
+  # servicio `postgres` que en producción no existe (la base está en Neon).
+  - path:
+      - ./back-end/docker-compose.yml
+      - ./back-end/docker-compose.neon-overrides.yml
 
 services:
   # Portainer CE — accesible solo por túnel SSH (:9443)

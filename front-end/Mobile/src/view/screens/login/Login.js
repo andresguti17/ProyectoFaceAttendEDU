@@ -4,7 +4,6 @@ import {
     Image,
     Keyboard,
     KeyboardAvoidingView,
-    Platform,
     SafeAreaView,
     Text,
     TextInput,
@@ -148,8 +147,8 @@ export default function LoginScreen({ onLogin, navigation }) {
             >
                 <KeyboardAvoidingView
                     style={{ flex: 1 }}
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+                    behavior="padding"
+                    keyboardVerticalOffset={0}
                 >
                     <ScrollView
                         contentContainerStyle={{ flexGrow: 1 }}

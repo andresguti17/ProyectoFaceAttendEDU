@@ -1,0 +1,69 @@
+name: Deploy frontend (Vercel)
+
+# Fase 1: despliegue manual a Vercel. El push a la rama de prueba sirve para
+# validar el workflow antes de que exista en main (workflow_dispatch solo
+# funciona con el archivo en la rama por defecto).
+on:
+  # Reutilizable desde deploy-production.yml (se ejecuta después del backend).
+  workflow_call:
+    inputs:
+      environment:
+        description: "GitHub environment que aprueba el despliegue"
+        type: string
+        default: preview
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Destino del despliegue"
+        type: choice
+        options: [preview, production]
+        default: preview
+  push:
+    branches: [feature/github-actions-deploy]
+    paths: [".github/workflows/deploy-frontend.yml", "front-end/Web/**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-frontend-${{ inputs.environment || 'preview' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: vercel / ${{ inputs.environment || 'preview' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'preview' }}
+    env:
+      TARGET: ${{ inputs.environment || 'preview' }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: front-end/Web/package-lock.json
+
+      - name: npm ci
+        working-directory: front-end/Web
+        run: npm ci
+
+      - name: npm test
+        working-directory: front-end/Web
+        run: npm test
+
+      # Build remoto en Vercel: usa las variables del proyecto (EXPO_PUBLIC_API_URL
+      # debe estar definida en Vercel → Settings → Environment Variables).
+      # Se ejecuta desde la raíz del repo: el proyecto ya tiene Root Directory
+      # front-end/Web, y desde esa carpeta la CLI duplicaba la ruta.
+      - name: Deploy to Vercel
+        run: |
+          if [ "$TARGET" = "production" ]; then
+            npx --yes vercel@64.5.0 deploy --prod --yes --scope face-attend-edu --token "$VERCEL_TOKEN"
+          else
+            npx --yes vercel@64.5.0 deploy --yes --scope face-attend-edu --token "$VERCEL_TOKEN"
+          fi
