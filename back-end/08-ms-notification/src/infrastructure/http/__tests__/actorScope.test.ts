@@ -49,9 +49,15 @@ describe('resolveActorScope', () => {
     expect(calls).toBe(2);
   });
 
-  it('does not retry on a 4xx and fails the scope resolution', async () => {
-    (global as any).fetch = jest.fn(async () => ({ ok: false, status: 400, json: async () => null }));
+  it('does not retry on a 4xx and fails the scope resolution as a 503 (never widens scope)', async () => {
+    let calls = 0;
+    (global as any).fetch = jest.fn(async () => {
+      calls++;
+      return { ok: false, status: 400, json: async () => null };
+    });
     await expect(resolveActorScope(reqWith('u4'))).rejects.toBeInstanceOf(ScopeError);
+    await expect(resolveActorScope(reqWith('u4'))).rejects.toMatchObject({ statusCode: 503 });
+    expect(calls).toBe(2);
   });
 });
 

@@ -67,8 +67,7 @@ async function getJsonStrict(url: string, token: string): Promise<any> {
     result = await fetchOnce(url, token);
   }
   if (result.status !== 200) {
-    const code = isTransient(result.status) ? 503 : 403;
-    throw new ScopeError(code, `GET ${url} answered ${result.status}`);
+    throw new ScopeError(503, `GET ${url} answered ${result.status}`);
   }
   return result.body;
 }
