@@ -7,7 +7,7 @@
 #  que solo funciona cuando el navegador corre en la misma
 #  máquina que el gateway.
 # ============================================================
-FROM node:20-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 ARG EXPO_PUBLIC_API_URL=
 ENV EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL}
