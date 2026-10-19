@@ -58,12 +58,14 @@ jobs:
 
       # Build remoto en Vercel: usa las variables del proyecto (EXPO_PUBLIC_API_URL
       # debe estar definida en Vercel → Settings → Environment Variables).
+      # Sin --scope: un token de equipo no tiene usuario y la CLI falla con "User not found"
+      # al resolver el slug; VERCEL_ORG_ID y VERCEL_PROJECT_ID ya identifican equipo y proyecto.
       # Se ejecuta desde la raíz del repo: el proyecto ya tiene Root Directory
       # front-end/Web, y desde esa carpeta la CLI duplicaba la ruta.
       - name: Deploy to Vercel
         run: |
           if [ "$TARGET" = "production" ]; then
-            npx --yes vercel@64.5.0 deploy --prod --yes --scope face-attend-edu --token "$VERCEL_TOKEN"
+            npx --yes vercel@64.5.0 deploy --prod --yes --token "$VERCEL_TOKEN"
           else
-            npx --yes vercel@64.5.0 deploy --yes --scope face-attend-edu --token "$VERCEL_TOKEN"
+            npx --yes vercel@64.5.0 deploy --yes --token "$VERCEL_TOKEN"
           fi
