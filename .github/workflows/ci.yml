@@ -94,7 +94,7 @@ jobs:
       # cache the venv keyed on the lockfile so only a changed lockfile pays
       # that cost again.
       - name: Cache poetry virtualenv
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: back-end/${{ matrix.service }}/.venv
           key: poetry-${{ runner.os }}-${{ matrix.service }}-${{ hashFiles(format('back-end/{0}/poetry.lock', matrix.service)) }}
