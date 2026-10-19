@@ -1,4 +1,4 @@
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim AS builder
 WORKDIR /app
 # face-recognition (dlib) and opencv-python-headless compile native extensions.
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir poetry==1.8.3 && poetry config virtualenvs.in-pro
 COPY pyproject.toml poetry.lock* ./
 RUN poetry install --no-root --only main --no-interaction --no-ansi
 
-FROM python:3.12-slim
+FROM python:3.14-slim
 # dlib (a face-recognition dependency) is linked against libopenblas/liblapack
 # at build time in the builder stage above — the runtime .so's must be present
 # here too, or `import dlib` fails with "libopenblas.so.0: cannot open shared
