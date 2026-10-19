@@ -2,10 +2,12 @@
 # Usado con: docker compose -f docker-compose.prod.yml up
 # Redefine los depends_on para NO esperar a un postgres: local,
 # y ajusta las conexiones para usar Neon via variables de entorno
+# Requiere NEON_HOST: host completo de Neon, con region (p. ej.
+# ep-xxxx-pooler.c-2.sa-east-1.aws.neon.tech). Sin la region el nombre no resuelve.
 
 services:
   ms-identity:
-    depends_on:
+    depends_on: !override
       # Quitamos: postgres (service_healthy)
       redis:
         condition: service_healthy
@@ -21,7 +23,7 @@ services:
       SPRING_DATASOURCE_HIKARI_SCHEMA: identity
 
   ms-authorization:
-    depends_on:
+    depends_on: !override
       redis:
         condition: service_healthy
       kafka:
@@ -33,7 +35,7 @@ services:
       SPRING_DATASOURCE_HIKARI_SCHEMA: authorization
 
   ms-scheduling:
-    depends_on:
+    depends_on: !override
       kafka:
         condition: service_healthy
     environment:
@@ -43,7 +45,7 @@ services:
       SPRING_DATASOURCE_HIKARI_SCHEMA: scheduling
 
   ms-attendance:
-    depends_on:
+    depends_on: !override
       mongodb:
         condition: service_healthy
       kafka:
@@ -55,7 +57,7 @@ services:
       SPRING_DATASOURCE_HIKARI_SCHEMA: attendance
 
   ms-biometric:
-    depends_on:
+    depends_on: !override
       mongodb:
         condition: service_healthy
       kafka:
@@ -68,30 +70,30 @@ services:
 
   # ── Node/TypeScript services ──
   ms-academic:
-    depends_on:
+    depends_on: !override
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@ep-nameless-wind-b6xj3sjk-pooler.neon.tech/${POSTGRES_DB}?schema=academic&sslmode=require
+      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=academic&sslmode=require
 
   ms-configuration:
-    depends_on:
+    depends_on: !override
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@ep-nameless-wind-b6xj3sjk-pooler.neon.tech/${POSTGRES_DB}?schema=configuration&sslmode=require
+      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=configuration&sslmode=require
 
   ms-quality:
-    depends_on:
+    depends_on: !override
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@ep-nameless-wind-b6xj3sjk-pooler.neon.tech/${POSTGRES_DB}?schema=quality&sslmode=require
+      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=quality&sslmode=require
 
   # ── Go — ms-notification ──
   ms-notification:
-    depends_on:
+    depends_on: !override
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@ep-nameless-wind-b6xj3sjk-pooler.neon.tech/${POSTGRES_DB}?schema=notification&sslmode=require
+      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=notification&sslmode=require
