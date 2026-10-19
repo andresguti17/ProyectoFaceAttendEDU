@@ -9,17 +9,19 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 export type PermissionRule = (method: string, path: string) => string | null;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const PUBLIC_PREFIXES = ['/health', '/api/v1/health', '/api/health', '/api/v1/emails'];
-// routes.ts also registers /alerts and /alert-types without the /api/v1
-// prefix (Kong-free aliases for direct access). They carry the same RBAC
-// requirement as their canonical path, so the guard must cover them too —
-// otherwise they fail open: no auth, no permission check.
-const PROTECTED_ALIAS_PREFIXES = ['/alerts', '/alert-types'];
+// Deny-by-default (mirrors the Go `isPublicPath`): every path requires auth
+// UNLESS it matches this explicit allowlist. `/health` and `/health/ready`
+// are bare liveness/readiness checks with no sensitive payload; everything
+// else — including `/health/quality` — goes through the guard like any
+// other route. Matches use a segment boundary (`path === p || path.startsWith(p+'/')`),
+// never a bare prefix, so e.g. `/api/v1/emailsX` is not mistaken for `/api/v1/emails`.
+const PUBLIC_EXACT_PATHS = ['/health', '/health/ready', '/api/v1/health', '/api/health'];
+const PUBLIC_PREFIXES = ['/api/v1/emails'];
 const TIMEOUT_MS = 4000;
 
-function isGuardedPath(path: string): boolean {
-  if (path.startsWith('/api/')) return true;
-  return PROTECTED_ALIAS_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
+function isPublicPath(path: string): boolean {
+  if (PUBLIC_EXACT_PATHS.includes(path)) return true;
+  return PUBLIC_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
 }
 
 function deny(reply: FastifyReply, status: number, message: string, path: string) {
@@ -92,9 +94,19 @@ export function registerAuthGuard(app: FastifyInstance, requiredPermission: Perm
   const authorizationUrl = process.env.AUTHORIZATION_URL || 'http://localhost:8082';
 
   app.addHook('onRequest', async (req: FastifyRequest, reply: FastifyReply) => {
-    const path = req.url.split('?')[0];
-    if (req.method === 'OPTIONS' || !isGuardedPath(path)) return;
-    if (PUBLIC_PREFIXES.some((p) => path === p || path.startsWith(p))) return;
+    // Routing runs before `onRequest` in Fastify's lifecycle (see
+    // docs/Reference/Lifecycle.md), so `req.routeOptions.url` is already the
+    // decoded, canonical route pattern find-my-way matched the request to —
+    // e.g. a request to `/%61pi/v1/alerts` resolves here to `/api/v1/alerts`,
+    // the SAME path the handler actually runs under. Deciding on the raw
+    // `req.url` instead (as before) let percent-encoding desync the guard's
+    // decision from the router's: an encoded path could look unguarded here
+    // while find-my-way still dispatched it to a real, protected handler.
+    // When no route matched (404) there is no routeOptions.url; fall back to
+    // the decoded raw path so even an unknown path is deny-by-default.
+    const matchedPath = req.routeOptions?.url;
+    const path = matchedPath ?? decodeURIComponent(req.url.split('?')[0]);
+    if (req.method === 'OPTIONS' || isPublicPath(path)) return;
 
     const header = req.headers.authorization;
     const token = header && /^bearer\s+/i.test(header) ? header.replace(/^bearer\s+/i, '').trim() : '';
