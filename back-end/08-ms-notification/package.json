@@ -11,7 +11,7 @@
     "lint": "eslint src/**/*.ts"
   },
   "dependencies": {
-    "drizzle-orm": "^0.36.4",
+    "drizzle-orm": "^0.45.4",
     "fastify": "^4.26.0",
     "kafkajs": "^2.2.4",
     "nodemailer": "^6.9.0",
