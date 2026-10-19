@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "faceattend-edu",
+    "name": "FaceAttend EDU",
     "slug": "faceattend-edu",
     "version": "1.0.0",
     "runtimeVersion": {
@@ -25,6 +25,7 @@
     "android": {
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
+        "foregroundImage": "./src/assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,

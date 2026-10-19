@@ -53,7 +53,9 @@ test("builds daily buckets from session records", async () => {
     expect(weekly.length).toBeGreaterThan(0);
     expect(weekly[0].week).toMatch(/^Sem \d+$/);
     expect(weekly[0]).toHaveProperty("rate");
-    expect(weekly[0].dailyData).toHaveLength(daily.length);
+    // Los días pueden caer en semanas distintas según el día de la semana en que corra el test.
+    const dailyInWeeks = weekly.reduce((sum, w) => sum + w.dailyData.length, 0);
+    expect(dailyInWeeks).toBe(daily.length);
 });
 
 test("teacher scope keeps only their blocks", async () => {
