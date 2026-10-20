@@ -59,6 +59,7 @@ export function ColorPresetSelector({ visionMode, customColors, selectedSemantic
                                     alignItems: "center",
                                     justifyContent: "center",
                                 }}>
+                                    {/* eslint-disable-next-line faceattend/button-standard -- la muestra pinta un color elegido por el usuario; el blanco es intencional */}
                                     <Feather name="check" size={16} color="#fff" />
                                 </View>
                             )}

@@ -10,7 +10,7 @@ import {
     View, Text, TouchableOpacity, ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Button, AnimatedDropdown, BaseModal, TextInput, PasswordInput } from "../common";
+import { Button, AnimatedDropdown, BaseModal, TextInput, PasswordInput, Checkbox } from "../common";
 import { useTheme }               from "../hooks/useTheme";
 import { useResponsive }          from "../hooks/useResponsive";
 import { useTranslation }         from "../../../core/utils/i18n/hooks/useTranslation";
@@ -512,31 +512,14 @@ export default function RegisterStudentModal({
 
                 {/* Enviar usuario y contraseña inicial por correo (Fase 1) */}
                 {form.role && (
-                    <TouchableOpacity
-                        onPress={() => setField("sendCredentials", form.sendCredentials === false)}
-                        style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 18 }}
-                    >
-                        <View style={{
-                            width: 20,
-                            height: 20,
-                            borderRadius: 4,
-                            borderWidth: 2,
-                            borderColor: form.sendCredentials !== false ? c.status.success : c.border.primary,
-                            backgroundColor: form.sendCredentials !== false ? c.status.success : "transparent",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}>
-                            {form.sendCredentials !== false && <Feather name="check" size={14} color="#fff" />}
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 13, color: c.text.primary }}>
-                                {t("Enviar credenciales por correo")}
-                            </Text>
-                            <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                                {t("Usuario y contraseña inicial al correo de la persona")}
-                            </Text>
-                        </View>
-                    </TouchableOpacity>
+                    <View style={{ marginBottom: 18 }}>
+                        <Checkbox
+                            checked={form.sendCredentials !== false}
+                            onToggle={(v) => setField("sendCredentials", v)}
+                            label={t("Enviar credenciales por correo")}
+                            description={t("Usuario y contraseña inicial al correo de la persona")}
+                        />
+                    </View>
                 )}
 
                 {/* Datos adicionales de la persona (opcionales, PersonDto) */}
@@ -782,70 +765,22 @@ export default function RegisterStudentModal({
                         </Text>
                         
                         {/* Checkbox Facial */}
-                        <TouchableOpacity
-                            onPress={() => setField("hasFacial", !form.hasFacial)}
-                            style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 10,
-                            }}
-                        >
-                            <View style={{
-                                width: 20,
-                                height: 20,
-                                borderRadius: 4,
-                                borderWidth: 2,
-                                borderColor: form.hasFacial ? c.status.success : c.border.primary,
-                                backgroundColor: form.hasFacial ? c.status.success : "transparent",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}>
-                                {form.hasFacial && (
-                                    <Feather name="check" size={14} color="#fff" />
-                                )}
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 13, color: c.text.primary }}>
-                                    {t("Registro facial")}
-                                </Text>
-                                <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                                    {t("Reconocimiento por rostro")}
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
+                        <Checkbox
+                            checked={!!form.hasFacial}
+                            onToggle={(v) => setField("hasFacial", v)}
+                            variant="success"
+                            label={t("Registro facial")}
+                            description={t("Reconocimiento por rostro")}
+                        />
                         
                         {/* Checkbox Huella */}
-                        <TouchableOpacity
-                            onPress={() => setField("hasFingerprint", !form.hasFingerprint)}
-                            style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 10,
-                            }}
-                        >
-                            <View style={{
-                                width: 20,
-                                height: 20,
-                                borderRadius: 4,
-                                borderWidth: 2,
-                                borderColor: form.hasFingerprint ? c.status.success : c.border.primary,
-                                backgroundColor: form.hasFingerprint ? c.status.success : "transparent",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}>
-                                {form.hasFingerprint && (
-                                    <Feather name="check" size={14} color="#fff" />
-                                )}
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 13, color: c.text.primary }}>
-                                    {t("Registro de huella dactilar")}
-                                </Text>
-                                <Text style={{ fontSize: 11, color: c.text.secondary }}>
-                                    {t("Reconocimiento por huella")}
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
+                        <Checkbox
+                            checked={!!form.hasFingerprint}
+                            onToggle={(v) => setField("hasFingerprint", v)}
+                            variant="success"
+                            label={t("Registro de huella dactilar")}
+                            description={t("Reconocimiento por huella")}
+                        />
                     </View>
                 )}
 

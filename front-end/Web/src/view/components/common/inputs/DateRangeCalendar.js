@@ -434,7 +434,7 @@ export function DateRangeCalendar({
                                         styles.dayText,
                                         !day.isCurrentMonth && { color: c.text.disabled, opacity: 0.3 },
                                         day.isCurrentMonth && { color: c.text.primary },
-                                        (isStart || isEnd) && { color: '#fff', fontWeight: '600' },
+                                        (isStart || isEnd) && { color: c.brand.textOnPrimary, fontWeight: '600' },
                                         isTodayDay && !isStart && !isEnd && {
                                             color: c.brand.primary,
                                             fontWeight: '600',

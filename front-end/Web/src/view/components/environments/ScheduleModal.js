@@ -512,9 +512,9 @@ export default function ScheduleModal({
                 disabled={saving}
                 leftIcon={
                     saving ? (
-                        <ActivityIndicator size="small" color="#fff" />
+                        <ActivityIndicator size="small" color={c.interactive.disabledText} />
                     ) : (
-                        <Feather name="check" size={16} color="#fff" />
+                        <Feather name="check" size={16} color={c.brand.textOnPrimary} />
                     )
                 }
             >

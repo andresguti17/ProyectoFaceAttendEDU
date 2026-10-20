@@ -47,7 +47,7 @@ export default function EnvironmentDetailModal({
                     variant="primary"
                     size="sm"
                     onPress={onEdit}
-                    leftIcon={<Feather name="edit-2" size={14} color="#fff" />}
+                    leftIcon={<Feather name="edit-2" size={14} color={c.brand.textOnPrimary} />}
                 >
                     {t("Editar ambiente")}
                 </Button>
@@ -135,7 +135,7 @@ export default function EnvironmentDetailModal({
                             variant="primary" 
                             size="sm" 
                             onPress={onAddSchedule}
-                            leftIcon={<Feather name="plus" size={14} color="#fff" />}
+                            leftIcon={<Feather name="plus" size={14} color={c.brand.textOnPrimary} />}
                         >
                             {t("Añadir horario")}
                         </Button>

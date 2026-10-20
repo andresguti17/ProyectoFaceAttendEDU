@@ -154,7 +154,7 @@ export default function SidebarItem({
                         style={{
                             fontSize: 11,
                             fontWeight: "600",
-                            color: "#FFF",
+                            color: c.status.errorText,
                         }}
                     >
                         {badge}

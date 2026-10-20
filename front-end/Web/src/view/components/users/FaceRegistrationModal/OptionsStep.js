@@ -68,7 +68,7 @@ export default function OptionsStep({ c, t, onCamera, onFileLoad, loadError }) {
                         alignItems: "center",
                         justifyContent: "center",
                     }}>
-                        <Feather name="camera" size={20} color="#fff" />
+                        <Feather name="camera" size={20} color={c.brand.textOnPrimary} />
                     </View>
                     <View style={{ flex: 1 }}>
                         <Text style={{

@@ -139,9 +139,7 @@ export default function SessionWarningModal({
                         onPress={onExtendSession}
                         style={{ flex: 1, maxWidth: 120 }}
                     >
-                        <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>
-                            {t("Continuar")}
-                        </Text>
+                        {t("Continuar")}
                     </Button>
                 </View>
             </View>

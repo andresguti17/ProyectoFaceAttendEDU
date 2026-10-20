@@ -17,11 +17,12 @@
 // ============================================================
 
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, Animated } from "react-native";
+import { View, Text, Image, StyleSheet, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useTheme } from "./components/hooks/useTheme";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+import { Button } from "./components/common/buttons";
 
 /**
  * Tipos de excepciones de autorización
@@ -191,16 +192,14 @@ export function NotAuthorized({
                             </View>
 
                             {/* Botón a la derecha */}
-                            <TouchableOpacity
-                                style={[styles.button, { backgroundColor: c.brand.primary }]}
+                            <Button
+                                variant="primary"
+                                size="sm"
                                 onPress={handleAccept}
-                                activeOpacity={0.8}
+                                leftIcon={<Feather name="log-in" size={14} color={c.brand.textOnPrimary} />}
                             >
-                                <Feather name="log-in" size={14} color={c.brand.textOnPrimary} />
-                                <Text style={[styles.buttonText, { color: c.brand.textOnPrimary }]}>
-                                    {t("Iniciar sesión")}
-                                </Text>
-                            </TouchableOpacity>
+                                {t("Iniciar sesión")}
+                            </Button>
                         </View>
                     </Animated.View>
                 </>
@@ -276,19 +275,6 @@ const styles = StyleSheet.create({
     message: {
         fontSize: 13,
         lineHeight: 18,
-    },
-    button: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        paddingHorizontal: 16,
-        paddingVertical: 9,
-        borderRadius: 8,
-        flexShrink: 0,
-    },
-    buttonText: {
-        fontSize: 13,
-        fontWeight: '600',
     },
 });
 

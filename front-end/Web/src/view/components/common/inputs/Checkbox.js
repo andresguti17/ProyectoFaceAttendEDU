@@ -106,6 +106,18 @@ export function Checkbox({
     danger: c.status.danger,
   };
 
+  // Color de la marca sobre el relleno: el "texto sobre" del mismo token del tema.
+  const markColors = {
+    default: c.brand.textOnPrimary,
+    primary: c.brand.textOnPrimary,
+    success: c.status.successText,
+    warning: c.status.warningText,
+    danger: c.status.errorText,
+  };
+  const markColor = error
+    ? c.status.errorText
+    : markColors[variant] || markColors.default;
+
   const activeColor = error 
     ? c.status.danger 
     : variantColors[variant] || variantColors.default;
@@ -173,7 +185,7 @@ export function Checkbox({
             <Feather
               name={getIcon()}
               size={currentSize.icon}
-              color={disabled ? c.text.disabled : "#FFFFFF"}
+              color={disabled ? c.interactive.disabledText : markColor}
             />
           )}
         </View>
