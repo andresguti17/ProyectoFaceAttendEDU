@@ -54,6 +54,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     /** Atributo que marca un PUT sobre la propia persona hecho sin identity.person:write. */
     public static final String SELF_EDIT_ATTRIBUTE = "identity.selfEdit";
+    /** Idem, cuando quien edita su persona NO tiene identity.person:write: nombres y correo también quedan fijos. */
+    public static final String SELF_EDIT_LIMITED_ATTRIBUTE = "identity.selfEditLimited";
     /** Set<UUID> de personas visibles para quien no es administrador (listado de /persons). */
     public static final String PERSON_SCOPE_ATTRIBUTE = "identity.personScope";
 
@@ -189,6 +191,10 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         if (WRITE.equals(required) && isOwnPerson(request.getMethod(), path, caller)) {
             required = "identity.person:read";
             request.setAttribute(SELF_EDIT_ATTRIBUTE, Boolean.TRUE);
+            // Quien administra personas conserva su alcance; el resto solo toca contacto y salud.
+            if (!cachedEvaluate(rawToken, caller, WRITE)) {
+                request.setAttribute(SELF_EDIT_LIMITED_ATTRIBUTE, Boolean.TRUE);
+            }
         }
         if (required != null && !cachedEvaluate(rawToken, caller, required)) {
             deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + required, path);
@@ -254,6 +260,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     static String requiredPermission(String method, String path, String caller) {
         // Cambio de la propia contraseña: basta la sesión (la valida el caso de uso).
         if (method.equalsIgnoreCase("POST") && path.equals("/api/v1/auth/change-password")) return null;
+        // Perfil propio: la cuenta sale de la sesión y el caso de uso solo toca campos editables.
+        if (method.equalsIgnoreCase("PUT") && path.equals("/api/v1/auth/me/profile")) return null;
         if (!method.equalsIgnoreCase("GET")) return WRITE;
         // Listados completos de cuentas y sesiones: solo administración.
         if (path.equals("/api/v1/users") || path.equals("/api/v1/sessions")) return WRITE;

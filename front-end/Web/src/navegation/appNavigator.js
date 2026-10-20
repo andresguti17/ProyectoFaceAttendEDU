@@ -43,6 +43,7 @@ import BiometricsScreen from "../view/screens/BiometricsScreen";
 import RolesScreen from "../view/screens/RolesScreen";
 import AlertsScreen from "../view/screens/AlertsScreen";
 import AttendanceKioskScreen from "../view/screens/AttendanceKioskScreen";
+import ProfileScreen from "../view/screens/ProfileScreen";
 
 // ── Importación de Componentes de Layout ────────────────────
 import AuthMiddleware from "../view/authorized/AuthMiddleware";
@@ -67,6 +68,7 @@ export default function AppNavigator() {
     const RolesWrapped = React.useMemo(() => AuthMiddleware(RolesScreen), []);
     const AlertsWrapped = React.useMemo(() => AuthMiddleware(AlertsScreen), []);
     const AttendanceKioskWrapped = React.useMemo(() => AuthMiddleware(AttendanceKioskScreen), []);
+    const ProfileWrapped = React.useMemo(() => AuthMiddleware(ProfileScreen), []);
 
     return (
         <Stack.Navigator
@@ -112,6 +114,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Roles" component={RolesWrapped} />
             <Stack.Screen name="Alerts" component={AlertsWrapped} />
             <Stack.Screen name="AttendanceKiosk" component={AttendanceKioskWrapped} />
+            <Stack.Screen name="Profile" component={ProfileWrapped} />
         </Stack.Navigator>
     );
 }

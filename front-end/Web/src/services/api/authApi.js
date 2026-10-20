@@ -54,6 +54,11 @@ export const authApi = {
             body: { currentPassword, newPassword },
         }),
 
+    // ── Perfil propio ───────────────────────────────────
+    // Solo contacto y salud; el correo exige currentPassword. Devuelve la persona.
+    updateMyProfile: (body) =>
+        request(endpoints.identity.myProfile, { method: "PUT", body }),
+
     // ── Alta pública de sede + administrador ────────────
     // Sin sesión previa. Cuerpo { school, admin } en camelCase; la sede y el
     // administrador quedan pendientes de activación por un Super Administrador.

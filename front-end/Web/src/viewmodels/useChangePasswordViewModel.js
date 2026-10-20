@@ -67,6 +67,14 @@ export function useChangePasswordViewModel() {
         setShowPasswords((v) => !v);
     }
 
+    function reset() {
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setErrors({});
+        setSubmitError("");
+    }
+
     async function submit() {
         if (loading) return false;
         const found = validate();
@@ -102,6 +110,7 @@ export function useChangePasswordViewModel() {
         setNew,
         setConfirm,
         togglePasswords,
+        reset,
         submit,
     };
 }
