@@ -105,3 +105,20 @@ test("saveFingerprint (enroll) always uses REST regardless of socket", async () 
     expect(biometricCaptureApi.enrollFingerprint).toHaveBeenCalled();
     expect(socket.send).not.toHaveBeenCalled();
 });
+
+test("saveFingerprint enrolls the finger chosen in the UI", async () => {
+    biometricCaptureApi.enrollFingerprint.mockResolvedValue({});
+    const vm = { run: (op) => op(), setStatus: jest.fn(), requirePersonId: () => "p1", refreshSummary: jest.fn() };
+    const getHook = renderHook({ vm, fingerNumber: 7 });
+
+    act(() => {
+        getHook().__setSampleForTest({ format: 1, data: "abc", quality: 80 });
+    });
+    await act(async () => {
+        await getHook().saveFingerprint();
+    });
+
+    expect(biometricCaptureApi.enrollFingerprint).toHaveBeenCalledWith(
+        expect.objectContaining({ personId: "p1", fingerNumber: 7 })
+    );
+});

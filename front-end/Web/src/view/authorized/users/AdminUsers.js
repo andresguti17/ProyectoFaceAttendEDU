@@ -439,6 +439,7 @@ export function AdminUsers({ section, vm: vmProp }) {
                     visible={vm.showRegisterModal}
                     onClose={vm.closeRegisterModal}
                     onSubmit={vm.registerUser}
+                    onBiometricsEnrolled={vm.markBiometrics}
                     initialRole={roleFilter || null}
                     getCohortsForCourse={vm.cohortsForCourse}
                 />

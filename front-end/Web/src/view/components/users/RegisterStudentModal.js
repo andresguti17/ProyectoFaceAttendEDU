@@ -5,7 +5,7 @@
 //  La validación se hace en el ViewModel, no aquí.
 // ============================================================
 
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
     View, Text, TouchableOpacity, ActivityIndicator,
 } from "react-native";
@@ -18,7 +18,7 @@ import { useAppData }             from "../../../context/AppDataContext";
 import { useAuth }                from "../../../context/AuthContext";
 import { academicApi }            from "../../../services/api/academicApi";
 import { listActors }             from "../../../services/api/referenceData";
-import FaceRegistrationModal      from "./FaceRegistrationModal";
+import BiometricEnrollmentModal    from "./BiometricEnrollmentModal";
 import {
     EMPTY_FORM,
     validateStudentForm,
@@ -55,6 +55,7 @@ export default function RegisterStudentModal({
     onSubmit,
     initialRole = null, // null = modo genérico, "student"/"teacher"/"admin" = modo específico
     getCohortsForCourse = null, // Fichas del curso (backend) para matrícula
+    onBiometricsEnrolled = null, // (personId, { hasFacial, hasFingerprint }) tras capturar la biometría
 }) {
     const { theme }   = useTheme();
     const { isSmall } = useResponsive();
@@ -72,12 +73,11 @@ export default function RegisterStudentModal({
     const [showErrors,    setShowErrors]    = useState(false);
     const [success,       setSuccess]       = useState(false);
     const [credentialsEmail, setCredentialsEmail] = useState(null); // SENT | SKIPPED | FAILED
-    const [showFaceModal, setShowFaceModal] = useState(false);
+    const [enrollment,    setEnrollment]    = useState(null); // { person, wantFace, wantFingerprint } tras el alta
     const [fichaSearch,   setFichaSearch]   = useState(""); // Para búsqueda de fichas
     const [schoolItems,   setSchoolItems]   = useState([]); // Sedes (vínculo del admin)
     const [schoolsError,  setSchoolsError]  = useState(null);
     const [cohortItems,   setCohortItems]   = useState([]); // Fichas del curso (matrícula)
-    const pendingFormRef = useRef(null);
 
     // Generar items de fichas desde los cursos disponibles
     const fichaItems = useMemo(() => {
@@ -297,6 +297,13 @@ export default function RegisterStudentModal({
         // Una cadena es un error; un objeto { credentialsEmail } es un alta exitosa.
         if (typeof result === "string" && result) {
             setError(t(result));
+        } else if (result?.personId && (result.wantFace || result.wantFingerprint)) {
+            // El usuario ya existe: la biometría se captura ahora con su personId real.
+            setEnrollment({
+                person: { personId: result.personId, name: formToSave.name },
+                wantFace: result.wantFace,
+                wantFingerprint: result.wantFingerprint,
+            });
         } else {
             const emailStatus = result?.credentialsEmail ?? null;
             setCredentialsEmail(emailStatus);
@@ -310,6 +317,15 @@ export default function RegisterStudentModal({
                 onClose();
             }, emailStatus ? 3200 : 900);
         }
+    };
+
+    const finishEnrollment = () => {
+        setEnrollment(null);
+        setForm(EMPTY_FORM);
+        setShowErrors(false);
+        setSuccess(false);
+        setCredentialsEmail(null);
+        onClose();
     };
 
     const isEmpty = (v) => showErrors && !v.trim();
@@ -388,7 +404,7 @@ export default function RegisterStudentModal({
     return (
         <React.Fragment>
             <BaseModal
-                visible={visible}
+                visible={visible && !enrollment}
                 onClose={handleClose}
                 title={config.title}
                 subtitle={config.subtitle}
@@ -769,8 +785,8 @@ export default function RegisterStudentModal({
                             checked={!!form.hasFacial}
                             onToggle={(v) => setField("hasFacial", v)}
                             variant="success"
-                            label={t("Registro facial")}
-                            description={t("Reconocimiento por rostro")}
+                            label={t("Registrar rostro al terminar")}
+                            description={t("Se captura con prueba de vida justo después de crear el usuario")}
                         />
                         
                         {/* Checkbox Huella */}
@@ -778,8 +794,8 @@ export default function RegisterStudentModal({
                             checked={!!form.hasFingerprint}
                             onToggle={(v) => setField("hasFingerprint", v)}
                             variant="success"
-                            label={t("Registro de huella dactilar")}
-                            description={t("Reconocimiento por huella")}
+                            label={t("Registrar huella dactilar al terminar")}
+                            description={t("Eliges el dedo y usas el lector DigitalPersona justo después de crear el usuario")}
                         />
                     </View>
                 )}
@@ -789,19 +805,14 @@ export default function RegisterStudentModal({
                 </Text>
             </BaseModal>
 
-            {/* Modal facial secundario */}
-            <FaceRegistrationModal
-                visible={showFaceModal}
-                studentName={form.name}
-                studentId={form.code}
-                onClose={() => setShowFaceModal(false)}
-                onConfirm={(_descriptor) => {
-                    setShowFaceModal(false);
-                    const formWithFace = { ...form, hasFacial: true };
-                    pendingFormRef.current = formWithFace;
-                    setForm(formWithFace);
-                    doSave(formWithFace);
-                }}
+            {/* Captura biométrica real, una vez creado el usuario */}
+            <BiometricEnrollmentModal
+                visible={!!enrollment}
+                person={enrollment?.person}
+                wantFace={!!enrollment?.wantFace}
+                wantFingerprint={!!enrollment?.wantFingerprint}
+                onFinished={(flags) => onBiometricsEnrolled?.(enrollment?.person?.personId, flags)}
+                onClose={finishEnrollment}
             />
         </React.Fragment>
     );
