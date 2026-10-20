@@ -66,6 +66,7 @@ export const linkingConfig = {
             Roles: 'app/roles',  // /app/roles (matriz rol x permiso)
             Alerts: 'app/alerts',  // /app/alerts (bandeja de alertas)
             AttendanceKiosk: 'app/kiosk',  // /app/kiosk (kiosco de asistencia)
+            Profile: 'app/profile',  // /app/profile (perfil de la persona en sesión)
             Biometrics: {
                 // /app/biometrics, /app/biometrics/face-login, /app/biometrics/fingerprint
                 path: 'app/biometrics/:section?',
@@ -156,6 +157,7 @@ export function buildUrl(screen, params = {}) {
         'Roles': '/app/roles',
         'Alerts': '/app/alerts',
         'AttendanceKiosk': '/app/kiosk',
+        'Profile': '/app/profile',
         'Biometrics': params.section ? `/app/biometrics/${params.section}` : '/app/biometrics',
         'Settings': params.section ? `/app/settings/${params.section}` : '/app/settings',
     };

@@ -23,6 +23,10 @@ services:
       # Same as back-end/docker-compose.yml: Docker embedded DNS blackholes
       # SRV queries (~8s cold-start latency per upstream host).
       KONG_DNS_ORDER: 'LAST,A,AAAA,CNAME'
+      # Re-resolve upstream hosts every 5 s so a recreated service (new container
+      # IP) is reachable again right away instead of returning 502 for ~10 min.
+      KONG_DNS_VALID_TTL: '5'
+      KONG_DNS_STALE_TTL: '0'
       KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
     ports:
       - '0.0.0.0:${KONG_PROXY_PORT:-8000}:8000'

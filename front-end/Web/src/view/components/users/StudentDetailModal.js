@@ -4,7 +4,7 @@
 //  Los botones de gestión se muestran según permisos.
 // ============================================================
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge, Avatar, Button, ProgressBar, useAttendanceColor } from "../common";
@@ -13,6 +13,8 @@ import { useTheme }       from "../hooks/useTheme";
 import { useResponsive }  from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../context/AppDataContext";
+import { biometricCaptureApi } from "../../../services/api/biometricCaptureApi";
+import BiometricEnrollmentModal from "./BiometricEnrollmentModal";
 
 
 export default function StudentDetailModal({
@@ -25,6 +27,7 @@ export default function StudentDetailModal({
     canDeleteUser,
     onToggleStatus,
     onRemove,
+    onBiometricsEnrolled,
 }) {
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
@@ -42,6 +45,28 @@ export default function StudentDetailModal({
         return course ? course.name : student.course;
     }, [student?.course, courses]);
 
+    // Lo que ms-biometric tiene de verdad: los flags locales de la fila no se cargan del backend.
+    const [summary, setSummary] = useState(null);
+    const [summaryTick, setSummaryTick] = useState(0);
+    const [enrolling, setEnrolling] = useState(false);
+    const personId = student?.personId;
+    const showsBiometrics = !!canRegisterFace && !!personId && student?.userType !== "admin";
+
+    useEffect(() => {
+        setSummary(null);
+        if (!showsBiometrics) return undefined;
+        let cancelled = false;
+        biometricCaptureApi.summary(personId).then(
+            (data) => {
+                if (!cancelled) setSummary(data);
+            },
+            () => {}
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [showsBiometrics, personId, summaryTick]);
+
     if (!student) return null;
 
     // Asistencia y programa/semestre solo existen para estudiantes: un
@@ -50,6 +75,24 @@ export default function StudentDetailModal({
     // que mostrarla aquí es un dato inventado, no una métrica real.
     const isStudent = (student.userType ?? "student") === "student";
     const isAdmin = student.userType === "admin";
+
+    if (enrolling) {
+        const missingFace = summary ? !summary.has_face : !student.hasFacial;
+        const missingFingerprint = summary ? !summary.has_fingerprint : !student.hasFingerprint;
+        return (
+            <BiometricEnrollmentModal
+                visible
+                person={{ personId, name: student.name }}
+                wantFace={missingFace || !missingFingerprint}
+                wantFingerprint={missingFingerprint || !missingFace}
+                onFinished={(flags) => onBiometricsEnrolled?.(personId, flags)}
+                onClose={() => {
+                    setEnrolling(false);
+                    setSummaryTick((tick) => tick + 1);
+                }}
+            />
+        );
+    }
 
     return (
         <Modal transparent animationType="fade" onRequestClose={onClose}>
@@ -177,8 +220,8 @@ export default function StudentDetailModal({
                                 un admin no tiene academic_actor ni biometría (MODELO §2.6) */}
                             {canRegisterFace && !isAdmin && (() => {
                                 // Determinar estado biométrico basado en facial y huella
-                                const hasFacial = student.hasFacial || false;
-                                const hasFingerprint = student.hasFingerprint || false;
+                                const hasFacial = summary ? !!summary.has_face : student.hasFacial || false;
+                                const hasFingerprint = summary ? !!summary.has_fingerprint : student.hasFingerprint || false;
                                 
                                 let biometricStatus = "pending";
                                 if (hasFacial && hasFingerprint) {
@@ -235,7 +278,16 @@ export default function StudentDetailModal({
                                             </View>
                                         </View>
                                         {config.showButton
-                                            ? <Button variant="primary" size="sm">{t("Registrar")}</Button>
+                                            ? (
+                                                <Button
+                                                    variant="primary"
+                                                    size="sm"
+                                                    disabled={!personId}
+                                                    onPress={() => setEnrolling(true)}
+                                                >
+                                                    {t("Registrar")}
+                                                </Button>
+                                            )
                                             : <Feather name={config.icon} size={18} color={config.color} />
                                         }
                                     </View>

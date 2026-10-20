@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Modal, FlatList, TextInput as RNTextInput
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
+import { Button } from "../buttons";
 
 /**
  * Select/Dropdown reutilizable con búsqueda y multi-selección
@@ -341,17 +342,9 @@ export function Select({
                   { borderTopColor: theme.colors.border.primary },
                 ]}
               >
-                <TouchableOpacity
-                  style={[
-                    styles.doneButton,
-                    { backgroundColor: theme.colors.brand.primary },
-                  ]}
-                  onPress={handleCloseModal}
-                >
-                  <Text style={[styles.doneButtonText, { color: theme.colors.text.inverse }]}>
+                <Button variant="primary" size="sm" fullWidth onPress={handleCloseModal}>
                     Listo ({selectedValues.length})
-                  </Text>
-                </TouchableOpacity>
+                </Button>
               </View>
             )}
           </View>

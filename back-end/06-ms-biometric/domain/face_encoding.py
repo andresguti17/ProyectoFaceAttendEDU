@@ -11,6 +11,7 @@ existing `FacialEmbedding.encoding` / compared with the existing
 from __future__ import annotations
 
 import base64
+from typing import NamedTuple
 
 import cv2
 import face_recognition
@@ -20,6 +21,11 @@ FACE_DETECTION_MODEL = "hog"
 BLINK_EAR_DELTA = 0.06
 MOVEMENT_DELTA = 0.05
 MOUTH_OPENING_DELTA = 0.07
+SMILE_DELTA = 0.03
+NOD_DELTA = 0.08
+# Mean absolute pixel difference (0-255) under which two consecutive frames are
+# considered the same still image.
+FROZEN_FRAME_DIFF = 0.5
 FRAMES_PER_ACTION = 6
 
 
@@ -55,8 +61,18 @@ def face_encoding(image: np.ndarray) -> list[float] | None:
     return list(encodings[0]) if encodings else None
 
 
-def face_measurements(image: np.ndarray) -> tuple[float, float, float] | None:
-    """(eye-aspect-ratio sum, nose horizontal offset, mouth opening ratio)."""
+class FaceMeasurements(NamedTuple):
+    """Scale-free geometry of one frame: relative to the eye distance (or the
+    jaw width for `mouth_width`), so it does not depend on camera distance."""
+
+    ear: float  # eye-aspect-ratio sum of both eyes (blink)
+    yaw: float  # nose offset from the eye centre; grows when turning to the person's left
+    mouth_open: float  # lip gap / mouth width
+    mouth_width: float  # mouth width / jaw width (smile)
+    pitch: float  # nose height below the eye line (nod)
+
+
+def face_measurements(image: np.ndarray) -> FaceMeasurements | None:
     locations = face_recognition.face_locations(
         image, number_of_times_to_upsample=0, model=FACE_DETECTION_MODEL
     )
@@ -70,19 +86,24 @@ def face_measurements(image: np.ndarray) -> tuple[float, float, float] | None:
     nose = landmarks[0].get("nose_tip")
     top_lip = landmarks[0].get("top_lip")
     bottom_lip = landmarks[0].get("bottom_lip")
-    if not left_eye or not right_eye or not nose or not top_lip or not bottom_lip:
+    chin = landmarks[0].get("chin")
+    if not left_eye or not right_eye or not nose or not top_lip or not bottom_lip or not chin:
         return None
     eye_width = np.linalg.norm(np.asarray(left_eye[0]) - np.asarray(right_eye[3]))
-    if eye_width == 0:
+    jaw_width = np.linalg.norm(np.asarray(chin[0]) - np.asarray(chin[-1]))
+    if eye_width == 0 or jaw_width == 0:
         return None
     eye_center_x = (left_eye[0][0] + right_eye[3][0]) / 2
-    nose_x = float(np.mean(np.asarray(nose)[:, 0]))
+    eye_center_y = (left_eye[0][1] + right_eye[3][1]) / 2
+    nose_points = np.asarray(nose)
     mouth_width = np.linalg.norm(np.asarray(top_lip[0]) - np.asarray(top_lip[6]))
     mouth_height = np.linalg.norm(np.asarray(top_lip[3]) - np.asarray(bottom_lip[3]))
-    return (
-        _eye_aspect_ratio(left_eye) + _eye_aspect_ratio(right_eye),
-        (nose_x - eye_center_x) / eye_width,
-        mouth_height / mouth_width if mouth_width else 0.0,
+    return FaceMeasurements(
+        ear=_eye_aspect_ratio(left_eye) + _eye_aspect_ratio(right_eye),
+        yaw=(float(np.mean(nose_points[:, 0])) - eye_center_x) / eye_width,
+        mouth_open=float(mouth_height / mouth_width) if mouth_width else 0.0,
+        mouth_width=float(mouth_width / jaw_width),
+        pitch=(float(np.mean(nose_points[:, 1])) - eye_center_y) / eye_width,
     )
 
 
@@ -97,24 +118,54 @@ def _eye_aspect_ratio(eye: list[tuple[int, int]]) -> float:
     )
 
 
-def _action_detected(action: str, measurements: list[tuple[float, float, float]]) -> bool:
+def _action_detected(action: str, measurements: list[FaceMeasurements]) -> bool:
+    def series(field: str) -> list[float]:
+        return [getattr(measurement, field) for measurement in measurements]
+
     if action == "blink":
-        values = [measurement[0] for measurement in measurements]
+        values = series("ear")
         return max(values) - min(values) >= BLINK_EAR_DELTA
-    if action == "turn":
-        values = [measurement[1] for measurement in measurements]
+    if action == "turn":  # legacy: any horizontal movement, no direction
+        values = series("yaw")
         return max(values) - min(values) >= MOVEMENT_DELTA
+    if action == "turn_left":
+        values = series("yaw")
+        return max(values) - values[0] >= MOVEMENT_DELTA
+    if action == "turn_right":
+        values = series("yaw")
+        return values[0] - min(values) >= MOVEMENT_DELTA
     if action == "open_mouth":
-        values = [measurement[2] for measurement in measurements]
+        values = series("mouth_open")
         return max(values) - min(values) >= MOUTH_OPENING_DELTA
+    if action == "smile":
+        values = series("mouth_width")
+        return max(values) - values[0] >= SMILE_DELTA
+    if action == "nod":
+        values = series("pitch")
+        return max(values) - min(values) >= NOD_DELTA
     return False
+
+
+def _frames_are_frozen(images: list[np.ndarray]) -> bool:
+    """True when every consecutive pair of frames is (almost) pixel-identical:
+    a still image or a repeated frame, never a live camera (sensor noise alone
+    moves pixels)."""
+    for previous, current in zip(images, images[1:]):
+        if previous.shape != current.shape:
+            return False
+        diff = np.mean(np.abs(previous.astype(np.int16) - current.astype(np.int16)))
+        if float(diff) >= FROZEN_FRAME_DIFF:
+            return False
+    return True
 
 
 def validate_liveness(images: list[np.ndarray], action: str) -> bool:
     """One action's worth of frames (`FRAMES_PER_ACTION`) show the gesture."""
     if len(images) != FRAMES_PER_ACTION:
         return False
-    measurements: list[tuple[float, float, float]] = []
+    if _frames_are_frozen(images):
+        return False
+    measurements: list[FaceMeasurements] = []
     for image in images:
         measurement = face_measurements(image)
         if measurement is None:

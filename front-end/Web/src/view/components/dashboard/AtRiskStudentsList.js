@@ -8,6 +8,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { getTextOnColor } from "../../../core/theme/generateTheme";
 import { Card, Badge, Avatar, ProgressBar } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
@@ -79,7 +80,7 @@ function StudentRow({ student, index, isLast, onPress, c, t }) {
                     alignItems: "center",
                     justifyContent: "center",
                 }}>
-                    <Feather name={icon} size={10} color="#fff" />
+                    <Feather name={icon} size={10} color={getTextOnColor(attColor)} />
                 </View>
             </View>
 

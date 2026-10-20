@@ -164,6 +164,57 @@ verificado.
 | GET | `/api/v1/sessions` | Listar sesiones del usuario |
 | DELETE | `/api/v1/sessions/{id}` | Revocar sesion |
 
+### 4.5.1 Credenciales por correo y cambio obligatorio
+
+`POST /api/v1/users` acepta `sendCredentials: true`. Tras crear la cuenta, identity pide a
+notification enviar la plantilla `user_credentials` (usuario y contrasena iniciales, mas el
+enlace de ingreso si `faceattend.notification.login-url` esta definido). La respuesta incluye
+`credentialsEmail`: `SENT`, `SKIPPED` (la persona no tiene correo o la cuenta esta inactiva) o
+`FAILED` (entrega fallida o SMTP sin configurar). Un fallo nunca deshace la cuenta.
+
+Solo cuando el correo fue aceptado se enciende `app_user.must_change_password`. El login
+(`POST /auth/login`) devuelve `mustChangePassword`; el cliente debe llevar al usuario a cambiar
+la contrasena (`POST /auth/change-password`) antes de usar la app. Cambiar la contrasena
+(`change-password` o recuperacion) apaga el flag; un `PUT /users` no lo toca. El bloqueo es del
+cliente: ningun microservicio rechaza peticiones por este flag.
+
+### 4.5.2 Perfil propio
+
+| Metodo | Endpoint | Descripcion |
+|--------|----------|-------------|
+| PUT | `/api/v1/auth/me/profile` | Editar los datos de contacto y salud de la persona en sesion |
+
+Basta la sesion (sin `identity.person:write`): la cuenta sale de la sesion, nunca del cuerpo. Cuerpo:
+`phone`, `address`, `birthDate`, `bloodType` (se reemplazan tal cual; vacio los borra) y `email` +
+`currentPassword`. El correo es el identificador de login, asi que un correo nuevo exige la
+contrasena actual (400 si falta o es incorrecta) y uno ya usado responde 409. Nombres, documento,
+estado, usuario, rol y sede no se pueden cambiar por aqui: cualquier otro campo del cuerpo se ignora.
+Devuelve la persona actualizada.
+
+Ademas, `PUT /api/v1/persons/{id}` sobre la propia persona hecho por quien NO tiene
+`identity.person:write` conserva nombres y correo (antes solo fijaba estado y documento).
+
+### 4.6 Alta publica de sedes
+
+| Metodo | Endpoint | Descripcion |
+|--------|----------|-------------|
+| POST | `/api/v1/onboarding/schools` | Registrar una sede y su administrador (publico, sin sesion) |
+
+Cuerpo (camelCase): `school` (`code`, `name`, `cityName`, `address?`, `phone?`, `email?`) y
+`admin` (`documentType` CC/TI/CE/PP, `documentNumber`, `name`, `lastName`, `email`, `phone?`,
+`username`, `password`). Responde `202 {schoolId, userId, status: "PENDING_ACTIVATION"}`.
+
+Flujo: valida el username, abre una sesion interna de la cuenta de servicio
+(`faceattend.onboarding.service-user-id`, un Super Administrador dedicado) y encadena
+persona -> usuario (inactivo) -> sede (`POST /schools`, `status=false`) -> rol Administrador
+(`POST /users/{id}/roles`) -> vinculo `academic_actor` tipo ADMIN. La sesion se cierra al terminar.
+Si falla un paso remoto se deshacen la sede, el rol y el vinculo; la persona y el usuario quedan
+inactivos. Un Super Administrador activa luego el usuario (`POST /users/{id}/activate`) y la sede
+(`PATCH /schools/{id}/status`).
+
+Errores: `400` validacion, `409` usuario o codigo de sede duplicado, `503` deshabilitado
+(sin cuenta de servicio) o servicio dependiente caido. Kong limita la ruta a 5/min y 20/h por IP.
+
 ---
 
 ## 5. Domain Events
@@ -265,10 +316,15 @@ springdoc:
 | `faceattend.recovery.resend-cooldown-seconds` | `60` | Espera minima entre reenvios |
 | `faceattend.notification.base-url` | `http://localhost:8088` | 08-ms-notification (en compose: `http://ms-notification:8088`) |
 | `faceattend.notification.internal-token` | *(vacio)* | Header `X-Internal-Token` si el destino lo exige |
+| `faceattend.notification.login-url` | *(vacio)* | Enlace de ingreso del correo de credenciales (`APP_LOGIN_URL` en compose) |
+| `faceattend.onboarding.service-user-id` | *(vacio)* | `user_id` de la cuenta de servicio del alta de sedes; vacio deshabilita el endpoint (503) |
+| `faceattend.onboarding.academic-url` | `http://localhost:8083` | 03-ms-academic (en compose: `http://ms-academic:8083`) |
+| `faceattend.onboarding.authorization-url` | `http://localhost:8082` | 02-ms-authorization (en compose: `http://ms-authorization:8082`) |
 
 Se sobrescriben por variable de entorno con la forma `FACEATTEND_AUTH_*`,
-`FACEATTEND_RECOVERY_*` y `FACEATTEND_NOTIFICATION_*` (p. ej.
-`FACEATTEND_NOTIFICATION_BASE_URL`).
+`FACEATTEND_RECOVERY_*`, `FACEATTEND_NOTIFICATION_*` y `FACEATTEND_ONBOARDING_*` (p. ej.
+`FACEATTEND_NOTIFICATION_BASE_URL`). En compose, `ONBOARDING_SERVICE_USER_ID` del `.env`
+alimenta `FACEATTEND_ONBOARDING_SERVICE_USER_ID`.
 
 ---
 

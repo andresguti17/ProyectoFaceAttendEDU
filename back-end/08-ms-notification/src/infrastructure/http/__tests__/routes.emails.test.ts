@@ -35,4 +35,23 @@ describe('POST /api/v1/emails', () => {
     const res = await app.inject({ method: 'POST', url: '/api/v1/emails', payload: { to: 'x@y.com', template: 'verification_code', data: { code: '123456' } } });
     expect(res.statusCode).toBe(502);
   });
+
+  it("accepts the user_credentials template and sends the credentials with the fixed subject", async () => {
+    const spy = jest.spyOn(sender, "sendEmail").mockResolvedValue(undefined as any);
+    const app = Fastify();
+    registerEmailRoute(app, cfg);
+    const res = await app.inject({ method: "POST", url: "/api/v1/emails", payload: { to: "x@y.com", template: "user_credentials", data: { username: "ana", password: "Secret123!" } } });
+    expect(res.statusCode).toBe(202);
+    expect(res.json().status).toBe("accepted");
+    const sent = spy.mock.calls[spy.mock.calls.length - 1][1] as any;
+    expect(sent.subject).toBe("Tus credenciales de acceso - FaceAttend EDU");
+    expect(sent.textBody).toContain("Secret123!");
+  });
+
+  it("returns 400 when user_credentials has no password", async () => {
+    const app = Fastify();
+    registerEmailRoute(app, cfg);
+    const res = await app.inject({ method: "POST", url: "/api/v1/emails", payload: { to: "x@y.com", template: "user_credentials", data: { username: "ana" } } });
+    expect(res.statusCode).toBe(400);
+  });
 });

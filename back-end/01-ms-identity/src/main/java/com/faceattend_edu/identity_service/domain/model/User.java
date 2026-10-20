@@ -26,6 +26,8 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime lastAccess;
+    /** true once initial credentials were handed over by email; cleared on the next password change. */
+    private boolean mustChangePassword;
 
     private static final Set<String> ALLOWED_AUTH_TYPES = new HashSet<>(Arrays.asList("Local", "Windows", "External"));
 

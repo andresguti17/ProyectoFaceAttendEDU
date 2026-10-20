@@ -247,7 +247,7 @@ export default function SchoolsView() {
                             variant="primary"
                             size="sm"
                             onPress={vm.openCreate}
-                            leftIcon={<Feather name="plus" size={16} color="#fff" />}
+                            leftIcon={<Feather name="plus" size={16} color={c.brand.textOnPrimary} />}
                         >
                             {t("Nueva sede")}
                         </Button>

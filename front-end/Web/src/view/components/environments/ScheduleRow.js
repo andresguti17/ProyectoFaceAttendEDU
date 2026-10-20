@@ -3,9 +3,9 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Badge } from "../common";
+import { Badge, IconButton } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useDateFormat } from "../hooks/useDateFormat";
@@ -135,27 +135,21 @@ export function ScheduleRow({ schedule, onEdit, onDelete, isLast, canManage = tr
                         gap: 8,
                         marginLeft: 12,
                     }}>
-                        <TouchableOpacity
+                        <IconButton
+                            size="sm"
+                            variant="secondary"
                             onPress={onEdit}
-                            style={{
-                                padding: 8,
-                                borderRadius: 6,
-                                backgroundColor: c.brand.primaryLight,
-                            }}
-                        >
-                            <Feather name="edit-2" size={16} color={c.brand.primary} />
-                        </TouchableOpacity>
+                            accessibilityLabel={t("Editar")}
+                            icon={(color) => <Feather name="edit-2" size={16} color={color} />}
+                        />
                         
-                        <TouchableOpacity
+                        <IconButton
+                            size="sm"
+                            variant="danger"
                             onPress={onDelete}
-                            style={{
-                                padding: 8,
-                                borderRadius: 6,
-                                backgroundColor: c.status.dangerLight,
-                            }}
-                        >
-                            <Feather name="trash-2" size={16} color={c.status.danger} />
-                        </TouchableOpacity>
+                            accessibilityLabel={t("Eliminar")}
+                            icon={(color) => <Feather name="trash-2" size={16} color={color} />}
+                        />
                     </View>
                 )}
             </View>

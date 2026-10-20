@@ -6,7 +6,7 @@
 //  local y envía la muestra al API para guardarla o reconocerla.
 // ============================================================
 
-import React from "react";
+import React, { useState } from "react";
 import { Platform, View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, Alert, Badge } from "../common";
@@ -14,14 +14,16 @@ import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../core/config/theme.config";
-import { useFingerprintReader } from "../../../viewmodels/useFingerprintReader";
+import { useFingerprintReader, DEFAULT_FINGER_NUMBER } from "../../../viewmodels/useFingerprintReader";
+import FingerSelector from "./FingerSelector";
 
-function ReaderModule({ vm }) {
+function ReaderModule({ vm, enrollOnly }) {
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
     const { t } = useTranslation();
     const c = theme.colors;
-    const fp = useFingerprintReader({ vm });
+    const [fingerNumber, setFingerNumber] = useState(DEFAULT_FINGER_NUMBER);
+    const fp = useFingerprintReader({ vm, fingerNumber });
 
     const dotColor = fp.readerError ? c.status.error : fp.deviceReady ? c.status.success : c.status.warning;
 
@@ -58,6 +60,8 @@ function ReaderModule({ vm }) {
                     )}
                 />
             )}
+
+            <FingerSelector value={fingerNumber} onChange={setFingerNumber} disabled={vm.busy || fp.capturing} />
 
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 10 }}>
                 <Button
@@ -96,15 +100,17 @@ function ReaderModule({ vm }) {
                 >
                     {t("Guardar muestra")}
                 </Button>
-                <Button
-                    variant="outline"
-                    style={{ flex: 1 }}
-                    disabled={vm.busy || !fp.sampleReady}
-                    leftIcon={<Feather name="check-circle" size={16} color={c.brand.primary} />}
-                    onPress={fp.loginFingerprint}
-                >
-                    {t("Reconocer huella")}
-                </Button>
+                {!enrollOnly && (
+                    <Button
+                        variant="outline"
+                        style={{ flex: 1 }}
+                        disabled={vm.busy || !fp.sampleReady}
+                        leftIcon={<Feather name="check-circle" size={16} color={c.brand.primary} />}
+                        onPress={fp.loginFingerprint}
+                    >
+                        {t("Reconocer huella")}
+                    </Button>
+                )}
             </View>
 
             <Text style={{ color: c.text.secondary, fontSize: 12, lineHeight: 18 }}>
@@ -116,7 +122,7 @@ function ReaderModule({ vm }) {
     );
 }
 
-export default function FingerprintModule({ vm }) {
+export default function FingerprintModule({ vm, enrollOnly = false }) {
     const { t } = useTranslation();
 
     if (Platform.OS !== "web") {
@@ -127,5 +133,5 @@ export default function FingerprintModule({ vm }) {
             />
         );
     }
-    return <ReaderModule vm={vm} />;
+    return <ReaderModule vm={vm} enrollOnly={enrollOnly} />;
 }

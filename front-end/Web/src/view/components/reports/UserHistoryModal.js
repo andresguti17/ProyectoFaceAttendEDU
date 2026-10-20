@@ -6,9 +6,9 @@
 // ============================================================
 
 import React, { useMemo, useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Modal, ScrollView } from "react-native";
+import { View, Text, Modal, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Badge, Avatar, Button } from "../common";
+import { Badge, Avatar, Button, IconButton } from "../common";
 import { AnimatedDropdown } from "../common/animation/AnimatedDropdown";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
@@ -388,16 +388,13 @@ export default function UserHistoryModal({
                                     </Text>
                                 </View>
                             </View>
-                            <TouchableOpacity 
+                            <IconButton
+                                size="sm"
+                                variant="ghost"
                                 onPress={onClose}
-                                style={{
-                                    padding: 4,
-                                    borderRadius: 6,
-                                    backgroundColor: c.background.surface,
-                                }}
-                            >
-                                <Feather name="x" size={18} color={c.text.secondary} />
-                            </TouchableOpacity>
+                                accessibilityLabel={t("Cerrar")}
+                                icon={(color) => <Feather name="x" size={18} color={color} />}
+                            />
                         </View>
 
                         {/* Información del curso */}

@@ -539,6 +539,17 @@ export function AppDataProvider({ children }) {
         else setLoadedStudents(apply);
     }, []);
 
+    // Refleja en la lista (estudiantes, docentes, administradores) lo que acaba
+    // de quedar registrado en ms-biometric para esa persona.
+    const patchBiometricsFn = useCallback((personId, patch) => {
+        if (!personId) return;
+        const apply = (prev) =>
+            prev.map((u) => (String(u.personId) === String(personId) ? { ...u, ...patch } : u));
+        setLoadedStudents(apply);
+        setLoadedTeachers(apply);
+        setLoadedAdmins(apply);
+    }, []);
+
     const removeUserFn = useCallback(
         async (id) => {
             const updated = await storageDeleteUser(users, id);
@@ -682,6 +693,7 @@ export function AppDataProvider({ children }) {
             updateUser: updateUserFn,
             removeUser: removeUserFn,
             patchStaff: patchStaffFn,
+            patchBiometrics: patchBiometricsFn,
 
             environments,
             addEnvironment: addEnvironmentFn,
@@ -725,6 +737,7 @@ export function AppDataProvider({ children }) {
             updateUserFn,
             removeUserFn,
             patchStaffFn,
+            patchBiometricsFn,
             environments,
             addEnvironmentFn,
             updateEnvironmentFn,

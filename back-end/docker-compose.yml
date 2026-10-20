@@ -130,6 +130,12 @@ services:
       # Canal de correo: identity llama por HTTP a POST /api/v1/emails (SERVICE.md §4.4).
       FACEATTEND_NOTIFICATION_BASE_URL: http://ms-notification:8088
       FACEATTEND_NOTIFICATION_INTERNAL_TOKEN: "${EMAIL_INTERNAL_TOKEN:-}"
+      # Enlace de ingreso del correo de credenciales (vacío = el correo no lleva enlace).
+      FACEATTEND_NOTIFICATION_LOGIN_URL: "${APP_LOGIN_URL:-}"
+      # Alta pública de sedes (POST /api/v1/onboarding/schools): vacío = deshabilitada (503).
+      FACEATTEND_ONBOARDING_SERVICE_USER_ID: "${ONBOARDING_SERVICE_USER_ID:-}"
+      FACEATTEND_ONBOARDING_ACADEMIC_URL: http://ms-academic:8083
+      FACEATTEND_ONBOARDING_AUTHORIZATION_URL: http://ms-authorization:8082
       SERVER_PORT: 8081
     ports:
       - "${BIND_IP:-127.0.0.1}:8081:8081"
@@ -550,6 +556,12 @@ services:
       # Docker's embedded DNS blackholes SRV queries (~8s cold-start latency
       # per upstream host). Same value as the standalone gateway file.
       KONG_DNS_ORDER: 'LAST,A,AAAA,CNAME'
+      # A recreated service gets a new container IP. Docker answers with a ~10 min
+      # TTL and Kong used to cache it that long, so after a rebuild every call to
+      # the recreated service (login included) failed with 502 "connection refused"
+      # against an IP that now belongs to another container. Re-resolve every 5 s.
+      KONG_DNS_VALID_TTL: '5'
+      KONG_DNS_STALE_TTL: '0'
       # Lets the pre-function token check call identity through resty.http.
       KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
     ports:

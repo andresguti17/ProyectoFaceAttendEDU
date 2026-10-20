@@ -1,16 +1,22 @@
 import React from "react";
-import { TouchableOpacity, StyleSheet } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
+import { getButtonColors } from "./buttonColors";
 
 /**
  * Botón circular solo con icono
- * 
- * @param {ReactNode} icon - Icono a mostrar
- * @param {string} variant - Estilo: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
+ *
+ * Usa los mismos colores que Button (ver buttonColors.js). Para que el icono
+ * tome el color correcto de la variante, `icon` puede ser una función que
+ * recibe ese color: `icon={(color) => <Feather name="edit" size={18} color={color} />}`.
+ *
+ * @param {ReactNode|function(string): ReactNode} icon - Icono, o función que lo crea con el color de la variante
+ * @param {string} variant - 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success' | 'warning' | 'inverse' | 'inverseOutline'
  * @param {string} size - Tamaño: 'sm' | 'md' | 'lg'
  * @param {boolean} disabled - Deshabilita el botón
  * @param {function} onPress - Callback al presionar
+ * @param {string} accessibilityLabel - Etiqueta accesible (recomendada: no hay texto)
  */
 export function IconButton({
   icon,
@@ -22,27 +28,6 @@ export function IconButton({
   ...props
 }) {
   const { theme } = useTheme();
-
-  // Estilos por variante
-  const variantStyles = {
-    primary: {
-      backgroundColor: theme.colors.brand.primary,
-    },
-    secondary: {
-      backgroundColor: theme.colors.brand.secondary,
-    },
-    outline: {
-      backgroundColor: "transparent",
-      borderColor: theme.colors.brand.primary,
-      borderWidth: 1,
-    },
-    ghost: {
-      backgroundColor: "transparent",
-    },
-    danger: {
-      backgroundColor: theme.colors.status.error,
-    },
-  };
 
   // Tamaños
   const sizeStyles = {
@@ -60,21 +45,32 @@ export function IconButton({
     },
   };
 
+  const idle = getButtonColors(theme.colors, variant, { disabled });
+
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
       disabled={disabled}
-      style={[
-        styles.button,
-        variantStyles[variant],
-        sizeStyles[size],
-        disabled && styles.disabled,
-        style,
-      ]}
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      style={({ hovered, pressed }) => {
+        const state = getButtonColors(theme.colors, variant, { disabled, hovered, pressed });
+        return [
+          styles.button,
+          {
+            backgroundColor: state.backgroundColor,
+            borderColor: state.borderColor,
+            borderWidth: variant === "outline" ? 1 : 0,
+            opacity: state.opacity,
+          },
+          sizeStyles[size],
+          style,
+        ];
+      }}
       {...props}
     >
-      {icon}
-    </TouchableOpacity>
+      {typeof icon === "function" ? icon(idle.color) : icon}
+    </Pressable>
   );
 }
 
@@ -83,9 +79,6 @@ const styles = StyleSheet.create({
     borderRadius: DESIGN_TOKENS.borderRadius.round,
     alignItems: "center",
     justifyContent: "center",
-  },
-  disabled: {
-    opacity: 0.5,
   },
 });
 

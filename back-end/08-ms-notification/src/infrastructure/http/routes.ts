@@ -6,7 +6,7 @@ import type { IAlertTypeRepository } from '../../domain/ports/out/IAlertTypeRepo
 import { actorAllowed, resolveActorScope, ScopeError } from './actorScope';
 import { notifyWebhook, webhookConfigFromEnv, WEBHOOK_NOT_CONFIGURED, type WebhookPayload } from '../webhook/notifier';
 import { sendEmail, SMTP_NOT_CONFIGURED, type SmtpConfig } from '../email/sender';
-import { render, subjectFor, TEMPLATE_VERIFICATION_CODE } from '../email/render';
+import { render, subjectFor, SUPPORTED_TEMPLATES } from '../email/render';
 
 /**
  * HTTP adapters — 08-ms-notification.
@@ -101,12 +101,13 @@ export async function registerNotificationRoutes(
         resolvedAt: null,
       } as any);
 
-      // DASHBOARD alerts are in-app only; EMAIL/PUSH need an external
-      // delivery. Fire-and-forget, detached from this request: a slow or
-      // unreachable receiver must never make alert creation time out, so this
-      // is deliberately not awaited before the response is sent (ports the Go
-      // `go notifyAsync(...)` fire-and-forget dispatch).
-      if (alertType && alertType.channel && alertType.channel !== 'DASHBOARD') {
+      // Only EMAIL/PUSH need an external delivery; DASHBOARD (and any legacy
+      // in-app value) is shown in the app only. Fire-and-forget, detached from
+      // this request: a slow or unreachable receiver must never make alert
+      // creation time out, so this is deliberately not awaited before the
+      // response is sent (ports the Go `go notifyAsync(...)` fire-and-forget
+      // dispatch).
+      if (alertType && (alertType.channel === 'EMAIL' || alertType.channel === 'PUSH')) {
         const payload: WebhookPayload = {
           alertId: (created as any).alertId,
           academicActorId: created.academicActorId,
@@ -252,7 +253,7 @@ export function registerEmailRoute(app: FastifyInstance, cfg: SmtpConfig): void 
     }
 
     const { to, template, data } = parsed.data;
-    if (template !== TEMPLATE_VERIFICATION_CODE) {
+    if (!SUPPORTED_TEMPLATES.includes(template)) {
       return reply.code(400).send({ error: 'VALIDATION_ERROR', message: 'unsupported template' });
     }
 

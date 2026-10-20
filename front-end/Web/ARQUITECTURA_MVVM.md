@@ -160,6 +160,36 @@ src/
 
 ---
 
+## 🎨 Estándar de botones
+
+Los botones toman su color de los tokens del tema que genera la paleta elegida en
+**Configuración > Apariencia**. Nunca llevan hex ni blanco fijo: así cambian con el
+acento, con el modo claro/oscuro y con la paleta semántica.
+
+| Variante | Fondo | Texto / borde | Uso |
+|---|---|---|---|
+| `primary` | `brand.primary` | `brand.textOnPrimary` | Acción principal |
+| `secondary` | `brand.primaryLight` | `brand.primary` | Acción suave / secundaria |
+| `outline` | transparente | borde y texto `brand.primary` | Cancelar, volver |
+| `ghost` | transparente | `text.primary` | Acción terciaria |
+| `danger` | `status.error` | `status.errorText` | Destructiva |
+| `success` / `warning` | `status.success` / `status.warning` | `status.*Text` | Confirmar / advertir |
+| `inverse` / `inverseOutline` | `brand.textOnPrimary` / transparente | `brand.primary` / `brand.textOnPrimary` | Sobre fondos de marca (CTA) |
+
+- Estados: deshabilitado usa `interactive.disabled` / `disabledText`; hover y pulsado
+  atenúan los rellenos y tiñen con `interactive.hover` / `pressed` los transparentes.
+- **Solo layout por `style`** (márgenes, `flex`, ancho): el color se elige con `variant`.
+- Iconos dentro de un botón: `brand.textOnPrimary`, `status.*Text` o `getTextOnColor(fondo)`
+  (`core/theme/generateTheme`) cuando el fondo es dinámico. En `IconButton`, `icon` puede ser
+  `(color) => <Feather ... color={color} />`.
+- Una sola fuente de color: `view/components/common/buttons/buttonColors.js`. La vista previa
+  de Configuración pinta el `Button` real con la paleta sin guardar (`themeColors`).
+- La regla ESLint `faceattend/button-standard` (`eslint-rules/`) marca los botones armados a
+  mano, el color por `style` y el blanco literal dentro de botones. Los controles de selección
+  (pestañas, chips, mosaicos) con fondo condicional no cuentan como botones de acción.
+
+---
+
 ## 🚀 Próximos ViewModels
 
 Siguiendo este patrón, crear ViewModels para:

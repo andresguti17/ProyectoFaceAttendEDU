@@ -142,15 +142,7 @@ export function InfoModal({
                             onPress={onClose}
                             style={{ width: "100%" }}
                         >
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    fontWeight: "600",
-                                    color: "#fff",
-                                }}
-                            >
-                                Entendido
-                            </Text>
+                            Entendido
                         </Button>
                     </View>
                 </TouchableOpacity>

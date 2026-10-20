@@ -7,6 +7,7 @@
 
 import React, { useState, useMemo, useEffect, forwardRef, useImperativeHandle } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { getTextOnColor } from "../../../../core/theme/generateTheme";
 import { Feather } from "@expo/vector-icons";
 import { createPortal } from "react-dom";
 import { 
@@ -110,7 +111,7 @@ function UserRow({ user, index, isLast, onPress, isExportMode, isSelected, onTog
                         alignItems: "center",
                         justifyContent: "center",
                     }}>
-                        <Feather name={config.icon} size={8} color="#fff" />
+                        <Feather name={config.icon} size={8} color={getTextOnColor(config.iconColor)} />
                     </View>
                 )}
             </View>
@@ -1521,7 +1522,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                         leftIcon={<Feather 
                                     name="download" 
                                     size={24} 
-                                    color="#fff" 
+                                    color={c.brand.textOnPrimary} 
                                     style={{
                                             transform: [
                                                 { translateX: 4 },

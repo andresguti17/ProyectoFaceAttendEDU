@@ -77,3 +77,19 @@ test("loginFace without a socket but with onIdentified still calls onIdentified 
     expect(biometricCaptureApi.identifyFace).toHaveBeenCalled();
     expect(onIdentified).toHaveBeenCalledWith({ person_id: "p2", score: 0.8 });
 });
+
+test("the liveness challenge announces every gesture the screen can show, without the legacy turn", async () => {
+    biometricCaptureApi.identifyFace.mockResolvedValue({ person_id: "p3", score: 0.9 });
+    const vm = { run: (op) => op(), setStatus: jest.fn(), requirePersonId: jest.fn() };
+    const getHook = renderHook({ vm });
+    getHook().videoRef.current = { videoWidth: 10, videoHeight: 10 };
+
+    await act(async () => {
+        await getHook().loginFace();
+    });
+
+    const supported = biometricCaptureApi.livenessChallenge.mock.calls.at(-1)[1];
+    expect(supported).toEqual(expect.arrayContaining(["blink", "open_mouth", "turn_left", "turn_right", "smile", "nod"]));
+    expect(supported).not.toContain("turn");
+});
+

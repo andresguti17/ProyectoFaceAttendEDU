@@ -69,6 +69,7 @@ public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
         }
 
         user.setPasswordHash(hashPasswordPort.hash(password));
+        user.setMustChangePassword(false);
         user.setUpdatedAt(LocalDateTime.now());
         updateUserPort.updateUser(user);
 

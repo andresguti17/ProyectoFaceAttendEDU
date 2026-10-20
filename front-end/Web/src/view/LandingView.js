@@ -448,25 +448,15 @@ function CTAContent({ onNavigate }) {
                     }}
                 >
                     <Button
+                        variant="inverse"
                         onPress={() => onNavigate("FaceAttendEDU-Register")}
                         size="lg"
-                        style={{
-                            backgroundColor: c.background.surface,
-                            borderColor: c.background.surface,
-                            borderWidth: 2,
-                        }}
-                        textStyle={{ color: c.brand.primary }}
                     >
                         {t("Comenzar gratis")}
                     </Button>
                     <Button
-                        variant="outline"
+                        variant="inverseOutline"
                         size="lg"
-                        style={{
-                            borderColor: c.background.surface,
-                            backgroundColor: "transparent",
-                        }}
-                        textStyle={{ color: c.background.surface }}
                         onPress={() => onNavigate("FaceAttendEDU-Login")}
                     >
                         {t("Ver demo")}

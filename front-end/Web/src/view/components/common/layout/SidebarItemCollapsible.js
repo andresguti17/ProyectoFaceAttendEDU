@@ -242,7 +242,7 @@ export default function SidebarItemCollapsible({
                             style={{
                                 fontSize: 11,
                                 fontWeight: "600",
-                                color: "#FFF",
+                                color: c.status.errorText,
                             }}
                         >
                             {badge}
@@ -375,7 +375,7 @@ export default function SidebarItemCollapsible({
                                                 style={{
                                                     fontSize: 10,
                                                     fontWeight: "600",
-                                                    color: "#FFF",
+                                                    color: c.status.errorText,
                                                 }}
                                             >
                                                 {child.badge}

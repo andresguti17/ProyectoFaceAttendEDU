@@ -27,7 +27,7 @@ import {
     ActivityIndicator, Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { AnimatedDropdown, Button, Badge } from "../common";
+import { AnimatedDropdown, Button, Badge, IconButton } from "../common";
 import { useTheme }       from "../hooks/useTheme";
 import { useResponsive }  from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
@@ -447,9 +447,13 @@ export default function ImportStudentsModal({
                                             {parseErrors > 0 && ` • ${parseErrors} ${t("filas con errores omitidas")}`}
                                         </Text>
                                     </View>
-                                    <TouchableOpacity onPress={() => setStep("idle")}>
-                                        <Feather name="refresh-cw" size={16} color={c.text.secondary} />
-                                    </TouchableOpacity>
+                                    <IconButton
+                                        size="sm"
+                                        variant="ghost"
+                                        onPress={() => setStep("idle")}
+                                        accessibilityLabel={t("Elegir otro archivo")}
+                                        icon={(color) => <Feather name="refresh-cw" size={16} color={color} />}
+                                    />
                                 </View>
 
                                 {parseErrors > 0 && (
@@ -586,12 +590,37 @@ export default function ImportStudentsModal({
                                     <Text style={{ fontSize: 14, color: c.text.secondary, textAlign: "center" }}>
                                         {importResult.success} {t("estudiantes agregados al sistema")}
                                     </Text>
-                                    {importResult.success > 0 && (
+                                    {importResult.success > 0 && !importResult.credentials && (
                                         <Text style={{ fontSize: 12, color: c.text.tertiary, textAlign: "center" }}>
                                             {t("Contraseña temporal para todos")}: Estudiante123!
                                         </Text>
                                     )}
+                                    {importResult.success > 0 && importResult.credentials && (
+                                        <Text style={{ fontSize: 12, color: c.text.tertiary, textAlign: "center" }}>
+                                            {importResult.credentials.sent} {t("estudiantes recibieron sus credenciales por correo; deberán cambiar la contraseña al ingresar")}
+                                        </Text>
+                                    )}
                                 </View>
+
+                                {importResult.credentials?.notSent?.length > 0 && (
+                                    <View style={{
+                                        backgroundColor: c.background.app,
+                                        borderLeftWidth: 3,
+                                        borderLeftColor: c.status.warning,
+                                        borderRadius: 8,
+                                        padding: 10,
+                                    }}>
+                                        <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary }}>
+                                            {t("No se pudo enviar el correo a")}:
+                                        </Text>
+                                        <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 2 }}>
+                                            {importResult.credentials.notSent.join(", ")}
+                                        </Text>
+                                        <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 4 }}>
+                                            {t("Su contraseña es aleatoria: deben usar \"Olvidé mi contraseña\" para entrar.")}
+                                        </Text>
+                                    </View>
+                                )}
 
                                 {importResult.errors.length > 0 && (
                                     <View>

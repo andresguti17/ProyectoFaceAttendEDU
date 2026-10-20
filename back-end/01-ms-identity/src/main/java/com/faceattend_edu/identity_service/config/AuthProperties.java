@@ -57,6 +57,10 @@ public class AuthProperties {
     @Value("${faceattend.notification.internal-token:}")
     private String notificationInternalToken = "";
 
+    /** URL pública de ingreso que se incluye en el correo de credenciales (vacía = sin enlace). */
+    @Value("${faceattend.notification.login-url:}")
+    private String loginUrl = "";
+
     public Duration sessionTimeout() {
         return Duration.ofMinutes(sessionTimeoutMinutes);
     }

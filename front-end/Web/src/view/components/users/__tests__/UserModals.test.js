@@ -55,6 +55,10 @@ jest.mock("../../../../context/AppDataContext", () => ({
 jest.mock("../../../../core/config/institutionConfig", () => ({
     getInstitutionConfig: () => ({ minAttendance: 75 }),
 }));
+jest.mock("../../../../services/api/biometricCaptureApi", () => ({
+    biometricCaptureApi: { summary: jest.fn().mockResolvedValue({ has_face: false, has_fingerprint: false }) },
+}));
+jest.mock("../BiometricEnrollmentModal", () => () => null);
 jest.mock("../../../../services/api/academicApi", () => ({
     academicApi: { listSchools: jest.fn() },
 }));

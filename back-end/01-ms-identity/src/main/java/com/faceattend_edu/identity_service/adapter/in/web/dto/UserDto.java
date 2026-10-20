@@ -12,6 +12,9 @@ public class UserDto {
     private String username;
     private String authenticationType;
     private Boolean status;
+    private Boolean mustChangePassword;
+    /** SENT | SKIPPED | FAILED when the create call asked to email the credentials; null otherwise. */
+    private String credentialsEmail;
     private LocalDateTime lastAccess;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -21,9 +21,18 @@ import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { authApi } from "../services/api/authApi";
 import { authorizationApi } from "../services/api/authorizationApi";
-import { provisionStaff, provisionStudent, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails, findExistingStudents } from "../services/api/staffProvisioning";
+import { provisionStaff, provisionStudent, credentialsNotice, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails, findExistingStudents } from "../services/api/staffProvisioning";
 import { userByPersonMap } from "../services/api/referenceData";
 import { isValidEmail } from "../core/utils/validation";
+
+// Alta exitosa: aviso del correo de credenciales + a quién capturarle la
+// biometría que se marcó en el formulario (personId solo si el backend lo devolvió).
+const registrationResult = (form, provisioned) => ({
+    credentialsEmail: credentialsNotice(form, provisioned)?.credentialsEmail ?? null,
+    personId: provisioned?.personId ?? null,
+    wantFace: !!form.hasFacial,
+    wantFingerprint: !!form.hasFingerprint,
+});
 
 // Usuarios pintados por página (la vista de Usuarios pagina en el cliente
 // para no cargar miles de filas de golpe en el DOM).
@@ -480,6 +489,11 @@ export function useUsersViewModel(
 
     // ── Acciones ───────────────────────────────────────────────
 
+    const markBiometrics = useCallback(
+        (personId, flags) => appData.patchBiometrics?.(personId, flags),
+        [appData]
+    );
+
     const registerUser = useCallback(
         async (form) => {
             const err = validateUserForm(form);
@@ -495,8 +509,9 @@ export function useUsersViewModel(
 
             // Delegar al método correspondiente según el tipo de usuario
             if (form.role === USER_TYPES.STUDENT) {
+                let provisioned;
                 try {
-                    await provisionStudent({
+                    provisioned = await provisionStudent({
                         name: form.name.trim(),
                         code: form.code.trim(),
                         email: form.email.trim(),
@@ -505,6 +520,7 @@ export function useUsersViewModel(
                         courseCode: form.course.trim(),
                         cohortId: String(form.cohortId ?? "").trim() || null,
                         details: form,
+                        sendCredentials: form.sendCredentials !== false,
                     });
                 } catch (e) {
                     return e?.message || "No se pudo registrar el estudiante en el backend";
@@ -515,17 +531,21 @@ export function useUsersViewModel(
                     course: form.course.trim(),
                     grade: form.role,
                     attendance: form.attendance || 0,
-                    hasFacial: form.hasFacial || false,
-                    hasFingerprint: form.hasFingerprint || false,
+                    personId: provisioned?.personId ?? null,
+                    // La biometría se captura al terminar el alta (BiometricEnrollmentModal):
+                    // hasta entonces no hay nada registrado.
+                    hasFacial: false,
+                    hasFingerprint: false,
                 });
-                return null;
+                return registrationResult(form, provisioned);
             }
 
             // Docentes y administradores: alta real en el backend
             // (persona + usuario + rol, más academic_actor en docentes y
             // vínculo a sede con actor ADMIN en administradores).
+            let staff;
             try {
-                await provisionStaff({
+                staff = await provisionStaff({
                     name: form.name.trim(),
                     code: form.code.trim(),
                     email: form.email.trim(),
@@ -534,6 +554,7 @@ export function useUsersViewModel(
                     role: form.role === USER_TYPES.TEACHER ? "teacher" : "admin",
                     schoolId: String(form.schoolId ?? "").trim() || user?.schoolId,
                     details: form,
+                    sendCredentials: form.sendCredentials !== false,
                 });
             } catch (e) {
                 return e?.message || "No se pudo registrar el usuario en el backend";
@@ -545,7 +566,7 @@ export function useUsersViewModel(
             // duplicada para siempre frente a la que luego trae loadUsers().
             await appData.reloadUsers();
 
-            return null;
+            return registrationResult(form, staff);
         },
         [appData, user]
     );
@@ -891,6 +912,7 @@ export function useUsersViewModel(
 
         // Acciones de CRUD
         registerUser,
+        markBiometrics,
         importUsers,
         updateUserDetails,
         toggleUserStatus,

@@ -121,6 +121,14 @@ class Settings(BaseSettings):
     # identify-sample, liveness) — ported from 10-ms-face-auth ────────────
     liveness_challenge_secret: str = ""
     liveness_ttl_seconds: int = 120
+    # A gesture needs a few seconds of real capture; a step answered faster than
+    # this was not performed in front of a camera.
+    liveness_min_step_seconds: float = 1.0
+    # Same-person check across the steps and the final image of one challenge.
+    # `0.75` is deliberately looser than `similarity_threshold` because frames
+    # taken mid-gesture (head turned, mouth open) shift the encoding.
+    liveness_identity_check: bool = True
+    liveness_identity_threshold: float = 0.75
     rate_limit_max_attempts: int = 20
     rate_limit_window_seconds: int = 60
     max_image_bytes: int = 3 * 1024 * 1024

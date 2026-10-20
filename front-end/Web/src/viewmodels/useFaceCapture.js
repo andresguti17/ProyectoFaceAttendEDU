@@ -26,8 +26,17 @@ const MAX_FRAME_WIDTH = 640;
 const ACTION_LABELS = {
     blink: "Parpadea una vez",
     turn: "Gira lentamente la cabeza",
+    // Izquierda/derecha son las de la persona; la vista previa está en espejo, así que
+    // en pantalla la cara se mueve hacia ese mismo lado.
+    turn_left: "Gira lentamente la cabeza hacia tu izquierda",
+    turn_right: "Gira lentamente la cabeza hacia tu derecha",
     open_mouth: "Abre y cierra la boca",
+    smile: "Sonríe",
+    nod: "Asiente con la cabeza (arriba y abajo)",
 };
+
+// Gestos que esta pantalla sabe indicar; el backend solo sorteará entre ellos.
+export const SUPPORTED_LIVENESS_ACTIONS = Object.keys(ACTION_LABELS).filter((action) => action !== "turn");
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -148,7 +157,10 @@ export function useFaceCapture({ vm, socket, onIdentified } = {}) {
 
     const captureLiveness = useCallback(
         async (gestureCount) => {
-            const challenge = await biometricCaptureApi.livenessChallenge(gestureCount);
+            const challenge = await biometricCaptureApi.livenessChallenge(
+                gestureCount,
+                SUPPORTED_LIVENESS_ACTIONS
+            );
             let token = challenge.challenge_token;
             const frames = [];
             const total = challenge.actions.length;

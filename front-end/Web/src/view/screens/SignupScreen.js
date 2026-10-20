@@ -23,15 +23,6 @@ import SignupView from "../SignupView";
 export default function SignupScreen() {
     const navigation = useNavigation();
 
-    // ── Navegación post-registro exitoso ──────────────────────
-    function onRegisterSuccess(data) {
-        console.log("Registro exitoso:", data.email);
-        
-        // El registro ya se maneja en el ViewModel
-        // Por diseño, signup SIEMPRE va al Dashboard (sin redirección guardada)
-        navigation.replace("Dashboard");
-    }
-
     // ── Navegación a login ────────────────────────────────────
     function onGoToLogin() {
         navigation.navigate("FaceAttendEDU-Login");
@@ -45,7 +36,6 @@ export default function SignupScreen() {
     // ── Delegación completa a View ────────────────────────────
     return (
         <SignupView
-            onRegisterSuccess={onRegisterSuccess}
             onGoToLogin={onGoToLogin}
             onGoToLanding={onGoToLanding}
         />

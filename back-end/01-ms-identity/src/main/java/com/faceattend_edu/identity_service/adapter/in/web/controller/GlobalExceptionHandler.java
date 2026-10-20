@@ -4,6 +4,7 @@ import com.faceattend_edu.identity_service.domain.exception.AccountLockedExcepti
 import com.faceattend_edu.identity_service.domain.exception.DomainException;
 import com.faceattend_edu.identity_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.identity_service.domain.exception.EntityNotFoundException;
+import com.faceattend_edu.identity_service.domain.exception.OnboardingUnavailableException;
 import com.faceattend_edu.identity_service.domain.exception.UnauthorizedException;
 import com.faceattend_edu.identity_service.domain.exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -99,6 +100,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(ValidationException ex, HttpServletRequest req) {
         return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(OnboardingUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> handleOnboardingUnavailable(OnboardingUnavailableException ex, HttpServletRequest req) {
+        log.warn("Onboarding unavailable: {}", ex.getMessage(), ex);
+        return build(HttpStatus.SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE",
+                "School registration is not available right now", req);
     }
 
     @ExceptionHandler(DomainException.class)

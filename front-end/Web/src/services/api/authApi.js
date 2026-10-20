@@ -46,6 +46,25 @@ export const authApi = {
         }
     },
 
+    // ── Cambio de contraseña de la propia cuenta ────────
+    // Exige sesión y la contraseña actual; también apaga mustChangePassword.
+    changePassword: (currentPassword, newPassword) =>
+        request(endpoints.identity.changePassword, {
+            method: "POST",
+            body: { currentPassword, newPassword },
+        }),
+
+    // ── Perfil propio ───────────────────────────────────
+    // Solo contacto y salud; el correo exige currentPassword. Devuelve la persona.
+    updateMyProfile: (body) =>
+        request(endpoints.identity.myProfile, { method: "PUT", body }),
+
+    // ── Alta pública de sede + administrador ────────────
+    // Sin sesión previa. Cuerpo { school, admin } en camelCase; la sede y el
+    // administrador quedan pendientes de activación por un Super Administrador.
+    onboardSchool: (body) =>
+        request(endpoints.identity.onboardSchool, { method: "POST", body }),
+
     // ── Roles y permisos del usuario autenticado ────────
     userRoles: (userId) =>
         request(endpoints.authorization.userRoles(userId), { method: "GET" }),

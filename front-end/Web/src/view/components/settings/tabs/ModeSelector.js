@@ -133,7 +133,7 @@ export function ModeSelector({ mode: modeProp, onModeChange: onModeChangeProp })
                                     alignItems: "center",
                                     justifyContent: "center",
                                 }}>
-                                    <Feather name="check" size={9} color="#fff" />
+                                    <Feather name="check" size={9} color={c.brand.textOnPrimary} />
                                 </View>
                             )}
                         </View>
