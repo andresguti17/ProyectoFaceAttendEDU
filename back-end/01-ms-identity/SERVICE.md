@@ -164,6 +164,20 @@ verificado.
 | GET | `/api/v1/sessions` | Listar sesiones del usuario |
 | DELETE | `/api/v1/sessions/{id}` | Revocar sesion |
 
+### 4.5.1 Credenciales por correo y cambio obligatorio
+
+`POST /api/v1/users` acepta `sendCredentials: true`. Tras crear la cuenta, identity pide a
+notification enviar la plantilla `user_credentials` (usuario y contrasena iniciales, mas el
+enlace de ingreso si `faceattend.notification.login-url` esta definido). La respuesta incluye
+`credentialsEmail`: `SENT`, `SKIPPED` (la persona no tiene correo o la cuenta esta inactiva) o
+`FAILED` (entrega fallida o SMTP sin configurar). Un fallo nunca deshace la cuenta.
+
+Solo cuando el correo fue aceptado se enciende `app_user.must_change_password`. El login
+(`POST /auth/login`) devuelve `mustChangePassword`; el cliente debe llevar al usuario a cambiar
+la contrasena (`POST /auth/change-password`) antes de usar la app. Cambiar la contrasena
+(`change-password` o recuperacion) apaga el flag; un `PUT /users` no lo toca. El bloqueo es del
+cliente: ningun microservicio rechaza peticiones por este flag.
+
 ### 4.6 Alta publica de sedes
 
 | Metodo | Endpoint | Descripcion |
@@ -286,6 +300,7 @@ springdoc:
 | `faceattend.recovery.resend-cooldown-seconds` | `60` | Espera minima entre reenvios |
 | `faceattend.notification.base-url` | `http://localhost:8088` | 08-ms-notification (en compose: `http://ms-notification:8088`) |
 | `faceattend.notification.internal-token` | *(vacio)* | Header `X-Internal-Token` si el destino lo exige |
+| `faceattend.notification.login-url` | *(vacio)* | Enlace de ingreso del correo de credenciales (`APP_LOGIN_URL` en compose) |
 | `faceattend.onboarding.service-user-id` | *(vacio)* | `user_id` de la cuenta de servicio del alta de sedes; vacio deshabilita el endpoint (503) |
 | `faceattend.onboarding.academic-url` | `http://localhost:8083` | 03-ms-academic (en compose: `http://ms-academic:8083`) |
 | `faceattend.onboarding.authorization-url` | `http://localhost:8082` | 02-ms-authorization (en compose: `http://ms-authorization:8082`) |

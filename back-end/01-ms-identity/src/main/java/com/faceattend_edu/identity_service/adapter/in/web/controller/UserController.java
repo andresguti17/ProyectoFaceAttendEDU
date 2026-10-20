@@ -10,6 +10,7 @@ import com.faceattend_edu.identity_service.application.port.in.ChangeUserStatusU
 import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ListUsersUseCase;
+import com.faceattend_edu.identity_service.application.port.in.NotifyUserCredentialsUseCase;
 import com.faceattend_edu.identity_service.application.port.in.UpdateUserUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,14 +36,21 @@ public class UserController {
     private final UpdateUserUseCase updateUserUseCase;
     private final ChangeUserStatusUseCase changeUserStatusUseCase;
     private final ActivateUserUseCase activateUserUseCase;
+    private final NotifyUserCredentialsUseCase notifyUserCredentialsUseCase;
     private final UserWebMapper userWebMapper;
 
     @PostMapping
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest request) {
         var created = createUserUseCase.createUser(userWebMapper.toDomain(request), request.getPassword());
+        UserDto body = userWebMapper.toDto(created);
+        if (Boolean.TRUE.equals(request.getSendCredentials())) {
+            var status = notifyUserCredentialsUseCase.notifyCredentials(created.getUserId(), request.getPassword());
+            body.setCredentialsEmail(status.name());
+            body.setMustChangePassword(status == NotifyUserCredentialsUseCase.Status.SENT);
+        }
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}").buildAndExpand(created.getUserId()).toUri();
-        return ResponseEntity.created(location).body(userWebMapper.toDto(created));
+        return ResponseEntity.created(location).body(body);
     }
 
     @GetMapping

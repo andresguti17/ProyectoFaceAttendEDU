@@ -13,6 +13,7 @@ public class UserSessionWebMapper {
         dto.setSessionId(domain.getSessionId());
         dto.setUserId(domain.getUserId() != null ? domain.getUserId().getUserId() : null);
         dto.setSessionStatus(domain.getSessionStatus());
+        dto.setMustChangePassword(domain.getUserId() != null && domain.getUserId().isMustChangePassword());
         dto.setStartDate(domain.getStartDate());
         dto.setEndDate(domain.getEndDate());
         dto.setSourceIp(domain.getSourceIp());

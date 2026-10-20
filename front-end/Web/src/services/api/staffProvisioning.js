@@ -14,6 +14,7 @@
 // ============================================================
 
 import { authApi } from "./authApi";
+import { generateTemporaryPassword } from "../../core/utils/passwordGenerator";
 import { academicApi } from "./academicApi";
 import { authorizationApi } from "./authorizationApi";
 import { listBlocks, listCohorts, listCourses, listPrograms, personMap, resetReferenceData } from "./referenceData";
@@ -231,6 +232,7 @@ export async function provisionStaff({
     role,
     schoolId = null,
     details = {},
+    sendCredentials = false,
 }) {
     const { name: firstName, lastName } = splitName(name);
     await assertPersonUnique({ documentNumber, email });
@@ -268,6 +270,7 @@ export async function provisionStaff({
             username: requestedUsername,
             password,
             authenticationType: "Local",
+            sendCredentials,
         });
         const userId = user?.userId ?? user?.user_id ?? null;
         if (!userId) throw new Error("User creation returned no id");
@@ -287,7 +290,12 @@ export async function provisionStaff({
         // del formulario (que nunca se envía como username): el espejo local
         // debe usar este valor o la fila queda duplicada frente a la que
         // trae el siguiente loadUsers().
-        return { personId, userId, username: user?.username ?? requestedUsername };
+        return {
+            personId,
+            userId,
+            username: user?.username ?? requestedUsername,
+            credentialsEmail: user?.credentialsEmail ?? null,
+        };
     } catch (err) {
         try {
             if (actorId != null) await academicApi.deleteActor(actorId);
@@ -301,6 +309,15 @@ export async function provisionStaff({
         }
         throw err;
     }
+}
+
+/**
+ * Resultado de un alta con envío de credenciales: la UI lo distingue de un
+ * error (cadena) porque es un objeto. null cuando no se pidió el correo.
+ */
+export function credentialsNotice(form, provisioned) {
+    if (form?.sendCredentials === false) return null;
+    return { credentialsEmail: provisioned?.credentialsEmail ?? "FAILED" };
 }
 
 function enrollmentIdOf(response) {
@@ -323,6 +340,7 @@ export async function provisionStudent({
     cohortId = null,
     details = {},
     resetCache = true,
+    sendCredentials = false,
 }) {
     const cohorts = await cohortsForCourseCode(courseCode);
     if (cohorts.length === 0) {
@@ -378,6 +396,7 @@ export async function provisionStudent({
             username: usernameFromEmail(email),
             password,
             authenticationType: "Local",
+            sendCredentials,
         });
         const userId = user?.userId ?? user?.user_id ?? null;
         if (!userId) throw new Error("User creation returned no id");
@@ -393,7 +412,13 @@ export async function provisionStudent({
         // estudiante y reventaba el rate-limit de Kong (60 req/min en
         // identity) a mitad de la tanda, dejando altas a medias.
         if (resetCache) resetReferenceData();
-        return { personId, userId, actorId, cohortId: target.cohortId };
+        return {
+            personId,
+            userId,
+            actorId,
+            cohortId: target.cohortId,
+            credentialsEmail: user?.credentialsEmail ?? null,
+        };
     } catch (err) {
         try {
             if (enrollmentId != null) await academicApi.deleteEnrollment(enrollmentId);
@@ -408,10 +433,11 @@ export async function provisionStudent({
     }
 }
 
-// Contraseña temporal para altas masivas: la plantilla CSV no trae una
-// columna de contraseña (no tiene sentido pedirle a un admin que escriba
-// contraseñas en texto plano en un archivo), así que todos los estudiantes
-// importados quedan con esta y deben cambiarla al ingresar.
+// Contraseña de respaldo para altas masivas SIN envío de credenciales: la
+// plantilla CSV no trae una columna de contraseña (no tiene sentido pedirle a
+// un admin que escriba contraseñas en texto plano en un archivo). Con envío
+// de credenciales cada estudiante recibe en cambio una contraseña propia
+// generada al azar, y debe cambiarla al ingresar.
 const BULK_IMPORT_DEFAULT_PASSWORD = "Estudiante123!";
 
 // Errores conocidos de provisionStudent traducidos al usuario.
@@ -437,11 +463,16 @@ function importErrorReason(e) {
  * detenerse ante fallos individuales (igual que importCourses en
  * courseCreation.js). documentNumber/password pueden venir del archivo; si
  * la fila los trae vacíos se usan code y una contraseña por defecto.
- * @returns {{ success: number, errors: Array<{ student: string, reason: string }> }}
+ * Con `sendCredentials` (por defecto) cada fila recibe una contraseña
+ * temporal propia y se le envía por correo; `credentials.notSent` lista a quienes
+ * el correo no llegó (deberán usar "Olvidé mi contraseña" o recibirla del admin).
+ * @returns {{ success: number, errors: Array<{ student: string, reason: string }>,
+ *   credentials: { sent: number, notSent: string[] } }}
  */
-export async function importStudents(drafts) {
+export async function importStudents(drafts, { sendCredentials = true } = {}) {
     let success = 0;
     const errors = [];
+    const credentials = { sent: 0, notSent: [] };
     const rows = drafts ?? [];
     for (let i = 0; i < rows.length; i += 1) {
         const draft = rows[i];
@@ -455,14 +486,18 @@ export async function importStudents(drafts) {
             continue;
         }
         try {
-            await provisionStudent({
+            const provisioned = await provisionStudent({
                 name,
                 code,
                 email,
                 // "||" y no "??": el parser puede traer cadenas vacías, y una
                 // persona sin documento no existe en el modelo (NOT NULL).
                 documentNumber: String(draft?.documentNumber || code).trim(),
-                password: String(draft?.password || BULK_IMPORT_DEFAULT_PASSWORD).trim(),
+                password: String(
+                    draft?.password ||
+                        (sendCredentials ? generateTemporaryPassword() : BULK_IMPORT_DEFAULT_PASSWORD)
+                ).trim(),
+                sendCredentials,
                 courseCode: course,
                 // Par Curso+Ficha elegido en el modal (filas sin course o con
                 // el mismo curso destino); null ⇒ provisión auto-resuelve.
@@ -471,6 +506,10 @@ export async function importStudents(drafts) {
                 resetCache: false,
             });
             success += 1;
+            if (sendCredentials) {
+                if (provisioned?.credentialsEmail === "SENT") credentials.sent += 1;
+                else credentials.notSent.push(label);
+            }
         } catch (e) {
             errors.push({ student: label, reason: importErrorReason(e) });
         }
@@ -480,5 +519,5 @@ export async function importStudents(drafts) {
         // creados a medias (persona/actor sin usuario).
         if (i < rows.length - 1) await new Promise((r) => setTimeout(r, 2600));
     }
-    return { success, errors };
+    return { success, errors, credentials };
 }

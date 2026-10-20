@@ -12,6 +12,7 @@ import { useRolePermissions } from "../../viewmodels/useRolePermissions";
 
 // ── Importación de Layout Component ───────────────────────────
 import AuthenticatedLayout from "./AuthenticatedLayout";
+import ForcePasswordChange from "./ForcePasswordChange";
 
 /**
  * AuthMiddleware - Higher Order Component para autenticación
@@ -62,6 +63,18 @@ export default function AuthMiddleware(ScreenComponent) {
             return <NotAuthorized type={AUTH_EXCEPTION_TYPES.INSUFFICIENT_PERMISSIONS} />;
         }
         
+        // 4. Contraseña inicial pendiente de cambio: pantalla bloqueante, sin
+        // layout ni navegación, hasta que el usuario elija una contraseña propia.
+        if (user.mustChangePassword) {
+            return (
+                <SafeAreaProvider>
+                    <SafeAreaView style={{ flex: 1, backgroundColor: c.background.app }}>
+                        <ForcePasswordChange />
+                    </SafeAreaView>
+                </SafeAreaProvider>
+            );
+        }
+
         // ============================================================
         // USUARIO AUTORIZADO - Renderizar con layout autenticado
         // ============================================================

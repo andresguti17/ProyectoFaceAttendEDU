@@ -130,6 +130,8 @@ services:
       # Canal de correo: identity llama por HTTP a POST /api/v1/emails (SERVICE.md §4.4).
       FACEATTEND_NOTIFICATION_BASE_URL: http://ms-notification:8088
       FACEATTEND_NOTIFICATION_INTERNAL_TOKEN: "${EMAIL_INTERNAL_TOKEN:-}"
+      # Enlace de ingreso del correo de credenciales (vacío = el correo no lleva enlace).
+      FACEATTEND_NOTIFICATION_LOGIN_URL: "${APP_LOGIN_URL:-}"
       # Alta pública de sedes (POST /api/v1/onboarding/schools): vacío = deshabilitada (503).
       FACEATTEND_ONBOARDING_SERVICE_USER_ID: "${ONBOARDING_SERVICE_USER_ID:-}"
       FACEATTEND_ONBOARDING_ACADEMIC_URL: http://ms-academic:8083

@@ -33,7 +33,7 @@ import { authApi } from "../authApi";
 import { academicApi } from "../academicApi";
 import { authorizationApi } from "../authorizationApi";
 import { listBlocks, listCohorts, listCourses, listPrograms, personMap } from "../referenceData";
-import { assertPersonUnique, cohortsForCourseCode, findExistingStudents, markExistingStudents, provisionStaff, provisionStudent } from "../staffProvisioning";
+import { assertPersonUnique, cohortsForCourseCode, credentialsNotice, findExistingStudents, importStudents, markExistingStudents, provisionStaff, provisionStudent } from "../staffProvisioning";
 
 const base = {
     name: "Ana García López",
@@ -58,7 +58,7 @@ test("admin: creates person, user, role and the ADMIN school actor", async () =>
     academicApi.listSchools.mockResolvedValue([{ schoolId: 2, name: "Sede" }]);
     const result = await provisionStaff({ ...base, role: "admin", schoolId: "2" });
 
-    expect(result).toEqual({ personId: "person-1", userId: "user-1", username: "ana" });
+    expect(result).toEqual({ personId: "person-1", userId: "user-1", username: "ana", credentialsEmail: null });
     expect(authApi.createPerson).toHaveBeenCalledWith({
         documentNumber: "1234567890",
         name: "Ana",
@@ -71,6 +71,7 @@ test("admin: creates person, user, role and the ADMIN school actor", async () =>
         username: "ana",
         password: "Secret123",
         authenticationType: "Local",
+        sendCredentials: false,
     });
     expect(authorizationApi.assignRole).toHaveBeenCalledWith("user-1", 1);
     expect(academicApi.createActor).toHaveBeenCalledWith(
@@ -174,6 +175,7 @@ test("student: resolves the single cohort and enrolls", async () => {
         userId: "user-1",
         actorId: 601,
         cohortId: 50,
+        credentialsEmail: null,
     });
     expect(academicApi.createActor).toHaveBeenCalledWith(
         expect.objectContaining({ actorTypeId: 1, schoolId: 2, actorCode: "ADMIN001" })
@@ -256,5 +258,82 @@ describe("findExistingStudents", () => {
         personMap.mockRejectedValueOnce(new Error("offline"));
         const rows = [{ name: "A", code: "2", email: "a@b.com" }];
         await expect(findExistingStudents(rows)).resolves.toEqual(rows);
+    });
+});
+
+describe("credentials email", () => {
+    test("staff: forwards sendCredentials to the user creation and returns the email status", async () => {
+        academicApi.listSchools.mockResolvedValue([{ schoolId: 2 }]);
+        authApi.createUser.mockResolvedValue({ userId: "user-1", username: "ana", credentialsEmail: "SENT" });
+
+        const result = await provisionStaff({ ...base, role: "admin", schoolId: "2", sendCredentials: true });
+
+        expect(authApi.createUser).toHaveBeenCalledWith(expect.objectContaining({ sendCredentials: true }));
+        expect(result.credentialsEmail).toBe("SENT");
+    });
+
+    describe("credentialsNotice", () => {
+        test("is null when the email was not requested", () => {
+            expect(credentialsNotice({ sendCredentials: false }, { credentialsEmail: "SENT" })).toBeNull();
+        });
+
+        test("reports the backend status, or FAILED when the backend sent none", () => {
+            expect(credentialsNotice({ sendCredentials: true }, { credentialsEmail: "SKIPPED" })).toEqual({ credentialsEmail: "SKIPPED" });
+            expect(credentialsNotice({}, {})).toEqual({ credentialsEmail: "FAILED" });
+        });
+    });
+
+    describe("importStudents", () => {
+        const rows = [
+            { name: "Ana Uno", code: "A1", email: "a1@u.edu", course: "MAT" },
+            { name: "Beto Dos", code: "B2", email: "b2@u.edu", course: "MAT" },
+        ];
+
+        beforeEach(() => {
+            listCourses.mockResolvedValue([{ courseId: 12, programId: 4, code: "MAT" }]);
+            listBlocks.mockResolvedValue([{ scheduleBlockId: 501, courseId: 12, cohortId: 50 }]);
+            listCohorts.mockResolvedValue([{ cohortId: 50, programId: 4, code: "F1", status: true }]);
+            listPrograms.mockResolvedValue([{ programId: 4, schoolId: 2 }]);
+            authorizationApi.listRoles.mockResolvedValue([{ roleId: 5, roleName: "Aprendiz" }]);
+            academicApi.createActor.mockResolvedValue({ academicActorId: 601 });
+            academicApi.createEnrollment.mockResolvedValue({ enrollmentId: 701 });
+            jest.useFakeTimers();
+        });
+
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
+        async function run(options) {
+            const promise = importStudents(rows, options);
+            await jest.runAllTimersAsync();
+            return promise;
+        }
+
+        test("sends a different random password per student and tallies who got the email", async () => {
+            authApi.createUser
+                .mockResolvedValueOnce({ userId: "u1", credentialsEmail: "SENT" })
+                .mockResolvedValueOnce({ userId: "u2", credentialsEmail: "FAILED" });
+
+            const result = await run();
+
+            const passwords = authApi.createUser.mock.calls.map(([body]) => body.password);
+            expect(passwords[0]).not.toBe(passwords[1]);
+            expect(passwords.every((p) => p !== "Estudiante123!" && p.length >= 8)).toBe(true);
+            expect(authApi.createUser).toHaveBeenCalledWith(expect.objectContaining({ sendCredentials: true }));
+            expect(result.success).toBe(2);
+            expect(result.credentials).toEqual({ sent: 1, notSent: ["Beto Dos"] });
+        });
+
+        test("without sendCredentials keeps the shared fallback password and no email", async () => {
+            authApi.createUser.mockResolvedValue({ userId: "u1" });
+
+            const result = await run({ sendCredentials: false });
+
+            expect(authApi.createUser).toHaveBeenCalledWith(
+                expect.objectContaining({ password: "Estudiante123!", sendCredentials: false })
+            );
+            expect(result.credentials).toEqual({ sent: 0, notSent: [] });
+        });
     });
 });

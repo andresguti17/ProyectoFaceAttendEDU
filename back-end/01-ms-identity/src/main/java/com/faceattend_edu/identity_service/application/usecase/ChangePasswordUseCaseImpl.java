@@ -46,6 +46,7 @@ public class ChangePasswordUseCaseImpl implements ChangePasswordUseCase {
         ResetPasswordUseCaseImpl.validateAgainstPolicy(password, listPasswordPoliciesPort.listPolicies());
 
         user.setPasswordHash(hashPasswordPort.hash(password));
+        user.setMustChangePassword(false);
         user.setUpdatedAt(LocalDateTime.now());
         updateUserPort.updateUser(user);
 

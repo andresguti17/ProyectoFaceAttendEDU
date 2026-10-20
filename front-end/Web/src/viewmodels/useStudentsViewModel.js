@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
-import { provisionStudent } from "../services/api/staffProvisioning";
+import { provisionStudent, credentialsNotice } from "../services/api/staffProvisioning";
 
 // ── Tipos de formulario ───────────────────────────────────
 
@@ -17,6 +17,7 @@ export const EMPTY_FORM = {
     address: "",
     phone: "",
     password: "",
+    sendCredentials: true, // Enviar usuario y contraseña inicial por correo
     schoolId: "",
     cohortId: "",
     attendance: 0,
@@ -119,8 +120,9 @@ export function useStudentsViewModel() {
             const err = validateStudentForm(form);
             if (err) return err;
 
+            let provisioned;
             try {
-                await provisionStudent({
+                provisioned = await provisionStudent({
                     name: form.name.trim(),
                     code: form.code.trim(),
                     email: form.email.trim(),
@@ -129,6 +131,7 @@ export function useStudentsViewModel() {
                     courseCode: form.course.trim(),
                     cohortId: String(form.cohortId ?? "").trim() || null,
                     details: form,
+                    sendCredentials: form.sendCredentials !== false,
                 });
             } catch (e) {
                 return e?.message || "No se pudo registrar el estudiante en el backend";
@@ -145,7 +148,7 @@ export function useStudentsViewModel() {
                 hasFingerprint: form.hasFingerprint || false,
                 status: form.status,
             });
-            return null;
+            return credentialsNotice(form, provisioned);
         },
         [appData]
     );

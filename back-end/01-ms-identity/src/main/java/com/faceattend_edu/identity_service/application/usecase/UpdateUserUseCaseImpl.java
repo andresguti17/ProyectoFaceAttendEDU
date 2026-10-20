@@ -33,6 +33,8 @@ public class UpdateUserUseCaseImpl implements UpdateUserUseCase {
         if (user.getAuthenticationType() == null) user.setAuthenticationType(existing.getAuthenticationType());
         if (user.getStatus() == null) user.setStatus(existing.getStatus());
 
+        // The flag is managed by credential delivery and password changes, never by a profile update.
+        user.setMustChangePassword(existing.isMustChangePassword());
         user.setCreatedAt(existing.getCreatedAt());
         user.validate();
         user.setUpdatedAt(LocalDateTime.now());
