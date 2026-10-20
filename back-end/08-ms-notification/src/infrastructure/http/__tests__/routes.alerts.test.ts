@@ -54,6 +54,18 @@ describe('alert routes — scope filtering', () => {
     expect(spy).toHaveBeenCalled();
   });
 
+  it.each(['DASHBOARD', 'IN_APP'])('does not dispatch a webhook for a %s alert type', async (channel) => {
+    const app = Fastify();
+    const alerts = fakeAlertRepo();
+    jest.spyOn(actorScope, 'resolveActorScope').mockResolvedValue(null);
+    const spy = jest.spyOn(notifier, 'notifyWebhook').mockResolvedValue(undefined);
+    spy.mockClear();
+    await registerNotificationRoutes(app, { alerts: alerts as any, alertTypes: fakeAlertTypeRepo({ alertTypeId: 1, code: 'X', severity: 'WARNING', channel }) });
+    await app.inject({ method: 'POST', url: '/api/v1/alerts', payload: { academicActorId: 1, alertTypeId: 1 } });
+    await new Promise((r) => setImmediate(r));
+    expect(spy).not.toHaveBeenCalled();
+  });
+
   it('filters actorId at the repository layer before paginating, like the Go FindAll', async () => {
     const app = Fastify();
     const alerts = fakeAlertRepo();

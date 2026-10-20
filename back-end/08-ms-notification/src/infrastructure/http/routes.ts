@@ -101,12 +101,13 @@ export async function registerNotificationRoutes(
         resolvedAt: null,
       } as any);
 
-      // DASHBOARD alerts are in-app only; EMAIL/PUSH need an external
-      // delivery. Fire-and-forget, detached from this request: a slow or
-      // unreachable receiver must never make alert creation time out, so this
-      // is deliberately not awaited before the response is sent (ports the Go
-      // `go notifyAsync(...)` fire-and-forget dispatch).
-      if (alertType && alertType.channel && alertType.channel !== 'DASHBOARD') {
+      // Only EMAIL/PUSH need an external delivery; DASHBOARD (and any legacy
+      // in-app value) is shown in the app only. Fire-and-forget, detached from
+      // this request: a slow or unreachable receiver must never make alert
+      // creation time out, so this is deliberately not awaited before the
+      // response is sent (ports the Go `go notifyAsync(...)` fire-and-forget
+      // dispatch).
+      if (alertType && (alertType.channel === 'EMAIL' || alertType.channel === 'PUSH')) {
         const payload: WebhookPayload = {
           alertId: (created as any).alertId,
           academicActorId: created.academicActorId,

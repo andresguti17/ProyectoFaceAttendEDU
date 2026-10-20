@@ -8,3 +8,6 @@ databaseChangeLog:
   - include:
       file: 003-seed-justification-result-alert-types.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 004-normalize-legacy-in-app-alert-type-channel.yaml
+      relativeToChangelogFile: true
