@@ -18,7 +18,7 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Pressable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -42,6 +42,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useDashboardScreenViewModel } from "../../viewmodels/useDashboardScreenViewModel";
 import { useTranslation } from "../../core/utils/i18n/hooks/useTranslation";
 import { roleDisplayLabel } from "../../core/utils/backendRoles";
+import { Avatar } from "../components/common";
 // ── Constantes de mapeo de rutas ────────────────────────────
 const ROUTE_MAP = {
     "dashboard": "Dashboard",
@@ -178,31 +179,47 @@ function PersistentSidebar() {
         <CollapsibleSidebar width={240}>
             {user && (
                 <SidebarHeader>
-                  <TouchableOpacity
-                    onPress={() => handleNavigate("profile")}
-                    accessibilityRole="button"
-                    accessibilityLabel={t("Mi perfil")}
-                  >
-                    <Text style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: c.text.primary,
-                        marginBottom: 4,
-                    }}>
-                        {user.name}
-                    </Text>
-                    <Text
-                        style={{
-                            fontSize: 12,
-                            color: c.text.secondary,
-                        }}
+                    <Pressable
+                        onPress={() => handleNavigate("profile")}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("Ver mi perfil")}
+                        accessibilityHint={t("Abre tu perfil para ver y editar tus datos")}
+                        style={({ hovered, pressed }) => ({
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 10,
+                            padding: 8,
+                            marginHorizontal: -8,
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: isTabActive("profile") ? c.brand.primary : "transparent",
+                            backgroundColor: isTabActive("profile") || hovered || pressed
+                                ? c.background.hover
+                                : "transparent",
+                        })}
                     >
-                        {/* Rol "Super Administrador" explícito (007) =
-                            Super Admin; "Administrador" = Admin de sede
-                            (ver backendRoles). */}
-                        {t(roleDisplayLabel(user))}
-                    </Text>
-                  </TouchableOpacity>
+                        <Avatar name={user.name} size={40} />
+                        <View style={{ flex: 1 }}>
+                            <Text
+                                numberOfLines={1}
+                                style={{ fontSize: 14, fontWeight: "700", color: c.text.primary }}
+                            >
+                                {user.name}
+                            </Text>
+                            <Text numberOfLines={1} style={{ fontSize: 12, color: c.text.secondary, marginTop: 1 }}>
+                                {/* Rol "Super Administrador" explícito (007) =
+                                    Super Admin; "Administrador" = Admin de sede
+                                    (ver backendRoles). */}
+                                {t(roleDisplayLabel(user))}
+                            </Text>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
+                                <Text style={{ fontSize: 11, fontWeight: "600", color: c.brand.primary }}>
+                                    {t("Ver mi perfil")}
+                                </Text>
+                                <Feather name="chevron-right" size={12} color={c.brand.primary} />
+                            </View>
+                        </View>
+                    </Pressable>
                 </SidebarHeader>
             )}
             

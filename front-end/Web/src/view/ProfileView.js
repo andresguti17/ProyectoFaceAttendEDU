@@ -5,13 +5,17 @@
 //  editar solo contacto y salud, más el cambio de su contraseña.
 //  Nombres, documento, usuario, rol y sede son de solo lectura.
 //
+//  Estructura: tarjeta de identidad arriba; abajo, a dos columnas en
+//  escritorio, los datos de la cuenta (solo lectura) y el formulario de
+//  información personal; al final, la seguridad (contraseña).
+//
 //  Toda la lógica está en useProfileViewModel / useChangePasswordViewModel.
 // ============================================================
 
 import React, { useState } from "react";
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Alert, Avatar, Button, Card, PageHeader, TextInput, AnimatedDropdown } from "./components/common";
+import { Alert, Avatar, Badge, Button, Card, PageHeader, TextInput, AnimatedDropdown } from "./components/common";
 import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
@@ -22,43 +26,83 @@ import { PasswordStrengthIndicator } from "./components/auth";
 
 const BLOOD_ITEMS = BLOOD_TYPES.map((b) => ({ value: b, label: b, icon: "droplet" }));
 
-function ReadOnlyRow({ label, value }) {
+// ── Piezas de presentación ───────────────────────────────────
+
+function CardHeading({ icon, title, subtitle }) {
+    const { theme } = useTheme();
+    const c = theme.colors;
+    return (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <View style={{
+                width: 36, height: 36, borderRadius: 10,
+                backgroundColor: c.background.hover,
+                alignItems: "center", justifyContent: "center",
+            }}>
+                <Feather name={icon} size={18} color={c.brand.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, fontWeight: "800", color: c.text.primary }}>{title}</Text>
+                {!!subtitle && (
+                    <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 2 }}>{subtitle}</Text>
+                )}
+            </View>
+        </View>
+    );
+}
+
+function InfoRow({ icon, label, value }) {
     const { theme } = useTheme();
     const c = theme.colors;
     if (!value) return null;
     return (
-        <View style={{ gap: 2 }}>
-            <Text style={{ fontSize: 12, color: c.text.secondary }}>{label}</Text>
-            <Text style={{ fontSize: 15, fontWeight: "600", color: c.text.primary }}>{value}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10 }}>
+            <Feather name={icon} size={16} color={c.text.secondary} />
+            <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, color: c.text.secondary, letterSpacing: 0.3, textTransform: "uppercase" }}>
+                    {label}
+                </Text>
+                <Text style={{ fontSize: 15, fontWeight: "600", color: c.text.primary, marginTop: 1 }}>
+                    {value}
+                </Text>
+            </View>
         </View>
     );
 }
 
-function SectionTitle({ icon, children }) {
+function GroupLabel({ children }) {
     const { theme } = useTheme();
     const c = theme.colors;
     return (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <Feather name={icon} size={16} color={c.brand.primary} />
-            <Text style={{ fontSize: 16, fontWeight: "800", color: c.text.primary }}>{children}</Text>
-        </View>
+        <Text style={{
+            fontSize: 12, fontWeight: "700", color: c.text.secondary,
+            letterSpacing: 0.5, textTransform: "uppercase", marginTop: 4,
+        }}>
+            {children}
+        </Text>
     );
 }
 
-// ── Cambio de contraseña (reutiliza el viewmodel del cambio obligatorio) ──
-function ChangePasswordCard() {
+// ── Seguridad: cambio de contraseña (reutiliza el viewmodel del cambio obligatorio) ──
+
+function SecurityCard() {
     const { theme } = useTheme();
     const c = theme.colors;
     const { t } = useTranslation();
     const vm = useChangePasswordViewModel();
+    const [open, setOpen] = useState(false);
     const [done, setDone] = useState(false);
 
     const submit = async () => {
-        setDone(false);
         if (await vm.submit()) {
             vm.reset();
+            setOpen(false);
             setDone(true);
         }
+    };
+
+    const close = () => {
+        vm.reset();
+        setOpen(false);
     };
 
     const eye = (
@@ -68,11 +112,25 @@ function ChangePasswordCard() {
     );
 
     return (
-        <View>
-            <SectionTitle icon="lock">{t("Contraseña")}</SectionTitle>
-            <Card variant="outlined">
-                <View style={{ gap: 12 }}>
-                    {done && <Alert type="success" message={t("Contraseña actualizada")} />}
+        <Card variant="outlined">
+            <CardHeading
+                icon="lock"
+                title={t("Seguridad")}
+                subtitle={t("Protege tu cuenta con una contraseña que solo tú conozcas")}
+            />
+            {done && !open && (
+                <View style={{ marginBottom: 12 }}>
+                    <Alert type="success" message={t("Contraseña actualizada")} />
+                </View>
+            )}
+            {!open ? (
+                <View style={{ alignItems: "flex-start" }}>
+                    <Button variant="outline" onPress={() => { setDone(false); setOpen(true); }}>
+                        {t("Cambiar contraseña")}
+                    </Button>
+                </View>
+            ) : (
+                <View style={{ gap: 12, maxWidth: 420 }}>
                     {!!vm.submitError && <Alert type="error" message={vm.submitError} />}
                     <TextInput
                         label={t("Contraseña actual")}
@@ -105,16 +163,21 @@ function ChangePasswordCard() {
                         error={!!vm.errors.confirmPassword}
                         errorMessage={vm.errors.confirmPassword}
                     />
-                    <View style={{ alignItems: "flex-start" }}>
+                    <View style={{ flexDirection: "row", gap: 10 }}>
                         <Button onPress={submit} disabled={vm.loading} loading={vm.loading}>
-                            {vm.loading ? t("Guardando…") : t("Cambiar contraseña")}
+                            {vm.loading ? t("Guardando…") : t("Actualizar contraseña")}
+                        </Button>
+                        <Button variant="outline" onPress={close} disabled={vm.loading}>
+                            {t("Cancelar")}
                         </Button>
                     </View>
                 </View>
-            </Card>
-        </View>
+            )}
+        </Card>
     );
 }
+
+// ── Pantalla ─────────────────────────────────────────────────
 
 export default function ProfileView() {
     const { isSmall } = useResponsive();
@@ -124,127 +187,198 @@ export default function ProfileView() {
     const vm = useProfileViewModel();
 
     const doc = [vm.account.documentType, vm.account.documentNumber].filter(Boolean).join(" ");
+    const stacked = isSmall;
 
     return (
         <View style={{ flex: 1, backgroundColor: c.background.app }}>
-            <PageHeader title={t("Mi perfil")} subtitle={t("Consulta tus datos y actualiza tu información de contacto")} />
+            <PageHeader
+                title={t("Mi perfil")}
+                subtitle={t("Consulta tus datos y actualiza tu información de contacto")}
+            />
 
             <ScrollView
-                contentContainerStyle={{ padding: isSmall ? 16 : 24, gap: 24, maxWidth: 760, width: "100%", alignSelf: "center" }}
+                contentContainerStyle={{ padding: isSmall ? 16 : 24, alignItems: "center" }}
                 showsVerticalScrollIndicator={false}
             >
-                {vm.loading ? (
-                    <ActivityIndicator color={c.brand.primary} />
-                ) : vm.loadError ? (
-                    <Alert type="error" title={t("No se pudo cargar")} message={vm.loadError} />
-                ) : (
-                    <>
-                        {/* ── Cuenta: solo lectura ── */}
-                        <View>
-                            <SectionTitle icon="user">{t("Datos de la cuenta")}</SectionTitle>
-                            <Card variant="outlined">
-                                <View style={{ flexDirection: "row", gap: 16, alignItems: "center" }}>
-                                    <Avatar name={vm.account.fullName} size={56} />
-                                    <View style={{ flex: 1, gap: 10 }}>
-                                        <ReadOnlyRow label={t("Nombre")} value={vm.account.fullName} />
-                                        <ReadOnlyRow label={t("Documento")} value={doc} />
-                                        <ReadOnlyRow label={t("Usuario")} value={vm.account.username} />
-                                        <ReadOnlyRow label={t("Rol")} value={t(vm.account.roleLabel)} />
-                                        <ReadOnlyRow label={t("Sede")} value={vm.account.schoolName} />
+                <View style={{ width: "100%", maxWidth: 980, gap: 20 }}>
+                    {vm.loading ? (
+                        <ActivityIndicator color={c.brand.primary} style={{ marginTop: 40 }} />
+                    ) : vm.loadError ? (
+                        <Alert type="error" title={t("No se pudo cargar")} message={vm.loadError} />
+                    ) : (
+                        <>
+                            {/* ── Identidad ── */}
+                            <Card variant="elevated">
+                                <View style={{
+                                    flexDirection: stacked ? "column" : "row",
+                                    alignItems: "center",
+                                    gap: 20,
+                                }}>
+                                    <Avatar name={vm.account.fullName} size={84} />
+                                    <View style={{ flex: 1, gap: 8, alignItems: stacked ? "center" : "flex-start" }}>
+                                        <Text style={{
+                                            fontSize: 24, fontWeight: "800", color: c.text.primary,
+                                            textAlign: stacked ? "center" : "left",
+                                        }}>
+                                            {vm.account.fullName}
+                                        </Text>
+                                        <View style={{
+                                            flexDirection: "row", flexWrap: "wrap", gap: 8,
+                                            justifyContent: stacked ? "center" : "flex-start",
+                                        }}>
+                                            {!!vm.account.roleLabel && (
+                                                <Badge variant="primary" icon="shield">{t(vm.account.roleLabel)}</Badge>
+                                            )}
+                                            {!!vm.account.schoolName && (
+                                                <Badge variant="default" icon="home">{vm.account.schoolName}</Badge>
+                                            )}
+                                            {!!vm.account.username && (
+                                                <Badge variant="default" icon="at-sign">{vm.account.username}</Badge>
+                                            )}
+                                        </View>
                                     </View>
                                 </View>
-                                <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 12 }}>
-                                    {t("Estos datos los cambia la administración de tu institución.")}
-                                </Text>
                             </Card>
-                        </View>
 
-                        {/* ── Datos personales: editables ── */}
-                        <View>
-                            <SectionTitle icon="edit-3">{t("Datos personales")}</SectionTitle>
-                            <Card variant="outlined">
-                                <View style={{ gap: 12 }}>
-                                    {vm.saved && <Alert type="success" message={t("Perfil actualizado")} />}
-                                    {!!vm.submitError && <Alert type="error" message={vm.submitError} />}
-
-                                    <TextInput
-                                        label={t("Correo electrónico")}
-                                        value={vm.values.email}
-                                        onChangeText={(v) => vm.setField("email", v)}
-                                        type="email"
-                                        helperText={t("Es tu identificador para iniciar sesión")}
-                                        error={!!vm.errors.email}
-                                        errorMessage={vm.errors.email}
-                                    />
-                                    {vm.needsPassword && (
-                                        <TextInput
-                                            label={t("Contraseña actual")}
-                                            value={vm.values.currentPassword}
-                                            onChangeText={(v) => vm.setField("currentPassword", v)}
-                                            type="password"
-                                            secureTextEntry
-                                            helperText={t("Necesaria para cambiar el correo")}
-                                            error={!!vm.errors.currentPassword}
-                                            errorMessage={vm.errors.currentPassword}
+                            <View style={{ flexDirection: stacked ? "column" : "row", gap: 20, alignItems: "flex-start" }}>
+                                {/* ── Cuenta: solo lectura ── */}
+                                <View style={{ width: stacked ? "100%" : 300, flexShrink: 0 }}>
+                                    <Card variant="outlined">
+                                        <CardHeading
+                                            icon="user"
+                                            title={t("Datos de la cuenta")}
+                                            subtitle={t("Solo lectura")}
                                         />
-                                    )}
-                                    <View style={{ flexDirection: isSmall ? "column" : "row", gap: 12 }}>
-                                        <View style={{ flex: 1 }}>
+                                        <InfoRow icon="credit-card" label={t("Documento")} value={doc} />
+                                        <InfoRow icon="at-sign" label={t("Usuario")} value={vm.account.username} />
+                                        <InfoRow icon="shield" label={t("Rol")} value={t(vm.account.roleLabel)} />
+                                        <InfoRow icon="home" label={t("Sede")} value={vm.account.schoolName} />
+                                        <View style={{
+                                            flexDirection: "row", gap: 8, marginTop: 12, padding: 10,
+                                            borderRadius: 10, backgroundColor: c.background.hover,
+                                        }}>
+                                            <Feather name="lock" size={14} color={c.text.secondary} style={{ marginTop: 2 }} />
+                                            <Text style={{ flex: 1, fontSize: 12, color: c.text.secondary, lineHeight: 17 }}>
+                                                {t("Nombre, documento, usuario, rol y sede los cambia la administración de tu institución.")}
+                                            </Text>
+                                        </View>
+                                    </Card>
+                                </View>
+
+                                {/* ── Información personal: editable ── */}
+                                <View style={{ flex: 1, width: stacked ? "100%" : undefined, minWidth: 0 }}>
+                                    <Card variant="outlined">
+                                        <CardHeading
+                                            icon="edit-3"
+                                            title={t("Información personal")}
+                                            subtitle={t("Puedes actualizar estos datos cuando quieras")}
+                                        />
+                                        <View style={{ gap: 14 }}>
+                                            {vm.saved && <Alert type="success" message={t("Perfil actualizado")} />}
+                                            {!!vm.submitError && <Alert type="error" message={vm.submitError} />}
+
+                                            <GroupLabel>{t("Contacto")}</GroupLabel>
+                                            <TextInput
+                                                label={t("Correo electrónico")}
+                                                value={vm.values.email}
+                                                onChangeText={(v) => vm.setField("email", v)}
+                                                type="email"
+                                                leftIcon={<Feather name="mail" size={18} color={c.text.secondary} />}
+                                                helperText={t("Es tu identificador para iniciar sesión")}
+                                                containerStyle={{ marginBottom: 4 }}
+                                                error={!!vm.errors.email}
+                                                errorMessage={vm.errors.email}
+                                            />
+                                            {vm.needsPassword && (
+                                                <TextInput
+                                                    label={t("Contraseña actual")}
+                                                    value={vm.values.currentPassword}
+                                                    onChangeText={(v) => vm.setField("currentPassword", v)}
+                                                    type="password"
+                                                    secureTextEntry
+                                                    leftIcon={<Feather name="lock" size={18} color={c.text.secondary} />}
+                                                    helperText={t("Necesaria para cambiar el correo")}
+                                                    error={!!vm.errors.currentPassword}
+                                                    errorMessage={vm.errors.currentPassword}
+                                                />
+                                            )}
                                             <TextInput
                                                 label={t("Teléfono")}
                                                 value={vm.values.phone}
                                                 onChangeText={(v) => vm.setField("phone", v)}
                                                 type="phone"
+                                                leftIcon={<Feather name="phone" size={18} color={c.text.secondary} />}
                                                 error={!!vm.errors.phone}
                                                 errorMessage={vm.errors.phone}
                                             />
-                                        </View>
-                                        <View style={{ flex: 1 }}>
                                             <TextInput
-                                                label={t("Nacimiento (AAAA-MM-DD)")}
-                                                value={vm.values.birthDate}
-                                                onChangeText={(v) => vm.setField("birthDate", v)}
-                                                placeholder={t("Ej: 2005-03-14")}
-                                                error={!!vm.errors.birthDate}
-                                                errorMessage={vm.errors.birthDate}
+                                                label={t("Dirección")}
+                                                value={vm.values.address}
+                                                onChangeText={(v) => vm.setField("address", v)}
+                                                leftIcon={<Feather name="map-pin" size={18} color={c.text.secondary} />}
+                                                error={!!vm.errors.address}
+                                                errorMessage={vm.errors.address}
                                             />
+
+                                            <GroupLabel>{t("Datos personales")}</GroupLabel>
+                                            <View style={{ flexDirection: isSmall ? "column" : "row", gap: 14 }}>
+                                                <View style={{ flex: 1 }}>
+                                                    <TextInput
+                                                        label={t("Fecha de nacimiento")}
+                                                        value={vm.values.birthDate}
+                                                        onChangeText={(v) => vm.setField("birthDate", v)}
+                                                        placeholder={t("AAAA-MM-DD")}
+                                                        leftIcon={<Feather name="calendar" size={18} color={c.text.secondary} />}
+                                                        error={!!vm.errors.birthDate}
+                                                        errorMessage={vm.errors.birthDate}
+                                                    />
+                                                </View>
+                                                <View style={{ flex: 1 }}>
+                                                    <Text style={{ fontSize: 13, color: c.text.secondary, marginBottom: 6 }}>
+                                                        {t("Tipo de sangre")}
+                                                    </Text>
+                                                    <AnimatedDropdown
+                                                        items={BLOOD_ITEMS}
+                                                        value={vm.values.bloodType}
+                                                        onSelect={(v) => vm.setField("bloodType", v)}
+                                                        placeholder={t("Seleccionar tipo")}
+                                                        triggerHeight={48}
+                                                    />
+                                                </View>
+                                            </View>
+
+                                            {/* ── Barra de acciones ── */}
+                                            <View style={{
+                                                flexDirection: "row", alignItems: "center", gap: 10, flexWrap: "wrap",
+                                                marginTop: 6, paddingTop: 16,
+                                                borderTopWidth: 1, borderTopColor: c.border.primary,
+                                            }}>
+                                                {vm.dirty ? (
+                                                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1 }}>
+                                                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: c.status.warning }} />
+                                                        <Text style={{ fontSize: 13, color: c.status.warning, fontWeight: "600" }}>
+                                                            {t("Cambios sin guardar")}
+                                                        </Text>
+                                                    </View>
+                                                ) : (
+                                                    <View style={{ flex: 1 }} />
+                                                )}
+                                                <Button variant="outline" onPress={vm.discard} disabled={!vm.dirty || vm.saving}>
+                                                    {t("Descartar")}
+                                                </Button>
+                                                <Button onPress={vm.save} disabled={!vm.dirty || vm.saving} loading={vm.saving}>
+                                                    {vm.saving ? t("Guardando…") : t("Guardar cambios")}
+                                                </Button>
+                                            </View>
                                         </View>
-                                    </View>
-                                    <TextInput
-                                        label={t("Dirección")}
-                                        value={vm.values.address}
-                                        onChangeText={(v) => vm.setField("address", v)}
-                                        error={!!vm.errors.address}
-                                        errorMessage={vm.errors.address}
-                                    />
-                                    <View>
-                                        <Text style={{ fontSize: 13, color: c.text.secondary, marginBottom: 6 }}>
-                                            {t("Tipo de sangre")}
-                                        </Text>
-                                        <AnimatedDropdown
-                                            items={BLOOD_ITEMS}
-                                            value={vm.values.bloodType}
-                                            onSelect={(v) => vm.setField("bloodType", v)}
-                                            placeholder={t("Seleccionar tipo")}
-                                            triggerHeight={48}
-                                        />
-                                    </View>
-
-                                    <View style={{ flexDirection: "row", gap: 10 }}>
-                                        <Button onPress={vm.save} disabled={!vm.dirty || vm.saving} loading={vm.saving}>
-                                            {vm.saving ? t("Guardando…") : t("Guardar cambios")}
-                                        </Button>
-                                        <Button variant="outline" onPress={vm.discard} disabled={!vm.dirty || vm.saving}>
-                                            {t("Descartar")}
-                                        </Button>
-                                    </View>
+                                    </Card>
                                 </View>
-                            </Card>
-                        </View>
+                            </View>
 
-                        <ChangePasswordCard />
-                    </>
-                )}
+                            <SecurityCard />
+                        </>
+                    )}
+                </View>
             </ScrollView>
         </View>
     );
