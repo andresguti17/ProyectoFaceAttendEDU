@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { AppState, Keyboard, Platform } from 'react-native';
+import * as NavigationBar from 'expo-navigation-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -9,8 +11,23 @@ import { UserProvider } from './src/utils/UserContext';
 import i18n from './src/utils/i18n';
 import AppNavigator from './src/navigations/AppNavigator';
 
+// Oculta los botones de navegación de Android (modo inmersivo). El sistema los vuelve a mostrar
+// al abrir el teclado o al volver a la app, así que se ocultan de nuevo en esos dos eventos.
+const hideNavigationBar = () => NavigationBar.setVisibilityAsync('hidden').catch(() => {});
+
 function AppContent() {
     const { isDark } = useTheme();
+
+    useEffect(() => {
+        if (Platform.OS !== 'android') return undefined;
+        hideNavigationBar();
+        const appState = AppState.addEventListener('change', (state) => state === 'active' && hideNavigationBar());
+        const keyboard = Keyboard.addListener('keyboardDidHide', hideNavigationBar);
+        return () => {
+            appState.remove();
+            keyboard.remove();
+        };
+    }, []);
 
     return (
         <>
