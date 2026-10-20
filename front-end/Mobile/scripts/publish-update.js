@@ -13,7 +13,10 @@ if (!['development', 'preview', 'production'].includes(channel)) {
 const profileEnv = require(path.join(__dirname, '..', 'eas.json')).build[channel].env || {};
 const message = rest.join(' ') || execFileSync('git', ['log', '-1', '--pretty=%s']).toString().trim();
 
-execFileSync('npx', ['eas-cli', 'update', '--channel', channel, '--message', message, '--clear-cache', '--non-interactive'], {
+// En Windows se usa shell (npx.cmd) y ahí el mensaje debe ir entrecomillado o se parte en palabras.
+const arg = process.platform === 'win32' ? JSON.stringify(message) : message;
+
+execFileSync('npx', ['eas-cli', 'update', '--channel', channel, '--message', arg, '--environment', channel, '--clear-cache', '--non-interactive'], {
     stdio: 'inherit',
     shell: process.platform === 'win32',
     env: {...process.env, ...profileEnv},
