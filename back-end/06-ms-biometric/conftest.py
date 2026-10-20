@@ -17,3 +17,8 @@ if SERVICE_ROOT not in sys.path:
 # Router contract tests exercise business behaviour, not the session guard;
 # tests/unit/web/test_security.py turns the guard back on explicitly.
 os.environ.setdefault("BIOMETRIC_AUTH_ENABLED", "false")
+
+# Liveness tests feed placeholder frames (no real faces), so the same-person and
+# minimum-step-time checks are off by default; the tests of those checks enable them.
+os.environ.setdefault("BIOMETRIC_LIVENESS_IDENTITY_CHECK", "false")
+os.environ.setdefault("BIOMETRIC_LIVENESS_MIN_STEP_SECONDS", "0")

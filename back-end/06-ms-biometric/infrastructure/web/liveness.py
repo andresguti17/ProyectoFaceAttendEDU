@@ -17,9 +17,16 @@ import json
 import secrets as _secrets
 import time
 
-LIVENESS_ACTIONS = ("blink", "turn", "open_mouth")
+# "turn" is the legacy direction-less gesture: only clients that do not announce
+# which gestures they support (see `create_liveness_challenge`) keep receiving it.
+LEGACY_ACTIONS = ("blink", "turn", "open_mouth")
+LIVENESS_ACTIONS = LEGACY_ACTIONS + ("turn_left", "turn_right", "smile", "nod")
 
 _consumed_tokens: set[str] = set()
+# Face seen at the first step of each challenge (`challenge id -> (expiry, encoding)`),
+# kept in memory only for the challenge TTL so later steps and the final image can
+# be checked to be the same person. Never logged, never persisted.
+_identities: dict[str, tuple[float, list[float]]] = {}
 _last_actions: tuple[str, ...] | None = None
 
 
@@ -29,28 +36,46 @@ def _prune_consumed_tokens(max_size: int = 10_000) -> None:
 
 
 def create_liveness_challenge(
-    secret: str, ttl_seconds: int, num_actions: int = 3
+    secret: str,
+    ttl_seconds: int,
+    num_actions: int = 3,
+    allowed: tuple[str, ...] | list[str] | None = None,
 ) -> tuple[str, list[str]]:
     """A challenge with `num_actions` random gestures (2 = quick, 3 = enroll).
 
     The subset and order are randomized every time: a fixed recorded sequence
     does not work even if the possible gestures are public knowledge.
+    `allowed` is what the calling client can render (default: the legacy set).
     """
     global _last_actions
     if num_actions not in (2, 3):
         raise ValueError("num_actions must be 2 or 3")
     randomizer = _secrets.SystemRandom()
-    actions = randomizer.sample(list(LIVENESS_ACTIONS), num_actions)
+    pool = [action for action in (allowed or LEGACY_ACTIONS) if action in LIVENESS_ACTIONS]
+    if len(set(pool)) < num_actions:
+        raise ValueError("Not enough supported liveness gestures")
+    actions = randomizer.sample(sorted(set(pool)), num_actions)
     randomizer.shuffle(actions)
     if tuple(actions) == _last_actions:
         randomizer.shuffle(actions)  # avoid repeating the exact previous sequence
     _last_actions = tuple(actions)
-    return _create_token(secret, ttl_seconds, actions, 0), actions
+    return _create_token(secret, ttl_seconds, actions, 0, _secrets.token_hex(8)), actions
 
 
 def verify_liveness_challenge(
     secret: str, token: str, require_complete: bool = False
 ) -> tuple[list[str], int]:
+    payload = _verified_payload(secret, token, require_complete)
+    return payload["actions"], payload["step"]
+
+
+def liveness_claims(secret: str, token: str) -> tuple[str | None, float | None]:
+    """(challenge id, issue time) of a valid token; `None`s for tokens without them."""
+    payload = _verified_payload(secret, token)
+    return payload.get("cid"), payload.get("iat")
+
+
+def _verified_payload(secret: str, token: str, require_complete: bool = False) -> dict:
     try:
         encoded_text, signature_text = token.split(".", 1)
         encoded = encoded_text.encode()
@@ -71,7 +96,7 @@ def verify_liveness_challenge(
             raise ValueError("Liveness challenge expired or invalid")
         if require_complete and step != len(actions):
             raise ValueError("Liveness challenge not completed")
-        return actions, step
+        return payload
     except (KeyError, TypeError, json.JSONDecodeError) as exc:
         # `ValueError`s raised intentionally above (expired/incomplete) propagate
         # with their own message; only malformed-token errors land here.
@@ -87,7 +112,8 @@ def advance_liveness_challenge(
     _consumed_tokens.add(token)
     _prune_consumed_tokens()
     next_step = step + 1
-    return _create_token(secret, ttl_seconds, actions, next_step), actions, next_step
+    cid, _ = liveness_claims(secret, token)
+    return _create_token(secret, ttl_seconds, actions, next_step, cid), actions, next_step
 
 
 def consume_liveness_challenge(secret: str, token: str) -> list[str]:
@@ -99,7 +125,28 @@ def consume_liveness_challenge(secret: str, token: str) -> list[str]:
     return actions
 
 
-def _create_token(secret: str, ttl_seconds: int, actions: list[str], step: int) -> str:
+def remember_identity(challenge_id: str, encoding: list[float], ttl_seconds: int) -> None:
+    now = time.time()
+    for key in [key for key, (expiry, _) in _identities.items() if expiry < now]:
+        del _identities[key]
+    _identities[challenge_id] = (now + ttl_seconds, encoding)
+
+
+def reference_identity(challenge_id: str | None) -> list[float] | None:
+    entry = _identities.get(challenge_id) if challenge_id else None
+    if entry is None or entry[0] < time.time():
+        return None
+    return entry[1]
+
+
+def forget_identity(challenge_id: str | None) -> None:
+    if challenge_id:
+        _identities.pop(challenge_id, None)
+
+
+def _create_token(
+    secret: str, ttl_seconds: int, actions: list[str], step: int, challenge_id: str | None = None
+) -> str:
     # `nonce` guarantees two tokens are never byte-identical even when actions,
     # step and exp (second granularity) all happen to coincide — without it,
     # two unrelated liveness attempts issued in the same second with the same
@@ -111,6 +158,8 @@ def _create_token(secret: str, ttl_seconds: int, actions: list[str], step: int) 
         "actions": actions,
         "step": step,
         "exp": int(time.time()) + ttl_seconds,
+        "iat": time.time(),
+        "cid": challenge_id,
         "nonce": _secrets.token_hex(8),
     }
     encoded = _encode_payload(payload)
