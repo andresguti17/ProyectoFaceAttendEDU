@@ -55,7 +55,7 @@ sumó después y no está dibujado aquí):
 | Tabla | Descripción | PK |
 |---|---|---|
 | `person` | Identidad base: documento, nombre, contacto | `person_id` (UUID) |
-| `app_user` | Credenciales de acceso; 1:1 con `person` (`person_id` UNIQUE) | `user_id` (UUID) |
+| `app_user` | Credenciales de acceso; 1:1 con `person` (`person_id` UNIQUE); `must_change_password` obliga a cambiar la contraseña inicial en el primer ingreso | `user_id` (UUID) |
 | `user_session` | Sesiones activas/cerradas | `session_id` (UUID) |
 | `password_policy` | Reglas de complejidad de contraseña | `policy_id` (INT) |
 

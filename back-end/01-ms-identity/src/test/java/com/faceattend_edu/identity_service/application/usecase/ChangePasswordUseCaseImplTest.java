@@ -34,6 +34,7 @@ class ChangePasswordUseCaseImplTest {
         user.setUsername("aprendiz.faceattend");
         user.setPasswordHash("hash:Old1234!");
         user.setStatus(true);
+        user.setMustChangePassword(true);
         current = session();
         other = session();
 
@@ -84,6 +85,7 @@ class ChangePasswordUseCaseImplTest {
         useCase.changePassword(user.getUserId(), current.getSessionId(), "Old1234!", "New1234!");
 
         assertThat(saved.getPasswordHash()).isEqualTo("hash:New1234!");
+        assertThat(saved.isMustChangePassword()).isFalse();
         assertThat(current.isActive()).isTrue();
         assertThat(other.isActive()).isFalse();
         assertThat(closed).containsExactly(other);

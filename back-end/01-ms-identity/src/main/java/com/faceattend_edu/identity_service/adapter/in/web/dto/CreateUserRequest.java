@@ -26,4 +26,7 @@ public class CreateUserRequest {
     private String password;
 
     private String authenticationType;
+
+    /** Email the username and password to the person (requires an active user and a person email). */
+    private Boolean sendCredentials;
 }

@@ -7,6 +7,7 @@ import com.faceattend_edu.identity_service.application.port.in.ChangeUserStatusU
 import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ListUsersUseCase;
+import com.faceattend_edu.identity_service.application.port.in.NotifyUserCredentialsUseCase;
 import com.faceattend_edu.identity_service.application.port.in.UpdateUserUseCase;
 import com.faceattend_edu.identity_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.identity_service.domain.exception.EntityNotFoundException;
@@ -68,6 +69,8 @@ class UserControllerTest {
     private ChangeUserStatusUseCase changeUserStatusUseCase;
     @MockitoBean
     private ActivateUserUseCase activateUserUseCase;
+    @MockitoBean
+    private NotifyUserCredentialsUseCase notifyUserCredentialsUseCase;
 
     private UUID personId;
     private UUID userId;
@@ -121,6 +124,56 @@ class UserControllerTest {
             verify(createUserUseCase).createUser(captor.capture(), eq("Secret123"));
             assertEquals(personId, captor.getValue().getPersonId().getPersonId());
             assertEquals("carolina.mendoza", captor.getValue().getUsername());
+        }
+
+        private String createBodyWithCredentials(String username, String password) {
+            return "{\"personId\":\"" + personId + "\",\"username\":\"" + username
+                    + "\",\"password\":\"" + password + "\",\"sendCredentials\":true}";
+        }
+
+        @Test
+        @DisplayName("givenSendCredentials_whenEmailAccepted_thenReportSentAndMustChangePassword")
+        void givenSendCredentials_whenEmailAccepted_thenReportSentAndMustChangePassword() throws Exception {
+            when(createUserUseCase.createUser(any(User.class), eq("Secret123"))).thenReturn(carolina);
+            when(notifyUserCredentialsUseCase.notifyCredentials(userId, "Secret123"))
+                    .thenReturn(NotifyUserCredentialsUseCase.Status.SENT);
+
+            mockMvc.perform(post("/api/v1/users")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(createBodyWithCredentials("carolina.mendoza", "Secret123")))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.credentialsEmail").value("SENT"))
+                    .andExpect(jsonPath("$.mustChangePassword").value(true))
+                    .andExpect(jsonPath("$.password").doesNotExist());
+        }
+
+        @Test
+        @DisplayName("givenSendCredentials_whenEmailFails_thenStillCreateAndReportFailed")
+        void givenSendCredentials_whenEmailFails_thenStillCreateAndReportFailed() throws Exception {
+            when(createUserUseCase.createUser(any(User.class), eq("Secret123"))).thenReturn(carolina);
+            when(notifyUserCredentialsUseCase.notifyCredentials(userId, "Secret123"))
+                    .thenReturn(NotifyUserCredentialsUseCase.Status.FAILED);
+
+            mockMvc.perform(post("/api/v1/users")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(createBodyWithCredentials("carolina.mendoza", "Secret123")))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.credentialsEmail").value("FAILED"))
+                    .andExpect(jsonPath("$.mustChangePassword").value(false));
+        }
+
+        @Test
+        @DisplayName("givenNoSendCredentials_whenCreateUser_thenNeverNotify")
+        void givenNoSendCredentials_whenCreateUser_thenNeverNotify() throws Exception {
+            when(createUserUseCase.createUser(any(User.class), eq("Secret123"))).thenReturn(carolina);
+
+            mockMvc.perform(post("/api/v1/users")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(createBody("carolina.mendoza", "Secret123")))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.credentialsEmail").doesNotExist());
+
+            org.mockito.Mockito.verifyNoInteractions(notifyUserCredentialsUseCase);
         }
 
         @Test

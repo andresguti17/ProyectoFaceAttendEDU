@@ -17,6 +17,7 @@ public class UserWebMapper {
         dto.setUsername(domain.getUsername());
         dto.setAuthenticationType(domain.getAuthenticationType());
         dto.setStatus(domain.getStatus());
+        dto.setMustChangePassword(domain.isMustChangePassword());
         dto.setLastAccess(domain.getLastAccess());
         dto.setCreatedAt(domain.getCreatedAt());
         dto.setUpdatedAt(domain.getUpdatedAt());

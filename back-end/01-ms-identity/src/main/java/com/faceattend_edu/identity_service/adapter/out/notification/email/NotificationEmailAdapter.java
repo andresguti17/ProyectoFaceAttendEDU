@@ -1,5 +1,6 @@
 package com.faceattend_edu.identity_service.adapter.out.notification.email;
 
+import com.faceattend_edu.identity_service.application.port.out.SendCredentialsEmailPort;
 import com.faceattend_edu.identity_service.application.port.out.SendRecoveryEmailPort;
 import com.faceattend_edu.identity_service.config.AuthProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -27,9 +28,10 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-public class NotificationEmailAdapter implements SendRecoveryEmailPort {
+public class NotificationEmailAdapter implements SendRecoveryEmailPort, SendCredentialsEmailPort {
 
     static final String TEMPLATE_VERIFICATION_CODE = "verification_code";
+    static final String TEMPLATE_USER_CREDENTIALS = "user_credentials";
     static final String EMAILS_PATH = "/api/v1/emails";
 
     private final AuthProperties authProperties;
@@ -68,6 +70,39 @@ public class NotificationEmailAdapter implements SendRecoveryEmailPort {
             return true;
         } catch (Exception ex) {
             log.warn("Email delivery failed to={} error={}", to, ex.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean sendCredentials(String to, String recipientName, String username, String password) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("username", username);
+        data.put("password", password);
+        if (recipientName != null && !recipientName.isBlank()) data.put("recipientName", recipientName);
+        String loginUrl = authProperties.getLoginUrl();
+        if (loginUrl != null && !loginUrl.isBlank()) data.put("loginUrl", loginUrl.trim());
+        return deliver(to, TEMPLATE_USER_CREDENTIALS, data);
+    }
+
+    /** Never logs the payload: for user_credentials it carries a password. */
+    private boolean deliver(String to, String template, Map<String, Object> data) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("to", to);
+        payload.put("template", template);
+        payload.put("data", data);
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    URI.create(baseUrl() + EMAILS_PATH), HttpMethod.POST,
+                    new HttpEntity<>(payload, headers()), Map.class);
+            Object status = response.getBody() != null ? response.getBody().get("status") : null;
+            if (!"accepted".equals(status)) {
+                log.warn("Email channel not delivering to={} template={} status={}", to, template, status);
+                return false;
+            }
+            return true;
+        } catch (Exception ex) {
+            log.warn("Email delivery failed to={} template={} error={}", to, template, ex.getMessage());
             return false;
         }
     }
