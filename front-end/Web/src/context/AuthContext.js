@@ -29,6 +29,15 @@ function loginErrorMessage(err) {
     if (err?.status === 0) return err.message; // red / timeout
     return err?.message || "No se pudo iniciar sesión";
 }
+
+function changePasswordErrorMessage(err) {
+    if (err?.status === 0) return err.message; // red / timeout
+    const detail = String(err?.message ?? "");
+    if (/current password is incorrect/i.test(detail)) return "La contraseña actual no es correcta";
+    if (/must be different/i.test(detail)) return "La nueva contraseña debe ser distinta a la actual";
+    if (err?.status === 400) return detail || "La nueva contraseña no cumple la política";
+    return "No se pudo cambiar la contraseña";
+}
 // ── Storage helper (multi-plataforma) ─────────────────────
 
 const SESSION_KEY = "@faceattend:session_user";
@@ -402,6 +411,8 @@ export function AuthProvider({ children }) {
             role,
             roles: roleNames,
             avatar: null,
+            // La cuenta aún usa la contraseña inicial: AuthMiddleware fuerza el cambio.
+            mustChangePassword: session?.mustChangePassword === true,
         };
 
         // ── Sesión limpia (trabajo propio: timeout + ruta deseada) ──
@@ -431,6 +442,24 @@ export function AuthProvider({ children }) {
         console.log('[AuthContext] Login successful, returning:', { success: true, redirectRoute });
         return { success: true, redirectRoute };
     }, [consumeIntendedRoute, sessionTimeout]);
+
+    // Cambio obligatorio (o voluntario) de la contraseña de la sesión actual.
+    // Devuelve null si salió bien o un mensaje para mostrar; al terminar apaga
+    // mustChangePassword en el estado y en el almacenamiento de sesión.
+    const changePassword = useCallback(async (currentPassword, newPassword) => {
+        try {
+            await authApi.changePassword(currentPassword, newPassword);
+        } catch (err) {
+            return changePasswordErrorMessage(err);
+        }
+        setUser((prev) => {
+            if (!prev) return prev;
+            const next = { ...prev, mustChangePassword: false };
+            sessionSet(JSON.stringify(next));
+            return next;
+        });
+        return null;
+    }, []);
 
     const logout = useCallback(async () => {
         // IMPORTANTE: Detener completamente el timer ANTES de limpiar el resto
@@ -496,9 +525,10 @@ export function AuthProvider({ children }) {
             login,
             logout,
             register,
+            changePassword,
             sessionTimeout,
         }),
-        [user, isLoadingAuth, sessionExpiredByTimeout, isLoadingTimeoutFlag, intendedRoute, saveIntendedRoute, clearIntendedRoute, consumeIntendedRoute, login, logout, register, sessionTimeout]
+        [user, isLoadingAuth, sessionExpiredByTimeout, isLoadingTimeoutFlag, intendedRoute, saveIntendedRoute, clearIntendedRoute, consumeIntendedRoute, login, logout, register, changePassword, sessionTimeout]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

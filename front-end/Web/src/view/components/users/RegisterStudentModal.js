@@ -71,6 +71,7 @@ export default function RegisterStudentModal({
     const [saving,        setSaving]        = useState(false);
     const [showErrors,    setShowErrors]    = useState(false);
     const [success,       setSuccess]       = useState(false);
+    const [credentialsEmail, setCredentialsEmail] = useState(null); // SENT | SKIPPED | FAILED
     const [showFaceModal, setShowFaceModal] = useState(false);
     const [fichaSearch,   setFichaSearch]   = useState(""); // Para búsqueda de fichas
     const [schoolItems,   setSchoolItems]   = useState([]); // Sedes (vínculo del admin)
@@ -269,6 +270,7 @@ export default function RegisterStudentModal({
         setError(null);
         setShowErrors(false);
         setSuccess(false);
+        setCredentialsEmail(null);
         onClose();
     };
 
@@ -290,18 +292,23 @@ export default function RegisterStudentModal({
     const doSave = async (formToSave) => {
         setSaving(true);
         setError(null);
-        const err = await onSubmit(formToSave);
+        const result = await onSubmit(formToSave);
         setSaving(false);
-        if (err) {
-            setError(t(err));
+        // Una cadena es un error; un objeto { credentialsEmail } es un alta exitosa.
+        if (typeof result === "string" && result) {
+            setError(t(result));
         } else {
+            const emailStatus = result?.credentialsEmail ?? null;
+            setCredentialsEmail(emailStatus);
             setSuccess(true);
+            // Con aviso de correo se deja más tiempo para leerlo.
             setTimeout(() => {
                 setForm(EMPTY_FORM);
                 setShowErrors(false);
                 setSuccess(false);
+                setCredentialsEmail(null);
                 onClose();
-            }, 900);
+            }, emailStatus ? 3200 : 900);
         }
     };
 
@@ -429,6 +436,9 @@ export default function RegisterStudentModal({
                         <Feather name="check-circle" size={14} color={c.status.success} />
                         <Text style={{ fontSize: 11, color: c.status.success, flex: 1 }}>
                             {config.successMessage}
+                            {credentialsEmail === "SENT" ? " — " + t("Las credenciales se enviaron por correo.") : ""}
+                            {credentialsEmail === "FAILED" ? " — " + t("No se pudo enviar el correo: entrega la contraseña por otro medio.") : ""}
+                            {credentialsEmail === "SKIPPED" ? " — " + t("No se envió el correo (sin correo registrado): entrega la contraseña por otro medio.") : ""}
                         </Text>
                     </View>
                 )}
@@ -492,10 +502,41 @@ export default function RegisterStudentModal({
                                 placeholder={t("Mínimo 8 caracteres")}
                                 error={showErrors && String(form.password ?? "").length < 8}
                                 errorMessage={showErrors && String(form.password ?? "").length < 8 ? t("Mínimo 8 caracteres") : ""}
-                                helperText={t("El usuario deberá cambiarla al ingresar")}
+                                helperText={form.sendCredentials !== false
+                                    ? t("Se enviará por correo y deberá cambiarla al ingresar")
+                                    : t("Entrégala al usuario por otro medio")}
                             />
                         </View>
                     </View>
+                )}
+
+                {/* Enviar usuario y contraseña inicial por correo (Fase 1) */}
+                {form.role && (
+                    <TouchableOpacity
+                        onPress={() => setField("sendCredentials", form.sendCredentials === false)}
+                        style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 18 }}
+                    >
+                        <View style={{
+                            width: 20,
+                            height: 20,
+                            borderRadius: 4,
+                            borderWidth: 2,
+                            borderColor: form.sendCredentials !== false ? c.status.success : c.border.primary,
+                            backgroundColor: form.sendCredentials !== false ? c.status.success : "transparent",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}>
+                            {form.sendCredentials !== false && <Feather name="check" size={14} color="#fff" />}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 13, color: c.text.primary }}>
+                                {t("Enviar credenciales por correo")}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: c.text.secondary }}>
+                                {t("Usuario y contraseña inicial al correo de la persona")}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
                 )}
 
                 {/* Datos adicionales de la persona (opcionales, PersonDto) */}

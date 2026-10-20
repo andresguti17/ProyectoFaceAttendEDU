@@ -586,12 +586,37 @@ export default function ImportStudentsModal({
                                     <Text style={{ fontSize: 14, color: c.text.secondary, textAlign: "center" }}>
                                         {importResult.success} {t("estudiantes agregados al sistema")}
                                     </Text>
-                                    {importResult.success > 0 && (
+                                    {importResult.success > 0 && !importResult.credentials && (
                                         <Text style={{ fontSize: 12, color: c.text.tertiary, textAlign: "center" }}>
                                             {t("Contraseña temporal para todos")}: Estudiante123!
                                         </Text>
                                     )}
+                                    {importResult.success > 0 && importResult.credentials && (
+                                        <Text style={{ fontSize: 12, color: c.text.tertiary, textAlign: "center" }}>
+                                            {importResult.credentials.sent} {t("estudiantes recibieron sus credenciales por correo; deberán cambiar la contraseña al ingresar")}
+                                        </Text>
+                                    )}
                                 </View>
+
+                                {importResult.credentials?.notSent?.length > 0 && (
+                                    <View style={{
+                                        backgroundColor: c.background.app,
+                                        borderLeftWidth: 3,
+                                        borderLeftColor: c.status.warning,
+                                        borderRadius: 8,
+                                        padding: 10,
+                                    }}>
+                                        <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.primary }}>
+                                            {t("No se pudo enviar el correo a")}:
+                                        </Text>
+                                        <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 2 }}>
+                                            {importResult.credentials.notSent.join(", ")}
+                                        </Text>
+                                        <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 4 }}>
+                                            {t("Su contraseña es aleatoria: deben usar \"Olvidé mi contraseña\" para entrar.")}
+                                        </Text>
+                                    </View>
+                                )}
 
                                 {importResult.errors.length > 0 && (
                                     <View>

@@ -21,7 +21,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { authApi } from "../services/api/authApi";
 import { authorizationApi } from "../services/api/authorizationApi";
-import { provisionStaff, provisionStudent, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails, findExistingStudents } from "../services/api/staffProvisioning";
+import { provisionStaff, provisionStudent, credentialsNotice, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails, findExistingStudents } from "../services/api/staffProvisioning";
 import { userByPersonMap } from "../services/api/referenceData";
 import { isValidEmail } from "../core/utils/validation";
 
@@ -495,8 +495,9 @@ export function useUsersViewModel(
 
             // Delegar al método correspondiente según el tipo de usuario
             if (form.role === USER_TYPES.STUDENT) {
+                let provisioned;
                 try {
-                    await provisionStudent({
+                    provisioned = await provisionStudent({
                         name: form.name.trim(),
                         code: form.code.trim(),
                         email: form.email.trim(),
@@ -505,6 +506,7 @@ export function useUsersViewModel(
                         courseCode: form.course.trim(),
                         cohortId: String(form.cohortId ?? "").trim() || null,
                         details: form,
+                        sendCredentials: form.sendCredentials !== false,
                     });
                 } catch (e) {
                     return e?.message || "No se pudo registrar el estudiante en el backend";
@@ -518,14 +520,15 @@ export function useUsersViewModel(
                     hasFacial: form.hasFacial || false,
                     hasFingerprint: form.hasFingerprint || false,
                 });
-                return null;
+                return credentialsNotice(form, provisioned);
             }
 
             // Docentes y administradores: alta real en el backend
             // (persona + usuario + rol, más academic_actor en docentes y
             // vínculo a sede con actor ADMIN en administradores).
+            let staff;
             try {
-                await provisionStaff({
+                staff = await provisionStaff({
                     name: form.name.trim(),
                     code: form.code.trim(),
                     email: form.email.trim(),
@@ -534,6 +537,7 @@ export function useUsersViewModel(
                     role: form.role === USER_TYPES.TEACHER ? "teacher" : "admin",
                     schoolId: String(form.schoolId ?? "").trim() || user?.schoolId,
                     details: form,
+                    sendCredentials: form.sendCredentials !== false,
                 });
             } catch (e) {
                 return e?.message || "No se pudo registrar el usuario en el backend";
@@ -545,7 +549,7 @@ export function useUsersViewModel(
             // duplicada para siempre frente a la que luego trae loadUsers().
             await appData.reloadUsers();
 
-            return null;
+            return credentialsNotice(form, staff);
         },
         [appData, user]
     );
