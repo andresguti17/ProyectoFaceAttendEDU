@@ -556,6 +556,12 @@ services:
       # Docker's embedded DNS blackholes SRV queries (~8s cold-start latency
       # per upstream host). Same value as the standalone gateway file.
       KONG_DNS_ORDER: 'LAST,A,AAAA,CNAME'
+      # A recreated service gets a new container IP. Docker answers with a ~10 min
+      # TTL and Kong used to cache it that long, so after a rebuild every call to
+      # the recreated service (login included) failed with 502 "connection refused"
+      # against an IP that now belongs to another container. Re-resolve every 5 s.
+      KONG_DNS_VALID_TTL: '5'
+      KONG_DNS_STALE_TTL: '0'
       # Lets the pre-function token check call identity through resty.http.
       KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
     ports:
