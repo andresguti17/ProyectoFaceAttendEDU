@@ -46,6 +46,12 @@ export const authApi = {
         }
     },
 
+    // ── Alta pública de sede + administrador ────────────
+    // Sin sesión previa. Cuerpo { school, admin } en camelCase; la sede y el
+    // administrador quedan pendientes de activación por un Super Administrador.
+    onboardSchool: (body) =>
+        request(endpoints.identity.onboardSchool, { method: "POST", body }),
+
     // ── Roles y permisos del usuario autenticado ────────
     userRoles: (userId) =>
         request(endpoints.authorization.userRoles(userId), { method: "GET" }),

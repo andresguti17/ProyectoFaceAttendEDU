@@ -17,6 +17,7 @@ export const endpoints = {
         forgotPassword: `${API_V1}/auth/forgot-password`,
         verifyCode: `${API_V1}/auth/verify-code`,
         resetPassword: `${API_V1}/auth/reset-password`,
+        onboardSchool: `${API_V1}/onboarding/schools`,
         me: `${API_V1}/auth/me`,
         persons: `${API_V1}/persons`,
         personById: (id) => `${API_V1}/persons/${id}`,

@@ -1,18 +1,16 @@
 // ============================================================
-//  FaceAttend EDU — Signup VIEW
+//  FaceAttend EDU — Signup VIEW (registro de sede + administrador)
 // ============================================================
 //  RESPONSABILIDAD: Presentación y UI ("cómo se presenta")
 //
 //  Este componente:
-//  ✓ Renderiza toda la interfaz visual
+//  ✓ Renderiza el formulario en dos pasos (sede y administrador)
 //  ✓ Maneja estilos, layouts y animaciones
-//  ✓ Coordina hooks de presentación (useSignupViewModel)
-//  ✓ Gestiona el estado visual (mostrar/ocultar contraseña, etc.)
+//  ✓ Coordina el hook useSignupViewModel
 //
 //  NO debe:
 //  ✗ Manejar navegación directamente
 //  ✗ Conocer rutas o nombres de pantallas
-//  ✗ Acceder a navigation directamente
 //
 //  Recibe callbacks del Screen para delegar acciones de navegación.
 // ============================================================
@@ -26,6 +24,7 @@ import Button             from "./components/common/buttons/Button";
 import TextInput          from "./components/common/inputs/TextInput";
 import Alert              from "./components/common/feedback/Alert";
 import CustomScrollBar    from "./components/common/CustomScrollBar";
+import { AnimatedDropdown } from "./components/common";
 import {
     AuthFooterLink,
     BrandPanelCircles,
@@ -34,29 +33,15 @@ import {
     AuthMobileLayout,
     AuthAnimatedLayout,
 } from "./components/auth";
-import { useSignupViewModel } from "../viewmodels/useAuthViewModel";
+import { useSignupViewModel } from "../viewmodels/useSignupViewModel";
+import { DOCUMENT_TYPES } from "../core/utils/schoolSignup";
 import { useTranslation }     from "../core/utils/i18n/hooks/useTranslation";
 import { useAutoSlideOnContent } from "./components/hooks/useAutoSlideOnContent";
-import { titleCase } from "../core/utils/formatting";
 
-/**
- * Filtra el texto para permitir solo letras y espacios manteniendo acentos
- */
-const filterLettersAndSpaces = (text) => {
-    if (!text) return '';
-    // Permite letras con acentos, espacios, ñ, ü, etc.
-    return text.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑç\s]/g, '');
-};
+// Espaciados centralizados del formulario
+const FORM_SPACING = { fieldGap: 8 };
 
-/**
- * Formatea el nombre: filtra caracteres no válidos y capitaliza usando titleCase
- */
-const formatName = (text) => {
-    if (!text) return '';
-    const filtered = filterLettersAndSpaces(text);
-    return titleCase(filtered);
-};
-
+const DOCUMENT_ITEMS = DOCUMENT_TYPES.map((d) => ({ value: d, label: d, icon: "credit-card" }));
 
 export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLanding }) {
     const { isSmall } = useResponsive();
@@ -64,139 +49,154 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
     const c           = theme.colors;
     const vm          = useSignupViewModel(onRegisterSuccess);
     const { t }       = useTranslation();
-    
+
     // Estado para el trigger del autoSlide
     const [autoSlideTrigger, setAutoSlideTrigger] = useState(null);
-    
-    // Callback estable para registrar el trigger del CustomScrollBar
     const registerAutoSlideTrigger = useCallback((callback) => {
         setAutoSlideTrigger(() => callback);
     }, []);
 
-    // ── Secciones compartidas entre mobile y desktop ──────────
-    // Detectar si debe mostrarse el indicador de contraseña
-    const showPasswordIndicator = vm.password.length > 0;
-    
-    // Calcular la cantidad de recomendaciones NO cumplidas (visibles)
+    // Recomendaciones de contraseña NO cumplidas: al cambiar, el scroll baja solo.
+    const password = vm.values.password;
     const visibleRequirementsCount = useMemo(() => {
-        if (!vm.password) return 0;
-        
-        const requirements = [
-            vm.password.length < 8,                                      // Mínimo 8 caracteres
-            !/[A-Z]/.test(vm.password),                                  // 1 mayúscula
-            !/[a-z]/.test(vm.password),                                  // 1 minúscula
-            !/[0-9]/.test(vm.password),                                  // 1 número
-            !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(vm.password), // 1 carácter especial
-        ];
-        
-        // Contar cuántos NO están cumplidos (son true)
-        return requirements.filter(Boolean).length;
-    }, [vm.password]);
-    
-    // Hook que detecta cuando aparecen o cambian las recomendaciones y dispara autoslide
-    // CLAVE: triggerOnAnyChange = true para que dispare SIEMPRE que cambie el count
-    useAutoSlideOnContent(
-        visibleRequirementsCount,
-        autoSlideTrigger,
-        { 
-            triggerOnAnyChange: true,  // Disparar en CUALQUIER cambio de recomendaciones
-            delay: 150,                // Pequeño delay para que la animación sea suave
-        }
-    );
-    
-    // Handler para cuando el usuario cambie el nombre de usuario (con formateo)
-    const handleUsernameChange = (text) => {
-        const formatted = formatName(text);
-        vm.setUsername(formatted);
-    };
-    
-    // Handler para cuando el usuario cambie la contraseña
-    const handlePasswordChange = (text) => {
-        vm.setPassword(text);
-    };
-    
-    // Handler para envío con Enter
+        if (!password) return 0;
+        return [
+            password.length < 8,
+            !/[A-Z]/.test(password),
+            !/[a-z]/.test(password),
+            !/[0-9]/.test(password),
+            !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+        ].filter(Boolean).length;
+    }, [password]);
+
+    useAutoSlideOnContent(visibleRequirementsCount, autoSlideTrigger, {
+        triggerOnAnyChange: true,
+        delay: 150,
+    });
+
     const handleKeyPress = (e) => {
-        if (e.nativeEvent.key === 'Enter' && !vm.loading) {
-            vm.handleRegister();
-        }
+        if (e.nativeEvent.key === "Enter" && !vm.loading) vm.handleRegister();
     };
-    
-    // Espaciados centralizados del formulario
-    const FORM_SPACING = {
-        fieldGap: 8,              // Gap entre campos del formulario
-        errorMarginTop: -5,         // Margen entre campo y mensaje de error
-    };
-    
+
+    // Propiedades comunes de un TextInput del formulario.
+    const field = (name, extra = {}) => ({
+        value: vm.values[name],
+        onChangeText: (text) => vm.setValue(name, text),
+        onBlur: () => vm.handleBlur(name),
+        onKeyPress: handleKeyPress,
+        error: !!vm.errors[name],
+        errorMessage: vm.errors[name],
+        success: vm.isValid(name),
+        shake: !!vm.shakeFields[name],
+        ...extra,
+    });
+
+    const icon = (name) => <Feather name={name} size={20} color={c.text.secondary} />;
+
+    const passwordToggle = (
+        <TouchableOpacity onPress={vm.togglePassword}>
+            <Feather name={vm.showPassword ? "eye-off" : "eye"} size={20} color={c.text.secondary} />
+        </TouchableOpacity>
+    );
+
+    // ── Paso 1: sede ──────────────────────────────────────────
+    const schoolFields = (
+        <View style={{ gap: FORM_SPACING.fieldGap }}>
+            <TextInput label={t("Código de la sede")} placeholder={t("CIES-001")}
+                leftIcon={icon("hash")} autoCapitalize="characters" {...field("code")} />
+            <TextInput label={t("Nombre de la sede")} placeholder={t("Nombre de la institución")}
+                leftIcon={icon("home")} {...field("name")} />
+            <TextInput label={t("Ciudad")} placeholder={t("Ciudad donde funciona la sede")}
+                leftIcon={icon("map-pin")} {...field("cityName")} />
+            <TextInput label={t("Dirección (opcional)")} placeholder={t("Calle, número, barrio")}
+                leftIcon={icon("navigation")} {...field("address")} />
+            <TextInput label={t("Teléfono de la sede (opcional)")} placeholder={t("300 000 0000")}
+                type="phone" leftIcon={icon("phone")} {...field("phone")} />
+            <TextInput label={t("Correo de la sede (opcional)")} placeholder={t("contacto@institucion.edu")}
+                type="email" leftIcon={icon("mail")} {...field("email")} />
+        </View>
+    );
+
+    // ── Paso 2: administrador ─────────────────────────────────
+    const adminFields = (
+        <View style={{ gap: FORM_SPACING.fieldGap }}>
+            <View>
+                <AnimatedDropdown
+                    label={t("Tipo de documento")}
+                    items={DOCUMENT_ITEMS}
+                    value={vm.values.documentType}
+                    onSelect={(v) => vm.setValue("documentType", v)}
+                    placeholder={t("Seleccionar tipo")}
+                    error={!!vm.errors.documentType}
+                    triggerHeight={48}
+                />
+                {!!vm.errors.documentType && (
+                    <Text style={{ color: c.status?.error ?? "#DC2626", fontSize: 12, marginTop: 4 }}>
+                        {vm.errors.documentType}
+                    </Text>
+                )}
+            </View>
+            <TextInput label={t("Número de documento")} placeholder={t("Número sin puntos")}
+                leftIcon={icon("credit-card")} {...field("documentNumber")} />
+            <TextInput label={t("Nombres")} placeholder={t("Nombres del administrador")}
+                leftIcon={icon("user")} {...field("adminName")} />
+            <TextInput label={t("Apellidos")} placeholder={t("Apellidos del administrador")}
+                leftIcon={icon("user")} {...field("adminLastName")} />
+            <TextInput label={t("Correo electrónico")} placeholder={t("correo@universidad.edu")}
+                type="email" leftIcon={icon("mail")} {...field("adminEmail")} />
+            <TextInput label={t("Teléfono (opcional)")} placeholder={t("300 000 0000")}
+                type="phone" leftIcon={icon("phone")} {...field("adminPhone")} />
+            <TextInput label={t("Usuario")} placeholder={t("Tu nombre de usuario")}
+                leftIcon={icon("at-sign")} {...field("username")} />
+            <View>
+                <TextInput label={t("Contraseña")} placeholder={t("Crea una contraseña")}
+                    type="password" secureTextEntry={!vm.showPassword}
+                    leftIcon={icon("lock")} rightIcon={passwordToggle} {...field("password")} />
+                <PasswordStrengthIndicator password={password} show={password.length > 0} />
+            </View>
+            <TextInput label={t("Confirmar contraseña")} placeholder={t("Repite la contraseña")}
+                type="password" secureTextEntry={!vm.showPassword}
+                leftIcon={icon("lock")} {...field("confirmPassword")} />
+        </View>
+    );
+
     const fields = (
         <View style={{ gap: FORM_SPACING.fieldGap }}>
-            <TextInput
-                label={t("Usuario")}
-                placeholder={t("Tu nombre de usuario")}
-                value={vm.username}
-                onChangeText={handleUsernameChange}
-                onBlur={() => vm.handleBlur('username')}
-                onKeyPress={handleKeyPress}
-                leftIcon={<Feather name="user" size={20} color={c.text.secondary} />}
-                error={!!vm.usernameError}
-                errorMessage={vm.usernameError}
-                success={vm.usernameValid && !vm.usernameError}
-                shake={vm.shakeFields.username}
-            />
-            <TextInput
-                label={t("Correo electrónico")}
-                placeholder={t("correo@universidad.edu")}
-                value={vm.email}
-                onChangeText={vm.setEmail}
-                onBlur={() => vm.handleBlur('email')}
-                onKeyPress={handleKeyPress}
-                type="email"
-                leftIcon={<Feather name="mail" size={20} color={c.text.secondary} />}
-                error={!!vm.emailError}
-                errorMessage={vm.emailError}
-                success={vm.emailValid && !vm.emailError}
-                shake={vm.shakeFields.email}
-            />
-            <View>
-                <TextInput
-                    label={t("Contraseña")}
-                    placeholder={t("Crea una contraseña")}
-                    value={vm.password}
-                    onChangeText={handlePasswordChange}
-                    onBlur={() => vm.handleBlur('password')}
-                    onKeyPress={handleKeyPress}
-                    type="password"
-                    leftIcon={<Feather name="lock" size={20} color={c.text.secondary} />}
-                    rightIcon={
-                        <TouchableOpacity onPress={vm.togglePassword}>
-                            <Feather name={vm.showPassword ? "eye-off" : "eye"} size={20} color={c.text.secondary} />
-                        </TouchableOpacity>
-                    }
-                    secureTextEntry={!vm.showPassword}
-                    error={!!vm.passwordError && vm.password.length === 0}
-                    errorMessage={vm.password.length === 0 ? vm.passwordError : null}
-                    success={vm.passwordValid && !vm.passwordError}
-                    shake={vm.shakeFields.password}
-                />
-                {/* Indicador siempre visible cuando hay contraseña */}
-                <PasswordStrengthIndicator 
-                    password={vm.password} 
-                    show={showPasswordIndicator}
-                />
+            {vm.step === 1 ? schoolFields : adminFields}
+            {!!vm.submitError && <Alert type="error" message={vm.submitError} />}
+        </View>
+    );
+
+    // Indicador de progreso: "Paso 1 de 2" + dos barras.
+    const stepHeader = (
+        <View style={{ marginBottom: 12 }}>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: c.text.secondary, marginBottom: 6 }}>
+                {t("Paso")} {vm.step} {t("de")} {vm.totalSteps} · {vm.step === 1 ? t("Datos de la sede") : t("Administrador de la sede")}
+            </Text>
+            <View style={{ flexDirection: "row", gap: 6 }}>
+                {[1, 2].map((n) => (
+                    <View key={n} style={{
+                        flex: 1, height: 4, borderRadius: 2,
+                        backgroundColor: n <= vm.step ? c.brand?.primary ?? c.text.primary : c.border?.default ?? "#D1D5DB",
+                    }} />
+                ))}
             </View>
         </View>
     );
 
     const formActions = (
         <React.Fragment>
-            <View style={{ marginTop: 20 }}>
-                <Button
-                    onPress={vm.handleRegister}
-                    disabled={vm.loading}
-                    loading={vm.loading}
-                >
-                    {vm.loading ? t("Registrando…") : t("Registrarse")}
+            <View style={{ marginTop: 20, gap: 10 }}>
+                <Button onPress={vm.handleRegister} disabled={vm.loading} loading={vm.loading}>
+                    {vm.step === 1
+                        ? t("Continuar")
+                        : vm.loading ? t("Registrando…") : t("Registrar sede")}
                 </Button>
+                {vm.step === 2 && (
+                    <Button variant="outline" onPress={vm.goBack} disabled={vm.loading}>
+                        {t("Atrás")}
+                    </Button>
+                )}
             </View>
             <View style={{ marginTop: 16 }}>
                 <AuthFooterLink
@@ -211,15 +211,36 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
         </React.Fragment>
     );
 
+    // ── Éxito: la sede y el administrador quedan pendientes de activación ──
+    const successContent = (
+        <View style={{ alignItems: "center", paddingVertical: 24, gap: 14 }}>
+            <Feather name="check-circle" size={56} color={c.status?.success ?? "#16A34A"} />
+            <Text style={{ fontSize: 24, fontWeight: "800", color: c.text.primary, textAlign: "center" }}>
+                {t("Solicitud recibida")}
+            </Text>
+            <Text style={{ fontSize: 15, color: c.text.secondary, textAlign: "center", lineHeight: 22 }}>
+                {t("Registramos tu sede y a su administrador. Un Super Administrador debe activarlos antes de que puedas iniciar sesión.")}
+            </Text>
+            <View style={{ alignSelf: "stretch", marginTop: 8 }}>
+                <Button onPress={onGoToLogin}>{t("Ir a iniciar sesión")}</Button>
+            </View>
+        </View>
+    );
+
     // ── MÓVIL ─────────────────────────────────────────────────
     if (isSmall) {
         return (
             <AuthMobileLayout
-                title={t("Crear cuenta")}
-                subtitle={t("Completa los datos para registrarte.")}
+                title={vm.done ? t("Solicitud recibida") : t("Registrar sede")}
+                subtitle={vm.done ? "" : t("Completa los datos de la sede y de su administrador.")}
             >
-                {fields}
-                {formActions}
+                {vm.done ? successContent : (
+                    <React.Fragment>
+                        {stepHeader}
+                        {fields}
+                        {formActions}
+                    </React.Fragment>
+                )}
             </AuthMobileLayout>
         );
     }
@@ -228,32 +249,22 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
     const brandPanel = (
         <React.Fragment>
             <BrandPanelCircles />
-            
-            {/* Botón de volver al inicio - posicionado arriba a la izquierda */}
+
             {onGoToLanding && (
                 <TouchableOpacity
                     onPress={onGoToLanding}
                     style={{
-                        position: "absolute",
-                        top: 20,
-                        left: 32,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 8,
-                        zIndex: 10,
+                        position: "absolute", top: 20, left: 32, flexDirection: "row",
+                        alignItems: "center", gap: 8, zIndex: 10,
                     }}
                 >
                     <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
-                    <Text style={{
-                        fontSize: 15,
-                        color: "rgba(255,255,255,0.9)",
-                        fontWeight: "500",
-                    }}>
+                    <Text style={{ fontSize: 15, color: "rgba(255,255,255,0.9)", fontWeight: "500" }}>
                         {t("Volver al inicio")}
                     </Text>
                 </TouchableOpacity>
             )}
-            
+
             <View style={{ zIndex: 1, alignItems: "center", maxWidth: 440, paddingHorizontal: 32 }}>
                 <Image
                     source={require("../assets/images/logoFaceAttend.svg")}
@@ -261,80 +272,58 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
                     resizeMode="contain"
                 />
                 <Text style={{
-                    fontSize: 24,
-                    fontWeight: "800",
-                    color: c.text.onBrand,
-                    textAlign: "center",
-                    marginBottom: 12,
-                    letterSpacing: -0.5,
+                    fontSize: 24, fontWeight: "800", color: c.text.onBrand,
+                    textAlign: "center", marginBottom: 12, letterSpacing: -0.5,
                 }}>
-                    {t("Únete a FaceAttend EDU")}
+                    {t("Registra tu institución en FaceAttend EDU")}
                 </Text>
-                <Text style={{
-                    fontSize: 16,
-                    color: "rgba(255,255,255,0.85)",
-                    textAlign: "center",
-                    lineHeight: 22,
-                }}>
-                    {t("Registrate para que puedas aplicar al sistema de registro de asistencias con reconocimiento facial del mañana.")}
+                <Text style={{ fontSize: 16, color: "rgba(255,255,255,0.85)", textAlign: "center", lineHeight: 22 }}>
+                    {t("Da de alta tu sede y a su administrador para llevar la asistencia con reconocimiento facial.")}
                 </Text>
             </View>
         </React.Fragment>
     );
 
-    const formContent = (
-        <View style={{ width: '100%', minHeight: 600, justifyContent: 'center', paddingTop: 35 }}>
-            {/* Header - compacto */}
-            <View style={{ marginBottom: 18 }}>
+    const formContent = vm.done ? (
+        <View style={{ width: "100%", minHeight: 600, justifyContent: "center" }}>{successContent}</View>
+    ) : (
+        <View style={{ width: "100%", minHeight: 600, justifyContent: "center", paddingTop: 35 }}>
+            <View style={{ marginBottom: 14 }}>
                 <Text style={{
-                    fontSize: 28,
-                    fontWeight: "800",
-                    color: c.text.primary,
-                    marginBottom: 6,
-                    letterSpacing: -0.5,
+                    fontSize: 28, fontWeight: "800", color: c.text.primary,
+                    marginBottom: 6, letterSpacing: -0.5,
                 }}>
-                    {t("Crear cuenta")}
+                    {t("Registrar sede")}
                 </Text>
-                <Text style={{
-                    fontSize: 15,
-                    color: c.text.secondary,
-                    lineHeight: 16,
-                }}>
-                    {t("Completa los datos para registrarte.")}
+                <Text style={{ fontSize: 15, color: c.text.secondary, lineHeight: 20 }}>
+                    {t("Completa los datos de la sede y de su administrador.")}
                 </Text>
             </View>
 
-            {/* Campos del formulario - ALTURA FIJA para que no mueva nada */}
-            <View style={{ height: 270, marginTop: -5}}>
+            {stepHeader}
+
+            {/* Altura fija con scroll interno: el botón no se mueve entre pasos */}
+            <View style={{ height: 300 }}>
                 <CustomScrollBar
                     showsVerticalScrollIndicator={true}
-                    contentContainerStyle={{ 
-                        paddingVertical: 0,
-                    }}
+                    contentContainerStyle={{ paddingVertical: 0 }}
                     bounces={false}
-                    scrollbarStyle={{
-                        variant: 'pill',
-                    }}
+                    scrollbarStyle={{ variant: "pill" }}
                     effects={{
                         autoSlide: {
                             enabled: true,
-                            target: 'end',
+                            target: "end",
                             triggerDelay: 150,
                             trigger: registerAutoSlideTrigger,
                         },
-                        smoothElastic: {
-                            enabled: true,
-                            tension: 45,
-                            friction: 9,
-                        },
+                        smoothElastic: { enabled: true, tension: 45, friction: 9 },
                     }}
                 >
                     {fields}
                 </CustomScrollBar>
             </View>
 
-            {/* Botón y footer - compacto, cerca del formulario */}
-            <View style={{ marginTop: -18}}>
+            <View style={{ marginTop: -8 }}>
                 {formActions}
             </View>
         </View>
