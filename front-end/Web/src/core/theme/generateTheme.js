@@ -134,6 +134,16 @@ function adaptColorForTheme(colorHex, backgroundHex, isDark) {
  * @param {string} mode - "light" o "dark"
  * @returns {Object} Tema completo con colores
  */
+/**
+ * Texto (o icono) legible sobre un fondo sólido con color.
+ * Regla única del sistema: fondo claro => texto oscuro; fondo oscuro => texto claro.
+ * La usan los tokens *Text del tema y los indicadores cuyo color es dinámico
+ * (p. ej. el color de asistencia), para no escribir blanco a mano.
+ */
+export function getTextOnColor(bgColor) {
+    return tinycolor(bgColor).getLuminance() > 0.5 ? "#0F172A" : "#FFFFFF";
+}
+
 export function generateTheme(accentColorOrColors, mode) {
     // Si recibe un string, es el color de acento simple
     const isSimpleAccent = typeof accentColorOrColors === "string";
@@ -208,15 +218,7 @@ export function generateTheme(accentColorOrColors, mode) {
     const focusColor = accentEffective.toHexString();
 
     // ── Textos sobre fondos sólidos con color (botones primarios) ──
-    // INDEPENDIENTES del slot Fuentes y del slot semántico
-    // Calculados dinámicamente según la luminosidad del fondo
-    // Regla: Si el fondo es claro, usar texto oscuro. Si es oscuro, usar texto claro.
-    function getTextOnColor(bgColor) {
-        const color = tinycolor(bgColor);
-        const luminance = color.getLuminance();
-        return luminance > 0.5 ? "#0F172A" : "#FFFFFF";
-    }
-    
+    // INDEPENDIENTES del slot Fuentes y del slot semántico (ver getTextOnColor).
     const textOnPrimary = getTextOnColor(accentEffective.toHexString());
     const textOnSuccess = getTextOnColor(successColor);
     const textOnWarning = getTextOnColor(warningColor);

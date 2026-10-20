@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
+import { Button } from "../../common/buttons";
 
 export function ThemePreview({ previewTheme, hasChanges }) {
     const { t } = useTranslation();
@@ -92,53 +93,19 @@ export function ThemePreview({ previewTheme, hasChanges }) {
                     </View>
                 </View>
 
-                {/* Botones Primarios */}
-                <View style={{ flexDirection: "row", gap: 6 }}>
-                    <View style={{
-                        flex: 1,
-                        backgroundColor: c.brand.primary,
-                        borderRadius: 14,
-                        padding: 10,
-                        alignItems: "center"
-                    }}>
-                        <Text style={{
-                            fontSize: 11,
-                            color: c.brand.textOnPrimary,
-                            fontWeight: "600"
-                        }}>
-                            {t("Primario")}
-                        </Text>
+                {/* Botones: el Button real, pintado con la paleta en previsualización */}
+                <View style={{ flexDirection: "row", gap: 6 }} pointerEvents="none">
+                    <View style={{ flex: 1 }}>
+                        <Button variant="primary" size="sm" fullWidth themeColors={c}>{t("Primario")}</Button>
                     </View>
-                    <View style={{
-                        flex: 1,
-                        borderRadius: 14,
-                        padding: 10,
-                        alignItems: "center",
-                        borderWidth: 1,
-                        borderColor: c.brand.primary
-                    }}>
-                        <Text style={{
-                            fontSize: 11,
-                            color: c.brand.primary,
-                            fontWeight: "600"
-                        }}>
-                            {t("Outline")}
-                        </Text>
+                    <View style={{ flex: 1 }}>
+                        <Button variant="secondary" size="sm" fullWidth themeColors={c}>{t("Secundario")}</Button>
                     </View>
-                    <View style={{
-                        flex: 1,
-                        backgroundColor: c.interactive.disabled,
-                        borderRadius: 14,
-                        padding: 10,
-                        alignItems: "center"
-                    }}>
-                        <Text style={{
-                            fontSize: 11,
-                            color: c.font,
-                            fontWeight: "600"
-                        }}>
-                            {t("Ghost")}
-                        </Text>
+                    <View style={{ flex: 1 }}>
+                        <Button variant="outline" size="sm" fullWidth themeColors={c}>{t("Outline")}</Button>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <Button variant="ghost" size="sm" fullWidth themeColors={c}>{t("Ghost")}</Button>
                     </View>
                 </View>
 

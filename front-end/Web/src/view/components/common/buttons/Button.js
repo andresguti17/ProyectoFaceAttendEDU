@@ -1,67 +1,40 @@
 import React from "react";
-import { TouchableOpacity, Text, View, ActivityIndicator, StyleSheet } from "react-native";
+import { Pressable, Text, View, ActivityIndicator, StyleSheet } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
+import { getButtonColors } from "./buttonColors";
 
 /**
  * Botón reutilizable con variantes y tamaños
- * 
- * Componente de botón flexible con múltiples variantes visuales, tamaños configurables,
- * estados de loading y disabled, y soporte para iconos izquierdo/derecho.
- * 
- * @param {('primary'|'secondary'|'outline'|'ghost'|'danger')} variant - Variante visual del botón
+ *
+ * Es el ÚNICO botón de acción de la app. Sus colores salen siempre de los
+ * tokens del tema (ver buttonColors.js), es decir, de la paleta que el usuario
+ * elige en Configuración > Apariencia: no se pasa color por `style`/`textStyle`.
+ *
+ * @param {('primary'|'secondary'|'outline'|'ghost'|'danger'|'success'|'warning'|'inverse'|'inverseOutline')} variant - Variante visual (inverse* para fondos de marca)
  * @param {('sm'|'md'|'lg')} size - Tamaño del botón
  * @param {boolean} fullWidth - Si debe ocupar todo el ancho disponible
- * @param {boolean} loading - Muestra spinner de carga
+ * @param {boolean} loading - Muestra spinner de carga (bloquea la pulsación)
  * @param {boolean} disabled - Deshabilita el botón
  * @param {ReactNode} leftIcon - Icono a la izquierda del texto
  * @param {ReactNode} rightIcon - Icono a la derecha del texto
  * @param {function} onPress - Callback al presionar el botón
  * @param {string|ReactNode} children - Contenido del botón (texto o componente)
- * @param {object} style - Estilos adicionales del contenedor
- * @param {object} textStyle - Estilos adicionales del texto
- * 
+ * @param {object} style - Estilos de layout adicionales del contenedor (márgenes, ancho)
+ * @param {object} textStyle - Estilos de texto adicionales (tipografía, no color)
+ * @param {object} themeColors - Paleta alternativa (theme.colors); solo la usa la vista previa de Configuración
+ *
  * @example
- * // Botón primario básico
- * <Button variant="primary" onPress={handleSave}>
+ * <Button variant="primary" onPress={handleSave}>Guardar</Button>
+ *
+ * @example
+ * // Con icono: el color del icono es el del texto de la variante
+ * <Button variant="outline" leftIcon={<Feather name="save" size={16} color={theme.colors.brand.primary} />}>
  *   Guardar
  * </Button>
- * 
+ *
  * @example
- * // Botón con loading
- * <Button loading={isSaving} disabled={isSaving}>
- *   {isSaving ? "Guardando..." : "Guardar"}
- * </Button>
- * 
- * @example
- * // Botón con iconos
- * <Button 
- *   leftIcon={<Feather name="save" size={16} color="#fff" />}
- *   variant="primary"
- * >
- *   Guardar
- * </Button>
- * 
- * @example
- * // Botón outline con full width
- * <Button variant="outline" fullWidth onPress={handleCancel}>
- *   Cancelar
- * </Button>
- * 
- * @example
- * // Botón peligroso con confirmación
- * <Button 
- *   variant="danger" 
- *   size="sm"
- *   onPress={() => {
- *     Alert.alert("Confirmar", "¿Eliminar?", [
- *       { text: "Cancelar" },
- *       { text: "Eliminar", onPress: handleDelete }
- *     ]);
- *   }}
- * >
- *   Eliminar
- * </Button>
+ * <Button variant="danger" size="sm" onPress={confirmDelete}>Eliminar</Button>
  */
 export function Button({
   variant = "primary",
@@ -75,47 +48,11 @@ export function Button({
   children,
   style,
   textStyle,
+  themeColors,
   ...props
 }) {
   const { theme } = useTheme();
-
-  // Estilos por variante
-  const variantStyles = {
-    primary: {
-      backgroundColor: theme.colors.brand.primary,
-      borderColor: theme.colors.brand.primary,
-      borderWidth: 2,
-    },
-    secondary: {
-      backgroundColor: theme.colors.brand.secondary,
-      borderColor: theme.colors.brand.secondary,
-      borderWidth: 2,
-    },
-    outline: {
-      backgroundColor: "transparent",
-      borderColor: theme.colors.brand.primary,
-      borderWidth: 2,
-    },
-    ghost: {
-      backgroundColor: "transparent",
-      borderColor: "transparent",
-      borderWidth: 0,
-    },
-    danger: {
-      backgroundColor: theme.colors.status.error,
-      borderColor: theme.colors.status.error,
-      borderWidth: 2,
-    },
-  };
-
-  // Estilos de texto por variante
-  const textVariantStyles = {
-    primary: { color: theme.colors.brand.textOnPrimary },
-    secondary: { color: theme.colors.brand.textOnPrimary }, // Usar el mismo que primary
-    outline: { color: theme.colors.brand.primary },
-    ghost: { color: theme.colors.text.primary },
-    danger: { color: theme.colors.status.errorText },
-  };
+  const palette = themeColors ?? theme.colors;
 
   // Estilos por tamaño
   const sizeStyles = {
@@ -135,7 +72,7 @@ export function Button({
       minHeight: 52,
     },
   };
-  
+
   // Reducir padding izquierdo cuando hay leftIcon
   const iconPaddingAdjustment = leftIcon ? {
     paddingLeft: sizeStyles[size].paddingHorizontal * 0.6, // 40% menos padding izquierdo
@@ -148,40 +85,53 @@ export function Button({
     lg: { fontSize: 17, fontWeight: "600" },
   };
 
+  // Mientras carga se conservan los colores de la variante (no se ve "apagado"),
+  // aunque quien llama pase también `disabled` para bloquear la pulsación.
+  const looksDisabled = disabled && !loading;
+  const idle = getButtonColors(palette, variant, { disabled: looksDisabled });
   const isDisabled = disabled || loading;
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
       disabled={isDisabled}
-      style={[
-        styles.button,
-        variantStyles[variant],
-        sizeStyles[size],
-        iconPaddingAdjustment,
-        fullWidth && styles.fullWidth,
-        isDisabled && styles.disabled,
-        style,
-      ]}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      style={({ hovered, pressed }) => {
+        const state = getButtonColors(palette, variant, { disabled: looksDisabled, hovered, pressed });
+        return [
+          styles.button,
+          {
+            backgroundColor: state.backgroundColor,
+            borderColor: state.borderColor,
+            borderWidth: variant === "ghost" ? 0 : 2,
+            opacity: state.opacity,
+          },
+          sizeStyles[size],
+          iconPaddingAdjustment,
+          fullWidth && styles.fullWidth,
+          style,
+        ];
+      }}
       {...props}
     >
       <View style={styles.content}>
         {loading ? (
           <ActivityIndicator
             size="small"
-            color={textVariantStyles[variant].color}
+            color={idle.color}
             style={styles.loader}
           />
         ) : (
           <>
             {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
-            
+
             {typeof children === "string" ? (
               <Text
                 style={[
                   styles.text,
                   textSizeStyles[size],
-                  textVariantStyles[variant],
+                  { color: idle.color },
                   textStyle,
                 ]}
               >
@@ -190,12 +140,12 @@ export function Button({
             ) : (
               children
             )}
-            
+
             {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
           </>
         )}
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
@@ -208,9 +158,6 @@ const styles = StyleSheet.create({
   },
   fullWidth: {
     width: "100%",
-  },
-  disabled: {
-    opacity: 0.5,
   },
   content: {
     flexDirection: "row",
