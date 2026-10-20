@@ -20,15 +20,10 @@ import { useSessionTimeout } from "../core/hooks/useSessionTimeout";
 import { clearToken, getToken, saveToken, setUnauthorizedHandler } from "../api/apiClient";
 import { roleNamesFrom, toUiRole } from "../core/utils/backendRoles";
 import { authApi } from "../services/api/authApi";
+import { loginErrorMessage } from "../core/utils/authErrors";
 
 // ── Roles del backend → roles de la UI ────────────────────────
 // Mapa compartido con UserStorage en core/utils/backendRoles.js.
-
-function loginErrorMessage(err) {
-    if (err?.status === 400 || err?.status === 401) return "Credenciales incorrectas";
-    if (err?.status === 0) return err.message; // red / timeout
-    return err?.message || "No se pudo iniciar sesión";
-}
 
 function changePasswordErrorMessage(err) {
     if (err?.status === 0) return err.message; // red / timeout
