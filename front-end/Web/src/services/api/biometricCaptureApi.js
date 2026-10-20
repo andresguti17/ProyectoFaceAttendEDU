@@ -21,8 +21,12 @@ export const biometricCaptureApi = {
     health: () => call(endpoints.biometric.health, { method: "GET", timeoutMs: 8000 }),
 
     // ── Prueba de vida (gestos aleatorios firmados por el backend) ──
-    livenessChallenge: (actions = 3) =>
-        call(endpoints.biometric.facialLivenessChallenge, { method: "GET", query: { actions } }),
+    // `supported`: gestos que el cliente sabe mostrar (sin él, el backend solo da los originales).
+    livenessChallenge: (actions = 3, supported = []) =>
+        call(endpoints.biometric.facialLivenessChallenge, {
+            method: "GET",
+            query: supported.length ? { actions, supported: supported.join(",") } : { actions },
+        }),
     livenessStep: ({ challengeToken, actionIndex, images }) =>
         call(endpoints.biometric.facialLivenessStep, {
             method: "POST",

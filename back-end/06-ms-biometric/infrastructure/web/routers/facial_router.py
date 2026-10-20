@@ -16,6 +16,8 @@ separate face-auth path anymore.
 """
 from __future__ import annotations
 
+import time
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
@@ -38,6 +40,10 @@ from infrastructure.web.liveness import (
     advance_liveness_challenge,
     consume_liveness_challenge,
     create_liveness_challenge,
+    forget_identity,
+    liveness_claims,
+    reference_identity,
+    remember_identity,
     verify_liveness_challenge,
 )
 from infrastructure.web.match_audit import record_match
@@ -138,12 +144,21 @@ async def enroll_facial(
 @router.get("/liveness-challenge", dependencies=[ANY_ROLE])
 async def liveness_challenge(
     actions: int = 3,
+    supported: str | None = None,
     secret: str = Depends(get_liveness_secret),
     settings: Settings = Depends(get_settings),
 ):
     if actions not in (2, 3):
         raise HTTPException(status_code=422, detail="actions must be 2 or 3")
-    token, action_list = create_liveness_challenge(secret, settings.liveness_ttl_seconds, actions)
+    # `supported`: comma-separated gestures the client can render. Without it the
+    # client is an older build and only gets the original gestures.
+    allowed = [name.strip() for name in supported.split(",") if name.strip()] if supported else None
+    try:
+        token, action_list = create_liveness_challenge(
+            secret, settings.liveness_ttl_seconds, actions, allowed
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return {"challenge_token": token, "actions": action_list}
 
 
@@ -259,6 +274,37 @@ async def identify_facial(
     return {"person_id": best.person_id, "score": best_score}
 
 
+IDENTITY_CHANGED = "The face changed during the liveness check"
+
+
+def _check_step_identity(first_frame, challenge_id: str | None, settings: Settings) -> None:
+    """The first frame of every step must be the person seen at the first step.
+
+    Skipped when the token carries no challenge id or the reference is gone
+    (another worker or an expired TTL): the check only ever adds a refusal.
+    """
+    if challenge_id is None:
+        return
+    encoding = face_encoding(first_frame)
+    if encoding is None:
+        raise ValueError("No face found in the image")
+    reference = reference_identity(challenge_id)
+    if reference is None:
+        remember_identity(challenge_id, encoding, settings.liveness_ttl_seconds)
+    elif cosine(encoding, reference) < settings.liveness_identity_threshold:
+        raise ValueError(IDENTITY_CHANGED)
+
+
+def _check_final_identity(secret: str, token: str, encoding: list[float], settings: Settings) -> None:
+    if not settings.liveness_identity_check:
+        return
+    challenge_id, _ = liveness_claims(secret, token)
+    reference = reference_identity(challenge_id)
+    forget_identity(challenge_id)
+    if reference is not None and cosine(encoding, reference) < settings.liveness_identity_threshold:
+        raise ValueError(IDENTITY_CHANGED)
+
+
 @router.post("/liveness-step", dependencies=[ANY_ROLE, Depends(rate_limit("liveness_step"))])
 async def liveness_step(
     req: LivenessStepRequest,
@@ -271,11 +317,16 @@ async def liveness_step(
         actions, step = verify_liveness_challenge(secret, req.challenge_token)
         if req.action_index != step:
             raise ValueError("action_index does not match the current challenge step")
+        challenge_id, issued_at = liveness_claims(secret, req.challenge_token)
+        if issued_at is not None and time.time() - issued_at < settings.liveness_min_step_seconds:
+            raise ValueError("Liveness gesture completed too fast")
         images = [
             decode_image(image, settings.max_image_bytes, settings.max_image_pixels)
             for image in req.images
         ]
         completed_gesture = validate_liveness(images, actions[req.action_index])
+        if completed_gesture and settings.liveness_identity_check:
+            _check_step_identity(images[0], challenge_id, settings)
     except (ValueError, IndexError) as exc:
         await record_match(
             match_logs,
@@ -332,6 +383,8 @@ async def enroll_facial_image(
         consume_liveness_challenge(secret, req.challenge_token)
         image = decode_image(req.image_base64, settings.max_image_bytes, settings.max_image_pixels)
         encoding = face_encoding(image)
+        if encoding is not None:
+            _check_final_identity(secret, req.challenge_token, encoding, settings)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if encoding is None:
@@ -379,6 +432,8 @@ async def identify_facial_image(
         consume_liveness_challenge(secret, req.challenge_token)
         image = decode_image(req.image_base64, settings.max_image_bytes, settings.max_image_pixels)
         encoding = face_encoding(image)
+        if encoding is not None:
+            _check_final_identity(secret, req.challenge_token, encoding, settings)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if encoding is None:
