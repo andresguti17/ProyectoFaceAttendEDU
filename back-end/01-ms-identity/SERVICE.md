@@ -164,6 +164,27 @@ verificado.
 | GET | `/api/v1/sessions` | Listar sesiones del usuario |
 | DELETE | `/api/v1/sessions/{id}` | Revocar sesion |
 
+### 4.6 Alta publica de sedes
+
+| Metodo | Endpoint | Descripcion |
+|--------|----------|-------------|
+| POST | `/api/v1/onboarding/schools` | Registrar una sede y su administrador (publico, sin sesion) |
+
+Cuerpo (camelCase): `school` (`code`, `name`, `cityName`, `address?`, `phone?`, `email?`) y
+`admin` (`documentType` CC/TI/CE/PP, `documentNumber`, `name`, `lastName`, `email`, `phone?`,
+`username`, `password`). Responde `202 {schoolId, userId, status: "PENDING_ACTIVATION"}`.
+
+Flujo: valida el username, abre una sesion interna de la cuenta de servicio
+(`faceattend.onboarding.service-user-id`, un Super Administrador dedicado) y encadena
+persona -> usuario (inactivo) -> sede (`POST /schools`, `status=false`) -> rol Administrador
+(`POST /users/{id}/roles`) -> vinculo `academic_actor` tipo ADMIN. La sesion se cierra al terminar.
+Si falla un paso remoto se deshacen la sede, el rol y el vinculo; la persona y el usuario quedan
+inactivos. Un Super Administrador activa luego el usuario (`POST /users/{id}/activate`) y la sede
+(`PATCH /schools/{id}/status`).
+
+Errores: `400` validacion, `409` usuario o codigo de sede duplicado, `503` deshabilitado
+(sin cuenta de servicio) o servicio dependiente caido. Kong limita la ruta a 5/min y 20/h por IP.
+
 ---
 
 ## 5. Domain Events
@@ -265,10 +286,14 @@ springdoc:
 | `faceattend.recovery.resend-cooldown-seconds` | `60` | Espera minima entre reenvios |
 | `faceattend.notification.base-url` | `http://localhost:8088` | 08-ms-notification (en compose: `http://ms-notification:8088`) |
 | `faceattend.notification.internal-token` | *(vacio)* | Header `X-Internal-Token` si el destino lo exige |
+| `faceattend.onboarding.service-user-id` | *(vacio)* | `user_id` de la cuenta de servicio del alta de sedes; vacio deshabilita el endpoint (503) |
+| `faceattend.onboarding.academic-url` | `http://localhost:8083` | 03-ms-academic (en compose: `http://ms-academic:8083`) |
+| `faceattend.onboarding.authorization-url` | `http://localhost:8082` | 02-ms-authorization (en compose: `http://ms-authorization:8082`) |
 
 Se sobrescriben por variable de entorno con la forma `FACEATTEND_AUTH_*`,
-`FACEATTEND_RECOVERY_*` y `FACEATTEND_NOTIFICATION_*` (p. ej.
-`FACEATTEND_NOTIFICATION_BASE_URL`).
+`FACEATTEND_RECOVERY_*`, `FACEATTEND_NOTIFICATION_*` y `FACEATTEND_ONBOARDING_*` (p. ej.
+`FACEATTEND_NOTIFICATION_BASE_URL`). En compose, `ONBOARDING_SERVICE_USER_ID` del `.env`
+alimenta `FACEATTEND_ONBOARDING_SERVICE_USER_ID`.
 
 ---
 

@@ -37,6 +37,8 @@ public class SecurityConfig {
                 // recursión de validación entre microservicios. Solo un segmento: /sessions/user/{id}
                 // lista sesiones ajenas y sigue exigiendo autenticación.
                 .requestMatchers(HttpMethod.GET, "/api/v1/sessions/*").permitAll()
+                // Alta pública de sede + administrador (queda pendiente de activación).
+                .requestMatchers(HttpMethod.POST, "/api/v1/onboarding/schools").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
