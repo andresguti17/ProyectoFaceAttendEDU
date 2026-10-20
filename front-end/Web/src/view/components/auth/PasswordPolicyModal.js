@@ -7,6 +7,7 @@ import { TouchableOpacity, View, Text, Modal, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { Button } from "../common/buttons";
 
 export function PasswordPolicyModal({ visible, onClose, onResetPassword }) {
     const { theme } = useTheme();
@@ -178,33 +179,17 @@ export function PasswordPolicyModal({ visible, onClose, onResetPassword }) {
                         >
                             {t("¿Definitivamente no la recuerdas?")}
                         </Text>
-                        <TouchableOpacity
+                        <Button
+                            variant="primary"
+                            size="sm"
                             onPress={() => {
                                 onClose();
                                 onResetPassword();
                             }}
-                            style={{
-                                backgroundColor: c.brand.primary,
-                                paddingVertical: 10,
-                                paddingHorizontal: 20,
-                                borderRadius: 10,
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 8,
-                            }}
-                            activeOpacity={0.8}
+                            leftIcon={<Feather name="refresh-cw" size={16} color={c.brand.textOnPrimary} />}
                         >
-                            <Feather name="refresh-cw" size={16} color={c.brand.textOnPrimary} />
-                            <Text
-                                style={{
-                                    fontSize: 14,
-                                    fontWeight: "600",
-                                    color: c.brand.textOnPrimary,
-                                }}
-                            >
-                                {t("Restablécela ahora")}
-                            </Text>
-                        </TouchableOpacity>
+                            {t("Restablécela ahora")}
+                        </Button>
                     </View>
                 </View>
             </TouchableOpacity>

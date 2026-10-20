@@ -6,6 +6,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { Button } from "../../common/buttons";
 import { useDateFormat } from "../../hooks/useDateFormat";
 
 export default function DoneStep({ c, t, descriptor, onDownload, onConfirm }) {
@@ -135,23 +136,14 @@ export default function DoneStep({ c, t, descriptor, onDownload, onConfirm }) {
                 </Text>
             </View>
 
-            <TouchableOpacity
+            <Button
+                variant="primary"
+                fullWidth
                 onPress={onConfirm}
-                style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    paddingVertical: 12,
-                    borderRadius: 14,
-                    backgroundColor: c.brand.primary,
-                }}
+                leftIcon={<Feather name="user-check" size={16} color={c.brand.textOnPrimary} />}
             >
-                <Feather name="user-check" size={16} color="#fff" />
-                <Text style={{ fontSize: 10, fontWeight: "700", color: "#fff" }}>
-                    {t("Registrar estudiante")}
-                </Text>
-            </TouchableOpacity>
+                {t("Registrar estudiante")}
+            </Button>
         </View>
     );
 }

@@ -27,7 +27,7 @@ import {
     ActivityIndicator, Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { AnimatedDropdown, Button, Badge } from "../common";
+import { AnimatedDropdown, Button, Badge, IconButton } from "../common";
 import { useTheme }       from "../hooks/useTheme";
 import { useResponsive }  from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
@@ -447,9 +447,13 @@ export default function ImportStudentsModal({
                                             {parseErrors > 0 && ` • ${parseErrors} ${t("filas con errores omitidas")}`}
                                         </Text>
                                     </View>
-                                    <TouchableOpacity onPress={() => setStep("idle")}>
-                                        <Feather name="refresh-cw" size={16} color={c.text.secondary} />
-                                    </TouchableOpacity>
+                                    <IconButton
+                                        size="sm"
+                                        variant="ghost"
+                                        onPress={() => setStep("idle")}
+                                        accessibilityLabel={t("Elegir otro archivo")}
+                                        icon={(color) => <Feather name="refresh-cw" size={16} color={color} />}
+                                    />
                                 </View>
 
                                 {parseErrors > 0 && (

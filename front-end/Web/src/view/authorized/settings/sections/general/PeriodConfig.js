@@ -96,10 +96,9 @@ export function PeriodConfig({
                     </Text>
                 </Button>
                 <Button
-                    variant="ghost"
+                    variant="secondary"
                     size="sm"
                     onPress={() => suggestDatesRef.current?.()}
-                    style={{ backgroundColor: c.brand.primaryLight }}
                 >
                     <Feather name="calendar" size={14} color={c.brand.primary} />
                     <Text style={{ fontSize: 13, fontWeight: "600", color: c.brand.primary }}>

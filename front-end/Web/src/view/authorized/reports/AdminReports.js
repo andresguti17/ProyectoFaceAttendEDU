@@ -11,8 +11,9 @@
 import React, { useState, useMemo, useRef } from "react";
 import { View, ScrollView, Text, TouchableOpacity, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { PageHeader, Button, Card, Loader, Avatar, Badge, EmptyState, ProgressBar } from "../../components/common";
+import { PageHeader, Button, IconButton, Card, Loader, Avatar, Badge, EmptyState, ProgressBar } from "../../components/common";
 import { useTheme } from "../../components/hooks/useTheme";
+import { getTextOnColor } from "../../../core/theme/generateTheme";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useRolePermissions } from "../../../viewmodels/useRolePermissions";
@@ -92,7 +93,7 @@ function StudentRow({ student, index, isLast, onPress, onNotify }) {
                     alignItems: "center",
                     justifyContent: "center",
                 }}>
-                    <Feather name={icon} size={10} color="#fff" />
+                    <Feather name={icon} size={10} color={getTextOnColor(attColor)} />
                 </View>
             </View>
 
@@ -642,33 +643,23 @@ export function AdminReports({ section, courseFilter }) {
                                 variant="danger"
                                 size="sm"
                                 onPress={handleNotifyAll}
-                                leftIcon={<Feather name="bell" size={16} color="#fff" />}
+                                leftIcon={<Feather name="bell" size={16} color={c.status.errorText} />}
                             >
                                 {t("Notificar Todos")}
                             </Button>
                         )
                     ) : (
-                        <TouchableOpacity
+                        <IconButton
+                            variant="secondary"
                             onPress={handleReload}
                             disabled={isReloading}
-                            style={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: 18,
-                                backgroundColor: c.background.secondary,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                opacity: isReloading ? 0.7 : 1,
-                            }}
-                        >
-                            <Animated.View
-                                style={{
-                                    transform: [{ rotate: rotateInterpolation }]
-                                }}
-                            >
-                                <Feather name="refresh-cw" size={18} color={c.text.primary} />
-                            </Animated.View>
-                        </TouchableOpacity>
+                            accessibilityLabel={t("Recargar")}
+                            icon={(color) => (
+                                <Animated.View style={{ transform: [{ rotate: rotateInterpolation }] }}>
+                                    <Feather name="refresh-cw" size={18} color={color} />
+                                </Animated.View>
+                            )}
+                        />
                     )
                 }
             />

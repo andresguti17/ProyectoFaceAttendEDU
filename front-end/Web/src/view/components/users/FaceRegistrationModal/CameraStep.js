@@ -4,8 +4,9 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, Platform } from "react-native";
+import { View, Text, ActivityIndicator, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { Button } from "../../common/buttons";
 
 export default function CameraStep({
     c,
@@ -266,50 +267,34 @@ export default function CameraStep({
 
             {/* Botones */}
             <View style={{ flexDirection: "row", gap: 10 }}>
-                <TouchableOpacity
-                    onPress={onBack}
-                    style={{
-                        flex: 1,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                        paddingVertical: 12,
-                        borderRadius: 14,
-                        borderWidth: 1,
-                        borderColor: c.border.primary,
-                        backgroundColor: c.background.app,
-                    }}
-                >
-                    <Feather name="arrow-left" size={14} color={c.text.secondary} />
-                    <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.secondary }}>
+                <View style={{ flex: 1 }}>
+                    <Button
+                        variant="outline"
+                        fullWidth
+                        onPress={onBack}
+                        leftIcon={<Feather name="arrow-left" size={14} color={c.brand.primary} />}
+                    >
                         {t("Volver")}
-                    </Text>
-                </TouchableOpacity>
+                    </Button>
+                </View>
 
-                <TouchableOpacity
-                    onPress={onCapture}
-                    disabled={camState !== "analyzing"}
-                    style={{
-                        flex: 1,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                        paddingVertical: 12,
-                        borderRadius: 14,
-                        backgroundColor: camState === "analyzing"
-                            ? allQOk
-                                ? c.status.success
-                                : c.brand.primary
-                            : c.interactive.disabled,
-                    }}
-                >
-                    <Feather name="camera" size={16} color="#fff" />
-                    <Text style={{ fontSize: 10, fontWeight: "700", color: "#fff" }}>
+                <View style={{ flex: 1 }}>
+                    <Button
+                        variant={allQOk ? "success" : "primary"}
+                        fullWidth
+                        onPress={onCapture}
+                        disabled={camState !== "analyzing"}
+                        leftIcon={<Feather
+                            name="camera"
+                            size={16}
+                            color={camState !== "analyzing"
+                                ? c.interactive.disabledText
+                                : allQOk ? c.status.successText : c.brand.textOnPrimary}
+                        />}
+                    >
                         {allQOk ? t("Autocapturando…") : t("Capturar ahora")}
-                    </Text>
-                </TouchableOpacity>
+                    </Button>
+                </View>
             </View>
 
             {!allQOk && camState === "analyzing" && (

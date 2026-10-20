@@ -313,7 +313,7 @@ export function ExportConfigModal({ visible, onClose, onExport, selectedCount })
                             variant="primary"
                             onPress={handleExport}
                             style={{ flex: 1 }}
-                            leftIcon={<Feather name="download" size={16} color="#fff" />}
+                            leftIcon={<Feather name="download" size={16} color={c.brand.textOnPrimary} />}
                         >
                             {t("Exportar")}
                         </Button>

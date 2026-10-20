@@ -199,9 +199,9 @@ export default function EnvironmentFormModal({
                 disabled={saving}
                 leftIcon={
                     saving ? (
-                        <ActivityIndicator size="small" color="#fff" />
+                        <ActivityIndicator size="small" color={c.interactive.disabledText} />
                     ) : (
-                        <Feather name="home" size={16} color="#fff" />
+                        <Feather name="home" size={16} color={c.brand.textOnPrimary} />
                     )
                 }
             >

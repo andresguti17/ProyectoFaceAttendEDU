@@ -9,8 +9,9 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { Button } from "../common/buttons";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 
@@ -71,6 +72,9 @@ export function PeriodExpirationAlert({
     };
 
     const alertConfig = getAlertConfig();
+    // Las acciones usan la variante semántica de la alerta (peligro o advertencia).
+    const actionVariant = alertConfig?.type === "danger" ? "danger" : "warning";
+    const actionIconColor = alertConfig?.type === "danger" ? c.status.errorText : c.status.warningText;
 
     if (!alertConfig) {
         return null;
@@ -135,83 +139,36 @@ export function PeriodExpirationAlert({
                     {/* Botones de acción */}
                     <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
                         {!isAutomaticMode && expirationInfo.hasExpired && onConfigure && (
-                            <Pressable
+                            <Button
+                                variant={actionVariant}
+                                size="sm"
                                 onPress={onConfigure}
-                                style={{
-                                    backgroundColor: alertConfig.iconColor,
-                                    paddingHorizontal: 16,
-                                    paddingVertical: 10,
-                                    borderRadius: 10,
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    gap: 6,
-                                }}
+                                leftIcon={<Feather name="settings" size={14} color={actionIconColor} />}
                             >
-                                <Feather name="settings" size={14} color="#fff" />
-                                <Text
-                                    style={{
-                                        fontSize: 13,
-                                        fontWeight: "600",
-                                        color: "#fff",
-                                    }}
-                                >
-                                    {t("Configurar nuevo período")}
-                                </Text>
-                            </Pressable>
+                                {t("Configurar nuevo período")}
+                            </Button>
                         )}
 
                         {expirationInfo.isExpiringSoon && !isAutomaticMode && onConfigure && (
-                            <Pressable
+                            <Button
+                                variant={actionVariant}
+                                size="sm"
                                 onPress={onConfigure}
-                                style={{
-                                    backgroundColor: alertConfig.iconColor,
-                                    paddingHorizontal: 16,
-                                    paddingVertical: 10,
-                                    borderRadius: 10,
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    gap: 6,
-                                }}
+                                leftIcon={<Feather name="calendar" size={14} color={actionIconColor} />}
                             >
-                                <Feather name="calendar" size={14} color="#fff" />
-                                <Text
-                                    style={{
-                                        fontSize: 13,
-                                        fontWeight: "600",
-                                        color: "#fff",
-                                    }}
-                                >
-                                    {t("Preparar siguiente período")}
-                                </Text>
-                            </Pressable>
+                                {t("Preparar siguiente período")}
+                            </Button>
                         )}
 
                         {onDismiss && (
-                            <Pressable
+                            <Button
+                                variant="outline"
+                                size="sm"
                                 onPress={onDismiss}
-                                style={{
-                                    backgroundColor: "transparent",
-                                    paddingHorizontal: 16,
-                                    paddingVertical: 10,
-                                    borderRadius: 10,
-                                    borderWidth: 1.5,
-                                    borderColor: alertConfig.textColor + "40",
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    gap: 6,
-                                }}
+                                leftIcon={<Feather name="x" size={14} color={c.brand.primary} />}
                             >
-                                <Feather name="x" size={14} color={alertConfig.textColor} />
-                                <Text
-                                    style={{
-                                        fontSize: 13,
-                                        fontWeight: "600",
-                                        color: alertConfig.textColor,
-                                    }}
-                                >
-                                    {t("Cerrar")}
-                                </Text>
-                            </Pressable>
+                                {t("Cerrar")}
+                            </Button>
                         )}
                     </View>
                 </View>

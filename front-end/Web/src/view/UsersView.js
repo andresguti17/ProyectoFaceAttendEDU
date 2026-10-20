@@ -113,7 +113,7 @@ export default function UsersView({
                                 variant="primary" 
                                 size="sm" 
                                 onPress={vm.openRegisterModal}
-                                leftIcon={<Feather name="plus" size={16} color="#fff" />}
+                                leftIcon={<Feather name="plus" size={16} color={c.brand.textOnPrimary} />}
                             >
                                 {newButtonLabel}
                             </Button>

@@ -4,8 +4,9 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, Platform } from "react-native";
+import { View, Text, ActivityIndicator, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { Button } from "../../common/buttons";
 
 export default function ConfirmStep({ c, t, capturedUrl, processing, onRetake, onConfirm }) {
     return (
@@ -76,51 +77,31 @@ export default function ConfirmStep({ c, t, capturedUrl, processing, onRetake, o
             </Text>
 
             <View style={{ flexDirection: "row", gap: 10 }}>
-                <TouchableOpacity
-                    onPress={onRetake}
-                    disabled={processing}
-                    style={{
-                        flex: 1,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                        paddingVertical: 12,
-                        borderRadius: 14,
-                        borderWidth: 1,
-                        borderColor: c.border.primary,
-                        backgroundColor: c.background.app,
-                    }}
-                >
-                    <Feather name="refresh-cw" size={14} color={c.text.secondary} />
-                    <Text style={{ fontSize: 10, fontWeight: "600", color: c.text.secondary }}>
+                <View style={{ flex: 1 }}>
+                    <Button
+                        variant="outline"
+                        fullWidth
+                        onPress={onRetake}
+                        disabled={processing}
+                        leftIcon={<Feather name="refresh-cw" size={14} color={processing ? c.interactive.disabledText : c.brand.primary} />}
+                    >
                         {t("Repetir")}
-                    </Text>
-                </TouchableOpacity>
+                    </Button>
+                </View>
 
-                <TouchableOpacity
-                    onPress={onConfirm}
-                    disabled={processing}
-                    style={{
-                        flex: 1,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 8,
-                        paddingVertical: 12,
-                        borderRadius: 14,
-                        backgroundColor: processing ? c.interactive.disabled : c.brand.primary,
-                    }}
-                >
-                    {processing ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                        <Feather name="cpu" size={15} color="#fff" />
-                    )}
-                    <Text style={{ fontSize: 10, fontWeight: "700", color: "#fff" }}>
+                <View style={{ flex: 1 }}>
+                    <Button
+                        variant="primary"
+                        fullWidth
+                        onPress={onConfirm}
+                        disabled={processing}
+                        leftIcon={processing
+                            ? <ActivityIndicator size="small" color={c.interactive.disabledText} />
+                            : <Feather name="cpu" size={15} color={c.brand.textOnPrimary} />}
+                    >
                         {processing ? t("Procesando rostro…") : t("Confirmar y generar")}
-                    </Text>
-                </TouchableOpacity>
+                    </Button>
+                </View>
             </View>
         </View>
     );

@@ -119,6 +119,7 @@ export function ColorPicker({
                 style={styles.clearButton}
                 onPress={() => onChange(null)}
               >
+                {/* eslint-disable-next-line faceattend/button-standard -- la muestra pinta un color elegido por el usuario; el blanco es intencional */}
                 <Feather name="x" size={12} color="#fff" />
               </TouchableOpacity>
             )}
@@ -159,6 +160,7 @@ export function ColorPicker({
               ]}
             >
               {isSelected && (
+                // eslint-disable-next-line faceattend/button-standard -- la muestra pinta un color elegido por el usuario; el blanco es intencional
                 <Feather name="check" size={16} color="#fff" />
               )}
             </TouchableOpacity>

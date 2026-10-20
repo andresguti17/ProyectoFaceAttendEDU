@@ -5,6 +5,7 @@ import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 // Fix for missing import
 import { Feather } from "@expo/vector-icons";
+import { IconButton } from "../buttons";
 
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -195,9 +196,12 @@ Drawer.Header = function DrawerHeader({ title, onClose, style }) {
         {title}
       </Text>
       {onClose && (
-        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-          <Feather name="x" size={24} color={theme.colors.text.primary} />
-        </TouchableOpacity>
+        <IconButton
+            variant="ghost"
+            onPress={onClose}
+            accessibilityLabel="Cerrar"
+            icon={(color) => <Feather name="x" size={24} color={color} />}
+        />
       )}
     </View>
   );

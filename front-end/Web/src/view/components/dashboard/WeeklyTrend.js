@@ -16,6 +16,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { IconButton } from "../common/buttons";
 import { ProgressBar } from "../common/charts/ProgressBar";
 import { AnimatedDropdown } from "../common/animation/AnimatedDropdown";
 import { useTheme } from "../hooks/useTheme";
@@ -391,25 +392,14 @@ export function WeeklyTrend({
                     borderTopColor: c.border.default,
                 }}>
                     {/* Botón anterior */}
-                    <TouchableOpacity
+                    <IconButton
+                        size="sm"
+                        variant="secondary"
                         onPress={handlePrevious}
                         disabled={!canGoBack}
-                        style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 16,
-                            backgroundColor: canGoBack ? c.brand.primaryLight : c.background.secondary,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            opacity: canGoBack ? 1 : 0.4,
-                        }}
-                    >
-                        <Feather
-                            name="chevron-left"
-                            size={16}
-                            color={canGoBack ? c.brand.primary : c.text.disabled}
-                        />
-                    </TouchableOpacity>
+                        accessibilityLabel="Anterior"
+                        icon={(color) => <Feather name="chevron-left" size={16} color={color} />}
+                    />
 
                     {/* Tendencia central */}
                     <View style={{
@@ -437,25 +427,14 @@ export function WeeklyTrend({
                     </View>
 
                     {/* Botón siguiente */}
-                    <TouchableOpacity
+                    <IconButton
+                        size="sm"
+                        variant="secondary"
                         onPress={handleNext}
                         disabled={!canGoForward}
-                        style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 16,
-                            backgroundColor: canGoForward ? c.brand.primaryLight : c.background.secondary,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            opacity: canGoForward ? 1 : 0.4,
-                        }}
-                    >
-                        <Feather
-                            name="chevron-right"
-                            size={16}
-                            color={canGoForward ? c.brand.primary : c.text.disabled}
-                        />
-                    </TouchableOpacity>
+                        accessibilityLabel="Siguiente"
+                        icon={(color) => <Feather name="chevron-right" size={16} color={color} />}
+                    />
                 </View>
             )}
         </View>
