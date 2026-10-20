@@ -26,6 +26,7 @@
     "expo-file-system": "~57.0.6",
     "expo-image-picker": "~57.0.16",
     "expo-localization": "~57.0.1",
+    "expo-navigation-bar": "~57.0.3",
     "expo-secure-store": "~57.0.3",
     "expo-status-bar": "~57.0.1",
     "expo-updates": "~57.0.26",
