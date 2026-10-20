@@ -375,13 +375,15 @@ eas init                   # crea o enlaza el proyecto y escribe extra.eas.proje
 **Qué exige un APK nuevo:** instalar o actualizar una dependencia nativa (`expo-camera`, `react-native-*`…), cambiar permisos o plugins en `app.json`, cambiar `package`, icono, nombre, `runtimeVersion`, versión del SDK de Expo.
 **Qué no se empaqueta nunca en la app:** backend y base de datos. Los cambios en microservicios, Kong o esquemas (Liquibase) viven en el servidor: se despliegan con el pipeline de la Parte I y la app los ve al instante porque consulta la misma URL. La URL del backend sí está dentro del APK (`EXPO_PUBLIC_API_URL`): cambiarla requiere **APK nuevo**, no OTA.
 
-**Preparación única (requiere un APK nuevo; aún no está hecha en el repo):**
+**Preparación única (ya hecha en el repo):** `expo-updates` instalado, `updates.url` y `extra.eas.projectId` en `app.json` (proyecto `@jonas7891/faceattend-edu`), `updates.enabled` retirado y `runtimeVersion.policy: "appVersion"`. El **APK que se compile a partir de ahora** ya recibe OTA; los APK anteriores (sin `expo-updates`) hay que reinstalarlos una vez.
+
+**Flujo diario (un comando):** cambia el código, haz commit y, desde `front-end/Mobile`:
 ```powershell
-cd front-end\Mobile
-npx expo install expo-updates     # dependencia nativa → obliga a recompilar el APK
-eas update:configure              # añade updates.url y extra.eas.projectId a app.json
+npm run update                       # publica al canal production con el asunto del último commit
+npm run update -- "mensaje propio"   # o con tu propio mensaje (el script lo toma tras el canal)
+npm run update:preview               # prueba primero en el canal preview
 ```
-Después, en `app.json` hay que **quitar `"enabled": false`** del bloque `updates` (hoy desactiva las OTA). Se conserva `runtimeVersion.policy: "appVersion"`: una actualización solo la reciben los APK con el mismo `version` de `app.json`. Compila de nuevo el APK (sección 16) y distribúyelo; ese APK queda "enlazado" al canal de su perfil.
+El script (`scripts/publish-update.js`) ejecuta `eas update --channel <canal> --message … --non-interactive`. Requiere sesión iniciada (`eas login`) o `EXPO_TOKEN`.
 
 **Canales y ramas** (ya definidos en `eas.json`):
 
