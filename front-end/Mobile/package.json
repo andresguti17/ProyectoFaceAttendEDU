@@ -6,7 +6,9 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "test": "jest"
+    "test": "jest",
+    "update": "node scripts/publish-update.js production",
+    "update:preview": "node scripts/publish-update.js preview"
   },
   "dependencies": {
     "@expo/metro-runtime": "~57.0.15",
@@ -26,6 +28,7 @@
     "expo-localization": "~57.0.1",
     "expo-secure-store": "~57.0.3",
     "expo-status-bar": "~57.0.1",
+    "expo-updates": "~57.0.26",
     "i18next": "^26.0.4",
     "jwt-decode": "^4.0.0",
     "react": "19.2.3",
