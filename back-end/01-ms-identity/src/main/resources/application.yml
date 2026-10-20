@@ -50,6 +50,12 @@ faceattend:
     # Canal de correo: 08-ms-notification (SMTP + templates). En compose: http://ms-notification:8088
     base-url: http://localhost:8088
     internal-token: ""
+  onboarding:
+    # user_id de la cuenta de servicio (Super Administrador dedicado) con la que el alta
+    # pública de sedes llama a academic y authorization. Vacío = endpoint deshabilitado (503).
+    service-user-id: ""
+    academic-url: http://localhost:8083
+    authorization-url: http://localhost:8082
 management:
   health:
     # Redis is only needed when faceattend.recovery.store=redis; do not fail health without it.
