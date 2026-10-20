@@ -461,6 +461,17 @@ export function AuthProvider({ children }) {
         return null;
     }, []);
 
+    // Actualiza campos del usuario en sesión (p. ej. el correo tras editar el
+    // perfil) en el estado y en el almacenamiento de sesión.
+    const updateSessionUser = useCallback((patch) => {
+        setUser((prev) => {
+            if (!prev) return prev;
+            const next = { ...prev, ...patch };
+            sessionSet(JSON.stringify(next));
+            return next;
+        });
+    }, []);
+
     const logout = useCallback(async () => {
         // IMPORTANTE: Detener completamente el timer ANTES de limpiar el resto
         if (sessionTimeout && sessionTimeout.clearTimer) {
@@ -526,9 +537,10 @@ export function AuthProvider({ children }) {
             logout,
             register,
             changePassword,
+            updateSessionUser,
             sessionTimeout,
         }),
-        [user, isLoadingAuth, sessionExpiredByTimeout, isLoadingTimeoutFlag, intendedRoute, saveIntendedRoute, clearIntendedRoute, consumeIntendedRoute, login, logout, register, changePassword, sessionTimeout]
+        [user, isLoadingAuth, sessionExpiredByTimeout, isLoadingTimeoutFlag, intendedRoute, saveIntendedRoute, clearIntendedRoute, consumeIntendedRoute, login, logout, register, changePassword, updateSessionUser, sessionTimeout]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

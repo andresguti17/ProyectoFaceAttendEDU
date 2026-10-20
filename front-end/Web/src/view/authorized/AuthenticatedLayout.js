@@ -58,6 +58,7 @@ const ROUTE_MAP = {
     "academic": "Academic",
     "contacts": "Contacts",
     "settings": "Settings",
+    "profile": "Profile",
 };
 
 const ROUTE_TO_KEY_MAP = {
@@ -75,6 +76,7 @@ const ROUTE_TO_KEY_MAP = {
     "Academic": "academic",
     "Contacts": "contacts",
     "Settings": "settings",
+    "Profile": "profile",
 };
 
 // ── Contexto para compartir estado del sidebar ────────────────
@@ -176,6 +178,11 @@ function PersistentSidebar() {
         <CollapsibleSidebar width={240}>
             {user && (
                 <SidebarHeader>
+                  <TouchableOpacity
+                    onPress={() => handleNavigate("profile")}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("Mi perfil")}
+                  >
                     <Text style={{
                         fontSize: 14,
                         fontWeight: "600",
@@ -195,6 +202,7 @@ function PersistentSidebar() {
                             (ver backendRoles). */}
                         {t(roleDisplayLabel(user))}
                     </Text>
+                  </TouchableOpacity>
                 </SidebarHeader>
             )}
             
