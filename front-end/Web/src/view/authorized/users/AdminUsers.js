@@ -374,6 +374,7 @@ export function AdminUsers({ section, vm: vmProp }) {
                 onUserUpdated={vm.handleUserUpdated}
                 canManage={canManage}
                 canRegisterFace={permissions.canRegisterFace}
+                onBiometricsEnrolled={vm.markBiometrics}
                 canToggleStatus={canToggleStatus}
                 canDeleteUser={canDelete}
                 onToggleStatus={(u) =>
