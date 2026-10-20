@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: notif-004-normalize-legacy-in-app-alert-type-channel
+      author: Andres Gutierrez
+      context: seed
+      splitStatements: false
+      comment: alert_type.channel solo admite DASHBOARD / EMAIL / PUSH; las filas creadas por la migracion Drizzle 0000 quedaron con el valor legado IN_APP.
+      changes:
+        - sql:
+            sql: |
+              UPDATE notification.alert_type
+                 SET channel = 'DASHBOARD'
+               WHERE channel = 'IN_APP';
+      rollback:
+        - sql:
+            sql: |
+              UPDATE notification.alert_type
+                 SET channel = 'IN_APP'
+               WHERE code IN ('ABSENCE_THRESHOLD', 'SCHEDULE_CONFLICT');
