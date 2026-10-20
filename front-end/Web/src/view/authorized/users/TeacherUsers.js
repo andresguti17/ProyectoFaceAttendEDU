@@ -139,6 +139,7 @@ export function TeacherUsers({ vm: vmProp }) {
                 onClose={vm.clearSelection}
                 canManage={false}
                 canRegisterFace={permissions.canRegisterFace}
+                onBiometricsEnrolled={vm.markBiometrics}
             />
         </ScrollView>
     );

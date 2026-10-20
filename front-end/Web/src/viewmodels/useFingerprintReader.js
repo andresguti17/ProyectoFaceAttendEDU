@@ -18,10 +18,8 @@ import { personMap, fullName } from "../services/api/referenceData";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 
 // ms-biometric exige finger_number (1..10); el lector no lo reporta, así que
-// se usa un valor fijo por defecto para esta pantalla. Si en el futuro se
-// necesita capturar varios dedos por persona, este sería el punto a extender
-// con un selector de dedo en la UI.
-const DEFAULT_FINGER_NUMBER = 1;
+// lo elige quien registra (FingerSelector). Si no se indica, se usa el pulgar derecho.
+export const DEFAULT_FINGER_NUMBER = 1;
 
 const POLL_INTERVAL_MS = 3000;
 const SDK_SCRIPTS = ["/vendor/websdk.client.ui.js", "/vendor/fingerprint.sdk.js"];
@@ -90,7 +88,7 @@ function normalizeSample(value) {
 const deviceKey = (value) =>
     value && (typeof value === "string" ? value : value.deviceId || value.id || value.name || String(value));
 
-export function useFingerprintReader({ vm, socket, onIdentified } = {}) {
+export function useFingerprintReader({ vm, socket, onIdentified, fingerNumber = DEFAULT_FINGER_NUMBER } = {}) {
     const { t } = useTranslation();
     const { run, setStatus, requirePersonId, refreshSummary } = vm;
 
@@ -311,7 +309,7 @@ export function useFingerprintReader({ vm, socket, onIdentified } = {}) {
                 const personId = requirePersonId();
                 await biometricCaptureApi.enrollFingerprint({
                     personId,
-                    fingerNumber: DEFAULT_FINGER_NUMBER,
+                    fingerNumber,
                     sampleFormat: sample.format,
                     data: sample.data,
                     quality: sample.quality,
@@ -322,7 +320,7 @@ export function useFingerprintReader({ vm, socket, onIdentified } = {}) {
                 await refreshSummary();
             }),
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [run, requirePersonId, setStatus, refreshSummary, t]
+        [run, requirePersonId, setStatus, refreshSummary, fingerNumber, t]
     );
 
     const loginFingerprint = useCallback(
