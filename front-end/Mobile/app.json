@@ -2,13 +2,13 @@
   "expo": {
     "name": "FaceAttend EDU",
     "slug": "faceattend-edu",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
       "fallbackToCacheTimeout": 0,
-      "enabled": false
+      "url": "https://u.expo.dev/5d37baea-16b3-4637-b372-c04352046deb"
     },
     "orientation": "portrait",
     "icon": "./src/assets/images/logoFaceAttend.png",
@@ -33,7 +33,11 @@
       "statusBar": {
         "translucent": true,
         "backgroundColor": "#00000000"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-localization",
@@ -45,6 +49,12 @@
           "cameraPermission": "FaceAttend EDU needs camera access to capture your face for attendance verification."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5d37baea-16b3-4637-b372-c04352046deb"
+      }
+    },
+    "owner": "jonas7891"
   }
 }
