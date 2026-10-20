@@ -101,6 +101,13 @@ public class PersonController {
             personDto.setStatus(current.getStatus());
             personDto.setDocumentNumber(current.getDocumentNumber());
             personDto.setDocumentType(current.getDocumentType());
+            if (Boolean.TRUE.equals(request.getAttribute(AuthTokenFilter.SELF_EDIT_LIMITED_ATTRIBUTE))) {
+                // Sin identity.person:write: nombres y correo (identificador de login) también fijos;
+                // el correo se cambia por PUT /auth/me/profile con la contraseña actual.
+                personDto.setName(current.getName());
+                personDto.setLastName(current.getLastName());
+                personDto.setEmail(current.getEmail());
+            }
         }
         updatePersonUseCase.updatePerson(id, personWebMapper.toDomain(personDto));
         return ResponseEntity.ok(personWebMapper.toDto(getPersonUseCase.getPerson(id)));

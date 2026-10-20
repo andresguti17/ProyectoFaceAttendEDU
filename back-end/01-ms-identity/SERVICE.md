@@ -178,6 +178,22 @@ la contrasena (`POST /auth/change-password`) antes de usar la app. Cambiar la co
 (`change-password` o recuperacion) apaga el flag; un `PUT /users` no lo toca. El bloqueo es del
 cliente: ningun microservicio rechaza peticiones por este flag.
 
+### 4.5.2 Perfil propio
+
+| Metodo | Endpoint | Descripcion |
+|--------|----------|-------------|
+| PUT | `/api/v1/auth/me/profile` | Editar los datos de contacto y salud de la persona en sesion |
+
+Basta la sesion (sin `identity.person:write`): la cuenta sale de la sesion, nunca del cuerpo. Cuerpo:
+`phone`, `address`, `birthDate`, `bloodType` (se reemplazan tal cual; vacio los borra) y `email` +
+`currentPassword`. El correo es el identificador de login, asi que un correo nuevo exige la
+contrasena actual (400 si falta o es incorrecta) y uno ya usado responde 409. Nombres, documento,
+estado, usuario, rol y sede no se pueden cambiar por aqui: cualquier otro campo del cuerpo se ignora.
+Devuelve la persona actualizada.
+
+Ademas, `PUT /api/v1/persons/{id}` sobre la propia persona hecho por quien NO tiene
+`identity.person:write` conserva nombres y correo (antes solo fijaba estado y documento).
+
 ### 4.6 Alta publica de sedes
 
 | Metodo | Endpoint | Descripcion |
