@@ -12,6 +12,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card } from "../../components/common";
 import { useAuth } from "../../../context/AuthContext";
 import { pushInstitutionConfig, loadBackendOverrides, parseSetting } from "../../../services/api/settingsPersistence";
+import { hasSuperAdminRole } from "../../../core/utils/backendRoles";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useDateFormat } from "../../components/hooks/useDateFormat";
@@ -111,7 +112,9 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
             // Réplica en el backend (upsert por clave); si falla, el
             // guardado se reporta como fallido para no mostrar éxito falso.
             try {
-                await pushInstitutionConfig(user?.schoolId ?? null, merged);
+                await pushInstitutionConfig(user?.schoolId ?? null, merged, {
+                    canWriteSecurity: hasSuperAdminRole(user?.roles),
+                });
                 return true;
             } catch {
                 return false;

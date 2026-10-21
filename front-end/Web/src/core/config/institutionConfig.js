@@ -110,6 +110,13 @@ const DEFAULT_INSTITUTION_CONFIG = {
 };
 
 /**
+ * Copia de los valores por defecto (para restablecer ajustes por sede)
+ */
+export function getDefaultInstitutionConfig() {
+    return { ...DEFAULT_INSTITUTION_CONFIG };
+}
+
+/**
  * Obtener la configuración institucional desde localStorage
  * 
  * @returns {Object} Configuración institucional
