@@ -362,9 +362,9 @@ export default function AppearanceSettingsScreen() {
                         </View>
 
                     </View>
-                    <ReturnButton onPress={handleBack} />
                 </ScrollViewWrapper>
             </KeyboardAvoidingView>
+            <ReturnButton onPress={handleBack} />
         </ScreenSafeArea>
     );
 }

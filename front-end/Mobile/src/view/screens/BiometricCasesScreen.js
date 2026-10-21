@@ -47,7 +47,6 @@ export default function BiometricCasesScreen() {
                 <ActivityIndicator size="large" color={colors.primary}/>
             ) : (
                 <FlatList persistentScrollbar
-                    ListFooterComponent={<ReturnButton onPress={handleBack} />}
                     data={cases}
                     keyExtractor={(item) => String(item.caseId)}
                     renderItem={renderItem}
@@ -67,6 +66,7 @@ export default function BiometricCasesScreen() {
                 onClose={hideAlert}
                 type={alertConfig.type}
             />
+            <ReturnButton onPress={handleBack} />
         </ScreenSafeArea>
     );
 }

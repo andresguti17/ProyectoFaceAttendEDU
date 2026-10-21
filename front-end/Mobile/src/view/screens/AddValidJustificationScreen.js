@@ -521,9 +521,9 @@ export default function AddValidJustificationScreen() {
                                 />
                             </View>
                         </View>
-                        <ReturnButton onPress={handleBack} />
                     </ScrollView>
                 </KeyboardAvoidingView>
+                <ReturnButton onPress={handleBack} />
             </ScreenSafeArea>
 
             <CustomAlert

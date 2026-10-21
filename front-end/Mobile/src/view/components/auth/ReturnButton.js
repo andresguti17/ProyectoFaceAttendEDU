@@ -16,16 +16,16 @@ export default function ReturnButton({ onPress, disabled = false, inset = true }
     const handlePress = () => (onPress ? onPress() : navigation.goBack());
 
     return (
-        // Mismo espaciado que el menú: 20px arriba y 20px a los lados. `inset={false}` si el contenedor ya lo aporta.
-        <View style={[styleAuth.dangerButtonContainer, { paddingTop: 20, paddingHorizontal: inset ? 20 : 0 }]}>
+        // Pie de pantalla fijo: neutral (nunca el color de las acciones como guardar) y siempre visible sin hacer scroll.
+        <View style={[styleAuth.dangerButtonContainer, { paddingTop: 20, paddingBottom: 20, paddingHorizontal: inset ? 20 : 0 }]}>
             <TouchableOpacity
-                style={[styleAuth.dangerButton, { backgroundColor: colors.primary }, disabled && styleAuth.buttonDisabled]}
+                style={[styleAuth.dangerButton, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }, disabled && styleAuth.buttonDisabled]}
                 onPress={handlePress}
                 disabled={disabled}
                 activeOpacity={0.7}
                 accessibilityRole="button"
             >
-                <Text style={[styleAuth.dangerButtonText, { color: colors.onPrimary }]}>{t('common.back')}</Text>
+                <Text style={[styleAuth.dangerButtonText, { color: colors.text }]}>{t('common.back')}</Text>
             </TouchableOpacity>
         </View>
     );

@@ -269,7 +269,6 @@ export default function ValidJustificationsScreen() {
                         )}
 
                     </View>
-                    <ReturnButton onPress={handleBack} />
                 </ScrollView>
             </KeyboardAvoidingView>
 
@@ -306,6 +305,7 @@ export default function ValidJustificationsScreen() {
                     )}
                 </View>
             </Modal>
+            <ReturnButton onPress={handleBack} />
         </ScreenSafeArea>
     );
 }

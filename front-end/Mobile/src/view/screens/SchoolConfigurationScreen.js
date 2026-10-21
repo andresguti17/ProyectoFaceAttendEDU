@@ -532,7 +532,6 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             </View>
                         )}
                     </View>
-                    <ReturnButton onPress={() => navigation?.goBack()} />
                 </ScrollView>
 
                 {/* ── Botones de Acción ── */}
@@ -839,6 +838,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                     </View>
                 </TouchableWithoutFeedback>
             </Modal>
+            <ReturnButton onPress={() => navigation?.goBack()} />
         </ScreenSafeArea>
     );
 };

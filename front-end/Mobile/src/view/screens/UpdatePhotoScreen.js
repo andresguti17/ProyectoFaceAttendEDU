@@ -144,7 +144,6 @@ export default function UpdatePhoto() {
                             </>
                         )}
                     </View>
-                    <ReturnButton onPress={handleBack} />
                 </ScrollView>
             </KeyboardAvoidingView>
             <CustomAlert
@@ -155,6 +154,7 @@ export default function UpdatePhoto() {
                 onClose={hideAlert}
                 type={alertConfig.type}
             />
+            <ReturnButton onPress={handleBack} />
         </ScreenSafeArea>
     );
 }

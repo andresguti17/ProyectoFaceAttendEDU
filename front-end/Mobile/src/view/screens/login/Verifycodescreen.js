@@ -351,7 +351,6 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                     </TouchableOpacity>
                                 </View>
                             </View>
-                            <ReturnButton disabled={codeVerification.isLoading} />
                         </View>
                     </TouchableWithoutFeedback>
                 </ScrollView>
@@ -367,6 +366,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                 confirmPasswordRef={confirmPasswordRef}
                 onClose={closePasswordModal}
             />
+            <ReturnButton disabled={codeVerification.isLoading} />
         </ScreenSafeArea>
     );
 }

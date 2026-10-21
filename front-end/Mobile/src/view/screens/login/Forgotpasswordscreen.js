@@ -491,11 +491,11 @@ export default function ForgotPasswordScreen({ navigation }) {
                                 />
 
                             </View>
-                            <ReturnButton onPress={handleBack} disabled={recovery.isLoading} />
                         </View>
                     </TouchableWithoutFeedback>
                 </ScrollView>
             </KeyboardAvoidingView>
+            <ReturnButton onPress={handleBack} disabled={recovery.isLoading} />
         </ScreenSafeArea>
     );
 }

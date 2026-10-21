@@ -284,7 +284,6 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                 </View>
 
                 <FlatList persistentScrollbar
-                    ListFooterComponent={<ReturnButton onPress={handleBack} />}
                     data={searchQuery ? searchResults : ambientes}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
@@ -336,6 +335,7 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                     onClose={hideAlert}
                     type={alertConfig.type}
                 />
+                <ReturnButton onPress={handleBack} />
             </ScreenSafeArea>
         </TouchableWithoutFeedback>
     );

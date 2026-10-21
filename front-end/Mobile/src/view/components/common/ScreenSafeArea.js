@@ -20,7 +20,7 @@ export function isLightColor(color) {
 export default function ScreenSafeArea({style, ...props}) {
     const {colors} = useTheme();
     const isFocused = useIsFocused();
-    const flat = StyleSheet.flatten([{backgroundColor: colors.background}, style]);
+    const flat = StyleSheet.flatten([{backgroundColor: colors.background, flex: 1}, style]);
     const isLightBackground = isLightColor(flat.backgroundColor);
 
     // Solo la pantalla con foco fija el estilo: las de debajo del stack no deben pisarlo.
@@ -28,5 +28,6 @@ export default function ScreenSafeArea({style, ...props}) {
         if (isFocused) setStatusBarStyle(isLightBackground ? 'dark' : 'light');
     }, [isFocused, isLightBackground]);
 
-    return <SafeAreaView edges={['top']} style={[{backgroundColor: colors.background}, style]} {...props} />;
+    // flex: 1 para que el pie de pantalla (ReturnButton) quede siempre al final de la pantalla.
+    return <SafeAreaView edges={['top']} style={[{backgroundColor: colors.background, flex: 1}, style]} {...props} />;
 }

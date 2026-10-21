@@ -326,7 +326,6 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                 </View>
 
                 <FlatList persistentScrollbar
-                    ListFooterComponent={<ReturnButton onPress={handleBack} />}
                     data={tab === 'students' ? students : teachers}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
@@ -375,6 +374,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                     onClose={hideAlert}
                     type={alertConfig.type}
                 />
+                <ReturnButton onPress={handleBack} />
             </ScreenSafeArea>
         </TouchableWithoutFeedback>
     );

@@ -90,10 +90,10 @@ export default function SchoolsScreen({ navigation }) {
             {schools.map((school) => (
               <SchoolCard key={school.schoolId} school={school} colors={colors} t={t} />
             ))}
-              <ReturnButton onPress={() => navigation?.navigate("DashboardScreen")} />
           </ScrollView>
         )}
       </View>
+        <ReturnButton onPress={() => navigation?.navigate("DashboardScreen")} />
     </ScreenSafeArea>
   );
 }

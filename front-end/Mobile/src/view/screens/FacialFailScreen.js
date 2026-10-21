@@ -144,7 +144,6 @@ export default function FacialFail() {
                         </View>
                     </TouchableWithoutFeedback>
                 </KeyboardAvoidingView>
-                <ReturnButton onPress={handleBack} />
             </ScrollView>
 
             {/* Modales */}
@@ -168,6 +167,7 @@ export default function FacialFail() {
                 type={alertConfig.type}
                 onClose={hideAlert}
             />
+            <ReturnButton onPress={handleBack} />
         </ScreenSafeArea>
     );
 }

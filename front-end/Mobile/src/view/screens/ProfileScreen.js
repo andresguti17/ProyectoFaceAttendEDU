@@ -523,8 +523,8 @@ export default function ProfileScreen({ onLogout }) {
                     </View>
 
                 </View>
-                <ReturnButton onPress={handleBack} />
             </ScrollView>
+            <ReturnButton onPress={handleBack} />
         </ScreenSafeArea>
     );
 }

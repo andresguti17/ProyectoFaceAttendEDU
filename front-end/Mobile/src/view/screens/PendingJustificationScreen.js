@@ -474,7 +474,6 @@ const DetailModal = ({
                                 )}
                             </>
                         )}
-                        <ReturnButton onPress={handleBack} />
                     </ScrollView>
 
                     {/* ── Botones de acción (ocultos para estudiantes) ── */}
@@ -609,6 +608,7 @@ export default function PendingJustificationScreen({ navigation }) {
                 ]}>
                     <ActivityIndicator color={colors.primary} size="large"/>
                 </View>
+                <ReturnButton onPress={handleBack} />
             </ScreenSafeArea>
         );
     }

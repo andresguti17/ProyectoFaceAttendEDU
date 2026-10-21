@@ -213,7 +213,6 @@ export default function LanguageSettingsScreen() {
                             isLoading={isLoading}
                         />
                     </View>
-                    <ReturnButton onPress={handleBack} />
                 </ScrollViewWrapper>
 
                 {/* ═══════════════════════════════════════════ */}
@@ -647,6 +646,7 @@ export default function LanguageSettingsScreen() {
                     </View>
                 </Modal>
             </KeyboardAvoidingView>
+            <ReturnButton onPress={handleBack} />
         </ScreenSafeArea>
     );
 }

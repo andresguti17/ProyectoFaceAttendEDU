@@ -401,7 +401,6 @@ export default function AttendanceReportScreen({ navigation }) {
                     )}
 
                 </View>
-                <ReturnButton onPress={() => navigation?.goBack()} />
             </ScrollView>
 
             {/* ══════════════════════════════════════════════
@@ -479,6 +478,7 @@ export default function AttendanceReportScreen({ navigation }) {
                 onClose={hideAlert}
                 type={alertConfig.type}
             />
+            <ReturnButton onPress={() => navigation?.goBack()} />
         </ScreenSafeArea>
     );
 }

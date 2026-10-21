@@ -117,7 +117,6 @@ export default function RegisterFace() {
                         )}
                     </TouchableOpacity>
                 </View>
-                <ReturnButton onPress={handleBack} />
             </View>
 
             <CustomAlert
@@ -128,6 +127,7 @@ export default function RegisterFace() {
                 type={alertConfig.type}
                 onClose={hideAlert}
             />
+            <ReturnButton onPress={handleBack} />
         </ScreenSafeArea>
     );
 }

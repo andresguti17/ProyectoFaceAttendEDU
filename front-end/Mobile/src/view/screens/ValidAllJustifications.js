@@ -125,7 +125,6 @@ export default function JustificationsScreen() {
                             </Text>
                         </View>
                     )}
-                    <ReturnButton onPress={handleBack} />
                 </ScrollView>
             </View>
             <CustomAlert
@@ -136,6 +135,7 @@ export default function JustificationsScreen() {
                 onClose={hideAlert}
                 type={alertConfig.type}
             />
+            <ReturnButton onPress={handleBack} />
         </ScreenSafeArea>
     );
 }

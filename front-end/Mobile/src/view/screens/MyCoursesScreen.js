@@ -113,10 +113,10 @@ export default function MyCoursesScreen({ navigation }) {
                 t={t}
               />
             ))}
-              <ReturnButton onPress={() => navigation?.navigate("DashboardScreen")} />
           </ScrollView>
         )}
       </View>
+        <ReturnButton onPress={() => navigation?.navigate("DashboardScreen")} />
     </ScreenSafeArea>
   );
 }

@@ -157,8 +157,8 @@ export default function UserDetailScreen({navigation, userRole}) {
                         </View>
                     </>
                 )}
-                <ReturnButton onPress={vm.handleBack} />
             </ScrollView>
+            <ReturnButton onPress={vm.handleBack} />
         </ScreenSafeArea>
     );
 }

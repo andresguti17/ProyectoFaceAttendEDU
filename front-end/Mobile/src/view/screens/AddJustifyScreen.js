@@ -161,7 +161,6 @@ export default function AddJustification() {
                 />
               </View>
             </View>
-              <ReturnButton onPress={handleBack} />
           </ScrollView>
         </KeyboardAvoidingView>
         <CustomAlert
@@ -172,6 +171,7 @@ export default function AddJustification() {
             onClose={hideAlert}
             type={alertConfig.type}
         />
+          <ReturnButton onPress={handleBack} />
       </ScreenSafeArea>
   );
 }

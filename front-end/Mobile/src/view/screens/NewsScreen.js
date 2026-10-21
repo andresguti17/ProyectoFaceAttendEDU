@@ -1,5 +1,6 @@
 import React, {useMemo} from 'react';
 import {ActivityIndicator, Text, TouchableOpacity, View} from 'react-native';
+import ReturnButton from '../components/auth/ReturnButton';
 import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import BottomBar from '../components/common/NavigationBar';
@@ -77,6 +78,7 @@ export default function NewsScreen() {
             </ScrollViewWrapper>
 
             <BottomBar/>
+            <ReturnButton />
         </ScreenSafeArea>
     );
 }
