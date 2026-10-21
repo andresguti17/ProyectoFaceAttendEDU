@@ -15,7 +15,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {createSchoolConfigStyles} from './Styles/SchoolConfigurationScreen/Style';
 import BackButton from '../components/common/BackButton';
 import {useSchoolConfigurationViewModel} from "../../viewmodels/useSchoolConfigurationViewModel";
@@ -185,7 +185,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
     // ─────────────────────────────────────────────
 
     return (
-        <SafeAreaView style={[styles.safeAreaSchoolConfig, { backgroundColor: colors.background }]}>
+        <ScreenSafeArea style={[styles.safeAreaSchoolConfig, { backgroundColor: colors.background }]}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={[styles.containerSchoolConfig, { backgroundColor: colors.background }]}
@@ -839,7 +839,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                     </View>
                 </TouchableWithoutFeedback>
             </Modal>
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 };
 

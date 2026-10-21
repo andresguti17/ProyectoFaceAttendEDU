@@ -12,7 +12,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import Separador from '../components/common/Separador';
@@ -90,7 +90,7 @@ export default function ValidJustificationsScreen() {
     );
 
     return (
-        <SafeAreaView
+        <ScreenSafeArea
             style={[styles.safeAreaWhite, { backgroundColor: colors.background }]}
             key={`${updateKey}`}
         >
@@ -306,6 +306,6 @@ export default function ValidJustificationsScreen() {
                     )}
                 </View>
             </Modal>
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

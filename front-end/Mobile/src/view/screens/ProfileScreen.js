@@ -1,6 +1,6 @@
 ﻿import React, {useMemo} from 'react';
 import {Platform, ScrollView, Text, TouchableOpacity, View,} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import BackButton from '../components/common/BackButton';
@@ -284,7 +284,7 @@ export default function ProfileScreen({ onLogout }) {
             : colors.success;
 
     return (
-        <SafeAreaView
+        <ScreenSafeArea
             style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
             key={`${updateKey}`}
         >
@@ -525,6 +525,6 @@ export default function ProfileScreen({ onLogout }) {
 
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

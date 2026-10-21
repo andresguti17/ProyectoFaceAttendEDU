@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import CustomLogo from '../components/common/logo';
 import Separador from '../components/common/Separador';
@@ -68,7 +68,7 @@ export default function MenuJustifyScreen() {
   );
 
   return (
-      <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]} key={`${updateKey}`}>
+      <ScreenSafeArea style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]} key={`${updateKey}`}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardview}>
 
           <ScrollView
@@ -102,6 +102,6 @@ export default function MenuJustifyScreen() {
           </ScrollView>
 
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </ScreenSafeArea>
   );
 }

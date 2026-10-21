@@ -9,7 +9,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 
 import {useTranslation} from 'react-i18next';
 import {useNavigation} from '@react-navigation/native';
@@ -42,7 +42,7 @@ export default function LanguageSettingsScreen() {
     } = useLanguageSettingsViewModel();
 
     return (
-        <SafeAreaView
+        <ScreenSafeArea
             style={[
                 styles.languageSettingsSafeArea,
                 {backgroundColor: colors.background},
@@ -647,6 +647,6 @@ export default function LanguageSettingsScreen() {
                     </View>
                 </Modal>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

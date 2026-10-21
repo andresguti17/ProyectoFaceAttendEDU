@@ -13,7 +13,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {createManageUsersStyles} from './Styles/ManageUsersScreen/Style';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
@@ -277,7 +277,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-            <SafeAreaView style={[styles.manageUsersContainer, {backgroundColor: colors.background}]}>
+            <ScreenSafeArea style={[styles.manageUsersContainer, {backgroundColor: colors.background}]}>
                 <View style={[styles.manageUsersHeader, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
                     <BackButton onPress={handleBack} />
                     <Text style={[styles.manageUsersTitle, {color: colors.text, flex: 1}]}>
@@ -375,7 +375,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                     onClose={hideAlert}
                     type={alertConfig.type}
                 />
-            </SafeAreaView>
+            </ScreenSafeArea>
         </TouchableWithoutFeedback>
     );
 }

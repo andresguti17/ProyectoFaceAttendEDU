@@ -1,6 +1,6 @@
 import React, {useMemo} from 'react';
 import {ActivityIndicator, Text, TouchableOpacity, View} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import BottomBar from '../components/common/NavigationBar';
 import ScrollViewWrapper from '../components/common/ScrollView';
@@ -18,7 +18,7 @@ export default function NewsScreen() {
     const formatDate = (iso) => (iso ? new Date(iso).toLocaleString(i18n.language) : '—');
 
     return (
-        <SafeAreaView style={[styles.safeArea, {backgroundColor: colors.background}]} key={`${updateKey}`}>
+        <ScreenSafeArea style={[styles.safeArea, {backgroundColor: colors.background}]} key={`${updateKey}`}>
             <ScrollViewWrapper>
                 <View style={[styles.container, {marginHorizontal: 10}]}>
                     <CustomTabs userRole={userRole}/>
@@ -77,6 +77,6 @@ export default function NewsScreen() {
             </ScrollViewWrapper>
 
             <BottomBar/>
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

@@ -10,7 +10,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import BackButton from '../components/common/BackButton';
@@ -44,7 +44,7 @@ export default function FacialFail() {
     } = useFacialFailViewModel();
 
     return (
-        <SafeAreaView
+        <ScreenSafeArea
             style={[styles.safeAreaFacialFail, { backgroundColor: colors.background }]}
             key={`${updateKey}`}
         >
@@ -168,6 +168,6 @@ export default function FacialFail() {
                 type={alertConfig.type}
                 onClose={hideAlert}
             />
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

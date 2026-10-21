@@ -10,7 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from "react-i18next";
 import {useNavigation} from "@react-navigation/native";
 import PrimaryButton from "../components/auth/PrimaryButton";
@@ -299,7 +299,7 @@ export default function AddValidJustificationScreen() {
 
     return (
         <>
-            <SafeAreaView
+            <ScreenSafeArea
                 style={[styles.safeAreaWhite, { backgroundColor: colors.background }]}
             >
                 <KeyboardAvoidingView
@@ -524,7 +524,7 @@ export default function AddValidJustificationScreen() {
                         </View>
                     </ScrollView>
                 </KeyboardAvoidingView>
-            </SafeAreaView>
+            </ScreenSafeArea>
 
             <CustomAlert
                 visible={alertConfig.visible}

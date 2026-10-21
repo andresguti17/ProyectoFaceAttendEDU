@@ -15,7 +15,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import ScrollViewWrapper from '../components/common/ScrollView';
@@ -181,7 +181,7 @@ export default function AppearanceSettingsScreen() {
     const alertMessage = alertData.message ? t(alertData.message) : null;
 
     return (
-        <SafeAreaView style={[styles.languageSettingsSafeArea, {backgroundColor: colors.background}]}>
+        <ScreenSafeArea style={[styles.languageSettingsSafeArea, {backgroundColor: colors.background}]}>
             <KeyboardAvoidingView
                 style={{flex: 1}}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -365,6 +365,6 @@ export default function AppearanceSettingsScreen() {
                     </View>
                 </ScrollViewWrapper>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

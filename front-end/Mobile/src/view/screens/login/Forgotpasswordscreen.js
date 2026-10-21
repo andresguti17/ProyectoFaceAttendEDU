@@ -13,7 +13,7 @@ import {
     UIManager,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../../components/common/ThemeContext';
 import BackButton from '../../components/common/BackButton';
@@ -419,7 +419,7 @@ export default function ForgotPasswordScreen({ navigation }) {
     }, [recovery.error, labels]);
 
     return (
-        <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
+        <ScreenSafeArea style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior="padding"
@@ -500,6 +500,6 @@ export default function ForgotPasswordScreen({ navigation }) {
                     </TouchableWithoutFeedback>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

@@ -13,7 +13,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {createManageEnvironmentStyles} from './Styles/ManageEnviromentScreen/Style';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
@@ -255,7 +255,7 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-            <SafeAreaView style={[styles.manageEnvironmentContainer, {backgroundColor: colors.background}]}>
+            <ScreenSafeArea style={[styles.manageEnvironmentContainer, {backgroundColor: colors.background}]}>
                 <View style={[styles.manageEnvironmentHeader, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
                     <BackButton onPress={handleBack} />
                     <Text style={[styles.manageEnvironmentTitle, {color: colors.text, flex: 1}]}>
@@ -336,7 +336,7 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                     onClose={hideAlert}
                     type={alertConfig.type}
                 />
-            </SafeAreaView>
+            </ScreenSafeArea>
         </TouchableWithoutFeedback>
     );
 }

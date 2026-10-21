@@ -10,7 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import BackButton from '../components/common/BackButton';
@@ -54,7 +54,7 @@ export default function UpdatePhoto() {
     });
 
     return (
-        <SafeAreaView style={[styles.safeAreaUpdatePhoto, {flex: 1, backgroundColor: colors.background}]} key={`${updateKey}`}>
+        <ScreenSafeArea style={[styles.safeAreaUpdatePhoto, {flex: 1, backgroundColor: colors.background}]} key={`${updateKey}`}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                                   style={styles.keyboardAvoidingViewUpdatePhoto}>
                 <ScrollView showsVerticalScrollIndicator={false}
@@ -155,6 +155,6 @@ export default function UpdatePhoto() {
                 onClose={hideAlert}
                 type={alertConfig.type}
             />
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

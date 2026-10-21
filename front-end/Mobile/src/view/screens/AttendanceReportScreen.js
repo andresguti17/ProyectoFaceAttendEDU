@@ -3,13 +3,12 @@ import {
     ActivityIndicator,
     Modal,
     ScrollView,
-    StatusBar,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTheme} from '../components/common/ThemeContext';
 import {useTranslation} from 'react-i18next';
 import CustomAlert from '../components/common/CustomAlert';
@@ -133,7 +132,7 @@ function PersonCard({person, onGenerateReport, ABSENCE_LIMIT, LATENESS_LIMIT, co
 // PANTALLA PRINCIPAL
 // ===========================================================================
 export default function AttendanceReportScreen({ navigation }) {
-    const { colors, isDark } = useTheme();
+    const { colors } = useTheme();
     const styles = useMemo(() => createAttendanceReportStyles(colors), [colors]);
     const {t} = useTranslation();
 
@@ -177,9 +176,7 @@ export default function AttendanceReportScreen({ navigation }) {
     } = useAttendanceReportViewModel();
 
     return (
-        <SafeAreaView style={[styles.safeAreaReport, { backgroundColor: colors.background }]}>
-            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
-
+        <ScreenSafeArea style={[styles.safeAreaReport, { backgroundColor: colors.background }]}>
             {/* ── HEADER ── */}
             <View style={[styles.headerReport, { backgroundColor: colors.background, borderBottomWidth: 1, borderBottomColor: colors.border }]}>
                 <BackButton onPress={() => navigation?.goBack()} />
@@ -482,6 +479,6 @@ export default function AttendanceReportScreen({ navigation }) {
                 onClose={hideAlert}
                 type={alertConfig.type}
             />
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

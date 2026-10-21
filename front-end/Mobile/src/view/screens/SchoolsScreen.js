@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {createSchoolsStyles} from "./Styles/SchoolsScreen/Style";
 import { useSchoolsViewModel } from "../../viewmodels/useSchoolsViewModel";
 
@@ -53,7 +53,7 @@ export default function SchoolsScreen({ navigation }) {
   const styles = useMemo(() => createSchoolsStyles(colors), [colors]);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.backgroundWhite }]}>
+    <ScreenSafeArea style={[styles.safeArea, { backgroundColor: colors.backgroundWhite }]}>
       <View style={styles.container}>
         <View style={styles.headerRow}>
           <BackButton onPress={() => navigation?.navigate("DashboardScreen")} />
@@ -94,6 +94,6 @@ export default function SchoolsScreen({ navigation }) {
           </ScrollView>
         )}
       </View>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }

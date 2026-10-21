@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {createMyCoursesStyles} from "./Styles/MyCoursesScreen/Style";
 import { useMyCoursesViewModel } from "../../viewmodels/useMyCoursesViewModel";
 
@@ -71,7 +71,7 @@ export default function MyCoursesScreen({ navigation }) {
     role === "teacher" ? t("teacher.myCoursesDesc") : t("student.myCoursesDesc");
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.backgroundWhite }]}>
+    <ScreenSafeArea style={[styles.safeArea, { backgroundColor: colors.backgroundWhite }]}>
       <View style={styles.container}>
         <View style={styles.headerRow}>
           <BackButton onPress={() => navigation?.navigate("DashboardScreen")} />
@@ -117,6 +117,6 @@ export default function MyCoursesScreen({ navigation }) {
           </ScrollView>
         )}
       </View>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }

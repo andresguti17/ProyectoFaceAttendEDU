@@ -1,6 +1,6 @@
 import React, {useMemo} from 'react';
 import {ActivityIndicator, Text, TouchableOpacity, View,} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {CameraView} from 'expo-camera';
 import {useIsFocused} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
@@ -52,7 +52,7 @@ export default function RegisterFace() {
         : null;
 
     return (
-        <SafeAreaView style={styles.safeAreaRegisterFace}>
+        <ScreenSafeArea style={styles.safeAreaRegisterFace}>
             <View style={styles.registerFaceContainer}>
                 <View style={styles.registerFaceHeader}>
                     <BackButton onPress={handleBack} />
@@ -128,6 +128,6 @@ export default function RegisterFace() {
                 type={alertConfig.type}
                 onClose={hideAlert}
             />
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

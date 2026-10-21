@@ -15,7 +15,7 @@ import {
     Vibration,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../../components/common/ThemeContext';
 import BackButton from '../../components/common/BackButton';
@@ -219,7 +219,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
     const errorMessage = getErrorMessage();
 
     return (
-        <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
+        <ScreenSafeArea style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior="padding"
@@ -372,6 +372,6 @@ export default function VerifyCodeScreen({ route, navigation }) {
                 confirmPasswordRef={confirmPasswordRef}
                 onClose={closePasswordModal}
             />
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

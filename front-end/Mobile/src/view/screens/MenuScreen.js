@@ -9,7 +9,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from "react-i18next";
 import {useTheme} from '../components/common/ThemeContext';
 import DangerButton from "../components/auth/DangerButton";
@@ -94,7 +94,7 @@ export default function MenuScreen({ onLogout }) {
 
     return (
         <>
-            <SafeAreaView
+            <ScreenSafeArea
                 style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
                 key={`${updateKey}`}
             >
@@ -178,7 +178,7 @@ export default function MenuScreen({ onLogout }) {
                         </View>
                     </ScrollView>
                 </KeyboardAvoidingView>
-            </SafeAreaView>
+            </ScreenSafeArea>
 
             <CustomAlert
                 visible={alertConfig.visible}

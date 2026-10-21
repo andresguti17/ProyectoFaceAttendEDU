@@ -1,6 +1,6 @@
 import React from 'react';
 import {ActivityIndicator, FlatList, Text, TouchableOpacity, View} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import BackButton from '../components/common/BackButton';
@@ -39,7 +39,7 @@ export default function BiometricCasesScreen() {
     );
 
     return (
-        <SafeAreaView style={{flex: 1, backgroundColor: colors.background}}>
+        <ScreenSafeArea style={{flex: 1, backgroundColor: colors.background}}>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, marginTop: 30}}>
                 <BackButton onPress={handleBack}/>
                 <Text style={{color: colors.text, fontSize: 20, fontWeight: 'bold', flex: 1}}>{t('biometricCases.title')}</Text>
@@ -67,6 +67,6 @@ export default function BiometricCasesScreen() {
                 onClose={hideAlert}
                 type={alertConfig.type}
             />
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

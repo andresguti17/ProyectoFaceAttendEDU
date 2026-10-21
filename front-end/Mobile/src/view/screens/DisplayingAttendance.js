@@ -12,7 +12,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import {createDisplayingAttendanceStyles} from "./Styles/DisplayingAttendance/Style";
 import BottomBar from "../components/common/NavigationBar";
@@ -447,7 +447,7 @@ export default function DisplayingAttendance() {
     const styles = React.useMemo(() => createDisplayingAttendanceStyles(colors), [colors]);
 
     return (
-        <SafeAreaView
+        <ScreenSafeArea
             style={[styles.safeArea, {backgroundColor: colors.background}]}
             key={`${updateKey}`}
         >
@@ -622,6 +622,6 @@ export default function DisplayingAttendance() {
                 <StudentDetailModal item={detailItem} visible={showDetailModal} onClose={closeDetail} colors={colors}
                                     t={t} isDark={isDark}/>
             )}
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

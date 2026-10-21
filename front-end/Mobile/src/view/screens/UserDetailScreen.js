@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo} from 'react';
 import {ActivityIndicator, ScrollView, Text, TouchableOpacity, View} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import BackButton from '../components/common/BackButton';
@@ -59,7 +59,7 @@ export default function UserDetailScreen({navigation, userRole}) {
     );
 
     return (
-        <SafeAreaView style={[styles.userDetailContainer, {backgroundColor: colors.background}]}>
+        <ScreenSafeArea style={[styles.userDetailContainer, {backgroundColor: colors.background}]}>
             <View style={styles.userDetailHeader}>
                 <BackButton onPress={vm.handleBack}/>
                 <Text style={[styles.userDetailTitle, {color: colors.text}]}>{t('userDetail.title')}</Text>
@@ -159,6 +159,6 @@ export default function UserDetailScreen({navigation, userRole}) {
                     </>
                 )}
             </ScrollView>
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

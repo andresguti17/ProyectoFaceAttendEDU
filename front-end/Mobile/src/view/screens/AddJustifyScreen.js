@@ -9,7 +9,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import BackButton from '../components/common/BackButton';
@@ -43,7 +43,7 @@ export default function AddJustification() {
   } = useAddJustificationViewModel();
 
   return (
-      <SafeAreaView
+      <ScreenSafeArea
           style={[styles.safeAreaWhite, { backgroundColor: colors.background }]}
           key={`${updateKey}`}
       >
@@ -172,6 +172,6 @@ export default function AddJustification() {
             onClose={hideAlert}
             type={alertConfig.type}
         />
-      </SafeAreaView>
+      </ScreenSafeArea>
   );
 }

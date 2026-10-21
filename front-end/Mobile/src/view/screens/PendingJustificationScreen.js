@@ -14,7 +14,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {createPendingStyles} from './Styles/PendingJustificationScreen/Style';
 import {readableOn} from '../../theme/contrast';
@@ -602,18 +602,18 @@ export default function PendingJustificationScreen({ navigation }) {
     // Si ya hay error (p. ej. sin rol), mostrarlo en vez de girar infinito.
     if (loadingRole && !error) {
         return (
-            <SafeAreaView style={[styles.safeAreaPending, {backgroundColor: colors.background}]}>
+            <ScreenSafeArea style={[styles.safeAreaPending, {backgroundColor: colors.background}]}>
                 <View style={[
                     styles.containerPending,
                 ]}>
                     <ActivityIndicator color={colors.primary} size="large"/>
                 </View>
-            </SafeAreaView>
+            </ScreenSafeArea>
         );
     }
 
     return (
-        <SafeAreaView style={[styles.safeAreaPending, { backgroundColor: colors.background }]}>
+        <ScreenSafeArea style={[styles.safeAreaPending, { backgroundColor: colors.background }]}>
             <View style={styles.containerPending}>
                 {/* Header */}
                 <View style={[styles.headerPending, { backgroundColor: colors.background }]}>
@@ -702,6 +702,6 @@ export default function PendingJustificationScreen({ navigation }) {
                 getRoleColors={getRoleColors}
                 colors={colors}
             />
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

@@ -10,7 +10,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import ScreenSafeArea from '../../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useLanguageRefresh} from '../../../utils/useLanguageRefresh';
 import {useTheme} from '../../components/common/ThemeContext';
@@ -141,7 +141,7 @@ export default function LoginScreen({ onLogin, navigation }) {
 
     return (
         <>
-            <SafeAreaView
+            <ScreenSafeArea
                 style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
                 key={refreshKey}
             >
@@ -290,7 +290,7 @@ export default function LoginScreen({ onLogin, navigation }) {
                         </TouchableWithoutFeedback>
                     </ScrollView>
                 </KeyboardAvoidingView>
-            </SafeAreaView>
+            </ScreenSafeArea>
 
             <CustomAlert
                 visible={alertConfig.visible}
