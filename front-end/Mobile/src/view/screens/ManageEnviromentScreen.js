@@ -284,7 +284,7 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                     />
                 </View>
 
-                <FlatList
+                <FlatList persistentScrollbar
                     data={searchQuery ? searchResults : ambientes}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
@@ -315,11 +315,11 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                                 Así los toques dentro del formulario no lo atraviesan. */}
                             <Pressable style={styles.manageEnvironmentBackdrop} onPress={handleBackdropPress}/>
 
-                            <ScrollView
+                            <ScrollView persistentScrollbar
                                 style={[styles.manageEnvironmentSheet, {backgroundColor: colors.card}]}
                                 contentContainerStyle={styles.manageEnvironmentSheetContent}
                                 keyboardShouldPersistTaps="handled"
-                                showsVerticalScrollIndicator={true}
+                                showsVerticalScrollIndicator
                                 bounces={false}
                             >
                                 {renderFormFields()}

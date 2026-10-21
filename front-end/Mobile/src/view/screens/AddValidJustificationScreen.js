@@ -113,7 +113,7 @@ function DropdownSelector({ label, placeholder, value, options, onSelect, colors
                     </Text>
 
                     {/* Lista de opciones */}
-                    <FlatList
+                    <FlatList persistentScrollbar
                         data={options}
                         keyExtractor={(item) => item.id}
                         ItemSeparatorComponent={() => (
@@ -306,10 +306,10 @@ export default function AddValidJustificationScreen() {
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     style={styles.keyboardview}
                 >
-                    <ScrollView
+                    <ScrollView persistentScrollbar
                         style={styles.ScrollView}
                         contentContainerStyle={styles.ScrollViewContent}
-                        showsVerticalScrollIndicator={false}
+                        showsVerticalScrollIndicator
                     >
                         <View style={styles.containerAddValidJustification}>
                             {/* ── Encabezado ───────────────────────────────────────── */}

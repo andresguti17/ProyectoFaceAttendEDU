@@ -47,7 +47,7 @@ export default function BiometricCasesScreen() {
             {loading ? (
                 <ActivityIndicator size="large" color={colors.primary}/>
             ) : (
-                <FlatList
+                <FlatList persistentScrollbar
                     data={cases}
                     keyExtractor={(item) => String(item.caseId)}
                     renderItem={renderItem}

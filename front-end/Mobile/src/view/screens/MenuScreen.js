@@ -102,7 +102,7 @@ export default function MenuScreen({ onLogout }) {
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     style={styles.menuScreen}
                 >
-                    <ScrollView
+                    <ScrollView persistentScrollbar
                         style={styles.ScrollView}
                         contentContainerStyle={styles.menuScrollContent}
                     >

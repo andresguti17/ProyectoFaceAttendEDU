@@ -57,7 +57,7 @@ export default function UpdatePhoto() {
         <ScreenSafeArea style={[styles.safeAreaUpdatePhoto, {flex: 1, backgroundColor: colors.background}]} key={`${updateKey}`}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                                   style={styles.keyboardAvoidingViewUpdatePhoto}>
-                <ScrollView showsVerticalScrollIndicator={false}
+                <ScrollView persistentScrollbar showsVerticalScrollIndicator
                             contentContainerStyle={styles.scrollViewContentUpdatePhoto}
                             keyboardShouldPersistTaps="handled">
                     <View style={[styles.mainContainerUpdatePhoto, {marginTop: Platform.OS === 'ios' ? 0 : 50}]}>

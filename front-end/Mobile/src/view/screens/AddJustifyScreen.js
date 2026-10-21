@@ -51,10 +51,10 @@ export default function AddJustification() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.keyboardview}
         >
-          <ScrollView
+          <ScrollView persistentScrollbar
               style={styles.ScrollView}
               contentContainerStyle={styles.ScrollViewContent}
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator
           >
             <View style={styles.containerAddJustification}>
               <BackButton onPress={handleBack} />

@@ -326,7 +326,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                     />
                 </View>
 
-                <FlatList
+                <FlatList persistentScrollbar
                     data={tab === 'students' ? students : teachers}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
@@ -354,11 +354,11 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                         <View style={styles.manageUsersOverlay}>
                             <Pressable style={styles.manageUsersBackdrop} onPress={handleBackdropPress}/>
 
-                            <ScrollView
+                            <ScrollView persistentScrollbar
                                 style={[styles.manageUsersSheet, {backgroundColor: colors.card}]}
                                 contentContainerStyle={styles.manageUsersSheetContent}
                                 keyboardShouldPersistTaps="handled"
-                                showsVerticalScrollIndicator={true}
+                                showsVerticalScrollIndicator
                                 bounces={false}
                             >
                                 {renderEditContent()}

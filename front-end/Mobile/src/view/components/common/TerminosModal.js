@@ -20,9 +20,9 @@ export default function TerminosModal({ isVisible, onClose }) {
                 <View style={[styleAuth.modalContainerTerminos, { backgroundColor: colors.modalBackground }]}>
                     <Text style={[styleAuth.titleTerminos, { color: colors.modalText }]}>{t('termsModal.title')}</Text>
 
-                    <ScrollView
+                    <ScrollView persistentScrollbar
                         style={styleAuth.contentTerminos}
-                        showsVerticalScrollIndicator={false}
+                        showsVerticalScrollIndicator
                     >
                         <Text style={[styleAuth.paragraphTerminos, { color: colors.modalTextSecondary }]}>
                             <Text style={[styleAuth.subtitleTerminos, { color: colors.modalText }]}>{t('termsModal.acceptanceTitle')} {"\n\n"}</Text>

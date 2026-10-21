@@ -76,8 +76,8 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
                     backgroundColor: colors.separator,
                 }]}/>
 
-                <ScrollView
-                    showsVerticalScrollIndicator={false}
+                <ScrollView persistentScrollbar
+                    showsVerticalScrollIndicator
                     contentContainerStyle={styles.sheetScrollContent}
                 >
                     {/* Cabecera */}
@@ -181,8 +181,8 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                     backgroundColor: colors.separator,
                 }]}/>
 
-                <ScrollView
-                    showsVerticalScrollIndicator={false}
+                <ScrollView persistentScrollbar
+                    showsVerticalScrollIndicator
                     contentContainerStyle={styles.sheetScrollContent}
                 >
                     {/* Cabecera */}
@@ -590,7 +590,7 @@ export default function DisplayingAttendance() {
                         </TouchableOpacity>
                     </View>
                 ) : (
-                <FlatList
+                <FlatList persistentScrollbar
                     data={activeData}
                     keyExtractor={item => item.id.toString()}
                     style={styles.listStyle}

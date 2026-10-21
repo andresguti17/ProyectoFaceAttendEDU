@@ -183,7 +183,7 @@ export default function AttendanceReportScreen({ navigation }) {
                 <Text style={[styles.headerTitleReport, {color: colors.text}]}>{t('attendanceReport.title')}</Text>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContentReport} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <ScrollView persistentScrollbar contentContainerStyle={styles.scrollContentReport} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator>
                 <View style={styles.containerReport}>
 
                     {/* ── SELECTOR ROL ── */}

@@ -48,7 +48,7 @@ export default function FacialFail() {
             style={[styles.safeAreaFacialFail, { backgroundColor: colors.background }]}
             key={`${updateKey}`}
         >
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView persistentScrollbar contentContainerStyle={styles.scrollContent}>
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={styles.keyboardview}

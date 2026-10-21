@@ -259,9 +259,9 @@ const DetailModal = ({
                         </TouchableOpacity>
                     </View>
 
-                    <ScrollView
+                    <ScrollView persistentScrollbar
                         contentContainerStyle={styles.modalScrollPending}
-                        showsVerticalScrollIndicator={false}
+                        showsVerticalScrollIndicator
                         keyboardShouldPersistTaps="handled"
                     >
                         {/* ── Usuario ── */}
@@ -671,14 +671,14 @@ export default function PendingJustificationScreen({ navigation }) {
                         </View>
                     </View>
                 ) : (
-                <FlatList
+                <FlatList persistentScrollbar
                     style={{ flex: 1 }}
                     data={filtered}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
                     contentContainerStyle={styles.listContentPending}
                     ListEmptyComponent={ListEmpty}
-                    showsVerticalScrollIndicator={false}
+                    showsVerticalScrollIndicator
                 />
                 )}
 

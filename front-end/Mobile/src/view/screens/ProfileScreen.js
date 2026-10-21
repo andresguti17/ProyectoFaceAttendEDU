@@ -288,10 +288,10 @@ export default function ProfileScreen({ onLogout }) {
             style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
             key={`${updateKey}`}
         >
-            <ScrollView
+            <ScrollView persistentScrollbar
                 contentContainerStyle={styles.ScrollViewContent}
                 keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
+                showsVerticalScrollIndicator
             >
                 <View style={[styles.container, { paddingHorizontal: 16 }]}>
                     <BackButton onPress={handleBack} />

@@ -98,10 +98,10 @@ export default function ValidJustificationsScreen() {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardview}
             >
-                <ScrollView
+                <ScrollView persistentScrollbar
                     style={styles.ScrollView}
                     contentContainerStyle={styles.ScrollViewContent}
-                    showsVerticalScrollIndicator={false}
+                    showsVerticalScrollIndicator
                     keyboardShouldPersistTaps="handled"
                 >
                     <View style={styles.containerValidJustifications}>
@@ -211,7 +211,7 @@ export default function ValidJustificationsScreen() {
                                     {t('consultJustify.justifiedAbsences')}
                                 </Text>
                                 {inasistenciasData.length > 0 ? (
-                                    <FlatList
+                                    <FlatList persistentScrollbar
                                         data={inasistenciasData}
                                         keyExtractor={(item) => item.id.toString()}
                                         renderItem={renderInasistenciaItem}
@@ -243,7 +243,7 @@ export default function ValidJustificationsScreen() {
                                     {t('consultJustify.justifiedDelays')}
                                 </Text>
                                 {retardosData.length > 0 ? (
-                                    <FlatList
+                                    <FlatList persistentScrollbar
                                         data={retardosData}
                                         keyExtractor={(item) => item.id.toString()}
                                         renderItem={renderRetardoItem}

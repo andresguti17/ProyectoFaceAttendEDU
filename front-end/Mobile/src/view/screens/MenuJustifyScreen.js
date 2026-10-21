@@ -71,10 +71,10 @@ export default function MenuJustifyScreen() {
       <ScreenSafeArea style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]} key={`${updateKey}`}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardview}>
 
-          <ScrollView
+          <ScrollView persistentScrollbar
               style={styles.ScrollView}
               contentContainerStyle={[styles.ScrollViewContent, { paddingBottom: 24 }]}
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator
           >
             <BackButton onPress={handleBack} />
             <View style={styles.containerMenuJustify}>

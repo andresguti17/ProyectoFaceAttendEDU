@@ -102,8 +102,8 @@ export default function MyCoursesScreen({ navigation }) {
             <Text style={[styles.centerText, { color: colors.text }]}>{t("courses.empty")}</Text>
           </View>
         ) : (
-          <ScrollView
-              showsVerticalScrollIndicator={false}
+          <ScrollView persistentScrollbar
+              showsVerticalScrollIndicator
               contentContainerStyle={{ paddingBottom: 24 }}
           >
             {fichas.map((ficha) => (

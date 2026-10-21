@@ -84,8 +84,8 @@ export default function SchoolsScreen({ navigation }) {
             <Text style={[styles.centerText, { color: colors.text }]}>{t("schools.empty")}</Text>
           </View>
         ) : (
-          <ScrollView
-              showsVerticalScrollIndicator={false}
+          <ScrollView persistentScrollbar
+              showsVerticalScrollIndicator
               contentContainerStyle={{ paddingBottom: 24 }}
           >
             {schools.map((school) => (

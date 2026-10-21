@@ -425,11 +425,11 @@ export default function ForgotPasswordScreen({ navigation }) {
                 behavior="padding"
                 keyboardVerticalOffset={0}
             >
-                <ScrollView
+                <ScrollView persistentScrollbar
                     contentContainerStyle={{ flexGrow: 1 }}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
-                    showsVerticalScrollIndicator={false}
+                    showsVerticalScrollIndicator
                     bounces={false}
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>

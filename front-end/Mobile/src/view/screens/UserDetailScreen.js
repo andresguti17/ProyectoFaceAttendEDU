@@ -65,7 +65,7 @@ export default function UserDetailScreen({navigation, userRole}) {
                 <Text style={[styles.userDetailTitle, {color: colors.text}]}>{t('userDetail.title')}</Text>
             </View>
 
-            <ScrollView contentContainerStyle={styles.userDetailContent}>
+            <ScrollView persistentScrollbar contentContainerStyle={styles.userDetailContent}>
                 {/* Perfil */}
                 <View style={[card, styles.userDetailProfile]}>
                     <View style={[styles.userDetailAvatar, {backgroundColor: colors.primary}]}>

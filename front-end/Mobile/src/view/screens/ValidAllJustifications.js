@@ -97,7 +97,7 @@ export default function JustificationsScreen() {
 
                 <PrimaryButton title={t('admin.addNewJustification')} onPress={createType} />
 
-                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.validAllJustificationsScrollContent}>
+                <ScrollView persistentScrollbar showsVerticalScrollIndicator contentContainerStyle={styles.validAllJustificationsScrollContent}>
                     {justifications.length > 0 ? (
                         categories.map((category) => {
                             const categoryItems = getJustificationsByCategory(category);

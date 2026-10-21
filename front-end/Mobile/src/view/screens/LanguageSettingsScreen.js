@@ -269,8 +269,8 @@ export default function LanguageSettingsScreen() {
                                 {t('settings.selectAlertTypes')}
                             </Text>
 
-                            <ScrollView
-                                showsVerticalScrollIndicator={false}
+                            <ScrollView persistentScrollbar
+                                showsVerticalScrollIndicator
                                 nestedScrollEnabled={true}
                                 keyboardShouldPersistTaps="handled"
                                 contentContainerStyle={{

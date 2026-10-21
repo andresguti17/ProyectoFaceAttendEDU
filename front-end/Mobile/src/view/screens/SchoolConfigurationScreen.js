@@ -205,10 +205,10 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
 
-                <ScrollView
+                <ScrollView persistentScrollbar
                     style={{ flex: 1 }}
                     contentContainerStyle={styles.scrollContentSchoolConfig}
-                    showsVerticalScrollIndicator={false}
+                    showsVerticalScrollIndicator
                     keyboardShouldPersistTaps="handled"
                 >
                     <View style={styles.mainContentSchoolConfig}>
@@ -623,7 +623,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                 </Text>
                             </View>
                         ) : (
-                            <ScrollView
+                            <ScrollView persistentScrollbar
                                 keyboardShouldPersistTaps="handled"
                                 showsVerticalScrollIndicator
                             >
@@ -744,7 +744,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                         })}
                                     </Text>
                                 )}
-                                <ScrollView
+                                <ScrollView persistentScrollbar
                                     keyboardShouldPersistTaps="handled"
                                     showsVerticalScrollIndicator
                                 >
