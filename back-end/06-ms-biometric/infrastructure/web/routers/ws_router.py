@@ -81,6 +81,7 @@ from domain.ports.out.biometric_repository import BiometricRepositoryPort
 from domain.ports.out.match_log_repository import MatchLogRepositoryPort
 from infrastructure.config.dependencies import (
     get_facial_repository_ws,
+    get_face_match_threshold,
     get_fingerprint_match_threshold,
     get_fingerprint_repository_ws,
     get_liveness_secret,
@@ -203,6 +204,7 @@ async def _dispatch(
     fingerprint_repo: BiometricRepositoryPort,
     match_logs: MatchLogRepositoryPort,
     threshold: float,
+    face_threshold: float,
     fp_threshold: int,
     secret: str,
     settings: Settings,
@@ -238,13 +240,13 @@ async def _dispatch(
         result = (
             await verify_fingerprint(data, fake_request, fingerprint_repo, match_logs, threshold)
             if is_fingerprint
-            else await verify_facial(data, fake_request, facial_repo, match_logs, threshold)
+            else await verify_facial(data, fake_request, facial_repo, match_logs, face_threshold)
         )
         return result, None
 
     if message_type == FACIAL_IDENTIFY_IMAGE:
         result = await identify_facial_image(
-            data, fake_request, facial_repo, match_logs, threshold, secret, settings
+            data, fake_request, facial_repo, match_logs, face_threshold, secret, settings
         )
         event = {
             "event_type": direction,
@@ -276,7 +278,7 @@ async def _dispatch(
     result = (
         await identify_fingerprint(data, fake_request, fingerprint_repo, match_logs, threshold)
         if is_fingerprint
-        else await identify_facial(data, fake_request, facial_repo, match_logs, threshold)
+        else await identify_facial(data, fake_request, facial_repo, match_logs, face_threshold)
     )
     event = {
         "event_type": direction,
@@ -298,6 +300,7 @@ async def _handle_frame(
     fingerprint_repo: BiometricRepositoryPort,
     match_logs: MatchLogRepositoryPort,
     threshold: float,
+    face_threshold: float,
     fp_threshold: int,
     idempotency: IdempotencyCache,
     manager: ConnectionManager,
@@ -337,6 +340,7 @@ async def _handle_frame(
             fingerprint_repo=fingerprint_repo,
             match_logs=match_logs,
             threshold=threshold,
+            face_threshold=face_threshold,
             fp_threshold=fp_threshold,
             secret=secret,
             settings=settings,
@@ -383,6 +387,7 @@ async def biometric_ws(
     fingerprint_repo: BiometricRepositoryPort = Depends(get_fingerprint_repository_ws),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository_ws),
     threshold: float = Depends(get_similarity_threshold),
+    face_threshold: float = Depends(get_face_match_threshold),
     fp_threshold: int = Depends(get_fingerprint_match_threshold),
     secret: str = Depends(get_liveness_secret),
     settings: Settings = Depends(get_settings),
@@ -418,6 +423,7 @@ async def biometric_ws(
                 fingerprint_repo=fingerprint_repo,
                 match_logs=match_logs,
                 threshold=threshold,
+                face_threshold=face_threshold,
                 fp_threshold=fp_threshold,
                 idempotency=idempotency,
                 manager=manager,

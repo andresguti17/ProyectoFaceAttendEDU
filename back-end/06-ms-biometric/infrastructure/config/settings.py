@@ -109,6 +109,12 @@ class Settings(BaseSettings):
     # ── Retention & matching ───────────────────────────────────────────
     match_log_retention_days: int = 90
     similarity_threshold: float = 0.85
+    # Faces (verify, identify, duplicate-on-enroll). dlib encodings are not
+    # centered, so cosine scores of different people routinely exceed 0.85;
+    # faces use the metric the model was trained for (Euclidean). dlib's own
+    # same-person tolerance is 0.6; 0.5 is stricter to avoid false matches.
+    # The face score is `1 - distance`, so the match threshold is `1 - this`.
+    face_match_max_distance: float = 0.5
     # Upper bound for the 1:N identify scan. Reaching it is logged as a warning:
     # it means candidates were not considered, so it must never pass silently.
     identify_scan_limit: int = 10_000

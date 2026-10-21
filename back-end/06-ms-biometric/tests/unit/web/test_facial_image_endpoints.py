@@ -172,6 +172,30 @@ class TestEnrollImage:
         )
         assert response.status_code == 409
 
+    def test_enroll_image_accepts_a_single_gesture_challenge(self, client, monkeypatch):
+        monkeypatch.setattr(facial_router, "face_encoding", lambda image: [1.0, 0.0, 0.0, 0.0])
+        token = _completed_challenge_token(client, monkeypatch, actions=1)
+        response = client.post(
+            f"{FACIAL_PREFIX}/enroll-image",
+            json={"person_id": PERSON, "image_base64": FAKE_IMAGE, "challenge_token": token},
+        )
+        assert response.status_code == 201
+
+    def test_enroll_image_allows_a_similar_but_distinct_face(self, client, monkeypatch):
+        # Cosine 0.857 (over the 0.85 identify threshold, the old false duplicate)
+        # but Euclidean 0.6 apart, beyond the 0.5 duplicate distance.
+        token = self._consume_challenge(client, monkeypatch, [1.0, 0.0, 0.0, 0.0])
+        client.post(
+            f"{FACIAL_PREFIX}/enroll-image",
+            json={"person_id": OTHER_PERSON, "image_base64": FAKE_IMAGE, "challenge_token": token},
+        )
+        token2 = self._consume_challenge(client, monkeypatch, [1.0, 0.6, 0.0, 0.0])
+        response = client.post(
+            f"{FACIAL_PREFIX}/enroll-image",
+            json={"person_id": PERSON, "image_base64": FAKE_IMAGE, "challenge_token": token2},
+        )
+        assert response.status_code == 201
+
     def test_enroll_image_rejects_a_frame_with_no_face(self, client, monkeypatch):
         token = self._consume_challenge(client, monkeypatch, None)
         response = client.post(

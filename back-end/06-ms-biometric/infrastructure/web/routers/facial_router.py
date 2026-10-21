@@ -1,4 +1,4 @@
-"""Facial biometric endpoints (primary adapter).
+﻿"""Facial biometric endpoints (primary adapter).
 
 Route prefix is fixed at `/api/v1/biometric/facial` because the API gateway
 (`back-end/99-api-gateway/kong/kong.yml`, route `biometric-route`) forwards
@@ -16,6 +16,8 @@ separate face-auth path anymore.
 """
 from __future__ import annotations
 
+import logging
+import math
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -26,13 +28,13 @@ from domain.entities.match_log import BiometricMatchLog
 from domain.face_encoding import decode_image, face_encoding, validate_liveness
 from domain.ports.out.biometric_repository import BiometricRepositoryPort
 from domain.ports.out.match_log_repository import MatchLogRepositoryPort
-from domain.similarity import cosine
+from domain.similarity import cosine, euclidean, face_similarity
 from domain.value_objects.biometric_type import BiometricType
 from infrastructure.config.dependencies import (
     get_facial_repository,
     get_liveness_secret,
     get_match_log_repository,
-    get_similarity_threshold,
+    get_face_match_threshold,
     rate_limit,
 )
 from infrastructure.config.settings import Settings, get_settings
@@ -49,6 +51,8 @@ from infrastructure.web.liveness import (
 from infrastructure.web.match_audit import record_match
 from infrastructure.web.security import STAFF_PERMISSION, ensure_can_enroll, require_permission
 from infrastructure.web.schemas.responses import template_response
+
+logger = logging.getLogger(__name__)
 
 # Templates are sensitive: only roles that capture attendance (admin, instructor).
 # Every role may pass liveness and enroll its own face (checked in /enroll-image).
@@ -109,8 +113,7 @@ async def _best_facial_match(
     threshold: float,
     exclude_person_id: str | None = None,
 ) -> tuple[FacialEmbedding | None, float]:
-    """Shared 1:N cosine scan used by `/identify`, `/identify-image`, and the
-    `/enroll-image` duplicate-face check."""
+    """Shared 1:N face scan (`face_similarity`) used by `/identify` and `/identify-image`."""
     best: FacialEmbedding | None = None
     best_score = 0.0
     seen: set[str] = set()
@@ -120,12 +123,32 @@ async def _best_facial_match(
         seen.add(template.person_id)
         if exclude_person_id is not None and template.person_id == exclude_person_id:
             continue
-        score = cosine(encoding, list(template.encoding))
+        score = face_similarity(encoding, list(template.encoding))
         if score > best_score:
             best_score = score
             best = template
     matched = best is not None and best_score >= threshold
     return (best, best_score) if matched else (None, best_score)
+
+
+async def _closest_other_face(
+    encoding: list[float],
+    repository: BiometricRepositoryPort,
+    person_id: str,
+    max_distance: float,
+) -> tuple[FacialEmbedding | None, float]:
+    """Nearest template of a *different* person by Euclidean distance; the
+    template is returned only when it is within `max_distance`."""
+    best: FacialEmbedding | None = None
+    best_distance = math.inf
+    for template in await repository.list_active():
+        if template.person_id == person_id:
+            continue
+        distance = euclidean(encoding, list(template.encoding))
+        if distance < best_distance:
+            best_distance = distance
+            best = template
+    return (best, best_distance) if best is not None and best_distance <= max_distance else (None, best_distance)
 
 
 @router.post("/enroll", status_code=status.HTTP_201_CREATED, dependencies=[STAFF])
@@ -148,8 +171,8 @@ async def liveness_challenge(
     secret: str = Depends(get_liveness_secret),
     settings: Settings = Depends(get_settings),
 ):
-    if actions not in (2, 3):
-        raise HTTPException(status_code=422, detail="actions must be 2 or 3")
+    if actions not in (1, 2, 3):
+        raise HTTPException(status_code=422, detail="actions must be 1, 2 or 3")
     # `supported`: comma-separated gestures the client can render. Without it the
     # client is an older build and only gets the original gestures.
     allowed = [name.strip() for name in supported.split(",") if name.strip()] if supported else None
@@ -222,13 +245,13 @@ async def verify_facial(
     request: Request,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
-    threshold: float = Depends(get_similarity_threshold),
+    threshold: float = Depends(get_face_match_threshold),
 ):
     active = await repository.find_active(req.person_id)
     if active is None:
         raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
 
-    score = cosine(req.encoding, list(active.encoding))
+    score = face_similarity(req.encoding, list(active.encoding))
     matched = score >= threshold
     await record_match(
         match_logs,
@@ -253,7 +276,7 @@ async def identify_facial(
     request: Request,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
-    threshold: float = Depends(get_similarity_threshold),
+    threshold: float = Depends(get_face_match_threshold),
 ):
     best, best_score = await _best_facial_match(req.encoding, repository, threshold)
     await record_match(
@@ -328,6 +351,7 @@ async def liveness_step(
         if completed_gesture and settings.liveness_identity_check:
             _check_step_identity(images[0], challenge_id, settings)
     except (ValueError, IndexError) as exc:
+        logger.warning("liveness-step refused: %s", exc)
         await record_match(
             match_logs,
             BiometricMatchLog(
@@ -352,6 +376,7 @@ async def liveness_step(
                 correlation_id=_correlation_id(request),
             ),
         )
+        logger.warning("liveness-step refused: gesture %s not detected", actions[req.action_index])
         raise HTTPException(status_code=400, detail="Liveness gesture not detected")
     try:
         next_token, _, next_step = advance_liveness_challenge(
@@ -372,7 +397,7 @@ async def enroll_facial_image(
     request: Request,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
-    threshold: float = Depends(get_similarity_threshold),
+    threshold: float = Depends(get_face_match_threshold),
     secret: str = Depends(get_liveness_secret),
     settings: Settings = Depends(get_settings),
 ):
@@ -390,13 +415,13 @@ async def enroll_facial_image(
     if encoding is None:
         raise HTTPException(status_code=400, detail="No face found in the image")
 
-    duplicate, duplicate_score = await _best_facial_match(
-        encoding, repository, threshold, exclude_person_id=req.person_id
+    duplicate, duplicate_distance = await _closest_other_face(
+        encoding, repository, req.person_id, settings.face_match_max_distance
     )
     if duplicate is not None:
         raise HTTPException(
             status_code=409,
-            detail=f"This face is already enrolled for a different person (score={duplicate_score:.4f})",
+            detail=f"This face is already enrolled for a different person (distance={duplicate_distance:.4f})",
         )
 
     template = await repository.enroll(
@@ -424,7 +449,7 @@ async def identify_facial_image(
     request: Request,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
-    threshold: float = Depends(get_similarity_threshold),
+    threshold: float = Depends(get_face_match_threshold),
     secret: str = Depends(get_liveness_secret),
     settings: Settings = Depends(get_settings),
 ):

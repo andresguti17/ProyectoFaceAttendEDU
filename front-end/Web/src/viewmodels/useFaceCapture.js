@@ -3,7 +3,7 @@
 //
 //  Cámara + prueba de vida + registro/reconocimiento de rostro.
 //  Lógica portada de face-auth (App.js) sin cambios de comportamiento:
-//   - registro: 3 gestos aleatorios (parpadear / girar / abrir boca)
+//   - registro: 1 gesto aleatorio (parpadear / girar / abrir boca)
 //   - reconocimiento: 2 gestos
 //   - cada gesto: 6 fotogramas (~280 ms) validados en /liveness-step, 2 intentos
 //   - el token de reto se firma y caduca en el backend; la imagen enviada es el
@@ -215,8 +215,8 @@ export function useFaceCapture({ vm, socket, onIdentified } = {}) {
         () =>
             withLiveness(async () => {
                 const personId = requirePersonId();
-                setStatus(t("Te pediremos 3 gestos para registrar el rostro."));
-                const liveness = await captureLiveness(3);
+                setStatus(t("Te pediremos un gesto para registrar el rostro."));
+                const liveness = await captureLiveness(1);
                 setStatus(t("Registrando rostro..."));
                 await biometricCaptureApi.enrollFace({
                     personId,

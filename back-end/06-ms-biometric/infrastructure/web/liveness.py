@@ -41,15 +41,15 @@ def create_liveness_challenge(
     num_actions: int = 3,
     allowed: tuple[str, ...] | list[str] | None = None,
 ) -> tuple[str, list[str]]:
-    """A challenge with `num_actions` random gestures (2 = quick, 3 = enroll).
+    """A challenge with `num_actions` random gestures (1 = enroll, 2-3 = stricter).
 
     The subset and order are randomized every time: a fixed recorded sequence
     does not work even if the possible gestures are public knowledge.
     `allowed` is what the calling client can render (default: the legacy set).
     """
     global _last_actions
-    if num_actions not in (2, 3):
-        raise ValueError("num_actions must be 2 or 3")
+    if num_actions not in (1, 2, 3):
+        raise ValueError("num_actions must be 1, 2 or 3")
     randomizer = _secrets.SystemRandom()
     pool = [action for action in (allowed or LEGACY_ACTIONS) if action in LIVENESS_ACTIONS]
     if len(set(pool)) < num_actions:
@@ -88,7 +88,7 @@ def _verified_payload(secret: str, token: str, require_complete: bool = False) -
         step = payload["step"]
         valid = (
             isinstance(actions, list)
-            and len(actions) in (2, 3)
+            and len(actions) in (1, 2, 3)
             and len(set(actions)) == len(actions)
             and set(actions) <= set(LIVENESS_ACTIONS)
         )
