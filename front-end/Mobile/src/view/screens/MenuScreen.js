@@ -1,4 +1,4 @@
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import React, {useMemo} from "react";
 import {
     Image,
@@ -107,7 +107,6 @@ export default function MenuScreen({ onLogout }) {
                         contentContainerStyle={styles.menuScrollContent}
                     >
                         <View style={[styles.container, {marginHorizontal: 10}]}>
-                            <BackButton onPress={handleBack} />
 
                             <View style={styles.containerSesion}>
                                 <CustomLogo
@@ -176,6 +175,7 @@ export default function MenuScreen({ onLogout }) {
                                 </View>
                             </View>
                         </View>
+                        <ReturnButton onPress={handleBack} />
                     </ScrollView>
                 </KeyboardAvoidingView>
             </ScreenSafeArea>

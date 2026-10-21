@@ -3,7 +3,7 @@ import {ActivityIndicator, FlatList, Text, TouchableOpacity, View} from 'react-n
 import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import CustomAlert from '../components/common/CustomAlert';
 import {useBiometricCasesViewModel} from '../../viewmodels/useBiometricCasesViewModel';
 
@@ -41,13 +41,13 @@ export default function BiometricCasesScreen() {
     return (
         <ScreenSafeArea style={{flex: 1, backgroundColor: colors.background}}>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, marginTop: 30}}>
-                <BackButton onPress={handleBack}/>
                 <Text style={{color: colors.text, fontSize: 20, fontWeight: 'bold', flex: 1}}>{t('biometricCases.title')}</Text>
             </View>
             {loading ? (
                 <ActivityIndicator size="large" color={colors.primary}/>
             ) : (
                 <FlatList persistentScrollbar
+                    ListFooterComponent={<ReturnButton onPress={handleBack} />}
                     data={cases}
                     keyExtractor={(item) => String(item.caseId)}
                     renderItem={renderItem}

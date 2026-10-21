@@ -12,7 +12,7 @@ import {
 import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import Separador from '../components/common/Separador';
 import CustomAlert from '../components/common/CustomAlert';
 import {createAddJustifyStyles} from './Styles/AddJustifyScreen/Style';
@@ -57,7 +57,6 @@ export default function AddJustification() {
               showsVerticalScrollIndicator
           >
             <View style={styles.containerAddJustification}>
-              <BackButton onPress={handleBack} />
               <Text style={[styles.mainTitleAddJustification, { color: colors.text }]}>
                 {t('justify.title')}
               </Text>
@@ -162,6 +161,7 @@ export default function AddJustification() {
                 />
               </View>
             </View>
+              <ReturnButton onPress={handleBack} />
           </ScrollView>
         </KeyboardAvoidingView>
         <CustomAlert

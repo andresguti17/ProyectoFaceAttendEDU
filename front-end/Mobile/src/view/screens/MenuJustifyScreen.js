@@ -1,4 +1,4 @@
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import React, {useMemo} from 'react';
 import {
   Image,
@@ -76,7 +76,6 @@ export default function MenuJustifyScreen() {
               contentContainerStyle={[styles.ScrollViewContent, { paddingBottom: 24 }]}
               showsVerticalScrollIndicator
           >
-            <BackButton onPress={handleBack} />
             <View style={styles.containerMenuJustify}>
               <View style={styles.mainContent}>
                 <Header title={isStudent ? t('justify.title') : t('admin.justificationManagement')} />
@@ -99,6 +98,7 @@ export default function MenuJustifyScreen() {
                 )}
               </View>
             </View>
+              <ReturnButton onPress={handleBack} />
           </ScrollView>
 
         </KeyboardAvoidingView>

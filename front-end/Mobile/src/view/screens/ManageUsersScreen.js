@@ -19,7 +19,7 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {useCustomAlert} from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {ROLE_OPTIONS, useManageUsersViewModel} from '../../viewmodels/useManageUsersViewModel';
 import {validateEmail} from '../../utils/validators';
@@ -279,7 +279,6 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <ScreenSafeArea style={[styles.manageUsersContainer, {backgroundColor: colors.background}]}>
                 <View style={[styles.manageUsersHeader, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
-                    <BackButton onPress={handleBack} />
                     <Text style={[styles.manageUsersTitle, {color: colors.text, flex: 1}]}>
                         {t('manageUsers.title')}
                     </Text>
@@ -327,6 +326,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                 </View>
 
                 <FlatList persistentScrollbar
+                    ListFooterComponent={<ReturnButton onPress={handleBack} />}
                     data={tab === 'students' ? students : teachers}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}

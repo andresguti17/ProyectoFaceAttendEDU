@@ -1,4 +1,4 @@
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import React, {useEffect, useMemo, useState} from 'react';
 import {
     ActivityIndicator,
@@ -474,6 +474,7 @@ const DetailModal = ({
                                 )}
                             </>
                         )}
+                        <ReturnButton onPress={handleBack} />
                     </ScrollView>
 
                     {/* ── Botones de acción (ocultos para estudiantes) ── */}
@@ -618,7 +619,6 @@ export default function PendingJustificationScreen({ navigation }) {
                 {/* Header */}
                 <View style={[styles.headerPending, { backgroundColor: colors.background }]}>
                     <View style={styles.headerTopRowPending}>
-                        <BackButton onPress={handleBack} />
                         <View style={{ flex: 1 }}>
                             <Text style={[styles.headerTitlePending, {color: colors.text}]}>
                                 {t('consultJustify.headerTitle')}

@@ -13,7 +13,7 @@ import {
 import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import CustomAlert from '../components/common/CustomAlert';
 import {createUpdatePhotoStyles} from './Styles/UpdatePhotoScreen/Style';
 import {useUpdatePhotoViewModel} from '../../viewmodels/useUpdatePhotoViewModel';
@@ -61,7 +61,6 @@ export default function UpdatePhoto() {
                             contentContainerStyle={styles.scrollViewContentUpdatePhoto}
                             keyboardShouldPersistTaps="handled">
                     <View style={styles.mainContainerUpdatePhoto}>
-                        <BackButton onPress={handleBack}/>
                         <View style={styles.imageContainerUpdatePhoto}>
                             <Image
                                 source={require('../../assets/images/perfil-del-usuario.png')}
@@ -145,6 +144,7 @@ export default function UpdatePhoto() {
                             </>
                         )}
                     </View>
+                    <ReturnButton onPress={handleBack} />
                 </ScrollView>
             </KeyboardAvoidingView>
             <CustomAlert

@@ -18,7 +18,7 @@ import {
 import ScreenSafeArea from '../../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../../components/common/ThemeContext';
-import BackButton from '../../components/common/BackButton';
+import ReturnButton from '../../components/auth/ReturnButton';
 import {createLoginStyles} from '../Styles/Verifycodescreen/Style';
 
 // Componentes
@@ -235,12 +235,6 @@ export default function VerifyCodeScreen({ route, navigation }) {
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
                         <View style={[styles.container, { backgroundColor: colors.backgroundWhite }]}>
 
-                            {/* Botón volver */}
-                            <BackButton
-                                onPress={codeVerification.isLoading ? undefined : () => navigation.goBack()}
-                                style={codeVerification.isLoading && { opacity: 0.5 }}
-                            />
-
                             <View style={styles.contentContainer}>
                                 <View style={styles.recoveryIconContainer}>
                                     <Text style={styles.recoveryIcon}>📧</Text>
@@ -357,6 +351,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                                     </TouchableOpacity>
                                 </View>
                             </View>
+                            <ReturnButton disabled={codeVerification.isLoading} />
                         </View>
                     </TouchableWithoutFeedback>
                 </ScrollView>

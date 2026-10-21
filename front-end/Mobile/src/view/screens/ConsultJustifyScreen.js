@@ -1,4 +1,4 @@
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import React, {useMemo} from 'react';
 import {
     FlatList,
@@ -106,7 +106,6 @@ export default function ValidJustificationsScreen() {
                 >
                     <View style={styles.containerValidJustifications}>
                         <View style={styles.headerTopRowValidJustifications}>
-                            <BackButton onPress={handleBack} />
                             <View style={{ flex: 1 }}>
                                 <Text style={[styles.mainTitleValidJustifications, { color: colors.text }]}>
                                     {t('consultJustify.mainTitle')}
@@ -270,6 +269,7 @@ export default function ValidJustificationsScreen() {
                         )}
 
                     </View>
+                    <ReturnButton onPress={handleBack} />
                 </ScrollView>
             </KeyboardAvoidingView>
 

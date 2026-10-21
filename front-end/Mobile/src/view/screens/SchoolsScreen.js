@@ -1,4 +1,4 @@
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import React, {useMemo} from "react";
 import {
   ActivityIndicator,
@@ -56,7 +56,6 @@ export default function SchoolsScreen({ navigation }) {
     <ScreenSafeArea style={[styles.safeArea, { backgroundColor: colors.backgroundWhite }]}>
       <View style={styles.container}>
         <View style={styles.headerRow}>
-          <BackButton onPress={() => navigation?.navigate("DashboardScreen")} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t("schools.title")}</Text>
         </View>
         <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
@@ -91,6 +90,7 @@ export default function SchoolsScreen({ navigation }) {
             {schools.map((school) => (
               <SchoolCard key={school.schoolId} school={school} colors={colors} t={t} />
             ))}
+              <ReturnButton onPress={() => navigation?.navigate("DashboardScreen")} />
           </ScrollView>
         )}
       </View>

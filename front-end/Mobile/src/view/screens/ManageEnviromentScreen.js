@@ -19,7 +19,7 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {useCustomAlert} from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {useManageEnvironmentViewModel} from '../../viewmodels/useManageEnvironmentViewModel';
 
@@ -257,7 +257,6 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <ScreenSafeArea style={[styles.manageEnvironmentContainer, {backgroundColor: colors.background}]}>
                 <View style={[styles.manageEnvironmentHeader, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
-                    <BackButton onPress={handleBack} />
                     <Text style={[styles.manageEnvironmentTitle, {color: colors.text, flex: 1}]}>
                         {t('manageAmbientes.title')}
                     </Text>
@@ -285,6 +284,7 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                 </View>
 
                 <FlatList persistentScrollbar
+                    ListFooterComponent={<ReturnButton onPress={handleBack} />}
                     data={searchQuery ? searchResults : ambientes}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}

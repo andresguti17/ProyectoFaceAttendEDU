@@ -19,7 +19,7 @@ import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import ScrollViewWrapper from '../components/common/ScrollView';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {useAppearanceSettingsViewModel} from '../../viewmodels/useAppearanceSettingsViewModel';
 import {createLanguageSettingsStyles} from './Styles/LanguageSettingsScreen/Style';
@@ -188,7 +188,6 @@ export default function AppearanceSettingsScreen() {
             >
                 <ScrollViewWrapper>
                     <View style={{marginHorizontal: 20}}>
-                        <BackButton onPress={handleBack} />
 
                         {/* ══════════════════════════════════════════ */}
                         {/* SECCIÓN 1 — MODO DE VISUALIZACIÓN          */}
@@ -363,6 +362,7 @@ export default function AppearanceSettingsScreen() {
                         </View>
 
                     </View>
+                    <ReturnButton onPress={handleBack} />
                 </ScrollViewWrapper>
             </KeyboardAvoidingView>
         </ScreenSafeArea>

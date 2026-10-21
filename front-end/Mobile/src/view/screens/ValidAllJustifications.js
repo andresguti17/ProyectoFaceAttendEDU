@@ -3,7 +3,7 @@ import {Platform, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from "react-i18next";
 import {useTheme} from '../components/common/ThemeContext';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import CustomAlert from '../components/common/CustomAlert';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {createValidAllJustificationsStyles} from "./Styles/ValidAllJustifications/Style";
@@ -84,7 +84,6 @@ export default function JustificationsScreen() {
         >
             <View style={[styles.validAllJustificationsContainer, { backgroundColor: colors.background, marginHorizontal: 10 } ]}>
                 <View style={[styles.validAllJustificationsHeader, { backgroundColor: colors.background, flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
-                    <BackButton onPress={handleBack} />
                     <Text style={[styles.validAllJustificationsTitle, { color: colors.text, flex: 1 }]}>
                         {t("justifications.validList")}
                     </Text>
@@ -126,6 +125,7 @@ export default function JustificationsScreen() {
                             </Text>
                         </View>
                     )}
+                    <ReturnButton onPress={handleBack} />
                 </ScrollView>
             </View>
             <CustomAlert

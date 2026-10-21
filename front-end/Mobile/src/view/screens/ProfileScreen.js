@@ -3,7 +3,7 @@ import {Platform, ScrollView, Text, TouchableOpacity, View,} from 'react-native'
 import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import PasswordUpdateModal from '../components/common/PasswordUpdateModal';
 import ProfileUpdateModal from '../components/common/ProfileUpdateModal';
 import {createProfileStyles} from './Styles/ProfileScreen/Style';
@@ -294,7 +294,6 @@ export default function ProfileScreen({ onLogout }) {
                 showsVerticalScrollIndicator
             >
                 <View style={[styles.container, { paddingHorizontal: 16 }]}>
-                    <BackButton onPress={handleBack} />
 
                     {/* ══ HEADER / AVATAR ══ */}
                     <View style={[
@@ -524,6 +523,7 @@ export default function ProfileScreen({ onLogout }) {
                     </View>
 
                 </View>
+                <ReturnButton onPress={handleBack} />
             </ScrollView>
         </ScreenSafeArea>
     );

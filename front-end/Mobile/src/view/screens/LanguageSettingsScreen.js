@@ -16,7 +16,7 @@ import {useNavigation} from '@react-navigation/native';
 import {useTheme} from '../components/common/ThemeContext';
 import {useAlertsConfig} from '../../utils/AlertsConfigContext';
 import ScrollViewWrapper from '../components/common/ScrollView';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {createLanguageSettingsStyles} from './Styles/LanguageSettingsScreen/Style';
 import {useLanguageSettingsViewModel} from '../../viewmodels/useLanguageSettingsViewModel';
@@ -55,7 +55,6 @@ export default function LanguageSettingsScreen() {
             >
                 <ScrollViewWrapper>
                     <View style={[{marginHorizontal: 25}]}>
-                        <BackButton onPress={handleBack} />
                         {/* ═══ SECCIÓN: IDIOMA ═══ */}
                         <Text
                             style={[
@@ -214,6 +213,7 @@ export default function LanguageSettingsScreen() {
                             isLoading={isLoading}
                         />
                     </View>
+                    <ReturnButton onPress={handleBack} />
                 </ScrollViewWrapper>
 
                 {/* ═══════════════════════════════════════════ */}

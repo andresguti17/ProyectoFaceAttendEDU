@@ -13,7 +13,7 @@ import {
 import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import {QuestionnaireModal} from '../components/common/QuestionnaireModal';
 import {FacialUpdateModal} from '../components/common/FacialUpdateModal';
 import CustomLogo from '../components/common/logo';
@@ -56,7 +56,6 @@ export default function FacialFail() {
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={[styles.container, { marginHorizontal: 20 }]}>
-                            <BackButton onPress={handleBack} />
                             <View style={styles.headerContainer}>
                                 <Text style={[styles.mainTitle, { color: colors.text }]}>
                                     {t('facialFail.title')}
@@ -145,6 +144,7 @@ export default function FacialFail() {
                         </View>
                     </TouchableWithoutFeedback>
                 </KeyboardAvoidingView>
+                <ReturnButton onPress={handleBack} />
             </ScrollView>
 
             {/* Modales */}

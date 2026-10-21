@@ -7,7 +7,7 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import CustomLogo from '../components/common/logo';
 import CustomAlert from '../components/common/CustomAlert';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import {createRegisterFaceStyles} from './Styles/RegisterFace/Style';
 import {useRegisterFaceScreenViewModel} from '../../viewmodels/useRegisterFaceScreenViewModel';
 
@@ -55,7 +55,6 @@ export default function RegisterFace() {
         <ScreenSafeArea style={styles.safeAreaRegisterFace}>
             <View style={styles.registerFaceContainer}>
                 <View style={styles.registerFaceHeader}>
-                    <BackButton onPress={handleBack} />
                     <Text style={styles.registerFaceTitle}>{title}</Text>
                     <CustomLogo size="small" rounded={true} backgroundColor={colors.cameraBackground} marginBottom={-2}/>
                 </View>
@@ -118,6 +117,7 @@ export default function RegisterFace() {
                         )}
                     </TouchableOpacity>
                 </View>
+                <ReturnButton onPress={handleBack} />
             </View>
 
             <CustomAlert

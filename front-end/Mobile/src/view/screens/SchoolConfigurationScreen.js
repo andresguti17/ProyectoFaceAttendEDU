@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {createSchoolConfigStyles} from './Styles/SchoolConfigurationScreen/Style';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import {useSchoolConfigurationViewModel} from "../../viewmodels/useSchoolConfigurationViewModel";
 import {useTheme} from '../../view/components/common/ThemeContext';
 import {useUser} from '../../utils/UserContext';
@@ -192,7 +192,6 @@ const SchoolConfigurationScreen = ({ navigation }) => {
             >
                 {/* ── Header ── */}
                 <View style={[styles.headerSchoolConfig, { backgroundColor: colors.navBar, borderBottomColor: colors.border }]}>
-                    <BackButton onPress={() => navigation?.goBack()} />
                     <Text style={[styles.headerTitleSchoolConfig, { color: colors.text }]}>
                         {t('schoolConfig.title')}
                     </Text>
@@ -533,6 +532,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                             </View>
                         )}
                     </View>
+                    <ReturnButton onPress={() => navigation?.goBack()} />
                 </ScrollView>
 
                 {/* ── Botones de Acción ── */}

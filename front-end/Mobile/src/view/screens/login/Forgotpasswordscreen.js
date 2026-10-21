@@ -16,7 +16,7 @@ import {
 import ScreenSafeArea from '../../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../../components/common/ThemeContext';
-import BackButton from '../../components/common/BackButton';
+import ReturnButton from '../../components/auth/ReturnButton';
 import {VerificationService, VerificationError} from '../../../services/verificationService';
 import {VerificationErrorType} from '../../../services/constants/auths';
 import {createLoginStyles} from '../Styles/Forgotpasswordscreen/Style';
@@ -435,11 +435,6 @@ export default function ForgotPasswordScreen({ navigation }) {
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
                         <View style={[styles.container, { backgroundColor: colors.backgroundWhite }]}>
 
-                            <BackButton
-                                onPress={recovery.isLoading ? undefined : handleBack}
-                                style={recovery.isLoading && { opacity: 0.5 }}
-                            />
-
                             <View style={styles.contentContainer}>
 
                                 <Text style={[styles.textoSesion, { color: colors.text }]}>
@@ -496,6 +491,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                                 />
 
                             </View>
+                            <ReturnButton onPress={handleBack} disabled={recovery.isLoading} />
                         </View>
                     </TouchableWithoutFeedback>
                 </ScrollView>

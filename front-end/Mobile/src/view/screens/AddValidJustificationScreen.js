@@ -14,7 +14,7 @@ import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from "react-i18next";
 import {useNavigation} from "@react-navigation/native";
 import PrimaryButton from "../components/auth/PrimaryButton";
-import BackButton from "../components/common/BackButton";
+import ReturnButton from "../components/auth/ReturnButton";
 import {useTheme} from "../components/common/ThemeContext";
 import {createAddValidJustificationStyles} from "./Styles/AddValidJustificationScreen/Style";
 import {useAddValidJustificationViewModel} from "../../viewmodels/useAddValidJustificationViewModel";
@@ -313,7 +313,6 @@ export default function AddValidJustificationScreen() {
                     >
                         <View style={styles.containerAddValidJustification}>
                             {/* ── Encabezado ───────────────────────────────────────── */}
-                            <BackButton onPress={handleBack} />
                             <Text style={[styles.mainTitle, { color: colors.text }]}>
                                 {t(isEditing ? "admin.editJustificationType" : "admin.newJustificationType")}
                             </Text>
@@ -522,6 +521,7 @@ export default function AddValidJustificationScreen() {
                                 />
                             </View>
                         </View>
+                        <ReturnButton onPress={handleBack} />
                     </ScrollView>
                 </KeyboardAvoidingView>
             </ScreenSafeArea>

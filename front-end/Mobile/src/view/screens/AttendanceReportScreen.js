@@ -12,7 +12,7 @@ import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTheme} from '../components/common/ThemeContext';
 import {useTranslation} from 'react-i18next';
 import CustomAlert from '../components/common/CustomAlert';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import {createAttendanceReportStyles} from './Styles/AttendanceReportScreen/Style';
 import {useAttendanceReportViewModel} from '../../viewmodels/useAttendanceReportViewModel';
 
@@ -179,7 +179,6 @@ export default function AttendanceReportScreen({ navigation }) {
         <ScreenSafeArea style={[styles.safeAreaReport, { backgroundColor: colors.background }]}>
             {/* ── HEADER ── */}
             <View style={[styles.headerReport, { backgroundColor: colors.background, borderBottomWidth: 1, borderBottomColor: colors.border }]}>
-                <BackButton onPress={() => navigation?.goBack()} />
                 <Text style={[styles.headerTitleReport, {color: colors.text}]}>{t('attendanceReport.title')}</Text>
             </View>
 
@@ -402,6 +401,7 @@ export default function AttendanceReportScreen({ navigation }) {
                     )}
 
                 </View>
+                <ReturnButton onPress={() => navigation?.goBack()} />
             </ScrollView>
 
             {/* ══════════════════════════════════════════════
