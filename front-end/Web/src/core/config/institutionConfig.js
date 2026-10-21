@@ -80,7 +80,6 @@ const DEFAULT_INSTITUTION_CONFIG = {
     // Reconocimiento facial
     confidenceThreshold: 85,
     autoRegister: true,
-    savePhotos: false,
     
     // Notificaciones
     emailAlert: true,

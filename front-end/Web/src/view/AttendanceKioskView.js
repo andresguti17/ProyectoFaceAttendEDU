@@ -34,6 +34,7 @@ import { useFaceCapture, CAMERA_SUPPORTED } from "../viewmodels/useFaceCapture";
 import { useFingerprintReader } from "../viewmodels/useFingerprintReader";
 import { ConfirmModal } from "./components/common/modals/ConfirmModal";
 import ClassCard from "./components/kiosk/ClassCard";
+import { getInstitutionConfig, onInstitutionConfigChange } from "../core/config/institutionConfig";
 
 const TONE_COLOR_KEY = {
     default: "secondary",
@@ -226,6 +227,14 @@ function CapturePanel({ kioskVm }) {
     // ESTA pantalla. kioskVm.view nunca distingue esto (ver cabecera del
     // archivo), así que el banner lo deriva combinando ambos más abajo.
     const [activeCapture, setActiveCaptureState] = useState(null);
+    // Ajuste "Registro automático" de la sede. Activado: el rostro se reconoce
+    // solo, de forma continua, por el WebSocket. Desactivado: cada asistencia
+    // se pide pulsando "Reconocer rostro".
+    const [autoRegister, setAutoRegister] = useState(() => getInstitutionConfig().autoRegister !== false);
+    useEffect(
+        () => onInstitutionConfigChange((config) => setAutoRegister(config?.autoRegister !== false)),
+        []
+    );
     // Espejo síncrono de activeCapture: los efectos/callbacks de abajo lo
     // necesitan leer en el momento exacto en que una promesa se resuelve,
     // sin esperar al siguiente render (el bug de Critical #2 era justamente
@@ -312,6 +321,7 @@ function CapturePanel({ kioskVm }) {
     // por view/cameraReady) y activeCapture leído/escrito vía ref, el mismo
     // efecto puede lanzar loginFace() tantas veces como haga falta.
     useEffect(() => {
+        if (!autoRegister) return;
         if (kioskVm.view !== "WAITING") return;
         if (!face.cameraReady) return;
 
@@ -366,7 +376,21 @@ function CapturePanel({ kioskVm }) {
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [kioskVm.view, face.cameraReady]);
+    }, [kioskVm.view, face.cameraReady, autoRegister]);
+
+    // Modo manual (registro automático desactivado): un solo intento por pulsación.
+    const handleFaceRecognizePress = async () => {
+        if (activeCaptureRef.current !== null || !face.cameraReady) return;
+        const attemptId = ++attemptIdRef.current;
+        setActiveCapture("FACE");
+        try {
+            await face.loginFace();
+        } catch (e) {
+            if (attemptIdRef.current === attemptId) kioskVm.onCaptureError(e.message);
+        } finally {
+            if (attemptIdRef.current === attemptId) setActiveCapture(null);
+        }
+    };
 
     // "Usa tu huella" ARMA el lector (startCapture) y marca
     // activeCapture="FINGER" de inmediato — puede interrumpir un intento de
@@ -427,7 +451,11 @@ function CapturePanel({ kioskVm }) {
               : kioskVm.view;
 
     const messages = {
-        WAITING: { icon: "user", tone: "default", title: t("Acércate al lector") },
+        WAITING: {
+            icon: "user",
+            tone: "default",
+            title: autoRegister ? t("Acércate al lector") : t("Pulsa «Reconocer rostro»"),
+        },
         CAPTURING_FACE: { icon: "camera", tone: "primary", title: t("Verificando rostro...") },
         CAPTURING_FINGER: { icon: "target", tone: "primary", title: t("Verificando huella...") },
         SUCCESS: { icon: "check-circle", tone: "success", title: t("Asistencia registrada") },
@@ -563,6 +591,17 @@ function CapturePanel({ kioskVm }) {
                     </Card>
 
                     <View style={{ flexDirection: "row", gap: 12, width: "100%" }}>
+                        {!autoRegister && (
+                            <Button
+                                variant="primary"
+                                style={{ flex: 1 }}
+                                disabled={activeCapture !== null || !face.cameraReady || kioskVm.view !== "WAITING"}
+                                leftIcon={<Feather name="camera" size={16} color={c.brand.textOnPrimary} />}
+                                onPress={handleFaceRecognizePress}
+                            >
+                                {t("Reconocer rostro")}
+                            </Button>
+                        )}
                         {fingerprint.deviceReady && (
                             <Button
                                 variant="outline"

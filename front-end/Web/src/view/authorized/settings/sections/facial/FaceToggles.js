@@ -1,13 +1,11 @@
 // ============================================================
-//  FaceToggles — Toggles de registro automático y fotos
+//  FaceToggles — Registro automático y aviso de fotos (futuro)
 //  UI pura. Sin estado propio.
 //
 //  Props:
 //   - confidence    : number — para la advertencia combinada
 //   - autoRegister  : bool
 //   - onAutoRegister: () => void
-//   - savePhotos    : bool
-//   - onSavePhotos  : () => void
 // ============================================================
 import React from "react";
 import { View, Text } from "react-native";
@@ -16,7 +14,7 @@ import { ToggleRow } from "../../../../components/common";
 import { useTranslation } from "../../../../../core/utils/i18n/hooks/useTranslation";
 import { useSettingsSectionStyles } from "../../modals/useSettingsSectionStyles";
 
-export function FaceToggles({ confidence, autoRegister, onAutoRegister, savePhotos, onSavePhotos }) {
+export function FaceToggles({ confidence, autoRegister, onAutoRegister }) {
     const { t } = useTranslation();
     const { c } = useSettingsSectionStyles();
 
@@ -24,7 +22,7 @@ export function FaceToggles({ confidence, autoRegister, onAutoRegister, savePhot
         <View style={{ gap: 0 }}>
             <ToggleRow
                 label={t("Registro automático")}
-                description={t("Registra automáticamente al detectar el rostro sin confirmación manual")}
+                description={t("Activado: el kiosco reconoce los rostros de forma continua por WebSocket. Desactivado: cada asistencia se registra pulsando un botón.")}
                 value={autoRegister}
                 onToggle={onAutoRegister}
             />
@@ -38,21 +36,12 @@ export function FaceToggles({ confidence, autoRegister, onAutoRegister, savePhot
                 </View>
             )}
 
-            <ToggleRow
-                label={t("Guardar fotos de registro")}
-                description={t("Almacena la foto tomada al registrar. Útil para auditorías pero consume más espacio.")}
-                value={savePhotos}
-                onToggle={onSavePhotos}
-            />
-
-            {savePhotos && (
-                <View style={{ marginTop: 8, backgroundColor: c.brand.primaryLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8 }}>
-                    <Feather name="info" size={13} color={c.brand.primary} style={{ marginTop: 1 }} />
-                    <Text style={{ fontSize: 12, color: c.brand.primary, flex: 1, lineHeight: 18 }}>
-                        {t("Las fotos se almacenan localmente. Asegúrate de tener suficiente espacio y de informar a los estudiantes según tu política de privacidad.")}
-                    </Text>
-                </View>
-            )}
+            <View style={{ marginTop: 12, backgroundColor: c.brand.primaryLight, borderRadius: 14, padding: 12, flexDirection: "row", gap: 8 }}>
+                <Feather name="info" size={13} color={c.brand.primary} style={{ marginTop: 1 }} />
+                <Text style={{ fontSize: 12, color: c.brand.primary, flex: 1, lineHeight: 18 }}>
+                    {t("Guardar fotos de registro no está disponible por ahora; podría ser una función futura. Hoy solo se almacenan los vectores faciales, nunca las imágenes.")}
+                </Text>
+            </View>
         </View>
     );
 }

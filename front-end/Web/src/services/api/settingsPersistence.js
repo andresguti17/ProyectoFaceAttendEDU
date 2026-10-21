@@ -28,7 +28,6 @@ export const ACADEMIC_FIELD_NAMES = {
     confidence: "web.facial_confidence",
     confidenceThreshold: "web.facial_confidence",
     autoRegister: "web.facial_auto_register",
-    savePhotos: "web.facial_save_photos",
     emailAlert: "web.notify_email_alert",
     weeklyReport: "web.notify_weekly_report",
     atRiskAlert: "web.notify_at_risk",

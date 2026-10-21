@@ -79,7 +79,6 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
             consecutiveDaysForSanction: config.consecutiveDaysForSanction ?? 3,
             confidence: config.confidenceThreshold,
             autoRegister: config.autoRegister,
-            savePhotos: config.savePhotos,
             emailAlert: config.emailAlert,
             weeklyReport: config.weeklyReport,
             atRiskAlert: config.atRiskAlert,
@@ -241,8 +240,6 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         confidence={config.confidence}
                         autoRegister={config.autoRegister}
                         onAutoRegister={() => updateConfig("autoRegister", !config.autoRegister)}
-                        savePhotos={config.savePhotos}
-                        onSavePhotos={() => updateConfig("savePhotos", !config.savePhotos)}
                     />,
                 ]}
             />

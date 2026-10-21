@@ -50,11 +50,21 @@ function withProviders(children) {
     return <ThemeProvider>{children}</ThemeProvider>;
 }
 
+// Screens left mounted keep their face loop alive and would call the next test's mocks.
+const mountedTrees = [];
+afterEach(() => {
+    while (mountedTrees.length) {
+        const tree = mountedTrees.pop();
+        act(() => tree.unmount());
+    }
+});
+
 function renderScreen() {
     let tree;
     act(() => {
         tree = create(withProviders(<AttendanceKioskScreen />));
     });
+    mountedTrees.push(tree);
     return tree;
 }
 
@@ -451,5 +461,70 @@ describe("kiosk fingerprint preemption and arm-timeout (Important #5)", () => {
         rerenderScreen(tree);
         expect(findButton(tree, "Usa tu huella").props.disabled).toBe(false);
         expect(kioskVm.onCaptureError).not.toHaveBeenCalled(); // a timeout is not an error, just a reset
+    });
+});
+
+describe("kiosk manual mode (Registro automático desactivado)", () => {
+    let face;
+
+    beforeEach(() => {
+        jest.useFakeTimers();
+        localStorage.setItem("faceattend_institution_config", JSON.stringify({ autoRegister: false }));
+        useRolePermissions.mockReturnValue({ canRegisterFace: true });
+        useAttendanceKioskViewModel.mockReturnValue({
+            view: "WAITING",
+            todaysBlocks: [],
+            startClass: jest.fn(),
+            endClass: jest.fn().mockResolvedValue(undefined),
+            session: { classSessionId: 1 },
+            statusMessage: "",
+            socket: null,
+            connectionStatus: "open",
+            registeredActorIds: new Set(),
+            registeredMethods: new Map(),
+            roster: [],
+            onIdentified: jest.fn(),
+            onCaptureError: jest.fn(),
+        });
+        face = {
+            startCamera: jest.fn(),
+            cameraReady: true,
+            loginFace: jest.fn().mockResolvedValue({}),
+            videoRef: { current: null },
+            livenessAction: "",
+        };
+        useFaceCapture.mockReturnValue(face);
+        useFingerprintReader.mockReturnValue({
+            deviceReady: false,
+            sampleReady: false,
+            startCapture: jest.fn(),
+            loginFingerprint: jest.fn(),
+        });
+    });
+
+    afterEach(() => {
+        localStorage.removeItem("faceattend_institution_config");
+        jest.clearAllTimers();
+        jest.useRealTimers();
+    });
+
+    test("does not recognise on its own and does one attempt per button press", async () => {
+        const tree = renderScreen();
+        expect(findButton(tree, "Reconocer rostro")).toBeTruthy();
+        await act(async () => {
+            jest.advanceTimersByTime(1000);
+        });
+        expect(face.loginFace).not.toHaveBeenCalled();
+        expect(hasText(tree, "Pulsa «Reconocer rostro»")).toBe(true);
+
+        await act(async () => {
+            findButton(tree, "Reconocer rostro").props.onPress();
+        });
+        expect(face.loginFace).toHaveBeenCalledTimes(1);
+
+        await act(async () => {
+            jest.advanceTimersByTime(1000);
+        });
+        expect(face.loginFace).toHaveBeenCalledTimes(1);
     });
 });
