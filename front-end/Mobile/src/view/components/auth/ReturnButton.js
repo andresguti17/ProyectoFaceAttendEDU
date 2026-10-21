@@ -16,7 +16,7 @@ export default function ReturnButton({ onPress, disabled = false }) {
     const handlePress = () => (onPress ? onPress() : navigation.goBack());
 
     return (
-        <View style={[styleAuth.dangerButtonContainer, { marginTop: 24 }]}>
+        <View style={styleAuth.dangerButtonContainer}>
             <TouchableOpacity
                 style={[styleAuth.dangerButton, { backgroundColor: colors.primary }, disabled && styleAuth.buttonDisabled]}
                 onPress={handlePress}

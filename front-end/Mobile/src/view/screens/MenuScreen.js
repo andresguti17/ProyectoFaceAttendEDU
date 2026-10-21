@@ -166,6 +166,10 @@ export default function MenuScreen({ onLogout }) {
                                     />
                                 )}
 
+                                <View style={styles.returnContainer}>
+                                    <ReturnButton onPress={handleBack} />
+                                </View>
+
                                 <View style={styles.logoutContainer}>
                                     <DangerButton
                                         title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
@@ -175,7 +179,6 @@ export default function MenuScreen({ onLogout }) {
                                 </View>
                             </View>
                         </View>
-                        <ReturnButton onPress={handleBack} />
                     </ScrollView>
                 </KeyboardAvoidingView>
             </ScreenSafeArea>
