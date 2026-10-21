@@ -160,13 +160,13 @@ export async function pushInstitutionConfig(schoolId, config, { canWriteSecurity
  * Lee las réplicas del backend y devuelve overrides parciales con los
  * tipos de institutionConfig (para una futura sincronización de carga).
  */
-export async function loadBackendOverrides(schoolId) {
+export async function loadBackendOverrides(schoolId, { includeSecurity = true } = {}) {
     if (schoolId == null) return {};
     // La seguridad global solo la lee quien administra la configuración: para el
     // resto (docentes, estudiantes) se omite en vez de perder también lo académico.
     const [academic, security] = await Promise.all([
         configurationApi.schoolConfigurations(schoolId).then(recordListOf),
-        configurationApi.listSecurity().then(recordListOf).catch(() => []),
+        includeSecurity ? configurationApi.listSecurity().then(recordListOf).catch(() => []) : [],
     ]);
     const byName = new Map();
     for (const record of [...academic, ...security]) {
@@ -206,9 +206,9 @@ function storedConfigSchool() {
  * los ajustes de la sede anterior. Sin sede (Super Administrador) no hace nada.
  * @returns {Promise<boolean>} true si se aplicó.
  */
-export async function syncInstitutionConfigFromBackend(schoolId) {
+export async function syncInstitutionConfigFromBackend(schoolId, { includeSecurity = true } = {}) {
     if (schoolId == null) return false;
-    const overrides = await loadBackendOverrides(schoolId);
+    const overrides = await loadBackendOverrides(schoolId, { includeSecurity });
 
     const sameSchool = storedConfigSchool() === String(schoolId);
     const defaults = getDefaultInstitutionConfig();

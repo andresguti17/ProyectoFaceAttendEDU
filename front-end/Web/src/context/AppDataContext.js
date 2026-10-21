@@ -289,7 +289,8 @@ export function AppDataProvider({ children }) {
         // de pedir nada: setActiveSchool limpia la caché si la sede cambió.
         setActiveSchool(user.schoolId ?? null);
         // Ajustes de la sede (asistencia mínima, reconocimiento, avisos) para todos los roles.
-        syncInstitutionConfigFromBackend(user.schoolId ?? null).catch(() => {});
+        // La seguridad global solo la lee quien administra (los demás recibirían un 403).
+        syncInstitutionConfigFromBackend(user.schoolId ?? null, { includeSecurity: user?.role === "admin" }).catch(() => {});
         // /users exige identity.person:write (solo administración): se prohibe
         // la petición ANTES de que ningún Storage la dispare con Instructor/Aprendiz.
         setUsersListAllowed(user?.role === "admin");

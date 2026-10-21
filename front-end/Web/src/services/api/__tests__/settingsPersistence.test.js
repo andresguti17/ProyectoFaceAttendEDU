@@ -168,3 +168,12 @@ describe("syncInstitutionConfigFromBackend", () => {
         expect(localStorage.getItem(SCHOOL_KEY)).toBe("2");
     });
 });
+
+test("a role that cannot read the global security keys never requests them (no 403 in the console)", async () => {
+    configurationApi.schoolConfigurations.mockResolvedValue([
+        { configurationName: "web.min_attendance", configurationValue: "75" },
+    ]);
+
+    expect(await loadBackendOverrides(2, { includeSecurity: false })).toEqual({ minAttendance: "75" });
+    expect(configurationApi.listSecurity).not.toHaveBeenCalled();
+});
