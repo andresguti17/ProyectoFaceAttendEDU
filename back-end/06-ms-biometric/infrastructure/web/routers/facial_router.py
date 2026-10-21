@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field
 
 from domain.entities.facial_embedding import FacialEmbedding
 from domain.entities.match_log import BiometricMatchLog
-from domain.face_encoding import decode_image, face_encoding, validate_liveness
+from domain.face_encoding import decode_image, face_encoding, liveness_report, validate_liveness
 from domain.ports.out.biometric_repository import BiometricRepositoryPort
 from domain.ports.out.match_log_repository import MatchLogRepositoryPort
 from domain.similarity import cosine, euclidean, face_similarity
@@ -68,6 +68,14 @@ OPERATION_LIVENESS_FAILURE = "LIVENESS_FAILURE"
 NO_ACTIVE_TEMPLATE = "no active facial template"
 NO_MATCH = "no match found"
 FRAMES_PER_ACTION = 6
+
+
+def _liveness_failure_reason(images, action: str) -> str:
+    """Why a gesture was refused, for the log only (numbers, never face data)."""
+    try:
+        return liveness_report(images, action).reason
+    except Exception:  # noqa: BLE001 - diagnostics must never turn a 400 into a 500
+        return "reason unavailable"
 
 
 def _correlation_id(request: Request) -> str | None:
@@ -376,7 +384,11 @@ async def liveness_step(
                 correlation_id=_correlation_id(request),
             ),
         )
-        logger.warning("liveness-step refused: gesture %s not detected", actions[req.action_index])
+        logger.warning(
+            "liveness-step refused: gesture %s not detected (%s)",
+            actions[req.action_index],
+            _liveness_failure_reason(images, actions[req.action_index]),
+        )
         raise HTTPException(status_code=400, detail="Liveness gesture not detected")
     try:
         next_token, _, next_step = advance_liveness_challenge(
