@@ -64,6 +64,11 @@ def get_similarity_threshold(settings: Settings = Depends(get_settings)) -> floa
     return settings.similarity_threshold
 
 
+def get_face_match_threshold(settings: Settings = Depends(get_settings)) -> float:
+    """Face score (`1 - Euclidean distance`) at or above which two faces match."""
+    return 1.0 - settings.face_match_max_distance
+
+
 def get_fingerprint_match_threshold(settings: Settings = Depends(get_settings)) -> int:
     """Keypoint-match count at or above which two fingerprint samples match."""
     return settings.fingerprint_match_threshold
