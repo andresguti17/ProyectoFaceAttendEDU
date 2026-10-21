@@ -314,7 +314,7 @@ export default function AddValidJustificationScreen() {
                         <View style={styles.containerAddValidJustification}>
                             {/* ── Encabezado ───────────────────────────────────────── */}
                             <BackButton onPress={handleBack} />
-                            <Text style={[styles.mainTitle, { color: colors.text, marginTop: Platform.OS === "ios" ? 0 : 15 }]}>
+                            <Text style={[styles.mainTitle, { color: colors.text }]}>
                                 {t(isEditing ? "admin.editJustificationType" : "admin.newJustificationType")}
                             </Text>
 

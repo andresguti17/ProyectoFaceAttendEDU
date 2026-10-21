@@ -112,9 +112,10 @@ export const createCommonStyles = (colors) => StyleSheet.create(normalizeTypogra
     },
     navBarContainer: {
         position: "absolute",
-        bottom: 20,
-        left: 20,
-        right: 20,
+        // Android: barra de navegación oculta (modo inmersivo), así que va pegada al borde sin margen.
+        bottom: Platform.OS === 'android' ? 0 : 20,
+        left: Platform.OS === 'android' ? 0 : 20,
+        right: Platform.OS === 'android' ? 0 : 20,
         height: 70,
         backgroundColor: colors.navBar,
         borderRadius: 20,
@@ -126,13 +127,13 @@ export const createCommonStyles = (colors) => StyleSheet.create(normalizeTypogra
         shadowOpacity: 0.2,
         shadowRadius: 5,
         shadowOffset: { width: 0, height: 2 },
-        marginBottom: Platform.OS === 'android' ? 25 : 0
     },
     navButton: {
         alignItems: "center",
         justifyContent: "center",
         padding: 10,
         borderRadius: 18,
+        padding: Platform.OS === 'android' ? 0 : 10,
     },
     activeNavButton: {
         backgroundColor: colors.primaryLight,

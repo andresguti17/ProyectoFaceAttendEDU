@@ -1,4 +1,4 @@
-import { Platform, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
 export const createMyCoursesStyles = (colors) => StyleSheet.create({
   safeArea: {
@@ -13,9 +13,6 @@ export const createMyCoursesStyles = (colors) => StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
-    // Estándar MenuScreen: en Android el SafeAreaView nativo no inseta y el
-    // header quedaba pegado a la barra de notificaciones.
-    marginTop: Platform.OS === "ios" ? 0 : 15,
   },
   backIcon: {
     width: 40,

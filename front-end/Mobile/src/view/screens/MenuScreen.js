@@ -106,7 +106,7 @@ export default function MenuScreen({ onLogout }) {
                         style={styles.ScrollView}
                         contentContainerStyle={styles.menuScrollContent}
                     >
-                        <View style={[styles.container, {marginTop: Platform.OS === "ios" ? 0 : 15, marginHorizontal: 10}]}>
+                        <View style={[styles.container, {marginHorizontal: 10}]}>
                             <BackButton onPress={handleBack} />
 
                             <View style={styles.containerSesion}>

@@ -60,7 +60,7 @@ export default function UpdatePhoto() {
                 <ScrollView persistentScrollbar showsVerticalScrollIndicator
                             contentContainerStyle={styles.scrollViewContentUpdatePhoto}
                             keyboardShouldPersistTaps="handled">
-                    <View style={[styles.mainContainerUpdatePhoto, {marginTop: Platform.OS === 'ios' ? 0 : 50}]}>
+                    <View style={styles.mainContainerUpdatePhoto}>
                         <BackButton onPress={handleBack}/>
                         <View style={styles.imageContainerUpdatePhoto}>
                             <Image
