@@ -2,7 +2,6 @@ import React, {useMemo} from 'react';
 import {
     ActivityIndicator,
     Modal,
-    SafeAreaView,
     ScrollView,
     StatusBar,
     Text,
@@ -10,6 +9,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useTheme} from '../components/common/ThemeContext';
 import {useTranslation} from 'react-i18next';
 import CustomAlert from '../components/common/CustomAlert';

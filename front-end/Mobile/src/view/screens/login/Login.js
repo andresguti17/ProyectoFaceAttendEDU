@@ -4,13 +4,13 @@ import {
     Image,
     Keyboard,
     KeyboardAvoidingView,
-    SafeAreaView,
     Text,
     TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useTranslation} from 'react-i18next';
 import {useLanguageRefresh} from '../../../utils/useLanguageRefresh';
 import {useTheme} from '../../components/common/ThemeContext';

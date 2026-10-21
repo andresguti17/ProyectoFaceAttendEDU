@@ -7,7 +7,6 @@ import {
     KeyboardAvoidingView,
     Modal,
     Platform,
-    SafeAreaView,
     ScrollView,
     Switch,
     Text,
@@ -16,6 +15,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {createSchoolConfigStyles} from './Styles/SchoolConfigurationScreen/Style';
 import BackButton from '../components/common/BackButton';
 import {useSchoolConfigurationViewModel} from "../../viewmodels/useSchoolConfigurationViewModel";

@@ -1,5 +1,6 @@
 import React, {useMemo} from 'react';
-import {ActivityIndicator, SafeAreaView, Text, TouchableOpacity, View} from 'react-native';
+import {ActivityIndicator, Text, TouchableOpacity, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useTranslation} from 'react-i18next';
 import BottomBar from '../components/common/NavigationBar';
 import ScrollViewWrapper from '../components/common/ScrollView';

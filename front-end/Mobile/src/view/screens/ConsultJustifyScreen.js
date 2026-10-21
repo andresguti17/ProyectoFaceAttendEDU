@@ -7,12 +7,12 @@ import {
     Modal,
     Platform,
     Pressable,
-    SafeAreaView,
     ScrollView,
     Text,
     TouchableOpacity,
     View,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import Separador from '../components/common/Separador';

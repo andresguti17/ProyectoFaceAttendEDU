@@ -3,13 +3,13 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
-    SafeAreaView,
     ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import BackButton from '../components/common/BackButton';

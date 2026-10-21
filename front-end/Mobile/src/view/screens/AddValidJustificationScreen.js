@@ -4,13 +4,13 @@ import {
     KeyboardAvoidingView,
     Modal,
     Platform,
-    SafeAreaView,
     ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useTranslation} from "react-i18next";
 import {useNavigation} from "@react-navigation/native";
 import PrimaryButton from "../components/auth/PrimaryButton";

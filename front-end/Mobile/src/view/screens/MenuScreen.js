@@ -4,12 +4,12 @@ import {
     Image,
     KeyboardAvoidingView,
     Platform,
-    SafeAreaView,
     ScrollView,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useTranslation} from "react-i18next";
 import {useTheme} from '../components/common/ThemeContext';
 import DangerButton from "../components/auth/DangerButton";

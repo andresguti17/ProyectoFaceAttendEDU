@@ -1,5 +1,6 @@
 import React, {useMemo} from 'react';
-import {SafeAreaView, Text, TouchableOpacity, View} from 'react-native';
+import {Text, TouchableOpacity, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';

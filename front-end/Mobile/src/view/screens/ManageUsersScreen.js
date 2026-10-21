@@ -6,7 +6,6 @@ import {
     Modal,
     Platform,
     Pressable,
-    SafeAreaView,
     ScrollView,
     Text,
     TextInput,
@@ -14,6 +13,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {createManageUsersStyles} from './Styles/ManageUsersScreen/Style';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';

@@ -1,5 +1,6 @@
 import React, {useEffect, useMemo} from 'react';
-import {ActivityIndicator, SafeAreaView, ScrollView, Text, TouchableOpacity, View} from 'react-native';
+import {ActivityIndicator, ScrollView, Text, TouchableOpacity, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import BackButton from '../components/common/BackButton';

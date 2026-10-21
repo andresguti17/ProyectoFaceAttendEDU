@@ -6,13 +6,13 @@ import {
     Image,
     Modal,
     Platform,
-    SafeAreaView,
     ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
+import {SafeAreaView} from 'react-native-safe-area-context';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import {createDisplayingAttendanceStyles} from "./Styles/DisplayingAttendance/Style";
 import BottomBar from "../components/common/NavigationBar";

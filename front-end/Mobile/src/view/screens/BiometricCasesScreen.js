@@ -1,5 +1,6 @@
 import React from 'react';
-import {ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View} from 'react-native';
+import {ActivityIndicator, FlatList, Text, TouchableOpacity, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import BackButton from '../components/common/BackButton';

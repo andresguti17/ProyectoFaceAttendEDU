@@ -3,12 +3,12 @@ import React, {useMemo} from "react";
 import {
   ActivityIndicator,
   Image,
-  SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {createMyCoursesStyles} from "./Styles/MyCoursesScreen/Style";
 import { useMyCoursesViewModel } from "../../viewmodels/useMyCoursesViewModel";
 
