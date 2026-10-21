@@ -44,7 +44,9 @@ def test_a_small_movement_reports_the_numbers(monkeypatch):
 def test_a_wrong_frame_count_and_a_still_image_are_refused():
     assert liveness_report(FRAMES[:3], "blink").reason.startswith("expected 6 frames")
     still = [FRAMES[0]] * fe.FRAMES_PER_ACTION
-    assert liveness_report(still, "blink").reason == "frames are identical (still image)"
+    assert liveness_report(still, "blink").reason == (
+        f"frames are identical (still image, max difference 0.00 < {fe.FROZEN_FRAME_DIFF})"
+    )
 
 
 @pytest.mark.parametrize("action", ["blink", "turn", "turn_left", "turn_right", "open_mouth", "smile", "nod"])

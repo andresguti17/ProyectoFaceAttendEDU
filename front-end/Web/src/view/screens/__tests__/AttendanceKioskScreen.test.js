@@ -528,3 +528,59 @@ describe("kiosk manual mode (Registro automático desactivado)", () => {
         expect(face.loginFace).toHaveBeenCalledTimes(1);
     });
 });
+
+describe("kiosk passive loop backs off while attempts keep failing", () => {
+    beforeEach(() => {
+        jest.useFakeTimers();
+        localStorage.removeItem("faceattend_institution_config");
+        useRolePermissions.mockReturnValue({ canRegisterFace: true });
+        useAttendanceKioskViewModel.mockReturnValue({
+            view: "WAITING",
+            todaysBlocks: [],
+            startClass: jest.fn(),
+            endClass: jest.fn().mockResolvedValue(undefined),
+            session: { classSessionId: 1 },
+            statusMessage: "",
+            socket: null,
+            connectionStatus: "open",
+            registeredActorIds: new Set(),
+            registeredMethods: new Map(),
+            roster: [],
+            onIdentified: jest.fn(),
+            onCaptureError: jest.fn(),
+        });
+        useFingerprintReader.mockReturnValue({
+            deviceReady: false,
+            sampleReady: false,
+            startCapture: jest.fn(),
+            loginFingerprint: jest.fn(),
+        });
+    });
+
+    afterEach(() => {
+        jest.clearAllTimers();
+        jest.useRealTimers();
+    });
+
+    test("a failing attempt is not repeated every 200 ms", async () => {
+        const face = {
+            startCamera: jest.fn(),
+            cameraReady: true,
+            loginFace: jest.fn().mockRejectedValue(new Error("Liveness gesture not detected")),
+            videoRef: { current: null },
+            livenessAction: "",
+        };
+        useFaceCapture.mockReturnValue(face);
+        renderScreen();
+
+        for (let elapsed = 0; elapsed < 3000; elapsed += 100) {
+            await act(async () => {
+                jest.advanceTimersByTime(100);
+            });
+        }
+
+        // Without a backoff this would be ~14 attempts in 3 s.
+        expect(face.loginFace.mock.calls.length).toBeGreaterThan(1);
+        expect(face.loginFace.mock.calls.length).toBeLessThanOrEqual(6);
+    });
+});

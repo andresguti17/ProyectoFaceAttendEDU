@@ -155,17 +155,22 @@ def _action_detected(action: str, measurements: list[FaceMeasurements]) -> bool:
     return gesture is not None and gesture[0] >= gesture[1]
 
 
+def _max_frame_diff(images: list[np.ndarray]) -> float:
+    """Largest mean absolute pixel difference (0-255) between consecutive frames."""
+    largest = 0.0
+    for previous, current in zip(images, images[1:]):
+        if previous.shape != current.shape:
+            return float("inf")
+        diff = np.mean(np.abs(previous.astype(np.int16) - current.astype(np.int16)))
+        largest = max(largest, float(diff))
+    return largest
+
+
 def _frames_are_frozen(images: list[np.ndarray]) -> bool:
     """True when every consecutive pair of frames is (almost) pixel-identical:
     a still image or a repeated frame, never a live camera (sensor noise alone
     moves pixels)."""
-    for previous, current in zip(images, images[1:]):
-        if previous.shape != current.shape:
-            return False
-        diff = np.mean(np.abs(previous.astype(np.int16) - current.astype(np.int16)))
-        if float(diff) >= FROZEN_FRAME_DIFF:
-            return False
-    return True
+    return _max_frame_diff(images) < FROZEN_FRAME_DIFF
 
 
 class LivenessReport(NamedTuple):
@@ -184,7 +189,10 @@ def liveness_report(images: list[np.ndarray], action: str) -> LivenessReport:
     if len(images) != FRAMES_PER_ACTION:
         return LivenessReport(False, f"expected {FRAMES_PER_ACTION} frames, got {len(images)}")
     if _frames_are_frozen(images):
-        return LivenessReport(False, "frames are identical (still image)")
+        return LivenessReport(
+            False,
+            f"frames are identical (still image, max difference {_max_frame_diff(images):.2f} < {FROZEN_FRAME_DIFF})",
+        )
     measurements: list[FaceMeasurements] = []
     for image in images:
         measurement = face_measurements(image)

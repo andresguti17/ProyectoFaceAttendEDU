@@ -47,6 +47,7 @@ const TONE_COLOR_KEY = {
 // Cuánto se espera antes de reintentar arrancar un intento de rostro
 // cuando el "slot" de captura ya está ocupado por una huella en curso.
 const FACE_RETRY_WAIT_MS = 200;
+const FACE_MAX_BACKOFF_MS = 5000;
 // Si se arma el lector de huella y nadie pone el dedo, no se puede quedar
 // esperando para siempre — ni tampoco bloqueado el ciclo pasivo de rostro.
 const FINGERPRINT_ARM_TIMEOUT_MS = 15000;
@@ -326,6 +327,11 @@ function CapturePanel({ kioskVm }) {
         if (!face.cameraReady) return;
 
         let cancelled = false;
+        // Intentos fallidos seguidos: sin nadie frente a la cámara cada intento
+        // termina en "gesto no detectado", y reintentar cada 200 ms inundaba
+        // el servicio de biometría. Se espacian hasta FACE_MAX_BACKOFF_MS y se
+        // vuelve al ritmo normal en cuanto un intento sale bien.
+        let failedAttempts = 0;
 
         async function loop() {
             while (!cancelled) {
@@ -341,7 +347,9 @@ function CapturePanel({ kioskVm }) {
                 setActiveCapture("FACE");
                 try {
                     await face.loginFace();
+                    failedAttempts = 0;
                 } catch (e) {
+                    failedAttempts += 1;
                     // `cancelled` también se vuelve true cuando la clase ya
                     // terminó (endClass cambia kioskVm.view a SELECT_SESSION,
                     // lo que dispara el cleanup de este efecto) — un rechazo
@@ -366,7 +374,7 @@ function CapturePanel({ kioskVm }) {
                 // esto, un loginFace() que resuelve muy rápido (p. ej. en un
                 // test con mocks) encadenaría awaits sin ceder nunca al
                 // event loop real, acaparándolo por completo.
-                await wait(FACE_RETRY_WAIT_MS);
+                await wait(Math.min(FACE_RETRY_WAIT_MS * 2 ** failedAttempts, FACE_MAX_BACKOFF_MS));
             }
         }
 
