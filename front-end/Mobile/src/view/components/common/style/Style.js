@@ -16,7 +16,6 @@ export const createCommonStyles = (colors) => StyleSheet.create(normalizeTypogra
     containerCustomTabs: {
         flexDirection: "row",
         justifyContent: "center",
-        ...(Platform.OS === "android" && { paddingTop: 40 }),
     },
     buttonCustomTabs: {
         backgroundColor: colors.tabInactive,
