@@ -166,7 +166,7 @@ export default function MenuScreen({ onLogout }) {
                                     />
                                 )}
 
-                                <ReturnButton onPress={handleBack} />
+                                <ReturnButton onPress={handleBack} inset={false} />
 
                                 <View style={styles.logoutContainer}>
                                     <DangerButton

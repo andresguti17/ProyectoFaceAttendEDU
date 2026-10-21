@@ -7,7 +7,7 @@ import { createAuthStyles } from './style/Style';
 
 // Botón volver de pie de pantalla: mismo formato que DangerButton (ancho completo,
 // al final del contenido). Sin onPress vuelve a la pantalla anterior.
-export default function ReturnButton({ onPress, disabled = false }) {
+export default function ReturnButton({ onPress, disabled = false, inset = true }) {
     const navigation = useNavigation();
     const { t } = useTranslation();
     const { colors } = useTheme();
@@ -16,8 +16,8 @@ export default function ReturnButton({ onPress, disabled = false }) {
     const handlePress = () => (onPress ? onPress() : navigation.goBack());
 
     return (
-        // 20px de separación con el contenido de la pantalla, igual en todas.
-        <View style={[styleAuth.dangerButtonContainer, { paddingTop: 20 }]}>
+        // Mismo espaciado que el menú: 20px arriba y 20px a los lados. `inset={false}` si el contenedor ya lo aporta.
+        <View style={[styleAuth.dangerButtonContainer, { paddingTop: 20, paddingHorizontal: inset ? 20 : 0 }]}>
             <TouchableOpacity
                 style={[styleAuth.dangerButton, { backgroundColor: colors.primary }, disabled && styleAuth.buttonDisabled]}
                 onPress={handlePress}
