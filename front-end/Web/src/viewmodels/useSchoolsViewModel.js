@@ -64,6 +64,8 @@ export function useSchoolsViewModel() {
 
     // Confirmación de activar/desactivar
     const [statusTarget, setStatusTarget] = useState(null);
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [isToggling, setIsToggling] = useState(false);
 
     // Igual que el resto de la app: la carga inicial se dispara al montar y
@@ -248,6 +250,29 @@ export function useSchoolsViewModel() {
         }
     }, [statusTarget, load, t]);
 
+    // ── Eliminar sede (en cascada, borrado lógico) ───────────
+    const requestDelete = useCallback((school) => setDeleteTarget(school), []);
+
+    const confirmDelete = useCallback(async () => {
+        const school = deleteTarget;
+        if (!school) return;
+        setIsDeleting(true);
+        try {
+            await academicApi.deleteSchool(school.schoolId);
+            setDeleteTarget(null);
+            setFeedback({ type: "success", message: t("Sede eliminada.") });
+            await load();
+        } catch (e) {
+            setFeedback({
+                type: "error",
+                message: e?.message || t("No se pudo eliminar la sede."),
+            });
+            setDeleteTarget(null);
+        } finally {
+            setIsDeleting(false);
+        }
+    }, [deleteTarget, load, t]);
+
     return {
         isLoading,
         error,
@@ -280,5 +305,11 @@ export function useSchoolsViewModel() {
         confirmStatusChange,
         closeStatusConfirm: () => setStatusTarget(null),
         isToggling,
+        // Eliminar
+        deleteTarget,
+        requestDelete,
+        confirmDelete,
+        closeDeleteConfirm: () => setDeleteTarget(null),
+        isDeleting,
     };
 }
