@@ -131,6 +131,7 @@ export const endpoints = {
         facialIdentifyImage: `${API_V1}/biometric/facial/identify-image`,
         fingerprintEnrollSample: `${API_V1}/biometric/fingerprint/enroll-sample`,
         fingerprintIdentifySample: `${API_V1}/biometric/fingerprint/identify-sample`,
+        summaryAll: `${API_V1}/biometric/summary`,
         summaryByPerson: (personId) => `${API_V1}/biometric/${personId}/summary`,
     },
     configuration: {
