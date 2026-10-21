@@ -608,7 +608,6 @@ export default function PendingJustificationScreen({ navigation }) {
                 ]}>
                     <ActivityIndicator color={colors.primary} size="large"/>
                 </View>
-                <ReturnButton onPress={handleBack} />
             </ScreenSafeArea>
         );
     }
@@ -702,6 +701,7 @@ export default function PendingJustificationScreen({ navigation }) {
                 getRoleColors={getRoleColors}
                 colors={colors}
             />
+            <ReturnButton onPress={handleBack} />
         </ScreenSafeArea>
     );
 }

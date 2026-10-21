@@ -12,7 +12,6 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import ReturnButton from '../components/auth/ReturnButton';
 import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import {createDisplayingAttendanceStyles} from "./Styles/DisplayingAttendance/Style";
@@ -623,7 +622,6 @@ export default function DisplayingAttendance() {
                 <StudentDetailModal item={detailItem} visible={showDetailModal} onClose={closeDetail} colors={colors}
                                     t={t} isDark={isDark}/>
             )}
-            <ReturnButton />
         </ScreenSafeArea>
     );
 }

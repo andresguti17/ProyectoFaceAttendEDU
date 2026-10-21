@@ -73,7 +73,7 @@ export default function MenuJustifyScreen() {
 
           <ScrollView persistentScrollbar
               style={styles.ScrollView}
-              contentContainerStyle={[styles.ScrollViewContent, { paddingBottom: 24 }]}
+              contentContainerStyle={[styles.ScrollViewContent]}
               showsVerticalScrollIndicator
           >
             <View style={styles.containerMenuJustify}>
