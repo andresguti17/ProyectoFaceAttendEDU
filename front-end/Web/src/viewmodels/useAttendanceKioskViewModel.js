@@ -222,7 +222,11 @@ export function useAttendanceKioskViewModel() {
                 }
 
                 try {
-                    nextSession = await schedulingApi.openSession(nextSession.classSessionId, user?.academicActorId);
+                    // Una sesión recién creada, o una ya abierta, no necesita /open:
+                    // pedirlo devuelve un 400 "already Open" que solo ensucia la consola.
+                    if (nextSession.sessionStatus !== "Open") {
+                        nextSession = await schedulingApi.openSession(nextSession.classSessionId, user?.academicActorId);
+                    }
                 } catch (e) {
                     if (e?.status !== 400) throw e;
                     // El 400 de "ya estaba Open" y el de "no se puede abrir una
