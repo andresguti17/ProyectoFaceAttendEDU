@@ -81,7 +81,6 @@ from domain.ports.out.biometric_repository import BiometricRepositoryPort
 from domain.ports.out.match_log_repository import MatchLogRepositoryPort
 from infrastructure.config.dependencies import (
     get_facial_repository_ws,
-    get_face_match_threshold,
     get_fingerprint_match_threshold,
     get_fingerprint_repository_ws,
     get_liveness_secret,
@@ -109,7 +108,12 @@ from infrastructure.web.routers.fingerprint_router import (
     identify_fingerprint_sample,
     verify_fingerprint,
 )
-from infrastructure.web.security import WebSocketAuthError, authenticate_websocket
+from infrastructure.web.security import (
+    WebSocketAuthError,
+    authenticate_websocket,
+    extract_ws_token,
+    face_threshold_for_caller,
+)
 from infrastructure.web.ws.connection_manager import ConnectionManager
 from infrastructure.web.ws.idempotency import IdempotencyCache
 
@@ -387,7 +391,6 @@ async def biometric_ws(
     fingerprint_repo: BiometricRepositoryPort = Depends(get_fingerprint_repository_ws),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository_ws),
     threshold: float = Depends(get_similarity_threshold),
-    face_threshold: float = Depends(get_face_match_threshold),
     fp_threshold: int = Depends(get_fingerprint_match_threshold),
     secret: str = Depends(get_liveness_secret),
     settings: Settings = Depends(get_settings),
@@ -415,6 +418,12 @@ async def biometric_ws(
             except asyncio.TimeoutError:
                 await websocket.close(code=1001, reason="idle timeout")
                 break
+
+            # Per frame (cached ~30 s) so a long-lived kiosk connection follows
+            # a confidence change without reconnecting.
+            face_threshold = await face_threshold_for_caller(
+                user_id, extract_ws_token(websocket), 1.0 - settings.face_match_max_distance
+            )
 
             await _handle_frame(
                 websocket,
