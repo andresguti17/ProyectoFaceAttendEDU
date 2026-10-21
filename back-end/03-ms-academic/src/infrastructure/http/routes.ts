@@ -235,7 +235,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
   app.delete('/api/v1/schools/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
     if (!(await requireSuperAdminForSchool(req, reply))) return reply;
-    if (!id || !(await repos.schools.softDelete(id))) return notFound(reply);
+    if (!id || !(await repos.schools.softDeleteCascade(id))) return notFound(reply);
     return reply.code(204).send();
   });
 
