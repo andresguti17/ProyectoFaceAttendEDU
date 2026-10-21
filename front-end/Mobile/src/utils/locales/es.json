@@ -1127,6 +1127,9 @@
     "saveErrorMsg": "Ocurrió un problema al guardar tu registro facial."
   },
   "faceCapture": {
+    "blockedTitle": "Acceso restringido",
+    "updateLocked": "Primero completa el cuestionario en \"¿Falla en el reconocimiento facial?\" para actualizar tu rostro.",
+    "alreadyRegistered": "Tu rostro ya está registrado. Solo un administrador puede volver a registrarlo.",
     "replaceNotAllowed": "Para reemplazar tu rostro registrado necesitas una solicitud de actualización aprobada después de tu último registro.",
     "blink": "Parpadea una vez",
     "turn": "Gira lentamente la cabeza",

@@ -1127,6 +1127,9 @@
     "saveErrorMsg": "Ocorreu um problema ao salvar seu registro facial."
   },
   "faceCapture": {
+    "blockedTitle": "Acesso restrito",
+    "updateLocked": "Preencha primeiro o questionário em \"Falha no reconhecimento facial?\" para atualizar o seu rosto.",
+    "alreadyRegistered": "O seu rosto já está registado. Só um administrador pode voltar a registá-lo.",
     "replaceNotAllowed": "Para substituir o seu rosto registado precisa de um pedido de atualização aprovado após o último registo.",
     "blink": "Pisque uma vez",
     "turn": "Gire lentamente a cabeça",

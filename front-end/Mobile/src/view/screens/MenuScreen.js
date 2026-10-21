@@ -66,7 +66,6 @@ export default function MenuScreen({ onLogout }) {
     };
 
     const handleBack = () => navigateTo("DashboardScreen");
-    const handleUpdatePhoto = () => navigateTo("UpdatePhoto");
     const handleFacialFail = () => navigateTo("FacialFail");
     const handleMenuJustify = () => navigateTo("MenuJustify");
     const handleSettings = () => navigateTo("LanguageSettingsScreen");
@@ -125,13 +124,6 @@ export default function MenuScreen({ onLogout }) {
                                     Pregunta académica: ¿Los profesores también deben actualizar sus parámetros faciales aquí?
                                     Si es solo para estudiantes, usa `isStudent`. Si es para todos los no-admin, usa `!isAdmin`.
                                     Aquí asumo que es solo para estudiantes por seguridad. */}
-                                {isStudent && (
-                                    <MenuItem
-                                        label={t('menu.updateFacialParams')}
-                                        onPress={handleUpdatePhoto}
-                                    />
-                                )}
-
                                 <MenuItem
                                     label={
                                         isAdmin

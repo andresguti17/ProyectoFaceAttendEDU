@@ -1,10 +1,11 @@
-import {useCallback, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUser, getCurrentUserRole} from "../services/UserService";
 import {BiometricCaseService} from '../services/BiometricCaseService';
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
+import {useUser} from '../utils/UserContext';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
 
 const MIN_REASON_LENGTH = 10;
@@ -19,6 +20,12 @@ export function useUpdatePhotoViewModel() {
     const {loadThemeForRole} = useTheme();
     const {alertConfig, hideAlert, showSuccess, showError} = useCustomAlert();
     const updateKey = useLanguageRefresh();
+
+    // Bloqueo: solo se llega desde "¿Falla en el reconocimiento facial?" tras el cuestionario.
+    const {faceUpdateUnlocked} = useUser();
+    useEffect(() => {
+        if (!faceUpdateUnlocked) showError(t('faceCapture.blockedTitle'), t('faceCapture.updateLocked'), () => navigation.goBack());
+    }, [faceUpdateUnlocked, navigation, showError, t]);
 
     const [personId, setPersonId] = useState(null);
     const [latestCase, setLatestCase] = useState(null);

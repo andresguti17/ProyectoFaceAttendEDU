@@ -13,11 +13,16 @@ export const UserProvider = ({ children }) => {
     const [userEmail, setUserEmail] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
     const [isLoadingUser, setIsLoadingUser] = useState(false);
+    // Actualizar el rostro solo tras el cuestionario de "¿Falla en el reconocimiento facial?" (solo en la sesión).
+    const [faceUpdateUnlocked, setFaceUpdateUnlocked] = useState(false);
+
+    const unlockFaceUpdate = useCallback(() => setFaceUpdateUnlocked(true), []);
 
     // Cargar usuario al montar el contexto
     const loadUserData = useCallback(async () => {
         try {
             setIsLoadingUser(true);
+            setFaceUpdateUnlocked(false);
             const role = await getCurrentUserRole();
             const user = await getCurrentUser();
             const email = await AsyncStorage.getItem('userEmail');
@@ -49,11 +54,13 @@ export const UserProvider = ({ children }) => {
         userEmail,
         currentUser,
         isLoadingUser,
+        faceUpdateUnlocked,
 
         // Setters
         setUserRole,
         setUserEmail,
         setCurrentUser,
+        unlockFaceUpdate,
 
         // Métodos
         loadUserData,
