@@ -16,6 +16,7 @@ import {
     getInstitutionConfig,
     saveInstitutionConfig,
 } from "../../core/config/institutionConfig";
+import { academicApi } from "./academicApi";
 import { configurationApi } from "./configurationApi";
 
 // Sede a la que pertenecen los valores guardados en este navegador.
@@ -34,6 +35,15 @@ export const ACADEMIC_FIELD_NAMES = {
     dailySummary: "web.notify_daily_summary",
     pushNotifications: "web.notify_push",
     pushDuration: "web.notify_push_duration",
+    pushNotificationLimit: "web.notify_push_limit",
+    pushNotificationLimitByType: "web.notify_push_limit_by_type",
+    consecutiveDaysForSanction: "web.consecutive_days_sanction",
+    academicPeriodType: "web.period_type",
+    periodStartDate: "web.period_start",
+    periodEndDate: "web.period_end",
+    isAutomaticPeriod: "web.period_automatic",
+    dateFormat: "web.date_format",
+    timeFormat24h: "web.time_24h",
 };
 
 // Campos con réplica global de seguridad.
@@ -172,6 +182,14 @@ export async function loadBackendOverrides(schoolId) {
     return overrides;
 }
 
+const slugify = (text) =>
+    String(text)
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
 function storedConfigSchool() {
     try {
         return localStorage.getItem(CONFIG_SCHOOL_KEY);
@@ -205,6 +223,17 @@ export async function syncInstitutionConfigFromBackend(schoolId) {
         // En la UI de Ajustes el umbral se llama `confidence`; en la config, `confidenceThreshold`.
         const target = field === "confidence" ? "confidenceThreshold" : field;
         base[target] = parseSetting(raw, base[target]);
+    }
+
+    // El nombre institucional es el de la sede (se edita en Configuración > Sede).
+    try {
+        const school = await academicApi.getSchool(schoolId);
+        if (school?.name) {
+            base.institutionName = school.name;
+            base.institutionSlug = slugify(school.name);
+        }
+    } catch {
+        // sin acceso a la sede: se conserva lo que había
     }
 
     const saved = saveInstitutionConfig(base);

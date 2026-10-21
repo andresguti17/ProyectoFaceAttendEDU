@@ -19,6 +19,7 @@ export function InstitutionInfo({
     institutionSlug, onSlugChange,
     academicPeriodType, onPeriodTypeChange,
     isSmall,
+    nameLocked = false,
 }) {
     const { t } = useTranslation();
     const { c, labelStyle, descStyle, inputStyle } = useSettingsSectionStyles();
@@ -31,7 +32,8 @@ export function InstitutionInfo({
                     <TextInput
                         value={institutionName}
                         onChangeText={onNameChange}
-                        style={inputStyle}
+                        editable={!nameLocked}
+                        style={[inputStyle, nameLocked && { opacity: 0.6 }]}
                         placeholder={t("Ej: Universidad Nacional")}
                         placeholderTextColor={c.text.disabled}
                     />
@@ -43,7 +45,8 @@ export function InstitutionInfo({
                         onChangeText={(text) =>
                             onSlugChange(text.toLowerCase().replace(/[^a-z0-9-]/g, "-"))
                         }
-                        style={inputStyle}
+                        editable={!nameLocked}
+                        style={[inputStyle, nameLocked && { opacity: 0.6 }]}
                         placeholder={t("Ej: universidad-nacional")}
                         placeholderTextColor={c.text.disabled}
                     />
@@ -57,7 +60,9 @@ export function InstitutionInfo({
                 </View>
             </View>
             <Text style={descStyle}>
-                {t("El nombre aparece en reportes y correos. El identificador se usa en la URL. El tipo de período define cómo se divide el año lectivo.")}
+                {nameLocked
+                    ? t("El nombre y el identificador son los de tu sede; se editan en Configuración > Sede. El tipo de período define cómo se divide el año lectivo.")
+                    : t("El nombre aparece en reportes y correos. El identificador se usa en la URL. El tipo de período define cómo se divide el año lectivo.")}
             </Text>
         </View>
     );
