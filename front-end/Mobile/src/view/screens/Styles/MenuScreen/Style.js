@@ -53,10 +53,6 @@ logoutContainer: {
         paddingTop: 24,
     },
 
-returnContainer: {
-        paddingTop: 24,
-    },
-
 safeAreaWhite: {
         flex: 1,
         backgroundColor: colors.backgroundWhite,

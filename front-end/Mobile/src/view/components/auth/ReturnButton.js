@@ -16,7 +16,8 @@ export default function ReturnButton({ onPress, disabled = false }) {
     const handlePress = () => (onPress ? onPress() : navigation.goBack());
 
     return (
-        <View style={styleAuth.dangerButtonContainer}>
+        // 20px de separación con el contenido de la pantalla, igual en todas.
+        <View style={[styleAuth.dangerButtonContainer, { paddingTop: 20 }]}>
             <TouchableOpacity
                 style={[styleAuth.dangerButton, { backgroundColor: colors.primary }, disabled && styleAuth.buttonDisabled]}
                 onPress={handlePress}
