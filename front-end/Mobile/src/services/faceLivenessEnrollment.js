@@ -57,6 +57,9 @@ export async function enrollFaceWithLiveness({
                     actionIndex,
                     images: actionFrames,
                 });
+                // El servidor responde 200 con detected:false (no un 4xx) cuando no
+                // vio el gesto: cuenta como intento fallido y no avanza el reto.
+                if (result?.detected === false) throw new Error('Liveness gesture not detected');
                 frames.push(...actionFrames);
                 challengeToken = result.challenge_token;
                 complete = true;

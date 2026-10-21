@@ -384,12 +384,15 @@ async def liveness_step(
                 correlation_id=_correlation_id(request),
             ),
         )
-        logger.warning(
+        logger.info(
             "liveness-step refused: gesture %s not detected (%s)",
             actions[req.action_index],
             _liveness_failure_reason(images, actions[req.action_index]),
         )
-        raise HTTPException(status_code=400, detail="Liveness gesture not detected")
+        # Not an error: a kiosk idling in front of nobody asks for this over and over,
+        # and a 4xx per attempt floods the browser console. The step does not advance
+        # (same token) and the client counts it as a failed attempt.
+        return {"challenge_token": req.challenge_token, "completed": False, "detected": False}
     try:
         next_token, _, next_step = advance_liveness_challenge(
             secret, settings.liveness_ttl_seconds, req.challenge_token
@@ -398,7 +401,7 @@ async def liveness_step(
         # Genuine replay of an already-advanced token (not just a validation
         # failure above) — still a 400, never an unhandled 500.
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return {"challenge_token": next_token, "completed": next_step >= len(actions)}
+    return {"challenge_token": next_token, "completed": next_step >= len(actions), "detected": True}
 
 
 @router.post(

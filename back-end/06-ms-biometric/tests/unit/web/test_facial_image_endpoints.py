@@ -76,6 +76,23 @@ class TestLiveness:
         assert len(body["actions"]) == 2
         assert body["challenge_token"]
 
+    def test_an_undetected_gesture_is_a_200_that_does_not_advance_the_step(self, client, monkeypatch, stores):
+        monkeypatch.setattr(facial_router, "decode_image", lambda data, max_bytes, max_pixels: "decoded")
+        monkeypatch.setattr(facial_router, "validate_liveness", lambda images, action: False)
+        token = _challenge(client, actions=2)["challenge_token"]
+        body = {"challenge_token": token, "action_index": 0, "images": [FAKE_IMAGE] * 6}
+
+        response = client.post(f"{FACIAL_PREFIX}/liveness-step", json=body)
+        assert response.status_code == 200
+        assert response.json() == {"challenge_token": token, "completed": False, "detected": False}
+        assert stores["match_logs"].entries[-1].operation == "LIVENESS_FAILURE"
+
+        # The same token is still valid for the retry: the step did not move.
+        monkeypatch.setattr(facial_router, "validate_liveness", lambda images, action: True)
+        retry = client.post(f"{FACIAL_PREFIX}/liveness-step", json=body)
+        assert retry.status_code == 200
+        assert retry.json()["detected"] is True
+
     def test_invalid_action_count_is_rejected(self, client):
         assert client.get(f"{FACIAL_PREFIX}/liveness-challenge", params={"actions": 5}).status_code == 422
 
@@ -98,7 +115,7 @@ class TestLiveness:
             token = body["challenge_token"]
         assert body["completed"] is True
 
-    def test_failed_gesture_is_rejected_and_audited(self, client, monkeypatch, stores):
+    def test_failed_gesture_is_reported_as_not_detected_and_audited(self, client, monkeypatch, stores):
         monkeypatch.setattr(facial_router, "decode_image", lambda data, max_bytes, max_pixels: "decoded")
         monkeypatch.setattr(facial_router, "validate_liveness", lambda images, action: False)
         challenge = _challenge(client, actions=2)
@@ -110,7 +127,8 @@ class TestLiveness:
                 "images": [FAKE_IMAGE] * 6,
             },
         )
-        assert response.status_code == 400
+        assert response.status_code == 200
+        assert response.json()["detected"] is False
         assert stores["match_logs"].entries[-1].operation == "LIVENESS_FAILURE"
 
     def test_reused_liveness_step_is_rejected(self, client, monkeypatch):
