@@ -196,6 +196,26 @@ class TestEnrollImage:
         )
         assert response.status_code == 201
 
+    def test_duplicate_check_follows_the_school_confidence(self, client, monkeypatch):
+        # Faces 0.45 apart: the same person at the default 0.5 distance...
+        token = self._consume_challenge(client, monkeypatch, [1.0, 0.0, 0.0, 0.0])
+        client.post(
+            f"{FACIAL_PREFIX}/enroll-image",
+            json={"person_id": OTHER_PERSON, "image_base64": FAKE_IMAGE, "challenge_token": token},
+        )
+        token2 = self._consume_challenge(client, monkeypatch, [1.0, 0.45, 0.0, 0.0])
+        body = {"person_id": PERSON, "image_base64": FAKE_IMAGE, "challenge_token": token2}
+        assert client.post(f"{FACIAL_PREFIX}/enroll-image", json=body).status_code == 409
+
+        # ...but different people for a school set to 90 % (max distance 0.40).
+        async def school_confidence(user_id, token, default):
+            return 0.60
+
+        monkeypatch.setattr(dependencies, "face_threshold_for_caller", school_confidence)
+        token3 = self._consume_challenge(client, monkeypatch, [1.0, 0.45, 0.0, 0.0])
+        body["challenge_token"] = token3
+        assert client.post(f"{FACIAL_PREFIX}/enroll-image", json=body).status_code == 201
+
     def test_enroll_image_rejects_a_frame_with_no_face(self, client, monkeypatch):
         token = self._consume_challenge(client, monkeypatch, None)
         response = client.post(

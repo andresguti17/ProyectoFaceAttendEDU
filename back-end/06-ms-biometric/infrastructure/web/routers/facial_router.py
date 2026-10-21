@@ -416,7 +416,7 @@ async def enroll_facial_image(
         raise HTTPException(status_code=400, detail="No face found in the image")
 
     duplicate, duplicate_distance = await _closest_other_face(
-        encoding, repository, req.person_id, settings.face_match_max_distance
+        encoding, repository, req.person_id, 1.0 - threshold
     )
     if duplicate is not None:
         raise HTTPException(
