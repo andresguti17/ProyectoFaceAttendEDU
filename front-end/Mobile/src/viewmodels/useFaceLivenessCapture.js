@@ -139,7 +139,7 @@ export function useFaceLivenessCapture() {
             setStatus(t('faceCapture.registered'), 'ok');
             return true;
         } catch (error) {
-            setStatus(error?.message || t('faceCapture.genericError'), 'error');
+            setStatus(error?.status === 403 ? t('faceCapture.replaceNotAllowed') : (error?.message || t('faceCapture.genericError')), 'error');
             return false;
         } finally {
             resetLiveness();

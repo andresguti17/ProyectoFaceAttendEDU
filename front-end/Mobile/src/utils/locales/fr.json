@@ -1127,6 +1127,7 @@
     "saveErrorMsg": "Un problème est survenu lors de l'enregistrement de votre visage."
   },
   "faceCapture": {
+    "replaceNotAllowed": "Pour remplacer votre visage enregistré, il faut une demande de mise à jour approuvée après votre dernier enregistrement.",
     "blink": "Clignez des yeux une fois",
     "turn": "Tournez lentement la tête",
     "openMouth": "Ouvrez et fermez la bouche",

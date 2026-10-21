@@ -1,6 +1,6 @@
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUser, getCurrentUserRole} from "../services/UserService";
 import {BiometricCaseService} from '../services/BiometricCaseService';
@@ -43,9 +43,10 @@ export function useUpdatePhotoViewModel() {
         }
     }, [loadThemeForRole, showError, t]);
 
-    useEffect(() => {
+    // Recarga al volver de RegisterFace: un re-enrolamiento consume la aprobación y el estado debe refrescarse.
+    useFocusEffect(useCallback(() => {
         load();
-    }, [load]);
+    }, [load]));
 
     const status = latestCase?.updateStatus || null;
     const hasOpenRequest = status === 'Pending' || status === 'In_Review';

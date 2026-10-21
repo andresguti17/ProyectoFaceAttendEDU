@@ -1127,6 +1127,7 @@
     "saveErrorMsg": "Ocorreu um problema ao salvar seu registro facial."
   },
   "faceCapture": {
+    "replaceNotAllowed": "Para substituir o seu rosto registado precisa de um pedido de atualização aprovado após o último registo.",
     "blink": "Pisque uma vez",
     "turn": "Gire lentamente a cabeça",
     "openMouth": "Abra e feche a boca",
