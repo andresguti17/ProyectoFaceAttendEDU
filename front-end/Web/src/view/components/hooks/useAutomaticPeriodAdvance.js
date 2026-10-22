@@ -20,9 +20,10 @@ import {
  * 
  * @param {boolean} enabled - Si el auto-advance está habilitado (default: true)
  * @param {number} checkIntervalMinutes - Intervalo de verificación en minutos (default: 60)
+ * @param {Function} onAdvanced - async ({periodStartDate, periodEndDate}) tras avanzar (p. ej. guardarlas en la sede)
  * @returns {Object} { lastCheck, hasAdvanced, error }
  */
-export function useAutomaticPeriodAdvance(enabled = true, checkIntervalMinutes = 60) {
+export function useAutomaticPeriodAdvance(enabled = true, checkIntervalMinutes = 60, onAdvanced = null) {
     useEffect(() => {
         if (!enabled) {
             return;
@@ -44,10 +45,11 @@ export function useAutomaticPeriodAdvance(enabled = true, checkIntervalMinutes =
                 if (expiration.hasExpired) {
                     console.log(`[PeriodAdvance] Período expirado hace ${expiration.daysOverdue} días. Avanzando al próximo período...`);
                     
-                    const success = await advanceToNextPeriod();
-                    
-                    if (success) {
-                        console.log("[PeriodAdvance] ✅ Período avanzado exitosamente y horarios borrados");
+                    const dates = await advanceToNextPeriod();
+
+                    if (dates) {
+                        console.log("[PeriodAdvance] ✅ Período avanzado exitosamente");
+                        await onAdvanced?.(dates);
                         
                         // Emitir evento custom para notificar a componentes
                         window.dispatchEvent(new CustomEvent("periodAdvanced", {
