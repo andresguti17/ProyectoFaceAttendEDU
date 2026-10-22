@@ -771,7 +771,8 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
       ]);
       if (actorSchool !== caller.schoolId || cohortSchool !== caller.schoolId) return forbiddenOtherSchool(reply);
     }
-    const created = await repos.enrollments.create(parsed.data);
+    // Re-enrolling someone who was unenrolled brings their old row back (see createOrRestore).
+    const created = await repos.enrollments.createOrRestore(parsed.data);
     return reply.code(201).send(created);
   });
   app.get('/api/v1/enrollments', async (req, reply) => {
