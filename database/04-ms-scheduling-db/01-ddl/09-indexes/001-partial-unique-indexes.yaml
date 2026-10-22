@@ -1,0 +1,50 @@
+databaseChangeLog:
+  - changeSet:
+      id: sch-partial-unique-indexes
+      author: Andres Gutierrez
+      comment: >-
+        Unique keys become partial (WHERE deleted_at IS NULL): rows are only ever soft-deleted, so a
+        full unique index kept a deleted row's key reserved and re-creating or re-enrolling the same
+        thing failed with a unique violation. Existing live rows are already unique, so nothing conflicts.
+      changes:
+        - sql:
+            sql: ALTER TABLE scheduling.class_session DROP CONSTRAINT IF EXISTS uq_session_block_date
+        - sql:
+            sql: DROP INDEX IF EXISTS scheduling.uq_session_block_date
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_session_block_date ON scheduling.class_session (schedule_block_id, session_date) WHERE deleted_at IS NULL
+        - sql:
+            sql: ALTER TABLE scheduling.environment DROP CONSTRAINT IF EXISTS uq_environment_code_school
+        - sql:
+            sql: DROP INDEX IF EXISTS scheduling.uq_environment_code_school
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_environment_code_school ON scheduling.environment (school_id, code) WHERE deleted_at IS NULL
+        - sql:
+            sql: ALTER TABLE scheduling.schedule_block DROP CONSTRAINT IF EXISTS uq_block_environment_slot
+        - sql:
+            sql: DROP INDEX IF EXISTS scheduling.uq_block_environment_slot
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_block_environment_slot ON scheduling.schedule_block (environment_id, day_of_week, starts_at) WHERE deleted_at IS NULL
+        - sql:
+            sql: ALTER TABLE scheduling.schedule_block DROP CONSTRAINT IF EXISTS uq_block_instructor_slot
+        - sql:
+            sql: DROP INDEX IF EXISTS scheduling.uq_block_instructor_slot
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_block_instructor_slot ON scheduling.schedule_block (instructor_actor_id, day_of_week, starts_at) WHERE deleted_at IS NULL
+      rollback:
+        - sql:
+            sql: DROP INDEX IF EXISTS scheduling.uq_session_block_date
+        - sql:
+            sql: ALTER TABLE scheduling.class_session ADD CONSTRAINT uq_session_block_date UNIQUE (schedule_block_id, session_date)
+        - sql:
+            sql: DROP INDEX IF EXISTS scheduling.uq_environment_code_school
+        - sql:
+            sql: ALTER TABLE scheduling.environment ADD CONSTRAINT uq_environment_code_school UNIQUE (school_id, code)
+        - sql:
+            sql: DROP INDEX IF EXISTS scheduling.uq_block_environment_slot
+        - sql:
+            sql: ALTER TABLE scheduling.schedule_block ADD CONSTRAINT uq_block_environment_slot UNIQUE (environment_id, day_of_week, starts_at)
+        - sql:
+            sql: DROP INDEX IF EXISTS scheduling.uq_block_instructor_slot
+        - sql:
+            sql: ALTER TABLE scheduling.schedule_block ADD CONSTRAINT uq_block_instructor_slot UNIQUE (instructor_actor_id, day_of_week, starts_at)

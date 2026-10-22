@@ -65,3 +65,6 @@ databaseChangeLog:
   - include:
       file: 03-tables/012-enforce-updated-at-not-null.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 03-tables/013-partial-unique-indexes.yaml
+      relativeToChangelogFile: true

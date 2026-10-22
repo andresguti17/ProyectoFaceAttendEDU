@@ -1,0 +1,90 @@
+databaseChangeLog:
+  - changeSet:
+      id: acad-partial-unique-indexes
+      author: Andres Gutierrez
+      comment: >-
+        Unique keys become partial (WHERE deleted_at IS NULL): rows are only ever soft-deleted, so a
+        full unique index kept a deleted row's key reserved and re-creating or re-enrolling the same
+        thing failed with a unique violation. Existing live rows are already unique, so nothing conflicts.
+      changes:
+        - sql:
+            sql: ALTER TABLE academic.academic_actor DROP CONSTRAINT IF EXISTS uq_actor_code_school_type
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_actor_code_school_type
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_actor_code_school_type ON academic.academic_actor (school_id, actor_type_id, actor_code) WHERE deleted_at IS NULL
+        - sql:
+            sql: ALTER TABLE academic.academic_actor DROP CONSTRAINT IF EXISTS uq_actor_person_type_school
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_actor_person_type_school
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_actor_person_type_school ON academic.academic_actor (person_id, actor_type_id, school_id) WHERE deleted_at IS NULL
+        - sql:
+            sql: ALTER TABLE academic.academic_period DROP CONSTRAINT IF EXISTS uq_period_name_school
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_period_name_school
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_period_name_school ON academic.academic_period (school_id, name) WHERE deleted_at IS NULL
+        - sql:
+            sql: ALTER TABLE academic.cohort DROP CONSTRAINT IF EXISTS cohort_code_key
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.cohort_code_key
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_cohort_code ON academic.cohort (code) WHERE deleted_at IS NULL
+        - sql:
+            sql: ALTER TABLE academic.course DROP CONSTRAINT IF EXISTS uq_course_code_program
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_course_code_program
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_course_code_program ON academic.course (program_id, code) WHERE deleted_at IS NULL
+        - sql:
+            sql: ALTER TABLE academic.enrollment DROP CONSTRAINT IF EXISTS uq_enrollment_actor_cohort
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_enrollment_actor_cohort
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_enrollment_actor_cohort ON academic.enrollment (academic_actor_id, cohort_id) WHERE deleted_at IS NULL
+        - sql:
+            sql: ALTER TABLE academic.program DROP CONSTRAINT IF EXISTS uq_program_code_school
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_program_code_school
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_program_code_school ON academic.program (school_id, code) WHERE deleted_at IS NULL
+        - sql:
+            sql: ALTER TABLE academic.school DROP CONSTRAINT IF EXISTS school_code_key
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.school_code_key
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_school_code ON academic.school (code) WHERE deleted_at IS NULL
+      rollback:
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_actor_code_school_type
+        - sql:
+            sql: ALTER TABLE academic.academic_actor ADD CONSTRAINT uq_actor_code_school_type UNIQUE (school_id, actor_type_id, actor_code)
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_actor_person_type_school
+        - sql:
+            sql: ALTER TABLE academic.academic_actor ADD CONSTRAINT uq_actor_person_type_school UNIQUE (person_id, actor_type_id, school_id)
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_period_name_school
+        - sql:
+            sql: ALTER TABLE academic.academic_period ADD CONSTRAINT uq_period_name_school UNIQUE (school_id, name)
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_cohort_code
+        - sql:
+            sql: ALTER TABLE academic.cohort ADD CONSTRAINT cohort_code_key UNIQUE (code)
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_course_code_program
+        - sql:
+            sql: ALTER TABLE academic.course ADD CONSTRAINT uq_course_code_program UNIQUE (program_id, code)
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_enrollment_actor_cohort
+        - sql:
+            sql: ALTER TABLE academic.enrollment ADD CONSTRAINT uq_enrollment_actor_cohort UNIQUE (academic_actor_id, cohort_id)
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_program_code_school
+        - sql:
+            sql: ALTER TABLE academic.program ADD CONSTRAINT uq_program_code_school UNIQUE (school_id, code)
+        - sql:
+            sql: DROP INDEX IF EXISTS academic.uq_school_code
+        - sql:
+            sql: ALTER TABLE academic.school ADD CONSTRAINT school_code_key UNIQUE (code)
