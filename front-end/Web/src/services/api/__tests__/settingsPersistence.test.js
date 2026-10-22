@@ -2,6 +2,7 @@ jest.mock("../configurationApi", () => ({
     configurationApi: {
         schoolConfigurations: jest.fn(),
         listSecurity: jest.fn(),
+        listSecurityPublic: jest.fn(),
         createAcademic: jest.fn(),
         updateAcademic: jest.fn(),
         createSecurity: jest.fn(),
@@ -33,6 +34,7 @@ beforeEach(() => {
     jest.clearAllMocks();
     configurationApi.schoolConfigurations.mockResolvedValue([]);
     configurationApi.listSecurity.mockResolvedValue([]);
+    configurationApi.listSecurityPublic.mockResolvedValue([]);
 });
 
 test("stringifies booleans and numbers as strings", () => {
@@ -125,7 +127,7 @@ test("overrides keep the school keys when the caller cannot read the global secu
     configurationApi.schoolConfigurations.mockResolvedValue([
         { configurationName: "web.min_attendance", configurationValue: "75" },
     ]);
-    configurationApi.listSecurity.mockRejectedValue(new Error("403"));
+    configurationApi.listSecurityPublic.mockRejectedValue(new Error("down"));
 
     expect(await loadBackendOverrides(2)).toEqual({ minAttendance: "75" });
 });
@@ -169,12 +171,15 @@ describe("syncInstitutionConfigFromBackend", () => {
     });
 });
 
-test("a role that cannot read the global security keys never requests them (no 403 in the console)", async () => {
+test("every role gets the session time from the public security list, without touching the full list", async () => {
     configurationApi.schoolConfigurations.mockResolvedValue([
         { configurationName: "web.min_attendance", configurationValue: "75" },
     ]);
+    configurationApi.listSecurityPublic.mockResolvedValue([
+        { configurationName: "web.session_time", configurationValue: "30" },
+    ]);
 
-    expect(await loadBackendOverrides(2, { includeSecurity: false })).toEqual({ minAttendance: "75" });
+    expect(await loadBackendOverrides(2)).toEqual({ minAttendance: "75", sessionTime: "30" });
     expect(configurationApi.listSecurity).not.toHaveBeenCalled();
 });
 

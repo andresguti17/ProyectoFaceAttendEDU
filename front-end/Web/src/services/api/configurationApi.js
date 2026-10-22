@@ -9,6 +9,7 @@ export const configurationApi = {
     updateAcademic: (id, b) =>
         request(endpoints.configuration.academicById(id), { method: "PUT", body: b }),
     listSecurity: (params) => request(endpoints.configuration.security, { method: "GET", query: params }),
+    listSecurityPublic: () => request(endpoints.configuration.securityPublic, { method: "GET" }),
     createSecurity: (b) =>
         request(endpoints.configuration.security, { method: "POST", body: b }),
     updateSecurity: (id, b) =>

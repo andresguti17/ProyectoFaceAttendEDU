@@ -21,6 +21,13 @@ describe('configurationPermission', () => {
     expect(configurationPermission('GET', '/api/v1/configurations/security')).toBe('configuration:manage');
   });
 
+  it('lets every role read the allow-listed public security settings, and nothing else of security', () => {
+    expect(configurationPermission('GET', '/api/v1/configurations/security/public')).toBeNull();
+    expect(configurationPermission('POST', '/api/v1/configurations/security/public')).toBe('configuration:manage');
+    expect(configurationPermission('GET', '/api/v1/configurations/security/1')).toBe('configuration:manage');
+    expect(configurationPermission('GET', '/api/v1/security-configurations')).toBe('configuration:manage');
+  });
+
   it('leaves every other GET free of a specific permission (session alone suffices)', () => {
     expect(configurationPermission('GET', '/api/v1/some-other-resource')).toBeNull();
   });

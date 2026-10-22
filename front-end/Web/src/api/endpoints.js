@@ -139,6 +139,8 @@ export const endpoints = {
         academicById: (id) => `${API_V1}/configurations/academic/${id}`,
         security: `${API_V1}/configurations/security`,
         securityById: (id) => `${API_V1}/configurations/security/${id}`,
+        // Solo tiempo de sesión y preferencia de 2FA; lo puede leer cualquier rol.
+        securityPublic: `${API_V1}/configurations/security/public`,
         schoolConfigurations: (schoolId) => `${API_V1}/schools/${schoolId}/configurations`,
         biometricCases: `${API_V1}/biometric-update-cases`,
         biometricCaseById: (id) => `${API_V1}/biometric-update-cases/${id}`,
