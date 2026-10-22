@@ -106,6 +106,37 @@ class ClassSessionControllerTest {
     }
 
     @Nested
+    @DisplayName("GET /api/v1/class-sessions filters")
+    class ListFilterTests {
+
+        @Test
+        @DisplayName("givenDateRangeAndStatus_whenList_thenOnlyClosedSessionsInsideTheRangeAreReturned")
+        void givenDateRangeAndStatus_whenList_thenOnlyClosedSessionsInsideTheRangeAreReturned() throws Exception {
+            ClassSession before = withStatus(openSession, "Closed");
+            before.setClassSessionId(1L);
+            before.setSessionDate(LocalDate.of(2026, 3, 1));
+            ClassSession inside = withStatus(openSession, "Closed");
+            inside.setClassSessionId(2L);
+            inside.setSessionDate(LocalDate.of(2026, 3, 3));
+            ClassSession insideOpen = withStatus(openSession, "Open");
+            insideOpen.setClassSessionId(3L);
+            insideOpen.setSessionDate(LocalDate.of(2026, 3, 3));
+            ClassSession after = withStatus(openSession, "Closed");
+            after.setClassSessionId(4L);
+            after.setSessionDate(LocalDate.of(2026, 3, 9));
+            when(listUseCase.list()).thenReturn(List.of(before, inside, insideOpen, after));
+
+            mockMvc.perform(get("/api/v1/class-sessions")
+                            .param("from", "2026-03-02")
+                            .param("to", "2026-03-08")
+                            .param("sessionStatus", "Closed"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(1))
+                    .andExpect(jsonPath("$[0].classSessionId").value(2));
+        }
+    }
+
+    @Nested
     @DisplayName("POST /api/v1/class-sessions")
     class CreateTests {
 

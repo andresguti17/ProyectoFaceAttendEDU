@@ -63,6 +63,8 @@ function world(overrides: Partial<World> = {}): World {
 
 function peersFor(w: World): Peers {
   return {
+    listClosedSessions: async () => [],
+    getSessionCounts: async () => ({ present: 0, late: 0, absent: 0, justified: 0, total: 0 }),
     getSession: async (id) => ({ classSessionId: id, scheduleBlockId: 4, sessionDate: '2026-10-22', sessionStatus: 'Closed' }),
     getBlock: async (id) => ({ scheduleBlockId: id, cohortId: 25, courseId: 3, instructorActorId: 7, environmentId: 2, startsAt: '07:00:00' }),
     getEnvironmentSchoolId: async () => 30,
@@ -315,10 +317,12 @@ describe('helpers', () => {
   });
 
   it('reads the school settings with the defaults the web shows', () => {
-    expect(alertSettingsFrom({})).toEqual({ emailAbsences: true, atRiskAlerts: true, minAttendance: 80 });
+    expect(alertSettingsFrom({})).toEqual({ emailAbsences: true, atRiskAlerts: true, dailySummary: false, weeklyReport: true, minAttendance: 80 });
     expect(alertSettingsFrom({ 'web.notify_email_alert': 'false', 'web.min_attendance': '70' })).toEqual({
       emailAbsences: false,
       atRiskAlerts: true,
+      dailySummary: false,
+      weeklyReport: true,
       minAttendance: 70,
     });
     expect(alertSettingsFrom({ 'web.min_attendance': 'nope' }).minAttendance).toBe(80);

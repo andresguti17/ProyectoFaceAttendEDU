@@ -8,6 +8,10 @@ export interface AlertSettings {
   emailAbsences: boolean;
   /** "Alerta en riesgo": raise at-risk alerts and e-mail them. */
   atRiskAlerts: boolean;
+  /** "Resumen diario": e-mail the admins the day's attendance. */
+  dailySummary: boolean;
+  /** "Reporte semanal": e-mail admins and instructors the week's attendance. */
+  weeklyReport: boolean;
   /** Minimum attendance percentage; below it a student is at risk. */
   minAttendance: number;
 }
@@ -28,6 +32,8 @@ export function alertSettingsFrom(raw: Record<string, string>): AlertSettings {
   return {
     emailAbsences: flag(raw['web.notify_email_alert'], true),
     atRiskAlerts: flag(raw['web.notify_at_risk'], true),
+    dailySummary: flag(raw['web.notify_daily_summary'], false),
+    weeklyReport: flag(raw['web.notify_weekly_report'], true),
     minAttendance: percent(raw['web.min_attendance'], DEFAULT_MIN_ATTENDANCE),
   };
 }

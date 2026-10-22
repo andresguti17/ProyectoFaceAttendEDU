@@ -445,6 +445,7 @@ services:
       NOTIFICATION_SERVICE_PASSWORD: "${NOTIFICATION_SERVICE_PASSWORD:-}"
       ATTENDANCE_ALERTS_ENABLED: "${ATTENDANCE_ALERTS_ENABLED:-true}"
       RISK_ALERT_HOUR: "${RISK_ALERT_HOUR:-7}"
+      DAILY_SUMMARY_HOUR: "${DAILY_SUMMARY_HOUR:-19}"
       # Canal de correo SMTP (SERVICE.md §9.1): SMTP_HOST vacío = deshabilitado y
       # POST /api/v1/emails responde 202 {"status":"skipped"}. Los valores por
       # defecto de dev (MailHog) viven en .env.example; vacío = seguro.
