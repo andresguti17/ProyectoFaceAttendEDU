@@ -42,7 +42,7 @@ class ClassSessionTransitionsTest {
     @BeforeEach
     void setUp() {
         open = new OpenClassSessionUseCaseImpl(repository);
-        close = new CloseClassSessionUseCaseImpl(repository);
+        close = new CloseClassSessionUseCaseImpl(repository, eventPublisher);
         cancel = new CancelClassSessionUseCaseImpl(repository);
         create = new CreateClassSessionUseCaseImpl(repository, eventPublisher);
         lenient().when(repository.save(any(ClassSession.class))).thenAnswer(call -> call.getArgument(0));
@@ -70,6 +70,30 @@ class ClassSessionTransitionsTest {
         assertEquals("Closed", result.getSessionStatus());
         assertEquals(55L, result.getClosedBy());
         assertNotNull(result.getClosedAt());
+    }
+
+    @Test
+    void closingASessionPublishesTheEventTheNotificationServiceListensTo() {
+        existing("Open");
+
+        close.close(ID, 55L);
+
+        org.mockito.ArgumentCaptor<String> payload = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(eventPublisher).publish(org.mockito.ArgumentMatchers.eq("scheduling.class-session.closed"), payload.capture());
+        String json = payload.getValue();
+        org.junit.jupiter.api.Assertions.assertTrue(json.contains("\"eventType\":\"ClassSessionClosed\""), json);
+        org.junit.jupiter.api.Assertions.assertTrue(json.contains("\"classSessionId\":" + ID), json);
+        org.junit.jupiter.api.Assertions.assertTrue(json.contains("\"scheduleBlockId\":1"), json);
+        org.junit.jupiter.api.Assertions.assertTrue(json.contains("\"sessionDate\":\"2026-03-02\""), json);
+    }
+
+    @Test
+    void aSessionThatCannotBeClosedPublishesNothing() {
+        existing("Closed");
+
+        assertThrows(ValidationException.class, () -> close.close(ID, 1L));
+
+        verify(eventPublisher, never()).publish(any(), any());
     }
 
     @Test

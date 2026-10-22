@@ -628,6 +628,27 @@ Table alert {
   }
 }
 
+Table notification_log {
+  log_id bigint [pk, increment]
+  kind varchar [not null, note: 'ABSENCE_REPORT / AT_RISK_REPORT']
+  dedupe_key varchar [not null, note: 'What it was about, e.g. session:1216; no personal data']
+  school_id int [null, note: 'academic.school.school_id (cross-context, NO FK)']
+  sent_at datetime [not null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    (kind, dedupe_key) [unique, name: 'uq_notification_log_dedupe', where: 'deleted_at IS NULL']
+    school_id [name: 'idx_notification_log_school']
+  }
+}
+
 // Relaciones internas (Notification)
 Ref: alert.alert_type_id > alert_type.alert_type_id
 
