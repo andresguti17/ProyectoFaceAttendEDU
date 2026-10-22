@@ -164,19 +164,70 @@ class OnboardSchoolUseCaseImplTest {
     }
 
     @Test
-    @DisplayName("removes only the school when assigning the role fails")
-    void rollsBackSchoolWhenRoleFails() {
+    @DisplayName("removes the school and still tries to remove the role when assigning it fails (it may have gone through)")
+    void rollsBackSchoolAndRoleWhenRoleFails() {
         stubOpenSession();
         stubIdentityRows();
         when(provisioning.schoolCodeExists(token, "CIES-009")).thenReturn(false);
         when(provisioning.createSchool(token, SCHOOL)).thenReturn(7L);
-        org.mockito.Mockito.doThrow(new OnboardingUnavailableException("authorization down"))
+        org.mockito.Mockito.doThrow(new OnboardingUnavailableException("authorization timeout"))
                 .when(provisioning).assignAdminRole(token, user.getUserId());
 
         assertThatThrownBy(() -> useCase.onboard(SCHOOL, ADMIN)).isInstanceOf(OnboardingUnavailableException.class);
 
+        verify(provisioning).removeAdminRole(token, user.getUserId());
         verify(provisioning).deleteSchool(token, 7L);
-        verify(provisioning, never()).removeAdminRole(anyString(), any(UUID.class));
         verify(closeUserSessionUseCase).closeSession(session.getSessionId());
+    }
+
+    @Test
+    @DisplayName("finds and removes a school that was created even though creating it failed")
+    void rollsBackASchoolWhoseCreationTimedOut() {
+        stubOpenSession();
+        stubIdentityRows();
+        when(provisioning.schoolCodeExists(token, "CIES-009")).thenReturn(false);
+        when(provisioning.createSchool(token, SCHOOL)).thenThrow(new OnboardingUnavailableException("no answer"));
+        when(provisioning.findSchoolIdByCode(token, "CIES-009")).thenReturn(7L);
+
+        assertThatThrownBy(() -> useCase.onboard(SCHOOL, ADMIN)).isInstanceOf(OnboardingUnavailableException.class);
+
+        verify(provisioning).deleteSchool(token, 7L);
+        verify(provisioning).removeAdminRole(token, user.getUserId());
+    }
+
+    @Test
+    @DisplayName("finds and removes the actor of a link that failed after it was created")
+    void rollsBackAnActorWhoseLinkTimedOut() {
+        stubOpenSession();
+        stubIdentityRows();
+        when(provisioning.schoolCodeExists(token, "CIES-009")).thenReturn(false);
+        when(provisioning.createSchool(token, SCHOOL)).thenReturn(7L);
+        when(provisioning.linkAdminToSchool(eq(token), any(UUID.class), anyLong(), anyString()))
+                .thenThrow(new OnboardingUnavailableException("no answer"));
+        when(provisioning.findActorIdsByPerson(token, person.getPersonId())).thenReturn(java.util.List.of(11L));
+
+        assertThatThrownBy(() -> useCase.onboard(SCHOOL, ADMIN)).isInstanceOf(OnboardingUnavailableException.class);
+
+        verify(provisioning).deleteActor(token, 11L);
+        verify(provisioning).removeAdminRole(token, user.getUserId());
+        verify(provisioning).deleteSchool(token, 7L);
+    }
+
+    @Test
+    @DisplayName("keeps undoing the other resources when one rollback step fails")
+    void aFailingRollbackStepDoesNotStopTheRest() {
+        stubOpenSession();
+        stubIdentityRows();
+        when(provisioning.schoolCodeExists(token, "CIES-009")).thenReturn(false);
+        when(provisioning.createSchool(token, SCHOOL)).thenReturn(7L);
+        when(provisioning.linkAdminToSchool(eq(token), any(UUID.class), anyLong(), anyString()))
+                .thenThrow(new OnboardingUnavailableException("academic down"));
+        when(provisioning.findActorIdsByPerson(token, person.getPersonId())).thenReturn(java.util.List.of(11L));
+        org.mockito.Mockito.doThrow(new RuntimeException("timeout")).when(provisioning).deleteActor(token, 11L);
+        org.mockito.Mockito.doThrow(new RuntimeException("timeout")).when(provisioning).removeAdminRole(token, user.getUserId());
+
+        assertThatThrownBy(() -> useCase.onboard(SCHOOL, ADMIN)).isInstanceOf(OnboardingUnavailableException.class);
+
+        verify(provisioning).deleteSchool(token, 7L);
     }
 }
