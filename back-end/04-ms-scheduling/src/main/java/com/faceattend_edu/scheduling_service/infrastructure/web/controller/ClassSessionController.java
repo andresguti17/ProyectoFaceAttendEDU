@@ -10,9 +10,11 @@ import com.faceattend_edu.scheduling_service.infrastructure.web.mapper.ClassSess
 import com.faceattend_edu.scheduling_service.infrastructure.web.security.CallerSchoolContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +54,9 @@ public class ClassSessionController {
     @GetMapping
     public ResponseEntity<List<ClassSessionResponse>> list(
             @RequestParam(required = false) Long scheduleBlockId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String sessionStatus,
             @RequestParam(required = false) Integer limit,
             @RequestParam(required = false) Integer offset) {
         boolean restricted = CallerSchoolContext.restricted();
@@ -59,6 +64,9 @@ public class ClassSessionController {
         Map<Long, Integer> schoolByBlock = new HashMap<>();
         List<ClassSessionResponse> list = listUseCase.list().stream()
                 .filter(s -> scheduleBlockId == null || scheduleBlockId.equals(s.getScheduleBlockId()))
+                .filter(s -> from == null || (s.getSessionDate() != null && !s.getSessionDate().isBefore(from)))
+                .filter(s -> to == null || (s.getSessionDate() != null && !s.getSessionDate().isAfter(to)))
+                .filter(s -> sessionStatus == null || sessionStatus.equalsIgnoreCase(s.getSessionStatus()))
                 // Sin sede propia (restricted && ownSchoolId == null): falla seguro, nada.
                 .filter(s -> !restricted || (ownSchoolId != null
                         && ownSchoolId.equals(schoolByBlock.computeIfAbsent(s.getScheduleBlockId(), id -> schoolOf(s)))))

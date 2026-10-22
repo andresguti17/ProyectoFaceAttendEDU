@@ -71,4 +71,8 @@ export interface Peers {
   getCohortCode(cohortId: number): Promise<string>;
   listSchools(): Promise<Array<{ schoolId: number; name: string }>>;
   getAttendanceCounts(actorIds: number[]): Promise<Map<number, AttendanceCounts>>;
+  /** Closed class sessions whose date falls in [from, to] (YYYY-MM-DD, both inclusive). */
+  listClosedSessions(from: string, to: string): Promise<SessionInfo[]>;
+  /** Records of one session counted by status. */
+  getSessionCounts(sessionId: number): Promise<AttendanceCounts>;
 }
