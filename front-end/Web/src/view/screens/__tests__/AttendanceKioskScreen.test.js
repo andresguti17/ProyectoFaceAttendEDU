@@ -51,8 +51,10 @@ function withProviders(children) {
 }
 
 // Screens left mounted keep their face loop alive and would call the next test's mocks.
+const MANUAL = JSON.stringify({ autoRegister: false });
 const mountedTrees = [];
 afterEach(() => {
+    localStorage.removeItem("faceattend_institution_config");
     while (mountedTrees.length) {
         const tree = mountedTrees.pop();
         act(() => tree.unmount());
@@ -103,6 +105,8 @@ describe("kiosk fingerprint capture (regression: Usa tu huella used to call logi
 
     beforeEach(() => {
         useRolePermissions.mockReturnValue({ canRegisterFace: true });
+
+        localStorage.setItem("faceattend_institution_config", MANUAL);
 
         kioskVm = {
             view: "WAITING",
@@ -363,6 +367,7 @@ describe("kiosk fingerprint preemption and arm-timeout (Important #5)", () => {
 
     beforeEach(() => {
         jest.useFakeTimers();
+        localStorage.setItem("faceattend_institution_config", MANUAL);
         useRolePermissions.mockReturnValue({ canRegisterFace: true });
         kioskVm = {
             view: "WAITING",
@@ -387,7 +392,8 @@ describe("kiosk fingerprint preemption and arm-timeout (Important #5)", () => {
         jest.useRealTimers();
     });
 
-    test("pressing 'Usa tu huella' preempts an in-flight face attempt instead of waiting for it to settle", async () => {
+    test("in automatic mode a fingerprint sample preempts an in-flight face attempt and is identified without any button", async () => {
+        localStorage.removeItem("faceattend_institution_config"); // automatic (default)
         let rejectLoginFace;
         useFaceCapture.mockReturnValue({
             startCamera: jest.fn(),
@@ -398,9 +404,11 @@ describe("kiosk fingerprint preemption and arm-timeout (Important #5)", () => {
         });
         const fingerprint = {
             deviceReady: true,
+            capturing: false,
             sampleReady: false,
             startCapture: jest.fn(),
-            loginFingerprint: jest.fn(),
+            discardSample: jest.fn(),
+            loginFingerprint: jest.fn().mockResolvedValue({ person_id: "p1", score: 12 }),
         };
         useFingerprintReader.mockReturnValue(fingerprint);
 
@@ -410,25 +418,22 @@ describe("kiosk fingerprint preemption and arm-timeout (Important #5)", () => {
             await Promise.resolve();
         });
         expect(hasText(tree, "Verificando rostro...")).toBe(true); // face attempt in flight
+        expect(fingerprint.startCapture).toHaveBeenCalled(); // reader armed on its own
+        expect(findButton(tree, "Usa tu huella")).toBeUndefined(); // no button in automatic mode
 
-        act(() => {
-            findButton(tree, "Usa tu huella").props.onPress();
-        });
-        expect(fingerprint.startCapture).toHaveBeenCalledTimes(1);
-        expect(findButton(tree, "Usa tu huella").props.disabled).toBe(true); // now the active capture
+        // A finger is read: the sample takes the turn from the face attempt.
+        fingerprint.sampleReady = true;
+        rerenderScreen(tree);
+        await act(async () => {});
+        expect(fingerprint.loginFingerprint).toHaveBeenCalledTimes(1);
 
-        // The preempted face attempt finally settles (with a rejection, e.g.
-        // "no match") — it must be ignored, not surfaced as an error, and
-        // must not clobber the fingerprint attempt that superseded it.
+        // The preempted face attempt settles late: ignored, not surfaced as an error.
         await act(async () => {
             rejectLoginFace(new Error("sin coincidencia"));
             await Promise.resolve();
             await Promise.resolve();
         });
-
         expect(kioskVm.onCaptureError).not.toHaveBeenCalled();
-        expect(findButton(tree, "Usa tu huella").props.disabled).toBe(true); // still "FINGER", untouched
-        expect(fingerprint.loginFingerprint).not.toHaveBeenCalled();
     });
 
     test("the fingerprint arm-timeout releases the reader and resets activeCapture if no sample ever arrives", async () => {
@@ -582,5 +587,55 @@ describe("kiosk passive loop backs off while attempts keep failing", () => {
         // Without a backoff this would be ~14 attempts in 3 s.
         expect(face.loginFace.mock.calls.length).toBeGreaterThan(1);
         expect(face.loginFace.mock.calls.length).toBeLessThanOrEqual(6);
+    });
+});
+
+describe("kiosk registration alert", () => {
+    function renderWith(lastRegistration, view = "SUCCESS") {
+        useRolePermissions.mockReturnValue({ canRegisterFace: true });
+        useAttendanceKioskViewModel.mockReturnValue({
+            view,
+            todaysBlocks: [],
+            startClass: jest.fn(),
+            endClass: jest.fn().mockResolvedValue(undefined),
+            session: { classSessionId: 1 },
+            statusMessage: "",
+            socket: null,
+            connectionStatus: "open",
+            registeredActorIds: new Set(),
+            registeredMethods: new Map(),
+            roster: [],
+            lastRegistration,
+            onIdentified: jest.fn(),
+            onCaptureError: jest.fn(),
+        });
+        useFaceCapture.mockReturnValue({
+            startCamera: jest.fn(),
+            cameraReady: false,
+            loginFace: jest.fn(),
+            videoRef: { current: null },
+            livenessAction: "",
+        });
+        useFingerprintReader.mockReturnValue({ deviceReady: false, sampleReady: false, startCapture: jest.fn(), loginFingerprint: jest.fn() });
+        return renderScreen();
+    }
+
+    test("shows who was registered, by which method, and flags a late arrival", () => {
+        const tree = renderWith({ name: "Ana Pérez", method: "FINGERPRINT", status: "Late", duplicate: false });
+        expect(hasText(tree, "Ana Pérez")).toBe(true);
+        expect(hasText(tree, "Registrado mediante: Huella")).toBe(true);
+        expect(hasText(tree, "Llegada tarde")).toBe(true);
+    });
+
+    test("an on-time face registration shows no late flag", () => {
+        const tree = renderWith({ name: "Luis Gómez", method: "FACIAL", status: "Present", duplicate: false });
+        expect(hasText(tree, "Registrado mediante: Rostro")).toBe(true);
+        expect(hasText(tree, "Llegada tarde")).toBe(false);
+    });
+
+    test("a repeat identification names the person and says it was already registered", () => {
+        const tree = renderWith({ name: "Ana Pérez", method: "FACIAL", status: null, duplicate: true }, "DUPLICATE");
+        expect(hasText(tree, "Ana Pérez")).toBe(true);
+        expect(hasText(tree, "Ya estaba registrado mediante: Rostro")).toBe(true);
     });
 });

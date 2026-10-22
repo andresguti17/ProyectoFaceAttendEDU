@@ -431,6 +431,26 @@ function CapturePanel({ kioskVm }) {
         }, FINGERPRINT_ARM_TIMEOUT_MS);
     };
 
+    // Registro automático: el lector queda armado mientras se espera a alguien (sin
+    // pulsar "Usa tu huella") y la muestra se identifica por el mismo WebSocket que
+    // el rostro. Sin registro automático solo se arma con el botón.
+    useEffect(() => {
+        if (!autoRegister || kioskVm.view !== "WAITING") return;
+        if (!fingerprint.deviceReady || fingerprint.capturing || fingerprint.sampleReady) return;
+        if (activeCaptureRef.current === "FINGER") return;
+        fingerprint.startCapture();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoRegister, kioskVm.view, fingerprint.deviceReady, fingerprint.capturing, fingerprint.sampleReady, activeCapture]);
+
+    // Llegó una muestra sin pulsar nada (modo automático): toma el turno al rostro.
+    useEffect(() => {
+        if (!autoRegister || kioskVm.view !== "WAITING" || !fingerprint.sampleReady) return;
+        if (activeCaptureRef.current === "FINGER") return;
+        attemptIdRef.current += 1; // invalida cualquier loginFace() en vuelo
+        setActiveCapture("FINGER");
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoRegister, kioskVm.view, fingerprint.sampleReady]);
+
     useEffect(() => {
         if (activeCapture !== "FINGER") return;
         if (!fingerprint.sampleReady) return;
@@ -440,6 +460,8 @@ function CapturePanel({ kioskVm }) {
             .loginFingerprint()
             .catch((e) => {
                 if (activeCaptureRef.current === "FINGER") kioskVm.onCaptureError(e.message);
+                // Sin esto la muestra fallida seguiría "lista" y se reintentaría sola.
+                fingerprint.discardSample?.();
             })
             .finally(() => {
                 if (activeCaptureRef.current === "FINGER") setActiveCapture(null);
@@ -528,6 +550,9 @@ function CapturePanel({ kioskVm }) {
                         <Text style={{ color: c.text.primary, fontSize: 24, fontWeight: "700", textAlign: "center" }}>
                             {banner.title}
                         </Text>
+                        {(displayState === "SUCCESS" || displayState === "DUPLICATE") && !!kioskVm.lastRegistration && (
+                            <RegistrationAlert registration={kioskVm.lastRegistration} t={t} c={c} />
+                        )}
                         {displayState === "ERROR" && !!kioskVm.statusMessage && (
                             <Text style={{ color: c.text.secondary, fontSize: 14, textAlign: "center" }}>
                                 {kioskVm.statusMessage}
@@ -610,7 +635,7 @@ function CapturePanel({ kioskVm }) {
                                 {t("Reconocer rostro")}
                             </Button>
                         )}
-                        {fingerprint.deviceReady && (
+                        {!autoRegister && fingerprint.deviceReady && (
                             <Button
                                 variant="outline"
                                 style={{ flex: 1 }}
@@ -679,6 +704,40 @@ function CapturePanel({ kioskVm }) {
                 )}
                 </View>
             </ScrollView>
+        </View>
+    );
+}
+
+// Aviso de quién quedó registrado y con qué método, junto al estado de la clase.
+function RegistrationAlert({ registration, t, c }) {
+    const methodLabel = registration.method === "FINGERPRINT" ? t("Huella") : t("Rostro");
+    const late = registration.status === "Late";
+    return (
+        <View accessibilityRole="alert" style={{ alignItems: "center", gap: 8 }}>
+            {!!registration.name && (
+                <Text style={{ color: c.text.primary, fontSize: 22, fontWeight: "700", textAlign: "center" }}>
+                    {registration.name}
+                </Text>
+            )}
+            <Text style={{ color: c.text.secondary, fontSize: 14 }}>
+                {registration.duplicate
+                    ? `${t("Ya estaba registrado mediante")}: ${methodLabel}`
+                    : `${t("Registrado mediante")}: ${methodLabel}`}
+            </Text>
+            {late && (
+                <View
+                    style={{
+                        backgroundColor: c.status.warningLight || c.status.warning,
+                        borderRadius: 999,
+                        paddingHorizontal: 12,
+                        paddingVertical: 4,
+                    }}
+                >
+                    <Text style={{ color: c.status.warningDark || c.text.primary, fontSize: 13, fontWeight: "700" }}>
+                        {t("Llegada tarde")}
+                    </Text>
+                </View>
+            )}
         </View>
     );
 }

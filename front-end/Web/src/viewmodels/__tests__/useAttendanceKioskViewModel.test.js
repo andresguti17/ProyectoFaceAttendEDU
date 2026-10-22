@@ -28,7 +28,7 @@ import { listBlocks, cohortActorByPerson, cohortRoster } from "../../services/ap
 import { schedulingApi } from "../../services/api/schedulingApi";
 import { attendanceApi } from "../../services/api/attendanceApi";
 import { connectBiometricSocket } from "../../services/ws/biometricSocket";
-import { useAttendanceKioskViewModel, todayLocalDate } from "../useAttendanceKioskViewModel";
+import { useAttendanceKioskViewModel, todayLocalDate, isLateArrival } from "../useAttendanceKioskViewModel";
 
 function renderHook() {
     let vm;
@@ -124,8 +124,8 @@ test("endClass closes the session and returns to SELECT_SESSION", async () => {
     expect(getVm().view).toBe("SELECT_SESSION");
 });
 
-async function startedVm({ enrolledPersonId = "person-a", academicActorId = 1, existingRecords = [] } = {}) {
-    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: ((new Date().getDay() + 6) % 7) + 1, cohortId: 10 }]);
+async function startedVm({ enrolledPersonId = "person-a", academicActorId = 1, existingRecords = [], startsAt } = {}) {
+    listBlocks.mockResolvedValue([{ scheduleBlockId: 1, instructorActorId: 7, dayOfWeek: ((new Date().getDay() + 6) % 7) + 1, cohortId: 10, startsAt }]);
     schedulingApi.listSessions.mockResolvedValue([{ classSessionId: 55, scheduleBlockId: 1, sessionStatus: "Open" }]);
     schedulingApi.openSession.mockResolvedValue({ classSessionId: 55, sessionStatus: "Open" });
     cohortActorByPerson.mockResolvedValue(new Map([[enrolledPersonId, academicActorId]]));
@@ -517,4 +517,48 @@ describe("ending, cancelling and correcting a running class", () => {
         });
         expect(getVm().lateActorIds.has(3)).toBe(false);
     });
+});
+
+describe("isLateArrival", () => {
+    const at = (h, m) => new Date(2026, 9, 21, h, m);
+
+    test("is late only after the tolerance has passed", () => {
+        expect(isLateArrival("07:00:00", at(7, 10), 15)).toBe(false);
+        expect(isLateArrival("07:00:00", at(7, 15), 15)).toBe(false); // exactly on the limit
+        expect(isLateArrival("07:00:00", at(7, 16), 15)).toBe(true);
+        expect(isLateArrival("07:00", at(8, 30), 0)).toBe(true);
+    });
+
+    test("a missing or malformed start time never marks late", () => {
+        expect(isLateArrival(undefined, at(23, 0), 15)).toBe(false);
+        expect(isLateArrival("mañana", at(23, 0), 15)).toBe(false);
+    });
+});
+
+test("an arrival past the school's tolerance is recorded as Late and flagged in lateActorIds", async () => {
+    attendanceApi.createRecord.mockResolvedValue({ attendanceRecordId: 9 });
+    cohortRoster.mockResolvedValue([{ academicActorId: 1, personId: "person-a", name: "Ana Pérez" }]);
+    const getVm = await startedVm({ startsAt: "00:00:00" }); // the class started at midnight: always past 15 min (unless run 00:00-00:15)
+
+    await act(async () => {
+        await getVm().onIdentified("person-a", { biometricType: "FINGERPRINT", score: 12 });
+    });
+
+    expect(attendanceApi.createRecord).toHaveBeenCalledWith(expect.objectContaining({ attendanceStatus: "Late", captureMethod: "IOT" }));
+    expect(getVm().lateActorIds.has(1)).toBe(true);
+    expect(getVm().recordIdByActor.get(1)).toBe(9);
+    expect(getVm().lastRegistration).toEqual({ name: "Ana Pérez", method: "FINGERPRINT", status: "Late", duplicate: false });
+});
+
+test("the on-screen alert says who was registered and how, and flags a repeat as a duplicate", async () => {
+    attendanceApi.createRecord.mockResolvedValue({ attendanceRecordId: 1 });
+    cohortRoster.mockResolvedValue([{ academicActorId: 1, personId: "person-a", name: "Ana Pérez" }]);
+    const getVm = await startedVm();
+
+    await act(async () => { await getVm().onIdentified("person-a", { biometricType: "FACIAL", score: 0.95 }); });
+    expect(getVm().lastRegistration).toEqual({ name: "Ana Pérez", method: "FACIAL", status: "Present", duplicate: false });
+
+    await act(async () => { await getVm().onIdentified("person-a", { biometricType: "FINGERPRINT", score: 9 }); });
+    expect(getVm().view).toBe("DUPLICATE");
+    expect(getVm().lastRegistration).toEqual({ name: "Ana Pérez", method: "FACIAL", status: null, duplicate: true });
 });

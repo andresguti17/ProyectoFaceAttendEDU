@@ -368,6 +368,9 @@ export function useFingerprintReader({ vm, socket, onIdentified, fingerNumber = 
         stopCapture,
         saveFingerprint,
         loginFingerprint,
+        // Descarta la muestra pendiente (p. ej. tras un reconocimiento fallido) para poder
+        // volver a armar el lector.
+        discardSample: consumeSample,
         __setSampleForTest: (sample) => {
             stateRef.current.sample = sample;
             setSampleReady(true);

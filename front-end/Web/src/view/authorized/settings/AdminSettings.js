@@ -68,6 +68,7 @@ function buildInitialConfig(config) {
         minAttendance: config.minAttendance,
         daysUntilSanction: config.daysUntilSanction,
         consecutiveDaysForSanction: config.consecutiveDaysForSanction ?? 3,
+        tardyToleranceMinutes: config.tardyToleranceMinutes ?? 15,
         confidence: config.confidenceThreshold,
         autoRegister: config.autoRegister,
         emailAlert: config.emailAlert,
@@ -253,6 +254,8 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         onDaysSanctionChange={(value) => updateConfig("daysUntilSanction", value)}
                         consecutiveDaysForSanction={config.consecutiveDaysForSanction}
                         onConsecutiveDaysChange={(value) => updateConfig("consecutiveDaysForSanction", value)}
+                        tardyToleranceMinutes={config.tardyToleranceMinutes}
+                        onTardyToleranceChange={(value) => updateConfig("tardyToleranceMinutes", value)}
                     />,
                     <ConfidenceSlider
                         value={config.confidence}

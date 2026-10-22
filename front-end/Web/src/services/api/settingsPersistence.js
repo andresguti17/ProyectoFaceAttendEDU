@@ -38,6 +38,8 @@ export const ACADEMIC_FIELD_NAMES = {
     pushNotificationLimit: "web.notify_push_limit",
     pushNotificationLimitByType: "web.notify_push_limit_by_type",
     consecutiveDaysForSanction: "web.consecutive_days_sanction",
+    // Clave nativa de ms-configuration (sembrada con 15): minutos antes de marcar tarde.
+    tardyToleranceMinutes: "tardy_tolerance_minutes",
     academicPeriodType: "web.period_type",
     periodStartDate: "web.period_start",
     periodEndDate: "web.period_end",

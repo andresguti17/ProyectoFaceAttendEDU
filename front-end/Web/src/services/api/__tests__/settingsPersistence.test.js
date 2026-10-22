@@ -93,7 +93,7 @@ test("without school only persists the global security keys", async () => {
 test("loads backend overrides keyed by institution field", async () => {
     configurationApi.schoolConfigurations.mockResolvedValue([
         { configurationName: "web.min_attendance", configurationValue: "75" },
-        { configurationName: "tardy_tolerance_minutes", configurationValue: "10" },
+        { configurationName: "login.max.attempts", configurationValue: "10" },
     ]);
 
     const overrides = await loadBackendOverrides(2);
@@ -176,4 +176,12 @@ test("a role that cannot read the global security keys never requests them (no 4
 
     expect(await loadBackendOverrides(2, { includeSecurity: false })).toEqual({ minAttendance: "75" });
     expect(configurationApi.listSecurity).not.toHaveBeenCalled();
+});
+
+test("the native tardy_tolerance_minutes key is the school tolerance for marking late", async () => {
+    configurationApi.schoolConfigurations.mockResolvedValue([
+        { configurationName: "tardy_tolerance_minutes", configurationValue: "10" },
+    ]);
+
+    expect(await loadBackendOverrides(2)).toEqual({ tardyToleranceMinutes: "10" });
 });

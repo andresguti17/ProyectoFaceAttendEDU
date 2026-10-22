@@ -12,6 +12,7 @@
 //   - minAttendance / onMinAttendanceChange              : number + setter
 //   - daysUntilSanction / onDaysSanctionChange           : number + setter
 //   - consecutiveDaysForSanction / onConsecutiveDaysChange : number + setter
+//   - tardyToleranceMinutes / onTardyToleranceChange     : number + setter
 // ============================================================
 import React from "react";
 import { View, Text } from "react-native";
@@ -25,6 +26,7 @@ export function AttendanceThresholds({
     minAttendance, onMinAttendanceChange,
     daysUntilSanction, onDaysSanctionChange,
     consecutiveDaysForSanction, onConsecutiveDaysChange,
+    tardyToleranceMinutes = 15, onTardyToleranceChange,
 }) {
     const { t } = useTranslation();
     const { c, labelStyle, descStyle } = useSettingsSectionStyles();
@@ -64,6 +66,32 @@ export function AttendanceThresholds({
                             ? t("Umbral bajo — los estudiantes tendrán mucha flexibilidad de faltar. Asegúrate de que sea intencional.")
                             : `${t("Con este umbral, un estudiante puede faltar hasta")} ${Math.floor(100 - minAttendance)} ${t("clases de cada 100 sin quedar en riesgo.")}`}
                     </Text>
+                </View>
+            </View>
+
+            <Divider />
+
+            {/* Tolerancia de llegada tarde */}
+            <View>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 8 }}>
+                    <View style={{ flex: 1, paddingRight: 12 }}>
+                        <Text style={labelStyle}>{t("Tolerancia de llegada tarde")}</Text>
+                        <Text style={[descStyle, { marginTop: 0 }]}>{t("Minutos tras el inicio de la clase antes de que el kiosco registre al estudiante como "Tarde"")}</Text>
+                    </View>
+                    <Text style={{ fontSize: 18, fontWeight: "800", color: c.brand.primary }}>{tardyToleranceMinutes} min</Text>
+                </View>
+                <Slider
+                    minimumValue={0} maximumValue={60} step={5}
+                    value={tardyToleranceMinutes} onValueChange={onTardyToleranceChange}
+                    minimumTrackTintColor={c.brand.primary}
+                    maximumTrackTintColor={c.border.primary}
+                />
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
+                    {[0, 15, 30, 45, 60].map((v) => (
+                        <Text key={v} style={{ fontSize: 12, color: v === tardyToleranceMinutes ? c.brand.primary : c.text.disabled, fontWeight: v === tardyToleranceMinutes ? "700" : "400" }}>
+                            {v}
+                        </Text>
+                    ))}
                 </View>
             </View>
 

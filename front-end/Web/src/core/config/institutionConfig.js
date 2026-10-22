@@ -69,6 +69,7 @@ const DEFAULT_INSTITUTION_CONFIG = {
     minAttendance: 80,
     daysUntilSanction: 15,
     consecutiveDaysForSanction: 3, // Días consecutivos de inasistencia para sanción (1-5)
+    tardyToleranceMinutes: 15,     // Minutos tras el inicio de la clase antes de marcar "Tarde"
     
     // Idioma
     language: "es",
