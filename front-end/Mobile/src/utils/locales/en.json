@@ -1127,6 +1127,10 @@
     "saveErrorMsg": "A problem occurred while saving your facial record."
   },
   "faceCapture": {
+    "blockedTitle": "Restricted access",
+    "updateLocked": "Complete the questionnaire in \"Facial recognition failed?\" first to update your face.",
+    "alreadyRegistered": "Your face is already registered. Only an administrator can register it again.",
+    "replaceNotAllowed": "To replace your registered face you need an update request approved after your last registration.",
     "blink": "Blink once",
     "turn": "Slowly turn your head",
     "openMouth": "Open and close your mouth",

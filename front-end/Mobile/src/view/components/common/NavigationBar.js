@@ -25,7 +25,7 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
 
   const defaultscreens = {
     menu: "Menu",
-    photo: "UpdatePhoto",
+    photo: "FacialFail",
     profile: "Profile",
   };
 
@@ -42,7 +42,7 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
   const getSelectedButton = (routeName) => {
     switch (routeName) {
       case "Menu": return "menu";
-      case "UpdatePhoto": return "photo";
+      case "FacialFail": return "photo";
       case "Profile": return "profile";
       default: return null;
     }

@@ -1,5 +1,6 @@
 import React, {useMemo} from 'react';
-import {SafeAreaView, Text, TouchableOpacity, View} from 'react-native';
+import {Text, TouchableOpacity, View} from 'react-native';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useNavigation} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
@@ -41,7 +42,7 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
     const recentRecordsList = (isAdmin || isTeacher) ? asistenciasRecientes : misRegistrosRecientes;
 
     return (
-        <SafeAreaView
+        <ScreenSafeArea
             style={[styles.safeArea, { backgroundColor: colors.background }]}
             key={`${updateKey}`}
         >
@@ -205,6 +206,6 @@ export default function Dashboard({ onLogout, userRole: propUserRole }) {
                 </View>
             </ScrollViewWrapper>
             <BottomBar />
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

@@ -4,16 +4,16 @@ import {
     Image,
     KeyboardAvoidingView,
     Platform,
-    SafeAreaView,
     ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import CustomAlert from '../components/common/CustomAlert';
 import {createUpdatePhotoStyles} from './Styles/UpdatePhotoScreen/Style';
 import {useUpdatePhotoViewModel} from '../../viewmodels/useUpdatePhotoViewModel';
@@ -54,14 +54,13 @@ export default function UpdatePhoto() {
     });
 
     return (
-        <SafeAreaView style={[styles.safeAreaUpdatePhoto, {flex: 1, backgroundColor: colors.background}]} key={`${updateKey}`}>
+        <ScreenSafeArea style={[styles.safeAreaUpdatePhoto, {flex: 1, backgroundColor: colors.background}]} key={`${updateKey}`}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                                   style={styles.keyboardAvoidingViewUpdatePhoto}>
-                <ScrollView showsVerticalScrollIndicator={false}
+                <ScrollView persistentScrollbar showsVerticalScrollIndicator
                             contentContainerStyle={styles.scrollViewContentUpdatePhoto}
                             keyboardShouldPersistTaps="handled">
-                    <View style={[styles.mainContainerUpdatePhoto, {marginTop: Platform.OS === 'ios' ? 0 : 50}]}>
-                        <BackButton onPress={handleBack}/>
+                    <View style={styles.mainContainerUpdatePhoto}>
                         <View style={styles.imageContainerUpdatePhoto}>
                             <Image
                                 source={require('../../assets/images/perfil-del-usuario.png')}
@@ -155,6 +154,7 @@ export default function UpdatePhoto() {
                 onClose={hideAlert}
                 type={alertConfig.type}
             />
-        </SafeAreaView>
+            <ReturnButton onPress={handleBack} />
+        </ScreenSafeArea>
     );
 }

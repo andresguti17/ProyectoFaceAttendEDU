@@ -1,15 +1,15 @@
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import React, {useMemo} from "react";
 import {
     Image,
     KeyboardAvoidingView,
     Platform,
-    SafeAreaView,
     ScrollView,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from "react-i18next";
 import {useTheme} from '../components/common/ThemeContext';
 import DangerButton from "../components/auth/DangerButton";
@@ -66,7 +66,6 @@ export default function MenuScreen({ onLogout }) {
     };
 
     const handleBack = () => navigateTo("DashboardScreen");
-    const handleUpdatePhoto = () => navigateTo("UpdatePhoto");
     const handleFacialFail = () => navigateTo("FacialFail");
     const handleMenuJustify = () => navigateTo("MenuJustify");
     const handleSettings = () => navigateTo("LanguageSettingsScreen");
@@ -94,7 +93,7 @@ export default function MenuScreen({ onLogout }) {
 
     return (
         <>
-            <SafeAreaView
+            <ScreenSafeArea
                 style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
                 key={`${updateKey}`}
             >
@@ -102,12 +101,11 @@ export default function MenuScreen({ onLogout }) {
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     style={styles.menuScreen}
                 >
-                    <ScrollView
+                    <ScrollView persistentScrollbar
                         style={styles.ScrollView}
                         contentContainerStyle={styles.menuScrollContent}
                     >
-                        <View style={[styles.container, {marginTop: Platform.OS === "ios" ? 0 : 15, marginHorizontal: 10}]}>
-                            <BackButton onPress={handleBack} />
+                        <View style={[styles.container, {marginHorizontal: 10}]}>
 
                             <View style={styles.containerSesion}>
                                 <CustomLogo
@@ -126,13 +124,6 @@ export default function MenuScreen({ onLogout }) {
                                     Pregunta académica: ¿Los profesores también deben actualizar sus parámetros faciales aquí?
                                     Si es solo para estudiantes, usa `isStudent`. Si es para todos los no-admin, usa `!isAdmin`.
                                     Aquí asumo que es solo para estudiantes por seguridad. */}
-                                {isStudent && (
-                                    <MenuItem
-                                        label={t('menu.updateFacialParams')}
-                                        onPress={handleUpdatePhoto}
-                                    />
-                                )}
-
                                 <MenuItem
                                     label={
                                         isAdmin
@@ -167,6 +158,8 @@ export default function MenuScreen({ onLogout }) {
                                     />
                                 )}
 
+                                <ReturnButton onPress={handleBack} inset={false} />
+
                                 <View style={styles.logoutContainer}>
                                     <DangerButton
                                         title={isLoading ? t('menu.loggingOut') : t('menu.logout')}
@@ -178,7 +171,7 @@ export default function MenuScreen({ onLogout }) {
                         </View>
                     </ScrollView>
                 </KeyboardAvoidingView>
-            </SafeAreaView>
+            </ScreenSafeArea>
 
             <CustomAlert
                 visible={alertConfig.visible}

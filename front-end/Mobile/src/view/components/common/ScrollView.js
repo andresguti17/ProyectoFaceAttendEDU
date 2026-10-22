@@ -36,7 +36,7 @@ export default function ScrollViews({
   ) : undefined;
 
   return (
-    <ScrollView
+    <ScrollView persistentScrollbar={showVerticalScroll}
       style={[stylescommon.ScrollViewWrapper]}
       contentContainerStyle={[
         stylescommon.contentContainerScroll,

@@ -2,18 +2,17 @@ import React, {useMemo} from 'react';
 import {
     ActivityIndicator,
     Modal,
-    SafeAreaView,
     ScrollView,
-    StatusBar,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTheme} from '../components/common/ThemeContext';
 import {useTranslation} from 'react-i18next';
 import CustomAlert from '../components/common/CustomAlert';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import {createAttendanceReportStyles} from './Styles/AttendanceReportScreen/Style';
 import {useAttendanceReportViewModel} from '../../viewmodels/useAttendanceReportViewModel';
 
@@ -133,7 +132,7 @@ function PersonCard({person, onGenerateReport, ABSENCE_LIMIT, LATENESS_LIMIT, co
 // PANTALLA PRINCIPAL
 // ===========================================================================
 export default function AttendanceReportScreen({ navigation }) {
-    const { colors, isDark } = useTheme();
+    const { colors } = useTheme();
     const styles = useMemo(() => createAttendanceReportStyles(colors), [colors]);
     const {t} = useTranslation();
 
@@ -177,16 +176,13 @@ export default function AttendanceReportScreen({ navigation }) {
     } = useAttendanceReportViewModel();
 
     return (
-        <SafeAreaView style={[styles.safeAreaReport, { backgroundColor: colors.background }]}>
-            <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
-
+        <ScreenSafeArea style={[styles.safeAreaReport, { backgroundColor: colors.background }]}>
             {/* ── HEADER ── */}
             <View style={[styles.headerReport, { backgroundColor: colors.background, borderBottomWidth: 1, borderBottomColor: colors.border }]}>
-                <BackButton onPress={() => navigation?.goBack()} />
                 <Text style={[styles.headerTitleReport, {color: colors.text}]}>{t('attendanceReport.title')}</Text>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContentReport} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <ScrollView persistentScrollbar contentContainerStyle={styles.scrollContentReport} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator>
                 <View style={styles.containerReport}>
 
                     {/* ── SELECTOR ROL ── */}
@@ -482,6 +478,7 @@ export default function AttendanceReportScreen({ navigation }) {
                 onClose={hideAlert}
                 type={alertConfig.type}
             />
-        </SafeAreaView>
+            <ReturnButton onPress={() => navigation?.goBack()} />
+        </ScreenSafeArea>
     );
 }

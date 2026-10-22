@@ -4,17 +4,17 @@ import {
     KeyboardAvoidingView,
     Modal,
     Platform,
-    SafeAreaView,
     ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from "react-i18next";
 import {useNavigation} from "@react-navigation/native";
 import PrimaryButton from "../components/auth/PrimaryButton";
-import BackButton from "../components/common/BackButton";
+import ReturnButton from "../components/auth/ReturnButton";
 import {useTheme} from "../components/common/ThemeContext";
 import {createAddValidJustificationStyles} from "./Styles/AddValidJustificationScreen/Style";
 import {useAddValidJustificationViewModel} from "../../viewmodels/useAddValidJustificationViewModel";
@@ -113,7 +113,7 @@ function DropdownSelector({ label, placeholder, value, options, onSelect, colors
                     </Text>
 
                     {/* Lista de opciones */}
-                    <FlatList
+                    <FlatList persistentScrollbar
                         data={options}
                         keyExtractor={(item) => item.id}
                         ItemSeparatorComponent={() => (
@@ -299,22 +299,21 @@ export default function AddValidJustificationScreen() {
 
     return (
         <>
-            <SafeAreaView
+            <ScreenSafeArea
                 style={[styles.safeAreaWhite, { backgroundColor: colors.background }]}
             >
                 <KeyboardAvoidingView
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     style={styles.keyboardview}
                 >
-                    <ScrollView
+                    <ScrollView persistentScrollbar
                         style={styles.ScrollView}
                         contentContainerStyle={styles.ScrollViewContent}
-                        showsVerticalScrollIndicator={false}
+                        showsVerticalScrollIndicator
                     >
                         <View style={styles.containerAddValidJustification}>
                             {/* ── Encabezado ───────────────────────────────────────── */}
-                            <BackButton onPress={handleBack} />
-                            <Text style={[styles.mainTitle, { color: colors.text, marginTop: Platform.OS === "ios" ? 0 : 15 }]}>
+                            <Text style={[styles.mainTitle, { color: colors.text }]}>
                                 {t(isEditing ? "admin.editJustificationType" : "admin.newJustificationType")}
                             </Text>
 
@@ -524,7 +523,8 @@ export default function AddValidJustificationScreen() {
                         </View>
                     </ScrollView>
                 </KeyboardAvoidingView>
-            </SafeAreaView>
+                <ReturnButton onPress={handleBack} />
+            </ScreenSafeArea>
 
             <CustomAlert
                 visible={alertConfig.visible}

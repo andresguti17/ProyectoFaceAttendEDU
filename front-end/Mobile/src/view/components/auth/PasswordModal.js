@@ -71,10 +71,10 @@ export function PasswordModal({
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={styleAuth.modalWrapper}>
-                            <ScrollView
+                            <ScrollView persistentScrollbar
                                 contentContainerStyle={styleAuth.modalScrollContent}
                                 keyboardShouldPersistTaps="handled"
-                                showsVerticalScrollIndicator={false}
+                                showsVerticalScrollIndicator
                             >
                                 <Animated.View style={[
                                     styleAuth.passwordModalCard,

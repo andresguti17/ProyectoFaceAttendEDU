@@ -1127,6 +1127,10 @@
     "saveErrorMsg": "Un problème est survenu lors de l'enregistrement de votre visage."
   },
   "faceCapture": {
+    "blockedTitle": "Accès restreint",
+    "updateLocked": "Remplissez d'abord le questionnaire dans « Échec de la reconnaissance faciale ? » pour mettre à jour votre visage.",
+    "alreadyRegistered": "Votre visage est déjà enregistré. Seul un administrateur peut l'enregistrer à nouveau.",
+    "replaceNotAllowed": "Pour remplacer votre visage enregistré, il faut une demande de mise à jour approuvée après votre dernier enregistrement.",
     "blink": "Clignez des yeux une fois",
     "turn": "Tournez lentement la tête",
     "openMouth": "Ouvrez et fermez la bouche",

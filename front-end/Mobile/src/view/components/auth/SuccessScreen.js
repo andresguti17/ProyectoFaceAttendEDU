@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
-import { SafeAreaView, View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import ScreenSafeArea from '../common/ScreenSafeArea';
 import { createAuthStyles } from './style/Style';
 
 export function SuccessScreen({ colors, t, onNavigateToLogin }) {
     const styleAuth = useMemo(() => createAuthStyles(colors), [colors]);
     return (
-        <SafeAreaView style={[styleAuth.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
+        <ScreenSafeArea style={[styleAuth.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
             <View style={styleAuth.successContainer}>
                 <Text style={[styleAuth.successTitle, { color: colors.text }]}>
                     {t('passwordUpdate.successTitle')}
@@ -29,6 +30,6 @@ export function SuccessScreen({ colors, t, onNavigateToLogin }) {
                     </Text>
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

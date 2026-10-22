@@ -3,16 +3,16 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
-    SafeAreaView,
     ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../components/auth/PrimaryButton';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import Separador from '../components/common/Separador';
 import CustomAlert from '../components/common/CustomAlert';
 import {createAddJustifyStyles} from './Styles/AddJustifyScreen/Style';
@@ -43,7 +43,7 @@ export default function AddJustification() {
   } = useAddJustificationViewModel();
 
   return (
-      <SafeAreaView
+      <ScreenSafeArea
           style={[styles.safeAreaWhite, { backgroundColor: colors.background }]}
           key={`${updateKey}`}
       >
@@ -51,13 +51,12 @@ export default function AddJustification() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.keyboardview}
         >
-          <ScrollView
+          <ScrollView persistentScrollbar
               style={styles.ScrollView}
               contentContainerStyle={styles.ScrollViewContent}
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator
           >
             <View style={styles.containerAddJustification}>
-              <BackButton onPress={handleBack} />
               <Text style={[styles.mainTitleAddJustification, { color: colors.text }]}>
                 {t('justify.title')}
               </Text>
@@ -151,8 +150,6 @@ export default function AddJustification() {
                 {t('justify.supportedFormats')}
               </Text>
 
-              <View style={styles.spacer} />
-
               <View style={styles.buttonContainer}>
                 <PrimaryButton
                     title={t('justify.upload')}
@@ -172,6 +169,7 @@ export default function AddJustification() {
             onClose={hideAlert}
             type={alertConfig.type}
         />
-      </SafeAreaView>
+          <ReturnButton onPress={handleBack} />
+      </ScreenSafeArea>
   );
 }

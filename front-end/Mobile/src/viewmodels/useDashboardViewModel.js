@@ -341,11 +341,11 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         { id: 2, title: t('student.myAttendance'), description: t('student.myAttendanceDesc'), color: cat[1], screen: 'DisplayingAttendance' },
         { id: 3, title: t('student.myCourses'), description: t('student.myCoursesDesc'), color: cat[2], screen: 'MyCourses' },
         { id: 4, title: t('student.myJustifications'), description: t('student.myJustificationsDesc'), color: cat[3], screen: 'MenuJustify' },
-        { id: 5, title: t('student.UpdateFace'), description: t('student.UpdateFaceDesc'), color: cat[4], screen: 'UpdatePhoto' },
+        { id: 5, title: t('student.UpdateFace'), description: t('student.UpdateFaceDesc'), color: cat[4], screen: 'FacialFail' },
         { id: 6, title: t('dashboard.news'), description: t('dashboard.newsDesc'), color: cat[5], screen: 'Novedades' },
     ];
     const menuAccionesDocente = [
-        { id: 1, title: t('teacher.updateFace'), description: t('teacher.updateFaceDesc'), color: cat[0], screen: 'UpdatePhoto' },
+        { id: 1, title: t('teacher.updateFace'), description: t('teacher.updateFaceDesc'), color: cat[0], screen: 'FacialFail' },
         { id: 2, title: t('teacher.myAttendance'), description: t('teacher.myAttendanceDesc'), color: cat[1], screen: 'DisplayingAttendance' },
         { id: 3, title: t('teacher.myCourses'), description: t('teacher.myCoursesDesc'), color: cat[2], screen: 'MyCourses' },
         { id: 4, title: t('teacher.pendingJustifications'), description: t('teacher.pendingJustificationsDesc'), color: cat[3], screen: 'PendingJustificationScreen' },

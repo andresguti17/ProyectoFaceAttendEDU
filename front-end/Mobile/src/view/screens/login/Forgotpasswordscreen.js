@@ -5,7 +5,6 @@ import {
     KeyboardAvoidingView,
     LayoutAnimation,
     Platform,
-    SafeAreaView,
     ScrollView,
     Text,
     TextInput,
@@ -14,9 +13,10 @@ import {
     UIManager,
     View,
 } from 'react-native';
+import ScreenSafeArea from '../../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../../components/common/ThemeContext';
-import BackButton from '../../components/common/BackButton';
+import ReturnButton from '../../components/auth/ReturnButton';
 import {VerificationService, VerificationError} from '../../../services/verificationService';
 import {VerificationErrorType} from '../../../services/constants/auths';
 import {createLoginStyles} from '../Styles/Forgotpasswordscreen/Style';
@@ -419,26 +419,21 @@ export default function ForgotPasswordScreen({ navigation }) {
     }, [recovery.error, labels]);
 
     return (
-        <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
+        <ScreenSafeArea style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior="padding"
                 keyboardVerticalOffset={0}
             >
-                <ScrollView
+                <ScrollView persistentScrollbar
                     contentContainerStyle={{ flexGrow: 1 }}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
-                    showsVerticalScrollIndicator={false}
+                    showsVerticalScrollIndicator
                     bounces={false}
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
                         <View style={[styles.container, { backgroundColor: colors.backgroundWhite }]}>
-
-                            <BackButton
-                                onPress={recovery.isLoading ? undefined : handleBack}
-                                style={recovery.isLoading && { opacity: 0.5 }}
-                            />
 
                             <View style={styles.contentContainer}>
 
@@ -500,6 +495,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                     </TouchableWithoutFeedback>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+            <ReturnButton onPress={handleBack} disabled={recovery.isLoading} />
+        </ScreenSafeArea>
     );
 }

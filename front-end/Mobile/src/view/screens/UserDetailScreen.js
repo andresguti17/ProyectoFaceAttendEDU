@@ -1,8 +1,9 @@
 import React, {useEffect, useMemo} from 'react';
-import {ActivityIndicator, SafeAreaView, ScrollView, Text, TouchableOpacity, View} from 'react-native';
+import {ActivityIndicator, ScrollView, Text, TouchableOpacity, View} from 'react-native';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import {createUserDetailStyles} from './Styles/UserDetailScreen/Style';
 import {MIN_ATTENDANCE, useUserDetailViewModel} from '../../viewmodels/useUserDetailViewModel';
 
@@ -58,13 +59,12 @@ export default function UserDetailScreen({navigation, userRole}) {
     );
 
     return (
-        <SafeAreaView style={[styles.userDetailContainer, {backgroundColor: colors.background}]}>
+        <ScreenSafeArea style={[styles.userDetailContainer, {backgroundColor: colors.background}]}>
             <View style={styles.userDetailHeader}>
-                <BackButton onPress={vm.handleBack}/>
                 <Text style={[styles.userDetailTitle, {color: colors.text}]}>{t('userDetail.title')}</Text>
             </View>
 
-            <ScrollView contentContainerStyle={styles.userDetailContent}>
+            <ScrollView persistentScrollbar contentContainerStyle={styles.userDetailContent}>
                 {/* Perfil */}
                 <View style={[card, styles.userDetailProfile]}>
                     <View style={[styles.userDetailAvatar, {backgroundColor: colors.primary}]}>
@@ -158,6 +158,7 @@ export default function UserDetailScreen({navigation, userRole}) {
                     </>
                 )}
             </ScrollView>
-        </SafeAreaView>
+            <ReturnButton onPress={vm.handleBack} />
+        </ScreenSafeArea>
     );
 }
