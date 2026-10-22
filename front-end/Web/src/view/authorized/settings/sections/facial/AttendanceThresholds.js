@@ -76,7 +76,7 @@ export function AttendanceThresholds({
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 8 }}>
                     <View style={{ flex: 1, paddingRight: 12 }}>
                         <Text style={labelStyle}>{t("Tolerancia de llegada tarde")}</Text>
-                        <Text style={[descStyle, { marginTop: 0 }]}>{t("Minutos tras el inicio de la clase antes de que el kiosco registre al estudiante como "Tarde"")}</Text>
+                        <Text style={[descStyle, { marginTop: 0 }]}>{t("Minutos tras el inicio de la clase antes de que el kiosco registre al estudiante como Tarde")}</Text>
                     </View>
                     <Text style={{ fontSize: 18, fontWeight: "800", color: c.brand.primary }}>{tardyToleranceMinutes} min</Text>
                 </View>
