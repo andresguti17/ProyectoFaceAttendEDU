@@ -150,8 +150,6 @@ export default function AddJustification() {
                 {t('justify.supportedFormats')}
               </Text>
 
-              <View style={styles.spacer} />
-
               <View style={styles.buttonContainer}>
                 <PrimaryButton
                     title={t('justify.upload')}
