@@ -18,6 +18,15 @@ class AuthTokenFilterProfileTest {
     }
 
     @Test
+    @DisplayName("the own second factor needs only a session, the use cases ask for password or code")
+    void twoFactorNeedsOnlySession() {
+        for (String action : new String[] {"enable", "confirm", "disable"}) {
+            assertNull(AuthTokenFilter.requiredPermission("POST", "/api/v1/auth/two-factor/" + action, CALLER));
+        }
+        assertEquals("identity.person:write", AuthTokenFilter.requiredPermission("PUT", "/api/v1/auth/two-factor/enable", CALLER));
+    }
+
+    @Test
     @DisplayName("other writes still require identity.person:write")
     void otherWritesStillProtected() {
         assertEquals("identity.person:write", AuthTokenFilter.requiredPermission("PUT", "/api/v1/auth/me", CALLER));

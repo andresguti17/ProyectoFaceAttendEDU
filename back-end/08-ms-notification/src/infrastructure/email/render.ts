@@ -2,6 +2,7 @@
 // never be abused as an open relay that renders arbitrary content.
 export const TEMPLATE_VERIFICATION_CODE = 'verification_code';
 export const TEMPLATE_USER_CREDENTIALS = 'user_credentials';
+export const TEMPLATE_LOGIN_CODE = 'login_code';
 
 // subjectFor returns the fixed subject line of a template. Callers cannot
 // provide their own subject: that is what keeps this endpoint from being a
@@ -9,6 +10,9 @@ export const TEMPLATE_USER_CREDENTIALS = 'user_credentials';
 export function subjectFor(templateName: string): string {
   if (templateName === TEMPLATE_VERIFICATION_CODE) {
     return 'Restablece tu contraseña - FaceAttend EDU';
+  }
+  if (templateName === TEMPLATE_LOGIN_CODE) {
+    return 'Tu código de acceso - FaceAttend EDU';
   }
   if (templateName === TEMPLATE_USER_CREDENTIALS) {
     return 'Tus credenciales de acceso - FaceAttend EDU';
@@ -71,6 +75,48 @@ function renderVerificationCodeHtml(values: Values): string {
 `;
 }
 
+function renderLoginCodeText(values: Values): string {
+  const greeting = values.recipientname ? `, ${values.recipientname}` : '';
+  return `${values.appname}
+
+Hola${greeting}:
+
+Tu código para iniciar sesión es: ${values.code}
+
+Caduca en ${values.minutes} minutos. Si no intentaste iniciar sesión, alguien
+conoce tu contraseña: cámbiala cuanto antes.
+`;
+}
+
+function renderLoginCodeHtml(values: Values): string {
+  const greeting = values.recipientname ? `, ${esc(values.recipientname)}` : '';
+  return `<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${esc(values.appname)}</title>
+</head>
+<body style="margin:0;padding:24px;background:#f4f6fb;font-family:Arial,Helvetica,sans-serif;">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;padding:32px;border:1px solid #e5e7eb;">
+    <h1 style="margin:0 0 16px;font-size:20px;color:#111827;">${esc(values.appname)}</h1>
+    <p style="margin:0 0 12px;font-size:15px;color:#4b5563;">
+      Hola${greeting}, alguien está iniciando sesión en tu cuenta.
+    </p>
+    <p style="margin:0 0 8px;font-size:15px;color:#4b5563;">Tu código para iniciar sesión es:</p>
+    <p style="margin:0 0 20px;font-size:34px;letter-spacing:10px;font-weight:bold;color:#111827;text-align:center;background:#f9fafb;border-radius:8px;padding:16px 0;">
+      ${esc(values.code)}
+    </p>
+    <p style="margin:0 0 6px;font-size:13px;color:#6b7280;">Caduca en ${esc(values.minutes)} minutos.</p>
+    <p style="margin:0;font-size:13px;color:#6b7280;">
+      Si no fuiste tú, alguien conoce tu contraseña: cámbiala cuanto antes.
+    </p>
+  </div>
+</body>
+</html>
+`;
+}
+
 function renderUserCredentialsText(values: Values): string {
   const greeting = values.recipientname ? `, ${values.recipientname}` : '';
   const access = values.loginurl ? `\nIngresa en: ${values.loginurl}\n` : '';
@@ -125,6 +171,7 @@ function renderUserCredentialsHtml(values: Values): string {
 
 const RENDERERS: Record<string, { required: string[]; text: (v: Values) => string; html: (v: Values) => string }> = {
   [TEMPLATE_VERIFICATION_CODE]: { required: ['code'], text: renderVerificationCodeText, html: renderVerificationCodeHtml },
+  [TEMPLATE_LOGIN_CODE]: { required: ['code'], text: renderLoginCodeText, html: renderLoginCodeHtml },
   [TEMPLATE_USER_CREDENTIALS]: { required: ['username', 'password'], text: renderUserCredentialsText, html: renderUserCredentialsHtml },
 };
 

@@ -14,6 +14,10 @@ export const endpoints = {
     identity: {
         login: `${API_V1}/auth/login`,
         logout: `${API_V1}/auth/logout`,
+        loginVerify: `${API_V1}/auth/login/verify`,
+        twoFactorEnable: `${API_V1}/auth/two-factor/enable`,
+        twoFactorConfirm: `${API_V1}/auth/two-factor/confirm`,
+        twoFactorDisable: `${API_V1}/auth/two-factor/disable`,
         forgotPassword: `${API_V1}/auth/forgot-password`,
         verifyCode: `${API_V1}/auth/verify-code`,
         resetPassword: `${API_V1}/auth/reset-password`,

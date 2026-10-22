@@ -18,6 +18,20 @@ export const authApi = {
             method: "POST",
             body: { email: email ?? username, password },
         }),
+    // Segundo paso del login con 2FA: el código que llegó al correo abre la sesión.
+    verifyLogin: ({ email, username, code }) =>
+        request(endpoints.identity.loginVerify, {
+            method: "POST",
+            body: { identifier: email ?? username, code },
+        }),
+    // Segundo factor propio: activar (envía un código al correo), confirmar con
+    // ese código y desactivar. Activar y desactivar piden la contraseña.
+    enableTwoFactor: (password) =>
+        request(endpoints.identity.twoFactorEnable, { method: "POST", body: { password } }),
+    confirmTwoFactor: (code) =>
+        request(endpoints.identity.twoFactorConfirm, { method: "POST", body: { code } }),
+    disableTwoFactor: (password) =>
+        request(endpoints.identity.twoFactorDisable, { method: "POST", body: { password } }),
     logout: (sessionId) =>
         request(endpoints.identity.logout, { method: "POST", query: { sessionId } }),
     me: (identifier) =>

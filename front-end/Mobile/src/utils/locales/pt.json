@@ -60,7 +60,15 @@
     "forgotPassword": "Esqueceu sua senha?",
     "showPassword": "Mostrar senha",
     "hidePassword": "Ocultar senha",
-    "errorTitle": "Não foi possível entrar"
+    "errorTitle": "Não foi possível entrar",
+    "codeTitle": "Verifique sua identidade",
+    "codeSubtitle": "Digite o código de 6 dígitos que enviamos para {{email}}.",
+    "code": "Código de verificação",
+    "codePlaceholder": "000000",
+    "verify": "Verificar",
+    "useOtherAccount": "Usar outra conta",
+    "invalidCode": "Código incorreto ou expirado",
+    "errorCode": "Digite os 6 dígitos do código"
   },
   "tabs": {
     "home": "Início",

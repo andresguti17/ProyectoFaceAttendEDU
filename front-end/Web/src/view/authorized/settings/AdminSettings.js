@@ -17,7 +17,6 @@ import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useDateFormat } from "../../components/hooks/useDateFormat";
 import { useEditableConfig } from "../../components/hooks/useEditableConfig";
-import { SecurityMeter } from "../../components/settings/tabs";
 import {
     GeneralSettings,
     FaceSettings,
@@ -40,7 +39,8 @@ import {
     DailySummaryToggle,
     PushNotificationToggle,
     PushNotificationLimit,
-    TwoFactorRow,
+    TwoFactorSetup,
+    OwnSecurityMeter,
     SessionTimeInput,
     AccentBlock,
 } from "./sections";
@@ -272,7 +272,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
         notifications: (
             <NotificationsSettings
                 sections={[
-                    <FutureNotice message={t("Por ahora los avisos por correo, el reporte semanal, las alertas de riesgo y el resumen diario no se envían automáticamente: tu preferencia queda guardada para cuando se active. Las notificaciones emergentes sí funcionan.")} />,
+                    <FutureNotice message={t("Los correos (ausencias de la clase, estudiantes en riesgo, resumen diario y reporte semanal) llegan a las direcciones registradas de docentes y administradores de la sede, según lo que actives aquí.")} />,
                     <EmailAlertToggle
                         value={config.emailAlert}
                         onToggle={() => updateConfig("emailAlert", !config.emailAlert)}
@@ -315,18 +315,12 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
         security: (
             <SecuritySettings
                 title={t("Seguridad")}
-                header={<SecurityMeter twoFactor={config.twoFactor} sessionTime={config.sessionTime} />}
+                header={<OwnSecurityMeter sessionTime={config.sessionTime} />}
                 sections={[
-                    <FutureNotice message={t("La autenticación de dos factores aún no está disponible al iniciar sesión: la preferencia se guarda pero no se aplica por ahora. El tiempo de sesión sí funciona.")} />,
                     ...(user?.schoolId != null ? [
                         <FutureNotice message={t("El tiempo de sesión es global de la plataforma: lo define el Super Administrador. Tu cambio solo se aplica en este navegador.")} />,
                     ] : []),
-                    <TwoFactorRow
-                        value={config.twoFactor}
-                        onToggle={() => updateConfig("twoFactor", !config.twoFactor)}
-                        description={t("Requiere un código adicional al iniciar sesión. Protege la cuenta aunque alguien obtenga tu contraseña.")}
-                        warningText={t("Sin 2FA, la cuenta queda vulnerable si la contraseña se compromete. Se recomienda activarlo.")}
-                    />,
+                    <TwoFactorSetup />,
                     <SessionTimeInput
                         value={config.sessionTime}
                         onChange={(value) => updateConfig("sessionTime", value)}

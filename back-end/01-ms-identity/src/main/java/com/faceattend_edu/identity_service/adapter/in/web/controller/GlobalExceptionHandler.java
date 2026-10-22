@@ -3,6 +3,7 @@ package com.faceattend_edu.identity_service.adapter.in.web.controller;
 import com.faceattend_edu.identity_service.domain.exception.AccountLockedException;
 import com.faceattend_edu.identity_service.domain.exception.DomainException;
 import com.faceattend_edu.identity_service.domain.exception.DuplicateEntityException;
+import com.faceattend_edu.identity_service.domain.exception.EmailDeliveryException;
 import com.faceattend_edu.identity_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.identity_service.domain.exception.OnboardingUnavailableException;
 import com.faceattend_edu.identity_service.domain.exception.UnauthorizedException;
@@ -100,6 +101,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(ValidationException ex, HttpServletRequest req) {
         return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(EmailDeliveryException.class)
+    public ResponseEntity<Map<String, Object>> handleEmailDelivery(EmailDeliveryException ex, HttpServletRequest req) {
+        log.warn("Verification code not delivered: {}", ex.getMessage());
+        return build(HttpStatus.SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE", ex.getMessage(), req);
     }
 
     @ExceptionHandler(OnboardingUnavailableException.class)

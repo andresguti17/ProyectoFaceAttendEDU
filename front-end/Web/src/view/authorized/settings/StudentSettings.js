@@ -12,7 +12,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Card } from "../../components/common";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useEditableConfig } from "../../components/hooks/useEditableConfig";
-import { SecurityMeter } from "../../components/settings/tabs";
 import {
     NotificationsSettings,
     SecuritySettings,
@@ -22,7 +21,8 @@ import {
     AtRiskAlertToggle,
     PushNotificationToggle,
     PushNotificationLimit,
-    TwoFactorRow,
+    TwoFactorSetup,
+    OwnSecurityMeter,
     SessionTimeInput,
     AccentBlock,
 } from "./sections";
@@ -110,15 +110,9 @@ export function StudentSettings({ section, onSave, onDiscard, onDiscardColors, o
         security: (
             <SecuritySettings
                 title={t("Seguridad")}
-                header={<SecurityMeter twoFactor={config.twoFactor} sessionTime={config.sessionTime} />}
+                header={<OwnSecurityMeter sessionTime={config.sessionTime} />}
                 sections={[
-                    <FutureNotice message={t("La autenticación de dos factores aún no está disponible al iniciar sesión: la preferencia se guarda pero no se aplica por ahora. El tiempo de sesión sí funciona.")} />,
-                    <TwoFactorRow
-                        value={config.twoFactor}
-                        onToggle={() => updateConfig("twoFactor", !config.twoFactor)}
-                        description={t("Requiere un código adicional al iniciar sesión. Protege tu cuenta aunque alguien obtenga tu contraseña.")}
-                        warningText={t("Sin 2FA, tu cuenta queda vulnerable si la contraseña se compromete. Se recomienda activarlo.")}
-                    />,
+                    <TwoFactorSetup />,
                     <SessionTimeInput
                         value={config.sessionTime}
                         onChange={(value) => updateConfig("sessionTime", value)}

@@ -5,8 +5,11 @@ import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserWebMapper;
 import com.faceattend_edu.identity_service.application.port.in.AuthenticateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CloseUserSessionUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetUserByUsernameUseCase;
+import com.faceattend_edu.identity_service.application.port.in.ManageTwoFactorUseCase;
+import com.faceattend_edu.identity_service.application.port.in.VerifyLoginCodeUseCase;
 import com.faceattend_edu.identity_service.application.port.in.RefreshSessionUseCase;
 import com.faceattend_edu.identity_service.domain.exception.AccountLockedException;
+import com.faceattend_edu.identity_service.domain.exception.TwoFactorRequiredException;
 import com.faceattend_edu.identity_service.domain.exception.UnauthorizedException;
 import com.faceattend_edu.identity_service.domain.model.User;
 import com.faceattend_edu.identity_service.domain.model.UserSession;
@@ -58,6 +61,10 @@ class AuthControllerTest {
     private GetUserByUsernameUseCase getUserByUsernameUseCase;
     @MockitoBean
     private RefreshSessionUseCase refreshSessionUseCase;
+    @MockitoBean
+    private VerifyLoginCodeUseCase verifyLoginCodeUseCase;
+    @MockitoBean
+    private ManageTwoFactorUseCase manageTwoFactorUseCase;
 
     private UserSession session;
     private UUID sessionId;
@@ -77,6 +84,105 @@ class AuthControllerTest {
         session.setUserId(user);
         session.setSourceIp("10.0.0.5");
         session.start();
+    }
+
+    @Nested
+    @DisplayName("two-factor")
+    class TwoFactorTests {
+
+        @Test
+        @DisplayName("givenAccountWithTwoFactor_whenLogin_thenReturn200WithChallengeAndNoSession")
+        void givenAccountWithTwoFactor_whenLogin_thenReturn200WithChallengeAndNoSession() throws Exception {
+            when(authenticateUserUseCase.authenticate("carolina.mendoza", "Secret123"))
+                    .thenThrow(new TwoFactorRequiredException("c***@example.com"));
+
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"identifier":"carolina.mendoza","password":"Secret123"}"""))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.twoFactorRequired").value(true))
+                    .andExpect(jsonPath("$.maskedEmail").value("c***@example.com"))
+                    .andExpect(jsonPath("$.sessionId").doesNotExist());
+        }
+
+        @Test
+        @DisplayName("givenRightCode_whenVerifyLogin_thenReturn200Session")
+        void givenRightCode_whenVerifyLogin_thenReturn200Session() throws Exception {
+            when(verifyLoginCodeUseCase.verify("carolina.mendoza", "123456")).thenReturn(session);
+
+            mockMvc.perform(post("/api/v1/auth/login/verify")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"identifier":"carolina.mendoza","code":"123456"}"""))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.sessionId").value(sessionId.toString()))
+                    .andExpect(jsonPath("$.twoFactorRequired").value(false));
+        }
+
+        @Test
+        @DisplayName("givenWrongCode_whenVerifyLogin_thenReturn401")
+        void givenWrongCode_whenVerifyLogin_thenReturn401() throws Exception {
+            when(verifyLoginCodeUseCase.verify("carolina.mendoza", "000000"))
+                    .thenThrow(new UnauthorizedException("Invalid or expired code"));
+
+            mockMvc.perform(post("/api/v1/auth/login/verify")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"identifier":"carolina.mendoza","code":"000000"}"""))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("givenPassword_whenRequestEnable_thenReturn202WithMaskedEmail")
+        void givenPassword_whenRequestEnable_thenReturn202WithMaskedEmail() throws Exception {
+            when(manageTwoFactorUseCase.requestEnable(userId, "Secret123")).thenReturn("c***@example.com");
+
+            mockMvc.perform(post("/api/v1/auth/two-factor/enable")
+                            .requestAttr("X-User-Id", userId.toString())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"password":"Secret123"}"""))
+                    .andExpect(status().isAccepted())
+                    .andExpect(jsonPath("$.twoFactorEnabled").value(false))
+                    .andExpect(jsonPath("$.maskedEmail").value("c***@example.com"));
+        }
+
+        @Test
+        @DisplayName("givenCode_whenConfirm_thenTwoFactorIsEnabled")
+        void givenCode_whenConfirm_thenTwoFactorIsEnabled() throws Exception {
+            mockMvc.perform(post("/api/v1/auth/two-factor/confirm")
+                            .requestAttr("X-User-Id", userId.toString())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"code":"123456"}"""))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.twoFactorEnabled").value(true));
+            verify(manageTwoFactorUseCase).confirmEnable(userId, "123456");
+        }
+
+        @Test
+        @DisplayName("givenNoSession_whenRequestEnable_thenReturn401")
+        void givenNoSession_whenRequestEnable_thenReturn401() throws Exception {
+            mockMvc.perform(post("/api/v1/auth/two-factor/enable")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"password":"Secret123"}"""))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("givenPassword_whenDisable_thenTwoFactorIsOff")
+        void givenPassword_whenDisable_thenTwoFactorIsOff() throws Exception {
+            mockMvc.perform(post("/api/v1/auth/two-factor/disable")
+                            .requestAttr("X-User-Id", userId.toString())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"password":"Secret123"}"""))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.twoFactorEnabled").value(false));
+            verify(manageTwoFactorUseCase).disable(userId, "Secret123");
+        }
     }
 
     @Nested

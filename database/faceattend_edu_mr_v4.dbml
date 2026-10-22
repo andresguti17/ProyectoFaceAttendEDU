@@ -52,6 +52,7 @@ Table app_user {
   authentication_type varchar [not null, note: 'Local, Windows, External']
   status boolean [not null, default: true]
   must_change_password boolean [not null, default: false, note: 'true cuando las credenciales iniciales se entregaron por correo; se apaga al cambiar la contraseña']
+  two_factor_enabled boolean [not null, default: false, note: 'true cuando la persona activó el código por correo como segundo factor al iniciar sesión']
   last_access datetime [null]
 
   created_at datetime [not null]

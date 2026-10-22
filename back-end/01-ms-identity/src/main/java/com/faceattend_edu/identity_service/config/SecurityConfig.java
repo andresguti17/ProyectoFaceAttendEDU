@@ -30,7 +30,7 @@ public class SecurityConfig {
                                  "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 // Bootstrap público (igual que AuthTokenFilter.isPublic): sin sesión
                 // no hay Authentication y anyRequest().authenticated() devolvería 403.
-                .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/logout",
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/login/verify", "/api/v1/auth/logout",
                                  "/api/v1/auth/refresh", "/api/v1/auth/forgot-password",
                                  "/api/v1/auth/verify-code", "/api/v1/auth/reset-password").permitAll()
                 // Lectura de sesión por UUID (ver AuthTokenFilter.isPublic): rompe la
