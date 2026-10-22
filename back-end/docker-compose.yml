@@ -436,7 +436,15 @@ services:
       # Alcance de alertas por actor (aprendiz: propias; instructor: sus fichas).
       ACADEMIC_URL: http://ms-academic:8083
       SCHEDULING_URL: http://ms-scheduling:8084
+      ATTENDANCE_URL: http://ms-attendance:8085
+      CONFIGURATION_URL: http://ms-configuration:8087
       KAFKA_BROKERS: kafka:29092
+      # Alertas de asistencia (correo al cerrar clase + estudiantes en riesgo): necesitan una
+      # cuenta de servicio para leer los otros servicios. Vacío = funcionalidad apagada.
+      NOTIFICATION_SERVICE_USERNAME: "${NOTIFICATION_SERVICE_USERNAME:-}"
+      NOTIFICATION_SERVICE_PASSWORD: "${NOTIFICATION_SERVICE_PASSWORD:-}"
+      ATTENDANCE_ALERTS_ENABLED: "${ATTENDANCE_ALERTS_ENABLED:-true}"
+      RISK_ALERT_HOUR: "${RISK_ALERT_HOUR:-7}"
       # Canal de correo SMTP (SERVICE.md §9.1): SMTP_HOST vacío = deshabilitado y
       # POST /api/v1/emails responde 202 {"status":"skipped"}. Los valores por
       # defecto de dev (MailHog) viven en .env.example; vacío = seguro.
