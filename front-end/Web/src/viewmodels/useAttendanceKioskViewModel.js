@@ -23,6 +23,7 @@ import { useAuth } from "../context/AuthContext";
 import { attendanceApi } from "../services/api/attendanceApi";
 import { cohortActorByPerson, cohortRoster, listBlocks } from "../services/api/referenceData";
 import { schedulingApi } from "../services/api/schedulingApi";
+import { getInstitutionConfig } from "../core/config/institutionConfig";
 import { connectBiometricSocket } from "../services/ws/biometricSocket";
 import { loadClassCards } from "./classCards";
 
@@ -43,9 +44,19 @@ export function todayLocalDate(date = new Date()) {
     return `${year}-${month}-${day}`;
 }
 
+/** La llegada es tarde si pasan más de `toleranceMinutes` desde la hora de inicio del bloque
+ * ("HH:MM[:SS]", hora local de la sede). Sin hora de inicio válida nunca marca tarde. */
+export function isLateArrival(startsAt, now = new Date(), toleranceMinutes = 15) {
+    const match = /^(\d{1,2}):(\d{2})/.exec(String(startsAt ?? ""));
+    if (!match) return false;
+    const startMinutes = Number(match[1]) * 60 + Number(match[2]);
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    return nowMinutes - startMinutes > toleranceMinutes;
+}
+
 // Cuánto se queda la pantalla en SUCCESS/DUPLICATE/ERROR antes de volver
-// a WAITING para la siguiente captura.
-const TERMINAL_VIEW_RESET_MS = 2000;
+// a WAITING para la siguiente captura (lo bastante para leer quién fue).
+const TERMINAL_VIEW_RESET_MS = 3500;
 
 export function useAttendanceKioskViewModel() {
     const { user } = useAuth();
@@ -68,6 +79,11 @@ export function useAttendanceKioskViewModel() {
     const [roster, setRoster] = useState([]);
     // academicActorId que ya están marcados como Tarde (corrección del profesor).
     const [lateActorIds, setLateActorIds] = useState(new Set());
+    // Última persona identificada, para el aviso en pantalla: { name, method:
+    // "FACIAL"|"FINGERPRINT", status: "Present"|"Late", duplicate }.
+    const [lastRegistration, setLastRegistration] = useState(null);
+    const blockRef = useRef(null);
+    const rosterRef = useRef([]);
 
     // Refs: leídos por onIdentified/el listener del socket, que deben ver
     // siempre el valor más reciente sin forzar su propia recreación.
@@ -222,7 +238,11 @@ export function useAttendanceKioskViewModel() {
                 }
 
                 try {
-                    nextSession = await schedulingApi.openSession(nextSession.classSessionId, user?.academicActorId);
+                    // Una sesión recién creada, o una ya abierta, no necesita /open:
+                    // pedirlo devuelve un 400 "already Open" que solo ensucia la consola.
+                    if (nextSession.sessionStatus !== "Open") {
+                        nextSession = await schedulingApi.openSession(nextSession.classSessionId, user?.academicActorId);
+                    }
                 } catch (e) {
                     if (e?.status !== 400) throw e;
                     // El 400 de "ya estaba Open" y el de "no se puede abrir una
@@ -284,6 +304,9 @@ export function useAttendanceKioskViewModel() {
                 setStatusMessage("");
                 sessionRef.current = nextSession;
                 setSession(nextSession);
+                blockRef.current = nextBlock;
+                rosterRef.current = nextRoster;
+                setLastRegistration(null);
                 setBlock(nextBlock);
                 setView("WAITING");
             } catch (e) {
@@ -336,6 +359,9 @@ export function useAttendanceKioskViewModel() {
         setLateActorIds(new Set());
         sessionRef.current = null;
         setSession(null);
+        blockRef.current = null;
+        rosterRef.current = [];
+        setLastRegistration(null);
         setBlock(null);
         setView("SELECT_SESSION");
     }, [session, user]);
@@ -357,18 +383,33 @@ export function useAttendanceKioskViewModel() {
                 return;
             }
 
+            const studentName = rosterRef.current.find((r) => r.academicActorId === academicActorId)?.name || "";
+
             if (registeredActorIdsRef.current.has(academicActorId)) {
                 setStatusMessage("");
+                setLastRegistration({
+                    name: studentName,
+                    method: registeredMethodsRef.current.get(academicActorId) ?? biometricType,
+                    status: null,
+                    duplicate: true,
+                });
                 setView("DUPLICATE");
                 scheduleReturnToWaiting();
                 return;
             }
 
+            // Llegar pasada la tolerancia de la sede (Ajustes > Reconocimiento) marca "Tarde".
+            const late = isLateArrival(
+                blockRef.current?.startsAt,
+                new Date(),
+                getInstitutionConfig().tardyToleranceMinutes
+            );
+
             try {
-                await attendanceApi.createRecord({
+                const created = await attendanceApi.createRecord({
                     classSessionId: currentSession.classSessionId,
                     academicActorId,
-                    attendanceStatus: "Present",
+                    attendanceStatus: late ? "Late" : "Present",
                     // 05-ms-attendance's AttendanceRecord.ALLOWED_METHOD solo
                     // admite FACIAL/MANUAL/IOT/IMPORT — nunca FINGERPRINT.
                     // Decisión de producto (ver ledger): un identify por huella
@@ -385,7 +426,19 @@ export function useAttendanceKioskViewModel() {
                 syncRegisteredActorIds();
                 registeredMethodsRef.current.set(academicActorId, biometricType);
                 syncRegisteredMethods();
+                const recordId = created?.attendanceRecordId ?? created?.attendance_record_id;
+                if (recordId != null) {
+                    recordIdByActorRef.current.set(academicActorId, recordId);
+                    setRecordIdByActor(new Map(recordIdByActorRef.current));
+                }
+                if (late) setLateActorIds((prev) => new Set(prev).add(academicActorId));
                 setStatusMessage("");
+                setLastRegistration({
+                    name: studentName,
+                    method: biometricType,
+                    status: late ? "Late" : "Present",
+                    duplicate: false,
+                });
                 setView("SUCCESS");
             } catch (e) {
                 if (e?.status === 409) {
@@ -395,6 +448,7 @@ export function useAttendanceKioskViewModel() {
                     registeredMethodsRef.current.set(academicActorId, biometricType);
                     syncRegisteredMethods();
                     setStatusMessage("");
+                    setLastRegistration({ name: studentName, method: biometricType, status: null, duplicate: true });
                     setView("DUPLICATE");
                 } else {
                     setStatusMessage(e?.message || "No se pudo registrar la asistencia");
@@ -429,6 +483,9 @@ export function useAttendanceKioskViewModel() {
         setLateActorIds(new Set());
         sessionRef.current = null;
         setSession(null);
+        blockRef.current = null;
+        rosterRef.current = [];
+        setLastRegistration(null);
         setBlock(null);
         setView("SELECT_SESSION");
     }
@@ -512,6 +569,7 @@ export function useAttendanceKioskViewModel() {
         registeredMethods,
         roster,
         lateActorIds,
+        lastRegistration,
         onIdentified,
         onCaptureError,
     };

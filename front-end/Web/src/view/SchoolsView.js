@@ -126,6 +126,14 @@ function SchoolCard({ school, vm, t, c }) {
                         >
                             {school.status ? t("Desactivar") : t("Activar")}
                         </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onPress={() => vm.requestDelete(school)}
+                            leftIcon={<Feather name="trash-2" size={14} color={c.status.danger} />}
+                        >
+                            {t("Eliminar")}
+                        </Button>
                     </View>
                 )}
             </View>
@@ -375,6 +383,20 @@ export default function SchoolsView() {
                 confirmText={vm.statusTarget?.status ? t("Desactivar") : t("Activar")}
                 cancelText={t("Cancelar")}
                 loading={vm.isToggling}
+            />
+
+            <ConfirmModal
+                visible={vm.deleteTarget != null}
+                onClose={vm.closeDeleteConfirm}
+                onConfirm={vm.confirmDelete}
+                title={t("Eliminar sede")}
+                message={`${t("¿Eliminar")} ${vm.deleteTarget?.name}? ${t(
+                    "Se eliminarán también sus programas, fichas, cursos, períodos, actores e inscripciones. Los usuarios y el historial de asistencia no se borran."
+                )}`}
+                variant="danger"
+                confirmText={t("Eliminar")}
+                cancelText={t("Cancelar")}
+                loading={vm.isDeleting}
             />
         </View>
     );

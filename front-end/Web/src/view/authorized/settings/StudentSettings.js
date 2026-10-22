@@ -26,6 +26,7 @@ import {
     SessionTimeInput,
     AccentBlock,
 } from "./sections";
+import { FutureNotice } from "./sections/FutureNotice";
 import {
     getInstitutionConfig,
     updateInstitutionConfig,
@@ -111,6 +112,7 @@ export function StudentSettings({ section, onSave, onDiscard, onDiscardColors, o
                 title={t("Seguridad")}
                 header={<SecurityMeter twoFactor={config.twoFactor} sessionTime={config.sessionTime} />}
                 sections={[
+                    <FutureNotice message={t("La autenticación de dos factores aún no está disponible al iniciar sesión: la preferencia se guarda pero no se aplica por ahora. El tiempo de sesión sí funciona.")} />,
                     <TwoFactorRow
                         value={config.twoFactor}
                         onToggle={() => updateConfig("twoFactor", !config.twoFactor)}

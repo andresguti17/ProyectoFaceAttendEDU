@@ -26,6 +26,7 @@ import {
     SessionTimeInput,
     AccentBlock,
 } from "./sections";
+import { FutureNotice } from "./sections/FutureNotice";
 import {
     getInstitutionConfig,
     updateInstitutionConfig,
@@ -84,6 +85,7 @@ export function TeacherSettings({ section, onSave, onDiscard, onDiscardColors, o
         notifications: (
             <NotificationsSettings
                 sections={[
+                    <FutureNotice message={t("Por ahora los avisos por correo, el reporte semanal, las alertas de riesgo y el resumen diario no se envían automáticamente: tu preferencia queda guardada para cuando se active. Las notificaciones emergentes sí funcionan.")} />,
                     <EmailAlertToggle
                         value={config.emailAlert}
                         onToggle={() => updateConfig("emailAlert", !config.emailAlert)}
@@ -113,6 +115,7 @@ export function TeacherSettings({ section, onSave, onDiscard, onDiscardColors, o
                 title={t("Seguridad")}
                 header={<SecurityMeter twoFactor={config.twoFactor} sessionTime={config.sessionTime} />}
                 sections={[
+                    <FutureNotice message={t("La autenticación de dos factores aún no está disponible al iniciar sesión: la preferencia se guarda pero no se aplica por ahora. El tiempo de sesión sí funciona.")} />,
                     <TwoFactorRow
                         value={config.twoFactor}
                         onToggle={() => updateConfig("twoFactor", !config.twoFactor)}

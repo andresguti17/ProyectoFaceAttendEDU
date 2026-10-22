@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field
 
 from domain.entities.facial_embedding import FacialEmbedding
 from domain.entities.match_log import BiometricMatchLog
-from domain.face_encoding import decode_image, face_encoding, validate_liveness
+from domain.face_encoding import decode_image, face_encoding, liveness_report, validate_liveness
 from domain.ports.out.biometric_repository import BiometricRepositoryPort
 from domain.ports.out.match_log_repository import MatchLogRepositoryPort
 from domain.similarity import cosine, euclidean, face_similarity
@@ -68,6 +68,14 @@ OPERATION_LIVENESS_FAILURE = "LIVENESS_FAILURE"
 NO_ACTIVE_TEMPLATE = "no active facial template"
 NO_MATCH = "no match found"
 FRAMES_PER_ACTION = 6
+
+
+def _liveness_failure_reason(images, action: str) -> str:
+    """Why a gesture was refused, for the log only (numbers, never face data)."""
+    try:
+        return liveness_report(images, action).reason
+    except Exception:  # noqa: BLE001 - diagnostics must never turn a 400 into a 500
+        return "reason unavailable"
 
 
 def _correlation_id(request: Request) -> str | None:
@@ -376,8 +384,15 @@ async def liveness_step(
                 correlation_id=_correlation_id(request),
             ),
         )
-        logger.warning("liveness-step refused: gesture %s not detected", actions[req.action_index])
-        raise HTTPException(status_code=400, detail="Liveness gesture not detected")
+        logger.info(
+            "liveness-step refused: gesture %s not detected (%s)",
+            actions[req.action_index],
+            _liveness_failure_reason(images, actions[req.action_index]),
+        )
+        # Not an error: a kiosk idling in front of nobody asks for this over and over,
+        # and a 4xx per attempt floods the browser console. The step does not advance
+        # (same token) and the client counts it as a failed attempt.
+        return {"challenge_token": req.challenge_token, "completed": False, "detected": False}
     try:
         next_token, _, next_step = advance_liveness_challenge(
             secret, settings.liveness_ttl_seconds, req.challenge_token
@@ -386,7 +401,7 @@ async def liveness_step(
         # Genuine replay of an already-advanced token (not just a validation
         # failure above) — still a 400, never an unhandled 500.
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return {"challenge_token": next_token, "completed": next_step >= len(actions)}
+    return {"challenge_token": next_token, "completed": next_step >= len(actions), "detected": True}
 
 
 @router.post(
@@ -416,7 +431,7 @@ async def enroll_facial_image(
         raise HTTPException(status_code=400, detail="No face found in the image")
 
     duplicate, duplicate_distance = await _closest_other_face(
-        encoding, repository, req.person_id, settings.face_match_max_distance
+        encoding, repository, req.person_id, 1.0 - threshold
     )
     if duplicate is not None:
         raise HTTPException(

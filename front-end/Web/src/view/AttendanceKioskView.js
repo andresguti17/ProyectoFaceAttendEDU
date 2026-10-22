@@ -34,6 +34,7 @@ import { useFaceCapture, CAMERA_SUPPORTED } from "../viewmodels/useFaceCapture";
 import { useFingerprintReader } from "../viewmodels/useFingerprintReader";
 import { ConfirmModal } from "./components/common/modals/ConfirmModal";
 import ClassCard from "./components/kiosk/ClassCard";
+import { getInstitutionConfig, onInstitutionConfigChange } from "../core/config/institutionConfig";
 
 const TONE_COLOR_KEY = {
     default: "secondary",
@@ -46,6 +47,7 @@ const TONE_COLOR_KEY = {
 // Cuánto se espera antes de reintentar arrancar un intento de rostro
 // cuando el "slot" de captura ya está ocupado por una huella en curso.
 const FACE_RETRY_WAIT_MS = 200;
+const FACE_MAX_BACKOFF_MS = 5000;
 // Si se arma el lector de huella y nadie pone el dedo, no se puede quedar
 // esperando para siempre — ni tampoco bloqueado el ciclo pasivo de rostro.
 const FINGERPRINT_ARM_TIMEOUT_MS = 15000;
@@ -226,6 +228,14 @@ function CapturePanel({ kioskVm }) {
     // ESTA pantalla. kioskVm.view nunca distingue esto (ver cabecera del
     // archivo), así que el banner lo deriva combinando ambos más abajo.
     const [activeCapture, setActiveCaptureState] = useState(null);
+    // Ajuste "Registro automático" de la sede. Activado: el rostro se reconoce
+    // solo, de forma continua, por el WebSocket. Desactivado: cada asistencia
+    // se pide pulsando "Reconocer rostro".
+    const [autoRegister, setAutoRegister] = useState(() => getInstitutionConfig().autoRegister !== false);
+    useEffect(
+        () => onInstitutionConfigChange((config) => setAutoRegister(config?.autoRegister !== false)),
+        []
+    );
     // Espejo síncrono de activeCapture: los efectos/callbacks de abajo lo
     // necesitan leer en el momento exacto en que una promesa se resuelve,
     // sin esperar al siguiente render (el bug de Critical #2 era justamente
@@ -312,10 +322,16 @@ function CapturePanel({ kioskVm }) {
     // por view/cameraReady) y activeCapture leído/escrito vía ref, el mismo
     // efecto puede lanzar loginFace() tantas veces como haga falta.
     useEffect(() => {
+        if (!autoRegister) return;
         if (kioskVm.view !== "WAITING") return;
         if (!face.cameraReady) return;
 
         let cancelled = false;
+        // Intentos fallidos seguidos: sin nadie frente a la cámara cada intento
+        // termina en "gesto no detectado", y reintentar cada 200 ms inundaba
+        // el servicio de biometría. Se espacian hasta FACE_MAX_BACKOFF_MS y se
+        // vuelve al ritmo normal en cuanto un intento sale bien.
+        let failedAttempts = 0;
 
         async function loop() {
             while (!cancelled) {
@@ -331,7 +347,9 @@ function CapturePanel({ kioskVm }) {
                 setActiveCapture("FACE");
                 try {
                     await face.loginFace();
+                    failedAttempts = 0;
                 } catch (e) {
+                    failedAttempts += 1;
                     // `cancelled` también se vuelve true cuando la clase ya
                     // terminó (endClass cambia kioskVm.view a SELECT_SESSION,
                     // lo que dispara el cleanup de este efecto) — un rechazo
@@ -356,7 +374,7 @@ function CapturePanel({ kioskVm }) {
                 // esto, un loginFace() que resuelve muy rápido (p. ej. en un
                 // test con mocks) encadenaría awaits sin ceder nunca al
                 // event loop real, acaparándolo por completo.
-                await wait(FACE_RETRY_WAIT_MS);
+                await wait(Math.min(FACE_RETRY_WAIT_MS * 2 ** failedAttempts, FACE_MAX_BACKOFF_MS));
             }
         }
 
@@ -366,7 +384,21 @@ function CapturePanel({ kioskVm }) {
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [kioskVm.view, face.cameraReady]);
+    }, [kioskVm.view, face.cameraReady, autoRegister]);
+
+    // Modo manual (registro automático desactivado): un solo intento por pulsación.
+    const handleFaceRecognizePress = async () => {
+        if (activeCaptureRef.current !== null || !face.cameraReady) return;
+        const attemptId = ++attemptIdRef.current;
+        setActiveCapture("FACE");
+        try {
+            await face.loginFace();
+        } catch (e) {
+            if (attemptIdRef.current === attemptId) kioskVm.onCaptureError(e.message);
+        } finally {
+            if (attemptIdRef.current === attemptId) setActiveCapture(null);
+        }
+    };
 
     // "Usa tu huella" ARMA el lector (startCapture) y marca
     // activeCapture="FINGER" de inmediato — puede interrumpir un intento de
@@ -399,6 +431,26 @@ function CapturePanel({ kioskVm }) {
         }, FINGERPRINT_ARM_TIMEOUT_MS);
     };
 
+    // Registro automático: el lector queda armado mientras se espera a alguien (sin
+    // pulsar "Usa tu huella") y la muestra se identifica por el mismo WebSocket que
+    // el rostro. Sin registro automático solo se arma con el botón.
+    useEffect(() => {
+        if (!autoRegister || kioskVm.view !== "WAITING") return;
+        if (!fingerprint.deviceReady || fingerprint.capturing || fingerprint.sampleReady) return;
+        if (activeCaptureRef.current === "FINGER") return;
+        fingerprint.startCapture();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoRegister, kioskVm.view, fingerprint.deviceReady, fingerprint.capturing, fingerprint.sampleReady, activeCapture]);
+
+    // Llegó una muestra sin pulsar nada (modo automático): toma el turno al rostro.
+    useEffect(() => {
+        if (!autoRegister || kioskVm.view !== "WAITING" || !fingerprint.sampleReady) return;
+        if (activeCaptureRef.current === "FINGER") return;
+        attemptIdRef.current += 1; // invalida cualquier loginFace() en vuelo
+        setActiveCapture("FINGER");
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoRegister, kioskVm.view, fingerprint.sampleReady]);
+
     useEffect(() => {
         if (activeCapture !== "FINGER") return;
         if (!fingerprint.sampleReady) return;
@@ -408,6 +460,8 @@ function CapturePanel({ kioskVm }) {
             .loginFingerprint()
             .catch((e) => {
                 if (activeCaptureRef.current === "FINGER") kioskVm.onCaptureError(e.message);
+                // Sin esto la muestra fallida seguiría "lista" y se reintentaría sola.
+                fingerprint.discardSample?.();
             })
             .finally(() => {
                 if (activeCaptureRef.current === "FINGER") setActiveCapture(null);
@@ -427,7 +481,11 @@ function CapturePanel({ kioskVm }) {
               : kioskVm.view;
 
     const messages = {
-        WAITING: { icon: "user", tone: "default", title: t("Acércate al lector") },
+        WAITING: {
+            icon: "user",
+            tone: "default",
+            title: autoRegister ? t("Acércate al lector") : t("Pulsa «Reconocer rostro»"),
+        },
         CAPTURING_FACE: { icon: "camera", tone: "primary", title: t("Verificando rostro...") },
         CAPTURING_FINGER: { icon: "target", tone: "primary", title: t("Verificando huella...") },
         SUCCESS: { icon: "check-circle", tone: "success", title: t("Asistencia registrada") },
@@ -492,6 +550,9 @@ function CapturePanel({ kioskVm }) {
                         <Text style={{ color: c.text.primary, fontSize: 24, fontWeight: "700", textAlign: "center" }}>
                             {banner.title}
                         </Text>
+                        {(displayState === "SUCCESS" || displayState === "DUPLICATE") && !!kioskVm.lastRegistration && (
+                            <RegistrationAlert registration={kioskVm.lastRegistration} t={t} c={c} />
+                        )}
                         {displayState === "ERROR" && !!kioskVm.statusMessage && (
                             <Text style={{ color: c.text.secondary, fontSize: 14, textAlign: "center" }}>
                                 {kioskVm.statusMessage}
@@ -563,7 +624,18 @@ function CapturePanel({ kioskVm }) {
                     </Card>
 
                     <View style={{ flexDirection: "row", gap: 12, width: "100%" }}>
-                        {fingerprint.deviceReady && (
+                        {!autoRegister && (
+                            <Button
+                                variant="primary"
+                                style={{ flex: 1 }}
+                                disabled={activeCapture !== null || !face.cameraReady || kioskVm.view !== "WAITING"}
+                                leftIcon={<Feather name="camera" size={16} color={c.brand.textOnPrimary} />}
+                                onPress={handleFaceRecognizePress}
+                            >
+                                {t("Reconocer rostro")}
+                            </Button>
+                        )}
+                        {!autoRegister && fingerprint.deviceReady && (
                             <Button
                                 variant="outline"
                                 style={{ flex: 1 }}
@@ -632,6 +704,40 @@ function CapturePanel({ kioskVm }) {
                 )}
                 </View>
             </ScrollView>
+        </View>
+    );
+}
+
+// Aviso de quién quedó registrado y con qué método, junto al estado de la clase.
+function RegistrationAlert({ registration, t, c }) {
+    const methodLabel = registration.method === "FINGERPRINT" ? t("Huella") : t("Rostro");
+    const late = registration.status === "Late";
+    return (
+        <View accessibilityRole="alert" style={{ alignItems: "center", gap: 8 }}>
+            {!!registration.name && (
+                <Text style={{ color: c.text.primary, fontSize: 22, fontWeight: "700", textAlign: "center" }}>
+                    {registration.name}
+                </Text>
+            )}
+            <Text style={{ color: c.text.secondary, fontSize: 14 }}>
+                {registration.duplicate
+                    ? `${t("Ya estaba registrado mediante")}: ${methodLabel}`
+                    : `${t("Registrado mediante")}: ${methodLabel}`}
+            </Text>
+            {late && (
+                <View
+                    style={{
+                        backgroundColor: c.status.warningLight || c.status.warning,
+                        borderRadius: 999,
+                        paddingHorizontal: 12,
+                        paddingVertical: 4,
+                    }}
+                >
+                    <Text style={{ color: c.status.warningDark || c.text.primary, fontSize: 13, fontWeight: "700" }}>
+                        {t("Llegada tarde")}
+                    </Text>
+                </View>
+            )}
         </View>
     );
 }

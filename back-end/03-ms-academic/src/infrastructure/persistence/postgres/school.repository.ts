@@ -1,5 +1,7 @@
 import type { School } from '../../../domain/entities/School';
 import type { ISchoolRepository } from '../../../domain/ports/out/ISchoolRepository';
+import { withTransaction } from '../../db/database';
+import { RepositoryError, translateDbError } from '../errors';
 import { PostgresCrudRepository, type FieldSpec, intToText, toInt } from './crud.repository';
 import { AUDIT_FIELDS } from './audit.fields';
 
@@ -34,4 +36,35 @@ export class PostgresSchoolRepository extends PostgresCrudRepository<School> imp
     { field: 'status', column: 'status' },
     ...AUDIT_FIELDS,
   ];
+
+  async softDeleteCascade(id: number): Promise<boolean> {
+    try {
+      return await withTransaction(async (client) => {
+        const found = await client.query(
+          'SELECT 1 FROM academic.school WHERE school_id = $1 AND deleted_at IS NULL FOR UPDATE',
+          [id],
+        );
+        if (found.rowCount === 0) return false;
+
+        // Children first; each statement only touches rows that are still alive.
+        const programs = 'SELECT program_id FROM academic.program WHERE school_id = $1';
+        const cohorts = `SELECT cohort_id FROM academic.cohort WHERE program_id IN (${programs})`;
+        const actors = 'SELECT academic_actor_id FROM academic.academic_actor WHERE school_id = $1';
+        const cascade = [
+          `UPDATE academic.enrollment SET deleted_at = NOW() WHERE deleted_at IS NULL
+             AND (cohort_id IN (${cohorts}) OR academic_actor_id IN (${actors}))`,
+          `UPDATE academic.cohort SET deleted_at = NOW() WHERE deleted_at IS NULL AND program_id IN (${programs})`,
+          `UPDATE academic.course SET deleted_at = NOW() WHERE deleted_at IS NULL AND program_id IN (${programs})`,
+          'UPDATE academic.program SET deleted_at = NOW() WHERE deleted_at IS NULL AND school_id = $1',
+          'UPDATE academic.academic_period SET deleted_at = NOW() WHERE deleted_at IS NULL AND school_id = $1',
+          'UPDATE academic.academic_actor SET deleted_at = NOW() WHERE deleted_at IS NULL AND school_id = $1',
+          'UPDATE academic.school SET deleted_at = NOW() WHERE deleted_at IS NULL AND school_id = $1',
+        ];
+        for (const sql of cascade) await client.query(sql, [id]);
+        return true;
+      });
+    } catch (err) {
+      throw err instanceof RepositoryError ? err : translateDbError(err, this.qualifiedTable);
+    }
+  }
 }

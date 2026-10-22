@@ -27,6 +27,8 @@ NOD_DELTA = 0.08
 # considered the same still image.
 FROZEN_FRAME_DIFF = 0.5
 FRAMES_PER_ACTION = 6
+# Frames of a gesture in which the face must be measured (see `liveness_report`).
+MIN_MEASURED_FRAMES = 4
 
 
 def decode_image(data_url_or_b64: str, max_bytes: int, max_pixels: int) -> np.ndarray:
@@ -118,57 +120,96 @@ def _eye_aspect_ratio(eye: list[tuple[int, int]]) -> float:
     )
 
 
-def _action_detected(action: str, measurements: list[FaceMeasurements]) -> bool:
+def _gesture_delta(action: str, measurements: list[FaceMeasurements]) -> tuple[float, float] | None:
+    """(observed movement, movement needed) for `action`; None for an unknown action."""
+
     def series(field: str) -> list[float]:
         return [getattr(measurement, field) for measurement in measurements]
 
     if action == "blink":
         values = series("ear")
-        return max(values) - min(values) >= BLINK_EAR_DELTA
+        return max(values) - min(values), BLINK_EAR_DELTA
     if action == "turn":  # legacy: any horizontal movement, no direction
         values = series("yaw")
-        return max(values) - min(values) >= MOVEMENT_DELTA
+        return max(values) - min(values), MOVEMENT_DELTA
     if action == "turn_left":
         values = series("yaw")
-        return max(values) - values[0] >= MOVEMENT_DELTA
+        return max(values) - values[0], MOVEMENT_DELTA
     if action == "turn_right":
         values = series("yaw")
-        return values[0] - min(values) >= MOVEMENT_DELTA
+        return values[0] - min(values), MOVEMENT_DELTA
     if action == "open_mouth":
         values = series("mouth_open")
-        return max(values) - min(values) >= MOUTH_OPENING_DELTA
+        return max(values) - min(values), MOUTH_OPENING_DELTA
     if action == "smile":
         values = series("mouth_width")
-        return max(values) - values[0] >= SMILE_DELTA
+        return max(values) - values[0], SMILE_DELTA
     if action == "nod":
         values = series("pitch")
-        return max(values) - min(values) >= NOD_DELTA
-    return False
+        return max(values) - min(values), NOD_DELTA
+    return None
+
+
+def _action_detected(action: str, measurements: list[FaceMeasurements]) -> bool:
+    gesture = _gesture_delta(action, measurements)
+    return gesture is not None and gesture[0] >= gesture[1]
+
+
+def _max_frame_diff(images: list[np.ndarray]) -> float:
+    """Largest mean absolute pixel difference (0-255) between consecutive frames."""
+    largest = 0.0
+    for previous, current in zip(images, images[1:]):
+        if previous.shape != current.shape:
+            return float("inf")
+        diff = np.mean(np.abs(previous.astype(np.int16) - current.astype(np.int16)))
+        largest = max(largest, float(diff))
+    return largest
 
 
 def _frames_are_frozen(images: list[np.ndarray]) -> bool:
     """True when every consecutive pair of frames is (almost) pixel-identical:
     a still image or a repeated frame, never a live camera (sensor noise alone
     moves pixels)."""
-    for previous, current in zip(images, images[1:]):
-        if previous.shape != current.shape:
-            return False
-        diff = np.mean(np.abs(previous.astype(np.int16) - current.astype(np.int16)))
-        if float(diff) >= FROZEN_FRAME_DIFF:
-            return False
-    return True
+    return _max_frame_diff(images) < FROZEN_FRAME_DIFF
 
 
-def validate_liveness(images: list[np.ndarray], action: str) -> bool:
-    """One action's worth of frames (`FRAMES_PER_ACTION`) show the gesture."""
+class LivenessReport(NamedTuple):
+    detected: bool
+    reason: str  # why it failed (or "ok"); numbers only, never image or face data
+
+
+def liveness_report(images: list[np.ndarray], action: str) -> LivenessReport:
+    """One action's worth of frames (`FRAMES_PER_ACTION`) and whether they show the gesture.
+
+    Frames where no single face with landmarks is found (a head turned far, a nod,
+    motion blur) are skipped instead of failing the whole gesture, but at least
+    `MIN_MEASURED_FRAMES` must be measured — the detector loses the face first
+    precisely when the person does the movement being asked for.
+    """
     if len(images) != FRAMES_PER_ACTION:
-        return False
+        return LivenessReport(False, f"expected {FRAMES_PER_ACTION} frames, got {len(images)}")
     if _frames_are_frozen(images):
-        return False
+        return LivenessReport(
+            False,
+            f"frames are identical (still image, max difference {_max_frame_diff(images):.2f} < {FROZEN_FRAME_DIFF})",
+        )
     measurements: list[FaceMeasurements] = []
     for image in images:
         measurement = face_measurements(image)
-        if measurement is None:
-            return False
-        measurements.append(measurement)
-    return _action_detected(action, measurements)
+        if measurement is not None:
+            measurements.append(measurement)
+    if len(measurements) < MIN_MEASURED_FRAMES:
+        return LivenessReport(False, f"face measured in {len(measurements)}/{len(images)} frames")
+    gesture = _gesture_delta(action, measurements)
+    if gesture is None:
+        return LivenessReport(False, f"unknown gesture {action}")
+    observed, needed = gesture
+    if observed < needed:
+        return LivenessReport(
+            False, f"{action} movement {observed:.3f} < {needed:.3f} ({len(measurements)}/{len(images)} frames)"
+        )
+    return LivenessReport(True, "ok")
+
+
+def validate_liveness(images: list[np.ndarray], action: str) -> bool:
+    return liveness_report(images, action).detected

@@ -100,3 +100,38 @@ test(`gives up after ${GESTURE_ATTEMPTS} failed attempts on the same gesture and
     expect(FaceAuthService.submitLivenessStep).toHaveBeenCalledTimes(GESTURE_ATTEMPTS);
     expect(FaceAuthService.enrollFace).not.toHaveBeenCalled();
 });
+
+test('a 200 with detected:false counts as a failed attempt, retries with the same token, then succeeds', async () => {
+    FaceAuthService.getLivenessChallenge.mockResolvedValue({
+        challenge_token: 'token-0',
+        actions: ['blink'],
+    });
+    FaceAuthService.submitLivenessStep
+        .mockResolvedValueOnce({challenge_token: 'token-0', completed: false, detected: false})
+        .mockResolvedValueOnce({challenge_token: 'token-1', completed: true, detected: true});
+    FaceAuthService.enrollFace.mockResolvedValue({embedding_id: 'e1'});
+
+    await enrollFaceWithLiveness({
+        personId: 'person-a',
+        captureFrame: frameCapturer(),
+        translateActionLabel: (action) => action,
+    });
+
+    expect(FaceAuthService.submitLivenessStep).toHaveBeenCalledTimes(2);
+    expect(FaceAuthService.submitLivenessStep.mock.calls[1][0].challengeToken).toBe('token-0');
+    expect(FaceAuthService.enrollFace).toHaveBeenCalledWith(expect.objectContaining({challengeToken: 'token-1'}));
+});
+
+test('detected:false on every attempt gives up and never enrolls', async () => {
+    FaceAuthService.getLivenessChallenge.mockResolvedValue({challenge_token: 'token-0', actions: ['blink']});
+    FaceAuthService.submitLivenessStep.mockResolvedValue({challenge_token: 'token-0', completed: false, detected: false});
+
+    await expect(
+        enrollFaceWithLiveness({
+            personId: 'person-a',
+            captureFrame: frameCapturer(),
+            translateActionLabel: (action) => action,
+        })
+    ).rejects.toThrow('Liveness gesture not detected');
+    expect(FaceAuthService.enrollFace).not.toHaveBeenCalled();
+});

@@ -14,6 +14,18 @@ def face_similarity(a: list[float], b: list[float]) -> float:
     return max(0.0, 1.0 - euclidean(a, b))
 
 
+def face_threshold_from_confidence(percent: float) -> float:
+    """Face score threshold (`1 - max distance`) for the confidence a school sets in Settings.
+
+    The slider runs 50-100 %: 50 % is dlib's own same-person tolerance (distance
+    0.60) and 100 % the strictest allowed (0.35). Out-of-range values are clamped,
+    so a bad setting can never open the matcher wider than dlib's tolerance or
+    close it past what a real camera can meet.
+    """
+    clamped = min(max(percent, 50.0), 100.0)
+    return 1.0 - (0.60 - (clamped - 50.0) * 0.005)
+
+
 def cosine(a: list[float], b: list[float]) -> float:
     if not a or not b or len(a) != len(b):
         return 0.0

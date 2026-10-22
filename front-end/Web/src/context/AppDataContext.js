@@ -16,6 +16,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
+import { syncInstitutionConfigFromBackend } from "../services/api/settingsPersistence";
 import { resetReferenceData, setActiveSchool, setUsersListAllowed } from "../services/api/referenceData";
 import { useAuth } from "./AuthContext";
 
@@ -287,6 +288,9 @@ export function AppDataProvider({ children }) {
         // La sede del usuario acota todas las cargas de abajo. Debe fijarse ANTES
         // de pedir nada: setActiveSchool limpia la caché si la sede cambió.
         setActiveSchool(user.schoolId ?? null);
+        // Ajustes de la sede (asistencia mínima, reconocimiento, avisos) para todos los roles.
+        // La seguridad global solo la lee quien administra (los demás recibirían un 403).
+        syncInstitutionConfigFromBackend(user.schoolId ?? null, { includeSecurity: user?.role === "admin" }).catch(() => {});
         // /users exige identity.person:write (solo administración): se prohibe
         // la petición ANTES de que ningún Storage la dispare con Instructor/Aprendiz.
         setUsersListAllowed(user?.role === "admin");

@@ -69,6 +69,7 @@ const DEFAULT_INSTITUTION_CONFIG = {
     minAttendance: 80,
     daysUntilSanction: 15,
     consecutiveDaysForSanction: 3, // Días consecutivos de inasistencia para sanción (1-5)
+    tardyToleranceMinutes: 15,     // Minutos tras el inicio de la clase antes de marcar "Tarde"
     
     // Idioma
     language: "es",
@@ -80,7 +81,6 @@ const DEFAULT_INSTITUTION_CONFIG = {
     // Reconocimiento facial
     confidenceThreshold: 85,
     autoRegister: true,
-    savePhotos: false,
     
     // Notificaciones
     emailAlert: true,
@@ -108,6 +108,13 @@ const DEFAULT_INSTITUTION_CONFIG = {
     // DEPRECADO: Mantener por compatibilidad con versiones antiguas
     accentColor: "#3B82F6",
 };
+
+/**
+ * Copia de los valores por defecto (para restablecer ajustes por sede)
+ */
+export function getDefaultInstitutionConfig() {
+    return { ...DEFAULT_INSTITUTION_CONFIG };
+}
 
 /**
  * Obtener la configuración institucional desde localStorage

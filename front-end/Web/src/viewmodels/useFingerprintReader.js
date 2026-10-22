@@ -68,10 +68,16 @@ export function loadDigitalPersonaSdk() {
     return sdkPromise;
 }
 
-function normalizeFingerprintQuality(event) {
-    const value = event?.quality ?? event?.code ?? event?.qualityCode ?? event?.value ?? event;
-    const quality = Number(value);
-    return Number.isInteger(quality) && quality >= 0 && quality <= 100 ? quality : null;
+// onQualityReported entrega un Fingerprint.QualityCode del SDK, NO un porcentaje:
+// 0 = Good y 1..24 = problema (NoImage, TooLight, TooDark, NotCentered...). Leerlo
+// como 0-100 convertía una huella buena en "calidad 0" y ms-biometric la rechazaba
+// (mínimo 30). Se traduce a la escala del servicio: Good -> 100, cualquier problema -> 0.
+const SDK_QUALITY_GOOD = 0;
+
+export function normalizeFingerprintQuality(event) {
+    const code = Number(event?.quality ?? event?.code ?? event?.qualityCode ?? event?.value ?? event);
+    if (!Number.isInteger(code) || code < 0) return null;
+    return code === SDK_QUALITY_GOOD ? 100 : 0;
 }
 
 /** El lector entrega la muestra como string, o como "[chunk][chunk]" URL-encoded. */
@@ -362,6 +368,9 @@ export function useFingerprintReader({ vm, socket, onIdentified, fingerNumber = 
         stopCapture,
         saveFingerprint,
         loginFingerprint,
+        // Descarta la muestra pendiente (p. ej. tras un reconocimiento fallido) para poder
+        // volver a armar el lector.
+        discardSample: consumeSample,
         __setSampleForTest: (sample) => {
             stateRef.current.sample = sample;
             setSampleReady(true);
