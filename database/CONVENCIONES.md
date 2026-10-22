@@ -71,6 +71,7 @@ Todas las tablas incluyen este bloque de columnas **sin excepción**:
 
 **Reglas:**
 - `deleted_at` → **borrado lógico** (soft delete). Ninguna tabla elimina registros físicamente.
+- Las claves únicas de negocio son **índices únicos parciales** `WHERE deleted_at IS NULL` (`uq_*`): un registro borrado libera su clave (código de sede, ficha, programa, curso; par actor + ficha; etc.). Un `UNIQUE` completo seguiría reservando la clave de una fila borrada. Quedan completos, a propósito, los de identidad (documento, usuario), roles/permisos y catálogos (`academic_actor_type.code`, `alert_type.code`).
 - `row_version` → **bloqueo optimista**. Se incrementa en cada UPDATE vía trigger.
 - `created_by` / `updated_by` / `deleted_by` → Siempre `UUID` (apuntan a `Identity.app_user.user_id`).
 - Los triggers `fn_audit_timestamps()` en cada esquema gestionan `created_at`, `updated_at` y `row_version` automáticamente.

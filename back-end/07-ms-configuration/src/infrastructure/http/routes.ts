@@ -213,7 +213,22 @@ function registerSecurityConfigRoutes(app: FastifyInstance, repos: Configuration
   });
 }
 
+/**
+ * The only global security settings the web needs from every role (idle sign-out time and the
+ * 2FA preference). The full security list stays behind `configuration:manage`: it also holds
+ * token lifetimes and login/lockout limits.
+ */
+export const PUBLIC_SECURITY_KEYS = ['web.session_time', 'web.two_factor'] as const;
+
 export async function registerConfigurationRoutes(app: FastifyInstance, repos: ConfigurationRepositories) {
+  // Any authenticated role (see permissions.ts); registered next to the security routes it must not shadow.
+  app.get('/api/v1/configurations/security/public', async () => {
+    const found = await Promise.all(PUBLIC_SECURITY_KEYS.map((name) => repos.security.search({ name })));
+    return found
+      .flat()
+      .map((row) => ({ configurationName: row.configurationName, configurationValue: row.configurationValue }));
+  });
+
   // SERVICE.md canonical bases
   registerAcademicConfigRoutes(app, repos, '/api/v1/configurations/academic');
   registerSecurityConfigRoutes(app, repos, '/api/v1/configurations/security');

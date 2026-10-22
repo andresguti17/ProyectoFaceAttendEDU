@@ -11,7 +11,11 @@ const ACADEMIC_CONFIG_PATH = /^\/api\/v1\/(configurations\/academic|academic-con
 // for any school other than the caller's, so no permission is needed to gate it.
 const SCHOOL_CONFIG_READ_PATH = /^\/api\/v1\/schools\/[^/]+\/configurations/;
 
+// The allow-listed security settings (idle sign-out time, 2FA preference) are readable by every role.
+const SECURITY_PUBLIC_PATH = /^\/api\/v1\/configurations\/security\/public\/?$/;
+
 export const configurationPermission: PermissionRule = (method, path) => {
+  if (method === 'GET' && SECURITY_PUBLIC_PATH.test(path)) return null;
   if (method === 'GET' && SCHOOL_CONFIG_READ_PATH.test(path)) return null;
   if (path.startsWith('/api/v1/quality')) return 'configuration:manage';
   if (BIOMETRIC_CASE_PATH.test(path)) {

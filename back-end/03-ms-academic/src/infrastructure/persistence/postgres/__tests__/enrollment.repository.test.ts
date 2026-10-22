@@ -39,6 +39,9 @@ describe('PostgresEnrollmentRepository.createOrRestore', () => {
     expect(updateSql).toMatch(/UPDATE academic\.enrollment/);
     expect(updateSql).toMatch(/deleted_at = NULL/);
     expect(updateSql).toMatch(/deleted_at IS NOT NULL/);
+    // One row only: with partial unique indexes several deleted rows of a pair can exist, and
+    // reviving them all at once would put two live enrollments on the same pair.
+    expect(updateSql).toMatch(/ORDER BY enrollment_id DESC LIMIT 1/);
     expect(updateParams).toEqual([1834, 25, 'Active', '2026-10-21']);
     expect(mockRunQuery.mock.calls.some(([sql]) => /INSERT INTO/.test(sql))).toBe(false);
     expect(record.enrollmentId).toBe(1702);

@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
@@ -41,17 +42,43 @@ public class SchoolProvisioningHttpAdapter implements SchoolProvisioningPort {
     public SchoolProvisioningHttpAdapter(OnboardingProperties properties) {
         this.properties = properties;
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(2000);
-        factory.setReadTimeout(5000);
+        // A service that has been idle can take several seconds to answer its first call.
+        factory.setConnectTimeout(3000);
+        factory.setReadTimeout(20000);
         this.restTemplate = new RestTemplate(factory);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public boolean schoolCodeExists(String token, String code) {
-        List<Map<String, Object>> schools = exchange(HttpMethod.GET, academic("/api/v1/schools"), token, null, List.class).getBody();
-        if (schools == null) return false;
-        return schools.stream().anyMatch(s -> code.equalsIgnoreCase(String.valueOf(s.get("code"))));
+        return findSchoolIdByCode(token, code) != null;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Long findSchoolIdByCode(String token, String code) {
+        List<Map<String, Object>> schools = exchangeIdempotent(HttpMethod.GET, academic("/api/v1/schools"), token, List.class).getBody();
+        if (schools == null) return null;
+        return schools.stream()
+                .filter(s -> code.equalsIgnoreCase(String.valueOf(s.get("code"))))
+                .map(s -> s.get("schoolId"))
+                .filter(Number.class::isInstance)
+                .map(id -> ((Number) id).longValue())
+                .findFirst()
+                .orElse(null);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<Long> findActorIdsByPerson(String token, UUID personId) {
+        List<Map<String, Object>> actors = exchangeIdempotent(
+                HttpMethod.GET, academic("/api/v1/academic-actors?personId=" + personId), token, List.class).getBody();
+        if (actors == null) return List.of();
+        return actors.stream()
+                .map(a -> a.get("academicActorId"))
+                .filter(Number.class::isInstance)
+                .map(id -> ((Number) id).longValue())
+                .toList();
     }
 
     @Override
@@ -71,22 +98,37 @@ public class SchoolProvisioningHttpAdapter implements SchoolProvisioningPort {
         } catch (HttpStatusCodeException ex) {
             if (ex.getStatusCode().value() == 409) throw new DuplicateEntityException("School", school.code());
             throw unavailable("create school", ex);
+        } catch (ResourceAccessException ex) {
+            // The call timed out, but the school may have been created anyway: look before giving up
+            // (and before the rollback has to guess).
+            Long existing = findSchoolIdByCode(token, school.code());
+            if (existing != null) return existing;
+            throw new OnboardingUnavailableException("Could not create school (no answer)", ex);
         }
     }
 
     @Override
     public void assignAdminRole(String token, UUID userId) {
         Map<String, Object> body = Map.of("roleId", adminRoleId(token));
+        String url = authorization("/api/v1/users/" + userId + "/roles");
         try {
-            exchange(HttpMethod.POST, authorization("/api/v1/users/" + userId + "/roles"), token, body, Map.class);
+            try {
+                exchange(HttpMethod.POST, url, token, body, Map.class);
+            } catch (ResourceAccessException timeout) {
+                // May have gone through despite the timeout: assigning again is harmless (409 = already assigned).
+                exchange(HttpMethod.POST, url, token, body, Map.class);
+            }
         } catch (HttpStatusCodeException ex) {
+            if (ex.getStatusCode().value() == 409) return;
             throw unavailable("assign role", ex);
+        } catch (ResourceAccessException ex) {
+            throw new OnboardingUnavailableException("Could not assign role (no answer)", ex);
         }
     }
 
     @Override
     public void removeAdminRole(String token, UUID userId) {
-        exchange(HttpMethod.DELETE, authorization("/api/v1/users/" + userId + "/roles/" + adminRoleId(token)), token, null, Void.class);
+        deleteIgnoringMissing(authorization("/api/v1/users/" + userId + "/roles/" + adminRoleId(token)), token);
     }
 
     @Override
@@ -102,22 +144,27 @@ public class SchoolProvisioningHttpAdapter implements SchoolProvisioningPort {
             return asLong(created, "academicActorId");
         } catch (HttpStatusCodeException ex) {
             throw unavailable("link administrator", ex);
+        } catch (ResourceAccessException ex) {
+            // Same ambiguity as createSchool: the actor may exist even though the answer never came.
+            List<Long> existing = findActorIdsByPerson(token, personId);
+            if (!existing.isEmpty()) return existing.get(0);
+            throw new OnboardingUnavailableException("Could not link administrator (no answer)", ex);
         }
     }
 
     @Override
     public void deleteActor(String token, long actorId) {
-        exchange(HttpMethod.DELETE, academic("/api/v1/academic-actors/" + actorId), token, null, Void.class);
+        deleteIgnoringMissing(academic("/api/v1/academic-actors/" + actorId), token);
     }
 
     @Override
     public void deleteSchool(String token, long schoolId) {
-        exchange(HttpMethod.DELETE, academic("/api/v1/schools/" + schoolId), token, null, Void.class);
+        deleteIgnoringMissing(academic("/api/v1/schools/" + schoolId), token);
     }
 
     @SuppressWarnings("unchecked")
     private long adminRoleId(String token) {
-        List<Map<String, Object>> roles = exchange(HttpMethod.GET, authorization("/api/v1/roles"), token, null, List.class).getBody();
+        List<Map<String, Object>> roles = exchangeIdempotent(HttpMethod.GET, authorization("/api/v1/roles"), token, List.class).getBody();
         if (roles != null) {
             for (Map<String, Object> role : roles) {
                 String name = String.valueOf(role.get("roleName")).trim().toLowerCase(Locale.ROOT).replace('_', ' ');
@@ -125,6 +172,24 @@ public class SchoolProvisioningHttpAdapter implements SchoolProvisioningPort {
             }
         }
         throw new OnboardingUnavailableException("Administrator role is not configured");
+    }
+
+    /** GET/DELETE are safe to repeat: one retry when the service did not answer in time. */
+    private <T> ResponseEntity<T> exchangeIdempotent(HttpMethod method, String url, String token, Class<T> type) {
+        try {
+            return exchange(method, url, token, null, type);
+        } catch (ResourceAccessException timeout) {
+            return exchange(method, url, token, null, type);
+        }
+    }
+
+    /** DELETE for rollbacks: already gone (404) is the outcome we want. */
+    private void deleteIgnoringMissing(String url, String token) {
+        try {
+            exchangeIdempotent(HttpMethod.DELETE, url, token, Void.class);
+        } catch (HttpStatusCodeException ex) {
+            if (ex.getStatusCode().value() != 404) throw ex;
+        }
     }
 
     private <T> ResponseEntity<T> exchange(HttpMethod method, String url, String token, Object body, Class<T> type) {

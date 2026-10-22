@@ -16,6 +16,7 @@ import { Platform } from "react-native";
 import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
 import { personMap, fullName } from "../services/api/referenceData";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+import { fingerprintQualityCode, fingerprintQualityMessage } from "./fingerprintQuality";
 
 // ms-biometric exige finger_number (1..10); el lector no lo reporta, así que
 // lo elige quien registra (FingerSelector). Si no se indica, se usa el pulgar derecho.
@@ -228,7 +229,10 @@ export function useFingerprintReader({ vm, socket, onIdentified, fingerNumber = 
 
         state.api.onQualityReported = (event) => {
             state.quality = normalizeFingerprintQuality(event);
+            state.qualityMessage = fingerprintQualityMessage(fingerprintQualityCode(event));
             setQuality(state.quality);
+            // Qué corregir, mientras el usuario todavía tiene el dedo en el lector.
+            if (state.qualityMessage) setReaderState(t(state.qualityMessage));
         };
         state.api.onSamplesAcquired = async (event) => {
             if (state.sample || state.stopping) return;
@@ -237,9 +241,18 @@ export function useFingerprintReader({ vm, socket, onIdentified, fingerNumber = 
                 setReaderState(t("El lector no devolvió una muestra válida. Intenta capturar de nuevo."));
                 return;
             }
-            state.sample = { format: event.sampleFormat ?? null, data: sampleData, quality: state.quality };
+            state.sample = {
+                format: event.sampleFormat ?? null,
+                data: sampleData,
+                quality: state.quality,
+                qualityMessage: state.qualityMessage ?? null,
+            };
             setSampleReady(true);
-            setReaderState(t("Huella capturada. Retira el dedo; ya puedes guardar o verificar."));
+            setReaderState(
+                state.qualityMessage
+                    ? t(state.qualityMessage)
+                    : t("Huella capturada. Retira el dedo; ya puedes guardar o verificar.")
+            );
             state.stopping = true;
             try {
                 await state.api.stopAcquisition(event.deviceUid || state.device);
@@ -300,6 +313,9 @@ export function useFingerprintReader({ vm, socket, onIdentified, fingerNumber = 
     const takeSample = () => {
         const sample = stateRef.current.sample;
         if (!sample) throw new Error(t("Captura una huella primero."));
+        // El lector ya dijo qué falló: se avisa aquí, sin enviar una muestra que el servidor
+        // rechazaría con un "calidad baja" sin detalle.
+        if (sample.qualityMessage) throw new Error(t(sample.qualityMessage));
         return sample;
     };
 

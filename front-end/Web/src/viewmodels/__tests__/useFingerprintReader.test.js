@@ -122,3 +122,21 @@ test("saveFingerprint enrolls the finger chosen in the UI", async () => {
         expect.objectContaining({ personId: "p1", fingerNumber: 7 })
     );
 });
+
+test("a sample the reader flagged as bad is refused with the reader's own explanation, before calling the server", async () => {
+    const vm = { run: (op) => op(), setStatus: jest.fn(), requirePersonId: () => "p1", refreshSummary: jest.fn() };
+    const getHook = renderHook({ vm });
+    biometricCaptureApi.enrollFingerprint.mockClear();
+
+    act(() => {
+        getHook().__setSampleForTest({
+            format: 1,
+            data: "abc",
+            quality: 0,
+            qualityMessage: "Dedo mal centrado. Céntralo sobre el sensor.",
+        });
+    });
+
+    await expect(getHook().saveFingerprint()).rejects.toThrow("Dedo mal centrado. Céntralo sobre el sensor.");
+    expect(biometricCaptureApi.enrollFingerprint).not.toHaveBeenCalled();
+});

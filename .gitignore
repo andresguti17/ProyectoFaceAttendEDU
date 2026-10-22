@@ -63,3 +63,7 @@ database/backups/
 # Subagent-driven-development scratch workspace (ledgers, briefs, review packages)
 .superpowers/
 .vercel
+
+# Local review accounts (credentials) and Expo cache: never versioned
+.cuentas.local
+.expo/

@@ -21,6 +21,8 @@ import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useAutomaticPeriodAdvance } from "./components/hooks/useAutomaticPeriodAdvance";
+import { useAuth } from "../context/AuthContext";
+import { pushInstitutionConfig } from "../services/api/settingsPersistence";
 import { AdminSettings, TeacherSettings, StudentSettings } from "./authorized/settings";
 import SchoolInfoView from "./SchoolInfoView";
 import ContactsView from "./ContactsView";
@@ -32,8 +34,14 @@ export default function SettingsView({ section = "appearance" }) {
     const permissions = useRolePermissions();
     const c = theme.colors;
 
-    // Activar verificación automática de períodos expirados
-    useAutomaticPeriodAdvance(true, 60); // Verificar cada 60 minutos
+    // Verificación automática de períodos expirados: solo la hace el administrador de una
+    // sede y sube las fechas nuevas a los ajustes de la sede, así el avance ocurre una vez
+    // para todos (antes lo recalculaba cada navegador, de cualquier rol, sin guardarlo).
+    const { user } = useAuth();
+    const schoolId = user?.schoolId ?? null;
+    useAutomaticPeriodAdvance(user?.role === "admin" && schoolId != null, 60, (dates) =>
+        pushInstitutionConfig(schoolId, dates, { canWriteSecurity: false }).catch(() => {})
+    );
 
     const [previewAccent, setPreviewAccent] = useState(accentColor);
     const [hasUnsavedAccent, setHasUnsavedAccent] = useState(false);
