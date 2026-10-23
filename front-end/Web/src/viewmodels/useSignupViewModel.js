@@ -18,7 +18,7 @@ const STEP_FIELDS = {
     1: ["code", "name", "cityName", "address", "phone", "email"],
     2: [
         "documentType", "documentNumber", "adminName", "adminLastName",
-        "adminEmail", "adminPhone", "username", "password", "confirmPassword",
+        "adminEmail", "adminPhone", "username", "password", "confirmPassword", "privacyAccepted",
     ],
 };
 

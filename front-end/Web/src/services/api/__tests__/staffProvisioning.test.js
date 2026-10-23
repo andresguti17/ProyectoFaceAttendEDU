@@ -28,6 +28,7 @@ const base = {
     email: "Ana@universidad.edu",
     documentNumber: "1234567890",
     password: "Secret123",
+    consent: { privacyAccepted: true, biometricAccepted: false },
 };
 
 function oneCohortCourse() {
@@ -70,6 +71,7 @@ test("admin: one server call with person, role and the ADMIN school actor", asyn
         sendCredentials: false,
         roleName: "Administrador",
         academicActor: { actorTypeId: 3, schoolId: 2, actorCode: "ADMIN001" },
+        consent: { policyVersion: "2026-10", biometricAccepted: false },
     });
 });
 
@@ -163,6 +165,12 @@ test("student: requires cohort choice when several are active", async () => {
     expect(authApi.provisionUser).not.toHaveBeenCalled();
 });
 
+test("no account is created without the privacy notice (Ley 1581)", async () => {
+    await expect(provisionStaff({ ...base, consent: null, role: "teacher", schoolId: 5 })).rejects.toThrow("aviso de privacidad");
+    await expect(importStudents([{ name: "A", code: "1", email: "a@b.c", course: "MAT" }])).rejects.toThrow("aviso de privacidad");
+    expect(authApi.provisionUser).not.toHaveBeenCalled();
+});
+
 test("cohortsForCourseCode returns nothing for an unknown course", async () => {
     listCourses.mockResolvedValue([]);
     await expect(cohortsForCourseCode("XYZ")).resolves.toEqual([]);
@@ -244,7 +252,7 @@ describe("credentials email", () => {
         });
 
         async function run(options) {
-            const promise = importStudents(rows, options);
+            const promise = importStudents(rows, { privacyAccepted: true, ...options });
             await jest.runAllTimersAsync();
             return promise;
         }

@@ -12,6 +12,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
+import { consentApi } from "../services/api/consentApi";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 
 export const BIOMETRIC_SECTIONS = ["face-register", "face-login", "fingerprint"];
@@ -35,6 +36,8 @@ export function useBiometricsViewModel() {
     });
     const [health, setHealth] = useState("checking"); // checking | ok | down
     const [summary, setSummary] = useState(null); // { has_face, has_fingerprint } | null
+    // Ley 1581: autorización biométrica de la persona elegida (null = aún no se sabe).
+    const [biometricAuthorized, setBiometricAuthorized] = useState(null);
     const mounted = useRef(true);
 
     useEffect(() => {
@@ -81,6 +84,39 @@ export function useBiometricsViewModel() {
     useEffect(() => {
         refreshSummary();
     }, [refreshSummary]);
+
+    const refreshConsent = useCallback(async () => {
+        if (!person?.personId) {
+            setBiometricAuthorized(null);
+            return null;
+        }
+        try {
+            const consent = await consentApi.get(person.personId);
+            const authorized = consent?.biometricAuthorized === true;
+            if (mounted.current) setBiometricAuthorized(authorized);
+            return authorized;
+        } catch {
+            // Sin respuesta de identity no se ofrece la captura: el servidor la rechazaría (428/503).
+            if (mounted.current) setBiometricAuthorized(false);
+            return false;
+        }
+    }, [person]);
+
+    useEffect(() => {
+        refreshConsent();
+    }, [refreshConsent]);
+
+    // Registra la autorización biométrica (propia o asistida por el admin) y habilita la captura.
+    const authorizeBiometrics = useCallback(
+        () =>
+            run(async () => {
+                const personId = requirePersonId();
+                await consentApi.accept(personId, { biometricAccepted: true });
+                setStatus(t("Autorización biométrica registrada."), "ok");
+                await refreshConsent();
+            }),
+        [run, requirePersonId, setStatus, refreshConsent, t]
+    );
 
     const setPerson = useCallback((selected) => {
         setPersonState(selected ?? null);
@@ -160,5 +196,8 @@ export function useBiometricsViewModel() {
         checkPerson,
         revokeFace,
         removeAll,
+        biometricAuthorized,
+        refreshConsent,
+        authorizeBiometrics,
     };
 }

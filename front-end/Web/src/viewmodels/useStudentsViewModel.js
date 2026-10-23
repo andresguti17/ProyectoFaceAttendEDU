@@ -31,6 +31,7 @@ export function validateStudentForm(form) {
     if (!form.code.trim()) return "Completa todos los campos";
     if (!form.email.trim()) return "Completa todos los campos";
     if (!form.role) return "Completa todos los campos";
+    if (form.privacyAccepted !== true) return "Confirma que la persona aceptó el aviso de privacidad";
     // Todos los roles se crean en el backend (POST /persons exige
     // documentNumber, POST /users exige password de 8-100 chars).
     if (!String(form.documentNumber ?? "").trim()) return "Completa todos los campos";
@@ -132,6 +133,7 @@ export function useStudentsViewModel() {
                     cohortId: String(form.cohortId ?? "").trim() || null,
                     details: form,
                     sendCredentials: form.sendCredentials !== false,
+                    consent: { privacyAccepted: form.privacyAccepted === true, biometricAccepted: form.biometricAccepted === true },
                 });
             } catch (e) {
                 return e?.message || "No se pudo registrar el estudiante en el backend";

@@ -11,6 +11,7 @@
 
 import { authApi } from "./authApi";
 import { generateTemporaryPassword } from "../../core/utils/passwordGenerator";
+import { consentBody } from "./consentApi";
 import { academicApi } from "./academicApi";
 import { listBlocks, listCohorts, listCourses, listPrograms, personMap, resetReferenceData } from "./referenceData";
 
@@ -206,7 +207,10 @@ export async function provisionStaff({
     schoolId = null,
     details = {},
     sendCredentials = false,
+    consent = null,
 }) {
+    // Ley 1581: sin la aceptación del aviso de privacidad no se crea la cuenta.
+    if (!consent?.privacyAccepted) throw new Error("Confirma que la persona aceptó el aviso de privacidad");
     const target = ROLE_BY_KIND[role];
     if (!target || role === "student") throw new Error("Unsupported staff role");
     const { name: firstName, lastName } = splitName(name);
@@ -227,6 +231,7 @@ export async function provisionStaff({
         sendCredentials,
         roleName: target.roleName,
         academicActor: { actorTypeId: target.actorTypeId, schoolId: targetSchoolId, actorCode: String(code).trim() },
+        consent: consentBody({ biometricAccepted: consent.biometricAccepted }),
     });
 
     // listActors()/personMap()/userByPersonMap() de referenceData.js se
@@ -266,7 +271,9 @@ export async function provisionStudent({
     details = {},
     resetCache = true,
     sendCredentials = false,
+    consent = null,
 }) {
+    if (!consent?.privacyAccepted) throw new Error("Confirma que la persona aceptó el aviso de privacidad");
     const cohorts = await cohortsForCourseCode(courseCode);
     if (cohorts.length === 0) {
         throw new Error("The course has no active cohorts in the backend");
@@ -302,6 +309,7 @@ export async function provisionStudent({
             actorCode: String(code).trim(),
             cohortId: target.cohortId,
         },
+        consent: consentBody({ biometricAccepted: consent.biometricAccepted }),
     });
 
     // La importación masiva pasa resetCache=false: resetear la caché de
@@ -353,7 +361,10 @@ function importErrorReason(e) {
  * @returns {{ success: number, errors: Array<{ student: string, reason: string }>,
  *   credentials: { sent: number, notSent: string[] } }}
  */
-export async function importStudents(drafts, { sendCredentials = true } = {}) {
+export async function importStudents(drafts, { sendCredentials = true, privacyAccepted = false } = {}) {
+    // Ley 1581: quien importa confirma que cada titular aceptó el aviso de privacidad.
+    // La parte biométrica queda pendiente: cada persona la decide al registrar su rostro.
+    if (!privacyAccepted) throw new Error("Confirma que cada persona aceptó el aviso de privacidad");
     let success = 0;
     const errors = [];
     const credentials = { sent: 0, notSent: [] };
@@ -388,6 +399,7 @@ export async function importStudents(drafts, { sendCredentials = true } = {}) {
                 cohortId: draft?.cohortId ?? null,
                 // La caché de referencia se surte UNA vez para toda la tanda.
                 resetCache: false,
+                consent: { privacyAccepted: true, biometricAccepted: false },
             });
             success += 1;
             if (sendCredentials) {

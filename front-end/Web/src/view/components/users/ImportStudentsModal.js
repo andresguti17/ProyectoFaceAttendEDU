@@ -27,7 +27,7 @@ import {
     ActivityIndicator, Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { AnimatedDropdown, Button, Badge, IconButton } from "../common";
+import { AnimatedDropdown, Button, Badge, IconButton, Checkbox } from "../common";
 import { useTheme }       from "../hooks/useTheme";
 import { useResponsive }  from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
@@ -99,6 +99,8 @@ export default function ImportStudentsModal({
     const c           = theme.colors;
 
     const [step,         setStep]         = useState("idle");
+    // Ley 1581: quien importa confirma que cada titular aceptó el aviso de privacidad.
+    const [privacyAccepted, setPrivacyAccepted] = useState(false);
     const [fileName,     setFileName]     = useState(null);
     const [preview,      setPreview]      = useState([]);
     const [parseErrors,  setParseErrors]  = useState(0);
@@ -189,7 +191,7 @@ export default function ImportStudentsModal({
             });
             // onImport ahora devuelve { success, errors } (alta real en el
             // backend, fila por fila): un fallo individual no detiene el resto.
-            const result = await onImport(drafts);
+            const result = await onImport(drafts, { privacyAccepted });
             setImportResult(result ?? { success: 0, errors: [] });
             setStep("done");
         } catch {
@@ -680,6 +682,17 @@ export default function ImportStudentsModal({
 
                     </ScrollView>
 
+                    {step === "preview" && (
+                        <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+                            <Checkbox
+                                checked={privacyAccepted}
+                                onToggle={setPrivacyAccepted}
+                                label={t("Cada persona aceptó el aviso de privacidad (Ley 1581)")}
+                                description={t("La autorización biométrica la decide cada persona al registrar su rostro.")}
+                            />
+                        </View>
+                    )}
+
                     {/* Footer */}
                     <View style={{
                         flexDirection: "row",
@@ -693,7 +706,7 @@ export default function ImportStudentsModal({
                             {step === "done" ? t("Cerrar") : t("Cancelar")}
                         </Button>
                         {step === "preview" && (
-                            <Button variant="primary" disabled={missingCohort || importable.length === 0} onPress={handleImport}>
+                            <Button variant="primary" disabled={missingCohort || importable.length === 0 || !privacyAccepted} onPress={handleImport}>
                                 <Feather name="upload" size={14} color={c.brand.textOnPrimary} />
                                 {"  "}{t("Importar")} {importable.length} {t("estudiantes")}
                             </Button>

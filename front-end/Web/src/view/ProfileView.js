@@ -22,6 +22,8 @@ import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useProfileViewModel } from "../viewmodels/useProfileViewModel";
 import { useChangePasswordViewModel } from "../viewmodels/useChangePasswordViewModel";
+import { useBiometricConsentViewModel } from "../viewmodels/useBiometricConsentViewModel";
+import { useAuth } from "../context/AuthContext";
 import { BLOOD_TYPES } from "../core/utils/profileForm";
 import { PasswordStrengthIndicator } from "./components/auth";
 
@@ -179,6 +181,60 @@ function SecurityCard() {
 }
 
 // ── Pantalla ─────────────────────────────────────────────────
+
+// ── Datos biométricos: revocar la autorización y suprimir las plantillas (Ley 1581, art. 8-e) ──
+
+function BiometricConsentCard() {
+    const { t } = useTranslation();
+    const { user } = useAuth();
+    const vm = useBiometricConsentViewModel(user?.personId);
+    const [confirming, setConfirming] = useState(false);
+
+    if (!user?.personId) return null;
+
+    return (
+        <Card variant="outlined">
+            <CardHeading
+                icon="user-check"
+                title={t("Datos biométricos")}
+                subtitle={t("Tu rostro y tu huella solo se usan para tomar asistencia, con tu autorización")}
+            />
+            {vm.error && <View style={{ marginBottom: 12 }}><Alert type="error" message={vm.error} /></View>}
+            {vm.revoked && (
+                <View style={{ marginBottom: 12 }}>
+                    <Alert type="success" message={t("Autorización revocada y datos biométricos eliminados")} />
+                </View>
+            )}
+            {vm.authorized === true && !confirming && (
+                <View style={{ alignItems: "flex-start" }}>
+                    <Button variant="outline" onPress={() => setConfirming(true)}>
+                        {t("Revocar autorización biométrica")}
+                    </Button>
+                </View>
+            )}
+            {vm.authorized === true && confirming && (
+                <View style={{ gap: 12, maxWidth: 480 }}>
+                    <Alert
+                        type="warning"
+                        message={t("Se eliminarán tus plantillas de rostro y huella. Tu asistencia se registrará por otros medios hasta que vuelvas a autorizar.")}
+                    />
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                        <Button variant="danger" onPress={async () => { if (await vm.revoke()) setConfirming(false); }}
+                                disabled={vm.busy} loading={vm.busy}>
+                            {t("Revocar y eliminar")}
+                        </Button>
+                        <Button variant="outline" onPress={() => setConfirming(false)} disabled={vm.busy}>
+                            {t("Cancelar")}
+                        </Button>
+                    </View>
+                </View>
+            )}
+            {vm.authorized === false && !vm.revoked && (
+                <Text>{t("No has autorizado el tratamiento de tus datos biométricos.")}</Text>
+            )}
+        </Card>
+    );
+}
 
 export default function ProfileView() {
     const { isSmall } = useResponsive();
@@ -376,6 +432,7 @@ export default function ProfileView() {
                             </View>
 
                             <SecurityCard />
+                            <BiometricConsentCard />
                         </>
                     )}
                 </View>
