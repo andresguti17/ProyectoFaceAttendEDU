@@ -477,6 +477,9 @@ async def ensure_biometric_consent(person_id: str, token: str | None) -> None:
         )
     if code == 403:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Person outside your scope")
+    if code == 400:
+        # identity rejected the id itself: a client error, not an outage (nothing is stored either way)
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "person_id is not a valid person")
     raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify the biometric data authorization")
 
 

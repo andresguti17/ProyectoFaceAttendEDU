@@ -173,6 +173,12 @@ def test_enrollment_with_biometric_authorization_is_stored(make_client, repos):
     assert len(repos["facial"].stored()) == 1
 
 
+def test_an_invalid_person_id_is_a_client_error_not_an_outage(make_client, repos):
+    with make_client({"not-a-uuid": (400, None)}) as client:
+        assert _enroll(client, "not-a-uuid").status_code == 422
+    assert repos["facial"].stored() == []
+
+
 def test_identity_down_fails_closed(make_client, repos):
     with make_client({"p-1": httpx.ConnectError("down")}) as client:
         assert _enroll(client, "p-1").status_code == 503
