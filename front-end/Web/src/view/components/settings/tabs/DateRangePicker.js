@@ -18,7 +18,7 @@ import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DateInput } from "../../common/inputs/DateInput";
-import { ACADEMIC_PERIOD_TYPES, ACADEMIC_PERIOD_CONFIG } from "../../../../core/constants/academicPeriods";
+import { ACADEMIC_PERIOD_TYPES, ACADEMIC_PERIOD_CONFIG, calendarPeriodDates } from "../../../../core/constants/academicPeriods";
 
 /**
  * Componente para seleccionar rango de fechas del período académico
@@ -179,19 +179,12 @@ export function DateRangePicker({
 
     // Los campos usan DateInput: máscara y formato configurado (Ajustes > Formato de fecha),
     // separadores automáticos y día/mes ajustados; aquí solo llega la fecha ISO (o "").
-    // Sugerir fechas según tipo de período
+    // Sugerir: el período del calendario que contiene hoy según el tipo
+    // (semestral → ene–jun / jul–dic), el mismo que usa el modo automático.
     const suggestDates = () => {
-        const today = new Date();
-        const start = new Date(today.getFullYear(), today.getMonth(), 1);
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + maxDurationMonths);
-        end.setDate(0); // Último día del mes anterior
-
-        // Fecha local: toISOString() la pasa a UTC y puede correr el día.
-        const toLocalIso = (d) =>
-            `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-        onStartDateChange(toLocalIso(start));
-        onEndDateChange(toLocalIso(end));
+        const { startIso, endIso } = calendarPeriodDates(periodType);
+        onStartDateChange(startIso);
+        onEndDateChange(endIso);
     };
 
     // Exponer suggestDates al componente padre si se proporciona la ref

@@ -16,7 +16,7 @@ import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
 import { useDateFormat } from "./components/hooks/useDateFormat";
 import { ACADEMIC_PERIOD_CONFIG, getConfiguredAcademicPeriodType } from "../core/constants/academicPeriods";
-import { currentPeriodOf } from "../services/api/periodSync";
+import { currentPeriodOf, todayLocalIso } from "../services/api/periodSync";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAcademicViewModel } from "../viewmodels/useAcademicViewModel";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
@@ -70,6 +70,15 @@ export default function AcademicView() {
     const c = theme.colors;
     const { t } = useTranslation();
     const { formatDate } = useDateFormat();
+
+    // Vigente = el período que rige hoy; un período activo ya terminado se muestra como finalizado.
+    const periodStatusLabel = (period) => {
+        if (!period.isActive) return t("Cerrado");
+        if (currentPeriodOf(vm.periods)?.academicPeriodId === period.academicPeriodId) {
+            return String(period.startsOn).slice(0, 10) > todayLocalIso() ? t("Próximo") : t("Vigente");
+        }
+        return String(period.endsOn).slice(0, 10) < todayLocalIso() ? t("Finalizado") : t("Activo");
+    };
     const vm = useAcademicViewModel();
     const permissions = useRolePermissions();
     const [showNewFicha, setShowNewFicha] = useState(false);
@@ -302,7 +311,7 @@ export default function AcademicView() {
                                                     size="sm"
                                                     icon={period.isActive ? "check-circle" : undefined}
                                                 >
-                                                    {period.isActive ? (currentPeriodOf(vm.periods)?.academicPeriodId === period.academicPeriodId ? t("Vigente") : t("Activo")) : t("Cerrado")}
+                                                    {periodStatusLabel(period)}
                                                 </Badge>
                                             }
                                             actions={

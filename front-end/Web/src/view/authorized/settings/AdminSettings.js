@@ -47,6 +47,8 @@ import {
 } from "./sections";
 import { FutureNotice } from "./sections/FutureNotice";
 import {
+    calendarPeriodDates,
+    describePeriod,
     getCurrentPeriod,
     normalizeAcademicPeriodType,
     validatePeriodDates,
@@ -195,6 +197,33 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
         return getCurrentPeriod(config.academicPeriodType);
     }, [config.academicPeriodType, dateFormat]); // Añadir dateFormat como dependencia
 
+    // Período según lo que se está editando (no lo ya guardado): tipo + fechas del borrador.
+    const draftPeriod = useMemo(
+        () => describePeriod(config.periodStartDate, config.periodEndDate, config.academicPeriodType),
+        [config.periodStartDate, config.periodEndDate, config.academicPeriodType]
+    );
+
+    // Cambiar el tipo en modo automático (o sin fechas) recalcula las fechas con la división
+    // del año del nuevo tipo; en manual se conservan y el selector avisa si ya no encajan.
+    const handlePeriodTypeChange = (value) => {
+        updateConfig("academicPeriodType", value);
+        if (config.isAutomaticPeriod || (!config.periodStartDate && !config.periodEndDate)) {
+            const { startIso, endIso } = calendarPeriodDates(value);
+            updateConfig("periodStartDate", startIso);
+            updateConfig("periodEndDate", endIso);
+        }
+    };
+
+    // Pasar a automático sin fechas las completa con el período del calendario.
+    const handlePeriodModeChange = (automatic) => {
+        updateConfig("isAutomaticPeriod", automatic);
+        if (automatic && !config.periodStartDate && !config.periodEndDate) {
+            const { startIso, endIso } = calendarPeriodDates(config.academicPeriodType);
+            updateConfig("periodStartDate", startIso);
+            updateConfig("periodEndDate", endIso);
+        }
+    };
+
     const periodExpiration = useMemo(() => {
         return checkPeriodExpiration();
     }, [config.periodStartDate, config.periodEndDate]);
@@ -217,7 +246,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         institutionSlug={config.institutionSlug}
                         onSlugChange={(value) => updateConfig("institutionSlug", value)}
                         academicPeriodType={config.academicPeriodType}
-                        onPeriodTypeChange={(value) => updateConfig("academicPeriodType", value)}
+                        onPeriodTypeChange={handlePeriodTypeChange}
                         isSmall={isSmall}
                         nameLocked={user?.schoolId != null}
                     />,
@@ -234,9 +263,11 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         periodEndDate={config.periodEndDate}
                         onEndDateChange={(value) => updateConfig("periodEndDate", value)}
                         isAutomaticPeriod={config.isAutomaticPeriod}
-                        onModeChange={(value) => updateConfig("isAutomaticPeriod", value)}
+                        onModeChange={handlePeriodModeChange}
                         academicPeriodType={config.academicPeriodType}
                         automaticPeriod={automaticPeriod}
+                        currentPeriod={draftPeriod}
+                        hasSchool={user?.schoolId != null}
                         periodExpiration={periodExpiration}
                         showExpirationAlert={showExpirationAlert}
                         onDismissExpiration={() => setShowExpirationAlert(false)}
@@ -248,6 +279,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         periodEndDate={config.periodEndDate}
                         isAutomaticPeriod={config.isAutomaticPeriod}
                         automaticPeriod={automaticPeriod}
+                        currentPeriod={draftPeriod}
                         currentLanguageLabel={currentLanguage?.labelES}
                         dateFormat={config.dateFormat}
                         timeFormat24h={config.timeFormat24h}

@@ -182,6 +182,52 @@ export function validatePeriodDates(startDate, endDate, periodType) {
     return null;
 }
 
+const toIso = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+/**
+ * Período del calendario (división del año según el tipo) al que pertenece la fecha:
+ * { startIso, endIso, label } con label como "Segundo Semestre 2026".
+ */
+export function calendarPeriodDates(periodType, referenceDate = new Date()) {
+    const type = normalizeAcademicPeriodType(periodType);
+    const p = calculateCurrentPeriodByYear(type, referenceDate);
+    return {
+        startIso: toIso(p.startDate),
+        endIso: toIso(p.endDate),
+        label: `${p.label} ${p.year}`,
+    };
+}
+
+/**
+ * Describe el período definido por las fechas (si son válidas para el tipo) o, si no, el
+ * del calendario. { label, startIso, endIso, daysRemaining, status, fromDates } con status
+ * "upcoming" | "current" | "ended".
+ */
+export function describePeriod(startIso, endIso, periodType, today = new Date()) {
+    const type = normalizeAcademicPeriodType(periodType);
+    const valid = !!startIso && !!endIso && !validatePeriodDates(startIso, endIso, type);
+    const todayIso = toIso(today);
+    let base;
+    if (valid) {
+        const [y, m, d] = startIso.split("-").map(Number);
+        base = {
+            startIso,
+            endIso,
+            label: calendarPeriodDates(type, new Date(y, m - 1, d)).label,
+            fromDates: true,
+        };
+    } else {
+        base = { ...calendarPeriodDates(type, today), fromDates: false };
+    }
+    const [ey, em, ed] = base.endIso.split("-").map(Number);
+    const daysRemaining = Math.ceil(
+        (new Date(ey, em - 1, ed) - new Date(today.getFullYear(), today.getMonth(), today.getDate())) / 86400000
+    );
+    const status = todayIso < base.startIso ? "upcoming" : todayIso > base.endIso ? "ended" : "current";
+    return { ...base, daysRemaining, status };
+}
+
 /**
  * Calcular semana actual del período académico
  * 

@@ -29,3 +29,23 @@ test("period dates follow the duration of the configured type", () => {
     expect(validatePeriodDates("2026-01-01", "2026-01-10", "semestral")).toMatch(/28 días/);
     expect(validatePeriodDates("", "", "semestral")).toBeNull();
 });
+
+import { calendarPeriodDates, describePeriod } from "../../../core/constants/academicPeriods";
+
+test("the calendar period splits the year by the configured type", () => {
+    expect(calendarPeriodDates("semestral", new Date(2026, 9, 23))).toEqual({
+        startIso: "2026-07-01",
+        endIso: "2026-12-31",
+        label: "Segundo Semestre 2026",
+    });
+    expect(calendarPeriodDates("anual", new Date(2026, 2, 1)).startIso).toBe("2026-01-01");
+});
+
+test("describePeriod uses valid dates, falls back to the calendar and reports status", () => {
+    const today = new Date(2026, 9, 23);
+    const own = describePeriod("2026-08-01", "2026-12-15", "semestral", today);
+    expect(own).toMatchObject({ fromDates: true, status: "current", daysRemaining: 53 });
+    const tooLong = describePeriod("2026-01-01", "2026-12-31", "trimestral", today);
+    expect(tooLong).toMatchObject({ fromDates: false, startIso: "2026-10-01" });
+    expect(describePeriod("2026-01-01", "2026-03-31", "trimestral", today).status).toBe("ended");
+});
