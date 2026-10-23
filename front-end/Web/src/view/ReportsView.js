@@ -1,7 +1,7 @@
 // ============================================================
 //  FaceAttend EDU — ReportsView
 //
-//  Orquestador de reportes y sanciones.
+//  Orquestador de reportes.
 //  Delega a componentes específicos según el rol del usuario y sección:
 //  - Vista Padre: AdminReports (estudiantes en riesgo para notificar)
 //  - Subsecciones: Históricos y Sanciones (delegadas según rol)
@@ -38,9 +38,7 @@ export default function ReportsView({ section = null }) {
     // Título dinámico según sección
     const pageTitle = navSection === "historicos" || navSection === "historical"
         ? t("Históricos")
-        : navSection === "sanciones"
-        ? t("Sanciones")
-        : t("Reportes y Sanciones");
+        : t("Reportes");
 
     // Determinar qué componente de reports renderizar según rol y sección
     let ReportsComponent;

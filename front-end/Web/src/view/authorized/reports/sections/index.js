@@ -5,4 +5,3 @@
 // ============================================================
 
 export { HistoricosSection } from "./HistoricalSection";
-export { SancionesSection } from "./SanctionsSection";
