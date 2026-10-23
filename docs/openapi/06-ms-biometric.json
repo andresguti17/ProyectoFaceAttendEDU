@@ -1,0 +1,1488 @@
+{
+  "components": {
+    "schemas": {
+      "EnrollFacialImageRequest": {
+        "properties": {
+          "challenge_token": {
+            "minLength": 1,
+            "title": "Challenge Token",
+            "type": "string"
+          },
+          "image_base64": {
+            "minLength": 1,
+            "title": "Image Base64",
+            "type": "string"
+          },
+          "model_version": {
+            "default": "facenet-v1",
+            "title": "Model Version",
+            "type": "string"
+          },
+          "person_id": {
+            "minLength": 1,
+            "title": "Person Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "person_id",
+          "image_base64",
+          "challenge_token"
+        ],
+        "title": "EnrollFacialImageRequest",
+        "type": "object"
+      },
+      "EnrollFacialRequest": {
+        "properties": {
+          "encoding": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 1,
+            "title": "Encoding",
+            "type": "array"
+          },
+          "model_version": {
+            "default": "facenet-v1",
+            "title": "Model Version",
+            "type": "string"
+          },
+          "person_id": {
+            "minLength": 1,
+            "title": "Person Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "person_id",
+          "encoding"
+        ],
+        "title": "EnrollFacialRequest",
+        "type": "object"
+      },
+      "EnrollFingerprintRequest": {
+        "properties": {
+          "encoding": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 1,
+            "title": "Encoding",
+            "type": "array"
+          },
+          "finger_number": {
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Finger Number",
+            "type": "integer"
+          },
+          "model_version": {
+            "default": "fingerprint-v1",
+            "title": "Model Version",
+            "type": "string"
+          },
+          "person_id": {
+            "minLength": 1,
+            "title": "Person Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "person_id",
+          "finger_number",
+          "encoding"
+        ],
+        "title": "EnrollFingerprintRequest",
+        "type": "object"
+      },
+      "EnrollFingerprintSampleRequest": {
+        "properties": {
+          "data_base64": {
+            "minLength": 1,
+            "title": "Data Base64",
+            "type": "string"
+          },
+          "finger_number": {
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Finger Number",
+            "type": "integer"
+          },
+          "model_version": {
+            "default": "fingerprint-sift-v1",
+            "title": "Model Version",
+            "type": "string"
+          },
+          "person_id": {
+            "minLength": 1,
+            "title": "Person Id",
+            "type": "string"
+          },
+          "quality": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality"
+          },
+          "sample_format": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Format"
+          }
+        },
+        "required": [
+          "person_id",
+          "finger_number",
+          "data_base64"
+        ],
+        "title": "EnrollFingerprintSampleRequest",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "IdentifyFacialImageRequest": {
+        "properties": {
+          "challenge_token": {
+            "minLength": 1,
+            "title": "Challenge Token",
+            "type": "string"
+          },
+          "image_base64": {
+            "minLength": 1,
+            "title": "Image Base64",
+            "type": "string"
+          }
+        },
+        "required": [
+          "image_base64",
+          "challenge_token"
+        ],
+        "title": "IdentifyFacialImageRequest",
+        "type": "object"
+      },
+      "IdentifyFacialRequest": {
+        "properties": {
+          "encoding": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 1,
+            "title": "Encoding",
+            "type": "array"
+          }
+        },
+        "required": [
+          "encoding"
+        ],
+        "title": "IdentifyFacialRequest",
+        "type": "object"
+      },
+      "IdentifyFingerprintRequest": {
+        "properties": {
+          "encoding": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 1,
+            "title": "Encoding",
+            "type": "array"
+          },
+          "finger_number": {
+            "anyOf": [
+              {
+                "maximum": 10.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finger Number"
+          }
+        },
+        "required": [
+          "encoding"
+        ],
+        "title": "IdentifyFingerprintRequest",
+        "type": "object"
+      },
+      "IdentifyFingerprintSampleRequest": {
+        "properties": {
+          "data_base64": {
+            "minLength": 1,
+            "title": "Data Base64",
+            "type": "string"
+          },
+          "finger_number": {
+            "anyOf": [
+              {
+                "maximum": 10.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finger Number"
+          },
+          "quality": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality"
+          },
+          "sample_format": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Format"
+          }
+        },
+        "required": [
+          "data_base64"
+        ],
+        "title": "IdentifyFingerprintSampleRequest",
+        "type": "object"
+      },
+      "LivenessStepRequest": {
+        "properties": {
+          "action_index": {
+            "minimum": 0.0,
+            "title": "Action Index",
+            "type": "integer"
+          },
+          "challenge_token": {
+            "minLength": 1,
+            "title": "Challenge Token",
+            "type": "string"
+          },
+          "images": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 6,
+            "minItems": 6,
+            "title": "Images",
+            "type": "array"
+          }
+        },
+        "required": [
+          "challenge_token",
+          "action_index",
+          "images"
+        ],
+        "title": "LivenessStepRequest",
+        "type": "object"
+      },
+      "ReviewUpdateRequestIn": {
+        "properties": {
+          "status": {
+            "pattern": "^(Approved|Rejected|In_Review)$",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "ReviewUpdateRequestIn",
+        "type": "object"
+      },
+      "UpdateRequestIn": {
+        "properties": {
+          "biometric_type": {
+            "pattern": "^(FACIAL|FINGERPRINT)$",
+            "title": "Biometric Type",
+            "type": "string"
+          },
+          "person_id": {
+            "minLength": 1,
+            "title": "Person Id",
+            "type": "string"
+          },
+          "reason": {
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "person_id",
+          "biometric_type",
+          "reason"
+        ],
+        "title": "UpdateRequestIn",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VerifyFacialRequest": {
+        "properties": {
+          "encoding": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 1,
+            "title": "Encoding",
+            "type": "array"
+          },
+          "person_id": {
+            "minLength": 1,
+            "title": "Person Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "person_id",
+          "encoding"
+        ],
+        "title": "VerifyFacialRequest",
+        "type": "object"
+      },
+      "VerifyFingerprintRequest": {
+        "properties": {
+          "encoding": {
+            "items": {
+              "type": "number"
+            },
+            "minItems": 1,
+            "title": "Encoding",
+            "type": "array"
+          },
+          "finger_number": {
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Finger Number",
+            "type": "integer"
+          },
+          "person_id": {
+            "minLength": 1,
+            "title": "Person Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "person_id",
+          "finger_number",
+          "encoding"
+        ],
+        "title": "VerifyFingerprintRequest",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Biometric Service",
+    "version": "0.2.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/biometric/facial/enroll": {
+      "post": {
+        "operationId": "enroll_facial_api_v1_biometric_facial_enroll_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollFacialRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Enroll Facial",
+        "tags": [
+          "facial"
+        ]
+      }
+    },
+    "/api/v1/biometric/facial/enroll-image": {
+      "post": {
+        "operationId": "enroll_facial_image_api_v1_biometric_facial_enroll_image_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollFacialImageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Enroll Facial Image",
+        "tags": [
+          "facial"
+        ]
+      }
+    },
+    "/api/v1/biometric/facial/identify": {
+      "post": {
+        "operationId": "identify_facial_api_v1_biometric_facial_identify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentifyFacialRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Identify Facial",
+        "tags": [
+          "facial"
+        ]
+      }
+    },
+    "/api/v1/biometric/facial/identify-image": {
+      "post": {
+        "operationId": "identify_facial_image_api_v1_biometric_facial_identify_image_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentifyFacialImageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Identify Facial Image",
+        "tags": [
+          "facial"
+        ]
+      }
+    },
+    "/api/v1/biometric/facial/liveness-challenge": {
+      "get": {
+        "operationId": "liveness_challenge_api_v1_biometric_facial_liveness_challenge_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "actions",
+            "required": false,
+            "schema": {
+              "default": 3,
+              "title": "Actions",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "supported",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supported"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Liveness Challenge",
+        "tags": [
+          "facial"
+        ]
+      }
+    },
+    "/api/v1/biometric/facial/liveness-step": {
+      "post": {
+        "operationId": "liveness_step_api_v1_biometric_facial_liveness_step_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LivenessStepRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Liveness Step",
+        "tags": [
+          "facial"
+        ]
+      }
+    },
+    "/api/v1/biometric/facial/verify": {
+      "post": {
+        "operationId": "verify_facial_api_v1_biometric_facial_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyFacialRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Facial",
+        "tags": [
+          "facial"
+        ]
+      }
+    },
+    "/api/v1/biometric/facial/{person_id}": {
+      "delete": {
+        "operationId": "delete_facial_api_v1_biometric_facial__person_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Facial",
+        "tags": [
+          "facial"
+        ]
+      },
+      "get": {
+        "operationId": "get_facial_api_v1_biometric_facial__person_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Facial",
+        "tags": [
+          "facial"
+        ]
+      }
+    },
+    "/api/v1/biometric/facial/{person_id}/history": {
+      "get": {
+        "operationId": "facial_history_api_v1_biometric_facial__person_id__history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Facial History",
+        "tags": [
+          "facial"
+        ]
+      }
+    },
+    "/api/v1/biometric/fingerprint/enroll": {
+      "post": {
+        "operationId": "enroll_fingerprint_api_v1_biometric_fingerprint_enroll_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollFingerprintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Enroll Fingerprint",
+        "tags": [
+          "fingerprint"
+        ]
+      }
+    },
+    "/api/v1/biometric/fingerprint/enroll-sample": {
+      "post": {
+        "operationId": "enroll_fingerprint_sample_api_v1_biometric_fingerprint_enroll_sample_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollFingerprintSampleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Enroll Fingerprint Sample",
+        "tags": [
+          "fingerprint"
+        ]
+      }
+    },
+    "/api/v1/biometric/fingerprint/identify": {
+      "post": {
+        "operationId": "identify_fingerprint_api_v1_biometric_fingerprint_identify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentifyFingerprintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Identify Fingerprint",
+        "tags": [
+          "fingerprint"
+        ]
+      }
+    },
+    "/api/v1/biometric/fingerprint/identify-sample": {
+      "post": {
+        "operationId": "identify_fingerprint_sample_api_v1_biometric_fingerprint_identify_sample_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentifyFingerprintSampleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Identify Fingerprint Sample",
+        "tags": [
+          "fingerprint"
+        ]
+      }
+    },
+    "/api/v1/biometric/fingerprint/verify": {
+      "post": {
+        "operationId": "verify_fingerprint_api_v1_biometric_fingerprint_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyFingerprintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Fingerprint",
+        "tags": [
+          "fingerprint"
+        ]
+      }
+    },
+    "/api/v1/biometric/fingerprint/{person_id}": {
+      "get": {
+        "operationId": "list_fingerprints_api_v1_biometric_fingerprint__person_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Fingerprints",
+        "tags": [
+          "fingerprint"
+        ]
+      }
+    },
+    "/api/v1/biometric/fingerprint/{person_id}/{finger}": {
+      "delete": {
+        "operationId": "delete_fingerprint_api_v1_biometric_fingerprint__person_id___finger__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "title": "Person Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "finger",
+            "required": true,
+            "schema": {
+              "title": "Finger",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Fingerprint",
+        "tags": [
+          "fingerprint"
+        ]
+      },
+      "get": {
+        "operationId": "get_fingerprint_api_v1_biometric_fingerprint__person_id___finger__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "title": "Person Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "finger",
+            "required": true,
+            "schema": {
+              "title": "Finger",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Fingerprint",
+        "tags": [
+          "fingerprint"
+        ]
+      }
+    },
+    "/api/v1/biometric/health": {
+      "get": {
+        "description": "Same payload as `/health`, reachable through Kong.\n\nKong only forwards `/api/v1/biometric/*` to this service (`strip_path:\nfalse`); a bare `/health` or `/api/v1/health` has no route of its own here\n(unlike `ms-quality`'s dedicated `/health/quality` Kong route), so clients\nbehind the gateway — including the merged biometric-capture front-end\nclients that used to hit `/face-auth/api/health` — need this alias under\nthe one prefix Kong does proxy.",
+        "operationId": "gateway_prefixed_health_api_v1_biometric_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Gateway Prefixed Health"
+      }
+    },
+    "/api/v1/biometric/summary": {
+      "get": {
+        "description": "Who has an active template, for list screens: ids only, never the templates.",
+        "operationId": "biometric_summary_all_api_v1_biometric_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Biometric Summary All",
+        "tags": [
+          "biometric"
+        ]
+      }
+    },
+    "/api/v1/biometric/update-request": {
+      "post": {
+        "operationId": "create_update_request_api_v1_biometric_update_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRequestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Update Request",
+        "tags": [
+          "update-requests"
+        ]
+      }
+    },
+    "/api/v1/biometric/update-request/{request_id}": {
+      "delete": {
+        "operationId": "delete_update_request_api_v1_biometric_update_request__request_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Update Request",
+        "tags": [
+          "update-requests"
+        ]
+      }
+    },
+    "/api/v1/biometric/update-request/{request_id}/review": {
+      "patch": {
+        "operationId": "review_update_request_api_v1_biometric_update_request__request_id__review_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewUpdateRequestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Update Request",
+        "tags": [
+          "update-requests"
+        ]
+      }
+    },
+    "/api/v1/biometric/update-requests/{person_id}": {
+      "get": {
+        "operationId": "list_update_requests_api_v1_biometric_update_requests__person_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Update Requests",
+        "tags": [
+          "update-requests"
+        ]
+      }
+    },
+    "/api/v1/biometric/{person_id}/summary": {
+      "get": {
+        "operationId": "biometric_summary_api_v1_biometric__person_id__summary_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Biometric Summary",
+        "tags": [
+          "biometric"
+        ]
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "operationId": "api_health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Api Health"
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Liveness + last known dependency state. Never 503: Docker health-checks it.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    },
+    "/health/live": {
+      "get": {
+        "description": "Pure liveness probe — no dependency I/O.",
+        "operationId": "health_live_health_live_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health Live"
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "description": "Readiness probe. 503 + `status: degraded` unless MongoDB is fully usable.",
+        "operationId": "health_ready_health_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health Ready"
+      }
+    }
+  }
+}

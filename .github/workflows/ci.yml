@@ -72,6 +72,27 @@ jobs:
           path: back-end/${{ matrix.service }}/target/site/jacoco
           if-no-files-found: ignore
 
+  # docs/openapi must match the code: regenerate the Java contracts and fail on any diff.
+  openapi:
+    name: openapi / drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: back-end/*/pom.xml
+      - name: regenerate Java contracts
+        run: bash tools/openapi/generate.sh
+      - name: contracts match the committed ones
+        run: |
+          if ! git diff --exit-code -- docs/openapi; then
+            echo "::error::docs/openapi is out of date: run tools/openapi/generate.sh and commit the result"
+            exit 1
+          fi
+
   node-services:
     name: node / ${{ matrix.service }}
     runs-on: ubuntu-latest
@@ -164,6 +185,14 @@ jobs:
           name: coverage-${{ matrix.service }}
           path: back-end/${{ matrix.service }}/htmlcov
           if-no-files-found: ignore
+      - name: OpenAPI contract matches the committed one
+        working-directory: back-end/${{ matrix.service }}
+        run: |
+          poetry run python ../../tools/openapi/biometric.py
+          if ! git diff --exit-code -- ../../docs/openapi/06-ms-biometric.json; then
+            echo "::error::docs/openapi/06-ms-biometric.json is out of date: regenerate it (docs/openapi/README.md)"
+            exit 1
+          fi
       - name: bandit (informational)
         working-directory: back-end/${{ matrix.service }}
         run: poetry run pip install --quiet bandit && poetry run bandit -r . -x ./tests,./.venv
