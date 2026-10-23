@@ -42,6 +42,9 @@ export default function RegisterFace() {
         handleBack,
         alertConfig,
         hideAlert,
+        biometricAuthorized,
+        authorizing,
+        authorizeBiometrics,
     } = useRegisterFaceScreenViewModel();
 
     const progressLabel = livenessProgress
@@ -65,7 +68,25 @@ export default function RegisterFace() {
                     {subtitle}
                 </Text>
 
-                {permissionLoading ? (
+                {biometricAuthorized === false ? (
+                    // Ley 1581: autorización previa, expresa e informada antes de capturar el rostro.
+                    <View style={[styles.cameraWrapper, {padding: 20, gap: 12}]}>
+                        <Text style={{fontWeight: '700', fontSize: 16, color: colors.text, textAlign: 'center'}}>
+                            {t('privacyConsent.biometricTitle')}
+                        </Text>
+                        <Text style={{color: colors.textSecondary, textAlign: 'center'}}>
+                            {t('privacyConsent.biometricNotice')}
+                        </Text>
+                        <TouchableOpacity
+                            accessibilityRole="button"
+                            style={[styles.registerFacePermissionButton, authorizing && {opacity: 0.6}]}
+                            onPress={authorizeBiometrics}
+                            disabled={authorizing}
+                        >
+                            <Text style={styles.registerFacePermissionButtonText}>{t('privacyConsent.authorizeButton')}</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : permissionLoading || biometricAuthorized === null ? (
                     <View style={styles.cameraWrapper}>
                         <ActivityIndicator color={colors.primary}/>
                     </View>
@@ -104,9 +125,9 @@ export default function RegisterFace() {
 
                 <View style={styles.registerFaceActions}>
                     <TouchableOpacity
-                        style={[styles.captureButtonRegister, (!cameraReady || busy) && {opacity: 0.6}]}
+                        style={[styles.captureButtonRegister, (!cameraReady || busy || !biometricAuthorized) && {opacity: 0.6}]}
                         onPress={handleRegister}
-                        disabled={!cameraReady || busy}
+                        disabled={!cameraReady || busy || !biometricAuthorized}
                     >
                         {busy ? (
                             <ActivityIndicator color={colors.onPrimary}/>

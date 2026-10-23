@@ -1351,5 +1351,21 @@
   "errors": {
     "missingPerson": "Falta o registro de pessoa do usuário.",
     "missingSchool": "Falta a escola selecionada."
+  },
+  "privacyConsent": {
+    "title": "Proteção de dados pessoais",
+    "saveError": "Não foi possível registrar a autorização. Tente novamente.",
+    "requiredForAccount": "Confirme que a pessoa aceitou o aviso de privacidade (Lei 1581).",
+    "holderAccepted": "A pessoa aceitou o aviso de privacidade *",
+    "holderBiometric": "Autoriza o tratamento dos seus dados biométricos (facultativo)",
+    "biometricTitle": "Dados biométricos",
+    "biometricAuthorized": "Você autorizou o uso do seu rosto e da sua digital para registrar a presença.",
+    "biometricNotAuthorized": "Você não autorizou o tratamento dos seus dados biométricos.",
+    "biometricNotice": "Seu rosto é um dado sensível. Autorizar o tratamento é facultativo: caso contrário, sua presença é registrada por outros meios. Guardamos um modelo criptografado, não a foto, apenas para a presença, e você pode revogar a autorização no seu perfil.",
+    "authorizeButton": "Autorizo o tratamento dos meus dados biométricos",
+    "revokeTitle": "Revogar autorização biométrica",
+    "revokeConfirm": "Seus modelos de rosto e digital serão excluídos. Continuar?",
+    "revokeButton": "Revogar e excluir meus dados biométricos",
+    "revoked": "Autorização revogada e dados biométricos excluídos."
   }
 }

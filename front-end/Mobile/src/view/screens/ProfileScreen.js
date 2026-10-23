@@ -5,6 +5,7 @@ import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import ReturnButton from '../components/auth/ReturnButton';
 import PasswordUpdateModal from '../components/common/PasswordUpdateModal';
+import BiometricConsentCard from '../components/common/BiometricConsentCard';
 import ProfileUpdateModal from '../components/common/ProfileUpdateModal';
 import {createProfileStyles} from './Styles/ProfileScreen/Style';
 import {useProfileViewModel} from '../../viewmodels/useProfileViewModel';
@@ -520,6 +521,8 @@ export default function ProfileScreen({ onLogout }) {
                         >
                             <PasswordUpdateModal />
                         </TouchableOpacity>
+
+                        <BiometricConsentCard personId={userInfo?.personId} />
                     </View>
 
                 </View>

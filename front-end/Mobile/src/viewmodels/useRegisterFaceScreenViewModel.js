@@ -8,6 +8,7 @@ import {GET, request} from '../api/apiClient';
 import {useUser} from '../utils/UserContext';
 import {faceAccessDenial, REGISTER_EXEMPT_ROLES} from '../utils/faceAccess';
 import {REGISTER_GESTURES, useFaceLivenessCapture} from './useFaceLivenessCapture';
+import {ConsentService} from '../services/consentService';
 
 // Registro/actualización facial contra ms-biometric, igual que el FaceModule
 // web: prueba de vida de 3 gestos y POST /facial/enroll-image por person_id.
@@ -29,6 +30,31 @@ export function useRegisterFaceScreenViewModel() {
 
     const capture = useFaceLivenessCapture();
     const {registerFace, status, setStatus} = capture;
+
+    // Ley 1581: sin autorización biométrica vigente no se abre la cámara (null = consultando).
+    const [biometricAuthorized, setBiometricAuthorized] = useState(null);
+    const [authorizing, setAuthorizing] = useState(false);
+    useEffect(() => {
+        if (!personId) return undefined;
+        let active = true;
+        ConsentService.get(personId)
+            .then((consent) => { if (active) setBiometricAuthorized(consent?.biometricAuthorized === true); })
+            .catch(() => { if (active) setBiometricAuthorized(false); });
+        return () => { active = false; };
+    }, [personId]);
+
+    const authorizeBiometrics = useCallback(async () => {
+        if (!personId || authorizing) return;
+        setAuthorizing(true);
+        try {
+            await ConsentService.accept(personId, {biometricAccepted: true});
+            setBiometricAuthorized(true);
+        } catch (e) {
+            showError(t('privacyConsent.title'), e?.message || t('privacyConsent.saveError'));
+        } finally {
+            setAuthorizing(false);
+        }
+    }, [personId, authorizing, showError, t]);
 
     useEffect(() => {
         if (params.personId) return;
@@ -113,5 +139,8 @@ export function useRegisterFaceScreenViewModel() {
         handleBack,
         alertConfig,
         hideAlert,
+        biometricAuthorized,
+        authorizing,
+        authorizeBiometrics,
     };
 }
