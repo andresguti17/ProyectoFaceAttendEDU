@@ -1,10 +1,11 @@
 databaseChangeLog:
-  - include:
-      file: 001-bootstrap-admin-user.yaml
-      relativeToChangelogFile: true
-  - include:
-      file: 002-bootstrap-demo-users.yaml
-      relativeToChangelogFile: true
+  # 001/002 (bootstrap admin and demo users with hard-coded passwords) were
+  # removed. Databases that already applied them keep their history rows;
+  # 004 disables those accounts. The first admin is created with
+  # database/scripts/bootstrap-admin.sh (see database/SEEDS.md).
   - include:
       file: 003-seed-password-policy-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 004-disable-seeded-default-accounts.yaml
       relativeToChangelogFile: true
