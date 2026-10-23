@@ -38,8 +38,11 @@ class PiiCipherTest {
     @Test
     void aTamperedValueOrAnotherKeyFailsInsteadOfReturningGarbage() {
         String stored = cipher.encrypt("3001234567");
-        char last = stored.charAt(stored.length() - 2);
-        String tampered = stored.substring(0, stored.length() - 2) + (last == 'A' ? 'B' : 'A') + stored.charAt(stored.length() - 1);
+        // Flip one bit of the decoded bytes (the GCM tag): editing a base64 character could
+        // land on padding bits the decoder ignores and leave the bytes unchanged.
+        byte[] raw = Base64.getDecoder().decode(stored.substring(PiiCipher.PREFIX.length()));
+        raw[raw.length - 1] ^= 1;
+        String tampered = PiiCipher.PREFIX + Base64.getEncoder().encodeToString(raw);
 
         assertThatThrownBy(() -> cipher.decrypt(tampered)).isInstanceOf(IllegalStateException.class);
         assertThatThrownBy(() -> new PiiCipher(OTHER_KEY, KEY).decrypt(stored)).isInstanceOf(IllegalStateException.class);
