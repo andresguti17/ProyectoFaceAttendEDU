@@ -202,6 +202,31 @@ services:
 
 # Tier 3 — databases and migrations only: nothing from the `edge` or `app`
 # networks can reach this one.
+  # One login per microservice, member of its schema role (03-dcl). Runs after the
+  # migrations (root compose chains it) and is safe to repeat.
+  db-service-logins:
+    image: postgres:17
+    container_name: faceattend-db-service-logins
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      PSQL: psql -h postgres -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-faceattend_db}
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?IDENTITY_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      AUTHORIZATION_DB_PASSWORD: ${AUTHORIZATION_DB_PASSWORD:?AUTHORIZATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      ACADEMIC_DB_PASSWORD: ${ACADEMIC_DB_PASSWORD:?ACADEMIC_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      SCHEDULING_DB_PASSWORD: ${SCHEDULING_DB_PASSWORD:?SCHEDULING_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      ATTENDANCE_DB_PASSWORD: ${ATTENDANCE_DB_PASSWORD:?ATTENDANCE_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      CONFIGURATION_DB_PASSWORD: ${CONFIGURATION_DB_PASSWORD:?CONFIGURATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      QUALITY_DB_PASSWORD: ${QUALITY_DB_PASSWORD:?QUALITY_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:?NOTIFICATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+    volumes:
+      - ./scripts:/scripts:ro
+    command: ["bash", "/scripts/create-service-logins.sh"]
+    networks:
+      - faceattend-data
+
 networks:
   faceattend-data:
     driver: bridge

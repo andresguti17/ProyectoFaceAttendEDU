@@ -114,8 +114,8 @@ services:
         condition: service_started
     environment:
       SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db?stringtype=unspecified}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-${POSTGRES_USER:-postgres}}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}}
+      SPRING_DATASOURCE_USERNAME: identity_app
+      SPRING_DATASOURCE_PASSWORD: ${IDENTITY_DB_PASSWORD:?IDENTITY_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: identity
       SPRING_DATA_REDIS_HOST: redis
       FACEATTEND_RECOVERY_STORE: redis
@@ -167,8 +167,8 @@ services:
         condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-${POSTGRES_USER:-postgres}}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}}
+      SPRING_DATASOURCE_USERNAME: authorization_app
+      SPRING_DATASOURCE_PASSWORD: ${AUTHORIZATION_DB_PASSWORD:?AUTHORIZATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: authorization
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_LIQUIBASE_ENABLED: "false"
@@ -204,8 +204,8 @@ services:
         condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db?stringtype=unspecified}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-${POSTGRES_USER:-postgres}}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}}
+      SPRING_DATASOURCE_USERNAME: scheduling_app
+      SPRING_DATASOURCE_PASSWORD: ${SCHEDULING_DB_PASSWORD:?SCHEDULING_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: scheduling
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_LIQUIBASE_ENABLED: "false"
@@ -247,8 +247,8 @@ services:
     environment:
       JAVA_OPTS: "-Xmx768m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}?stringtype=unspecified
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      SPRING_DATASOURCE_USERNAME: attendance_app
+      SPRING_DATASOURCE_PASSWORD: ${ATTENDANCE_DB_PASSWORD:?ATTENDANCE_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: attendance
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_LIQUIBASE_ENABLED: "false"
@@ -293,7 +293,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      DATABASE_URL: postgres://academic_app:${ACADEMIC_DB_PASSWORD:?ACADEMIC_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@postgres:5432/${POSTGRES_DB:-faceattend_db}
       PG_SCHEMA: academic
       PORT: 8083
       # Session + RBAC guard: sessions come from identity, permissions from authorization.
@@ -328,7 +328,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      DATABASE_URL: postgres://configuration_app:${CONFIGURATION_DB_PASSWORD:?CONFIGURATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@postgres:5432/${POSTGRES_DB:-faceattend_db}
       PG_SCHEMA: configuration
       PORT: 8087
       # Session + RBAC guard: sessions come from identity, permissions from authorization.
@@ -428,7 +428,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-faceattend_db}?sslmode=disable
+      DATABASE_URL: postgres://notification_app:${NOTIFICATION_DB_PASSWORD:?NOTIFICATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@postgres:5432/${POSTGRES_DB:-faceattend_db}?sslmode=disable
       PG_SCHEMA: notification
       PORT: 8088
       # Session + RBAC guard: sessions come from identity, permissions from authorization.
@@ -502,7 +502,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      DATABASE_URL: postgres://quality_app:${QUALITY_DB_PASSWORD:?QUALITY_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@postgres:5432/${POSTGRES_DB:-faceattend_db}
       PG_SCHEMA: quality
       PORT: 8089
       # Session + RBAC guard: sessions come from identity, permissions from authorization.
