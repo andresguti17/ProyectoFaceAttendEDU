@@ -8,6 +8,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { Button, BaseModal, TextInput } from "../common";
+import { DateInput } from "../common/inputs/DateInput";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 
@@ -44,6 +45,10 @@ export default function PeriodModal({ visible, period, onClose, onSubmit }) {
     const handleSubmit = async () => {
         setShowErrors(true);
         setError(null);
+        if (form.startsOn && form.endsOn && form.startsOn >= form.endsOn) {
+            setError(t("La fecha de fin debe ser posterior a la de inicio"));
+            return;
+        }
         setSaving(true);
         const err = await onSubmit({ academicPeriodId: period?.academicPeriodId ?? null, ...form });
         setSaving(false);
@@ -96,21 +101,19 @@ export default function PeriodModal({ visible, period, onClose, onSubmit }) {
                     error={showErrors && !String(form.name ?? "").trim()}
                     errorMessage={t("Campo requerido")}
                 />
-                <TextInput
-                    label={t("Inicio (AAAA-MM-DD)") + " *"}
+                <DateInput
+                    label={t("Inicio") + " *"}
                     value={form.startsOn}
                     onChangeText={(v) => setField("startsOn", v)}
-                    placeholder={t("Ej: 2026-02-01")}
                     error={badDate(form.startsOn)}
-                    errorMessage={t("Formato AAAA-MM-DD")}
+                    errorMessage={t("Fecha incompleta o inválida")}
                 />
-                <TextInput
-                    label={t("Fin (AAAA-MM-DD)") + " *"}
+                <DateInput
+                    label={t("Fin") + " *"}
                     value={form.endsOn}
                     onChangeText={(v) => setField("endsOn", v)}
-                    placeholder={t("Ej: 2026-06-30")}
                     error={badDate(form.endsOn)}
-                    errorMessage={t("Formato AAAA-MM-DD")}
+                    errorMessage={t("Fecha incompleta o inválida")}
                 />
             </View>
         </BaseModal>

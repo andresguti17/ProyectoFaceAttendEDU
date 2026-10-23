@@ -562,6 +562,7 @@ export default function RegisterStudentModal({
                             <View style={{ flex: 1 }}>
                                 <TextInput
                                     label={t("Teléfono")}
+                                    type="phone"
                                     value={form.phone}
                                     onChangeText={v => setField("phone", v)}
                                     placeholder={t("Ej: 3001234567")}

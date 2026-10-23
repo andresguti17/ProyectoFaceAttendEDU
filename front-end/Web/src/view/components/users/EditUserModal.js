@@ -234,6 +234,7 @@ export default function EditUserModal({ visible, onClose, onSubmit, user, canCha
                 <View style={{ flex: 1 }}>
                     <TextInput
                         label={t("Teléfono")}
+                        type="phone"
                         value={form?.phone ?? ""}
                         onChangeText={v => setField("phone", v)}
                     />

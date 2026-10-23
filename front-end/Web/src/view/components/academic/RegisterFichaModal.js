@@ -10,6 +10,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, AnimatedDropdown, BaseModal, TextInput } from "../common";
+import { DateInput } from "../common/inputs/DateInput";
 import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
@@ -125,6 +126,10 @@ export default function RegisterFichaModal({ visible, onClose, onCreated }) {
     const handleCreatePeriod = async () => {
         if (!newPeriodName.trim() || !newPeriodStart.trim() || !newPeriodEnd.trim()) {
             setNewPeriodError(t("Nombre y fechas son requeridos"));
+            return;
+        }
+        if (newPeriodStart.trim() >= newPeriodEnd.trim()) {
+            setNewPeriodError(t("La fecha de fin debe ser posterior a la de inicio"));
             return;
         }
         setSavingPeriod(true);
@@ -299,13 +304,11 @@ export default function RegisterFichaModal({ visible, onClose, onCreated }) {
                             leftIcon={<Feather name="calendar" size={16} color={c.text.tertiary} />} />
                         <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 10 : 8 }}>
                             <View style={{ flex: 1 }}>
-                                <TextInput label={t("Fecha de inicio")} value={newPeriodStart} onChangeText={setNewPeriodStart}
-                                    placeholder="2026-01-15"
+                                <DateInput label={t("Fecha de inicio")} value={newPeriodStart} onChangeText={setNewPeriodStart}
                                     leftIcon={<Feather name="calendar" size={16} color={c.text.tertiary} />} />
                             </View>
                             <View style={{ flex: 1 }}>
-                                <TextInput label={t("Fecha de fin")} value={newPeriodEnd} onChangeText={setNewPeriodEnd}
-                                    placeholder="2026-04-15"
+                                <DateInput label={t("Fecha de fin")} value={newPeriodEnd} onChangeText={setNewPeriodEnd}
                                     leftIcon={<Feather name="calendar" size={16} color={c.text.tertiary} />} />
                             </View>
                         </View>

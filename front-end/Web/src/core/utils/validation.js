@@ -127,11 +127,9 @@ export function isValidPhone(phone) {
   return phoneRegex.test(phone) && digits >= 10 && digits <= 15;
 }
 
-/** Deja solo lo que puede teclearse en un teléfono: dígitos, "+" inicial, espacios, guion y paréntesis (máx. 20). */
+/** Teléfono: solo dígitos (máx. 15, el límite E.164). */
 export function normalizePhone(text) {
-  const raw = String(text ?? "").replace(/[^\d+\s\-()]/g, "");
-  const plus = raw.trimStart().startsWith("+") ? "+" : "";
-  return (plus + raw.replace(/\+/g, "")).slice(0, 20);
+  return String(text ?? "").replace(/\D/g, "").slice(0, 15);
 }
 
 /**

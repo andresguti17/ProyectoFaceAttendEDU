@@ -12,12 +12,12 @@
 //  - Cálculo automático de duración en días/semanas/meses
 // ============================================================
 
-import React, { useState, useMemo } from "react";
-import { View, Text, TextInput } from "react-native";
+import React, { useMemo } from "react";
+import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
-import { useDateFormat } from "../../hooks/useDateFormat";
+import { DateInput } from "../../common/inputs/DateInput";
 import { ACADEMIC_PERIOD_TYPES, ACADEMIC_PERIOD_CONFIG } from "../../../../core/constants/academicPeriods";
 
 /**
@@ -41,87 +41,7 @@ export function DateRangePicker({
 }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
-    const { dateFormat } = useDateFormat(); // Volver a usar el hook
     const c = theme.colors;
-
-    // Estados para validación en tiempo real
-    const [startDateError, setStartDateError] = useState("");
-    const [endDateError, setEndDateError] = useState("");
-    
-    // Convertir fecha ISO a formato de display
-    const isoToDisplayFormat = React.useCallback((isoDate) => {
-        if (!isoDate) return "";
-        const date = new Date(isoDate);
-        if (isNaN(date)) return isoDate; // Si no es válida, devolver tal como está
-        
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-        
-        switch (dateFormat) {
-            case "DD/MM/YYYY":
-                return `${day}/${month}/${year}`;
-            case "MM/DD/YYYY":
-                return `${month}/${day}/${year}`;
-            case "YYYY-MM-DD":
-                return `${year}-${month}-${day}`;
-            default:
-                return `${day}/${month}/${year}`;
-        }
-    }, [dateFormat]);
-    
-    // Convertir formato de display a ISO
-    const displayToIsoFormat = React.useCallback((displayDate) => {
-        if (!displayDate) return "";
-        
-        let day, month, year;
-        
-        switch (dateFormat) {
-            case "DD/MM/YYYY":
-                const ddmmParts = displayDate.split("/");
-                if (ddmmParts.length !== 3) return displayDate;
-                [day, month, year] = ddmmParts;
-                break;
-            case "MM/DD/YYYY":
-                const mmddParts = displayDate.split("/");
-                if (mmddParts.length !== 3) return displayDate;
-                [month, day, year] = mmddParts;
-                break;
-            case "YYYY-MM-DD":
-                const yyyyParts = displayDate.split("-");
-                if (yyyyParts.length !== 3) return displayDate;
-                [year, month, day] = yyyyParts;
-                break;
-            default:
-                return displayDate;
-        }
-        
-        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-    }, [dateFormat]);
-    
-    // Fechas formateadas para mostrar en los inputs
-    const [displayStartDate, setDisplayStartDate] = useState("");
-    const [displayEndDate, setDisplayEndDate] = useState("");
-    
-    // Actualizar fechas formateadas cuando cambie el formato o las fechas
-    React.useEffect(() => {
-        setDisplayStartDate(isoToDisplayFormat(startDate));
-        setDisplayEndDate(isoToDisplayFormat(endDate));
-    }, [startDate, endDate, dateFormat, isoToDisplayFormat]);
-
-    // Calcular placeholders dinámicos según el formato seleccionado
-    const placeholderFormat = useMemo(() => {
-        switch (dateFormat) {
-            case "DD/MM/YYYY":
-                return "DD-MM-AAAA";
-            case "MM/DD/YYYY":
-                return "MM-DD-AAAA";
-            case "YYYY-MM-DD":
-                return "AAAA-MM-DD";
-            default:
-                return "AAAA-MM-DD";
-        }
-    }, [dateFormat]);
 
     // Configuración de duración máxima según tipo de período
     const maxDurationMonths = useMemo(() => {
@@ -257,29 +177,8 @@ export function DateRangePicker({
         };
     }, [startDate, endDate, periodType, maxDurationMonths, t]);
 
-    // Manejadores de cambio con validación
-    const handleStartDateChange = (text) => {
-        setDisplayStartDate(text);
-        const isoDate = displayToIsoFormat(text);
-        onStartDateChange(isoDate);
-        if (text && !isValidDateFormat(isoDate)) {
-            setStartDateError(t("Formato inválido") + " (" + placeholderFormat + ")");
-        } else {
-            setStartDateError("");
-        }
-    };
-
-    const handleEndDateChange = (text) => {
-        setDisplayEndDate(text);
-        const isoDate = displayToIsoFormat(text);
-        onEndDateChange(isoDate);
-        if (text && !isValidDateFormat(isoDate)) {
-            setEndDateError(t("Formato inválido") + " (" + placeholderFormat + ")");
-        } else {
-            setEndDateError("");
-        }
-    };
-
+    // Los campos usan DateInput: máscara y formato configurado (Ajustes > Formato de fecha),
+    // separadores automáticos y día/mes ajustados; aquí solo llega la fecha ISO (o "").
     // Sugerir fechas según tipo de período
     const suggestDates = () => {
         const today = new Date();
@@ -291,8 +190,6 @@ export function DateRangePicker({
         // Fecha local: toISOString() la pasa a UTC y puede correr el día.
         const toLocalIso = (d) =>
             `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-        setStartDateError("");
-        setEndDateError("");
         onStartDateChange(toLocalIso(start));
         onEndDateChange(toLocalIso(end));
     };
@@ -304,17 +201,6 @@ export function DateRangePicker({
         }
     }, [onSuggestDatesRef, maxDurationMonths]);
 
-    const inputStyle = {
-        height: 44,
-        borderWidth: 1.5,
-        borderColor: c.border.primary,
-        borderRadius: 14,
-        paddingHorizontal: 14,
-        fontSize: 12,
-        color: c.text.primary,
-        backgroundColor: c.background.surface,
-    };
-
     const labelStyle = {
         fontSize: 12,
         fontWeight: "600",
@@ -322,87 +208,27 @@ export function DateRangePicker({
         marginBottom: 6,
     };
 
-    const errorInputStyle = {
-        ...inputStyle,
-        borderColor: c.status.danger,
-    };
-
-    const successInputStyle = {
-        ...inputStyle,
-        borderColor: c.status.success,
-    };
-
     return (
         <View style={{ gap: 12 }}>
             {/* Campos de entrada de fecha */}
             <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-                {/* Fecha de inicio */}
-                <View style={{ width: 140 }}>
-                    <Text style={labelStyle}>{t("Fecha de inicio")}</Text>
-                    <View style={{ position: "relative" }}>
-                        <TextInput
-                            value={displayStartDate}
-                            onChangeText={handleStartDateChange}
-                            style={
-                                startDateError
-                                    ? errorInputStyle
-                                    : validation.isValid
-                                    ? successInputStyle
-                                    : inputStyle
-                            }
-                            placeholder={placeholderFormat}
-                            placeholderTextColor={c.text.disabled}
-                        />
-                        {validation.isValid && (
-                            <View
-                                style={{
-                                    position: "absolute",
-                                    right: 12,
-                                    top: 12,
-                                }}
-                            >
-                                <Feather
-                                    name="check-circle"
-                                    size={18}
-                                    color={c.status.success}
-                                />
-                            </View>
-                        )}
-                    </View>
+                <View style={{ width: 160 }}>
+                    <DateInput
+                        label={t("Fecha de inicio")}
+                        value={startDate || ""}
+                        onChangeText={onStartDateChange}
+                        error={validation.type === "error"}
+                        success={validation.isValid}
+                    />
                 </View>
-                {/* Fecha de fin */}
-                <View style={{ width: 140 }}>
-                    <Text style={labelStyle}>{t("Fecha de fin")}</Text>
-                    <View style={{ position: "relative" }}>
-                        <TextInput
-                            value={displayEndDate}
-                            onChangeText={handleEndDateChange}
-                            style={
-                                endDateError
-                                    ? errorInputStyle
-                                    : validation.isValid
-                                    ? successInputStyle
-                                    : inputStyle
-                            }
-                            placeholder={placeholderFormat}
-                            placeholderTextColor={c.text.disabled}
-                        />
-                        {validation.isValid && (
-                            <View
-                                style={{
-                                    position: "absolute",
-                                    right: 12,
-                                    top: 12,
-                                }}
-                            >
-                                <Feather
-                                    name="check-circle"
-                                    size={18}
-                                    color={c.status.success}
-                                />
-                            </View>
-                        )}
-                    </View>
+                <View style={{ width: 160 }}>
+                    <DateInput
+                        label={t("Fecha de fin")}
+                        value={endDate || ""}
+                        onChangeText={onEndDateChange}
+                        error={validation.type === "error"}
+                        success={validation.isValid}
+                    />
                 </View>
 
                 {/* Indicador de validación y estadísticas - como tercer campo */}
