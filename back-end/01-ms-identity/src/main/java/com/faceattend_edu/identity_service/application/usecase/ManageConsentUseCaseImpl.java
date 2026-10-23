@@ -39,7 +39,9 @@ public class ManageConsentUseCaseImpl implements ManageConsentUseCase {
 
     @Override
     public Optional<DataProcessingConsent> current(UUID personId, UUID caller, Collection<String> roles) {
-        requireOwnerOrAdmin(personId, caller, roles);
+        // Reading the status is allowed to anyone whose scope includes the person (the filter
+        // already applied it): staff that enrolls a face must be able to check it.
+        if (caller == null) throw new UnauthorizedException("Authentication required");
         return consentPort.findCurrent(personId);
     }
 
