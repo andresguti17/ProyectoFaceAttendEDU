@@ -19,41 +19,28 @@ async function roleIdOf(roleName) {
 }
 
 /**
- * Alta completa de una cuenta (HU-IAM-002): persona en identity, usuario con
- * contraseña inicial, rol en authorization y, para Aprendiz/Instructor, actor
- * académico en la sede. Cada paso depende del anterior; si uno falla se
- * informa cuál, para que el administrador corrija y reintente.
+ * Alta completa de una cuenta (HU-IAM-002) en una sola llamada: identity crea
+ * persona y usuario y pide a authorization el rol y, para Aprendiz/Instructor
+ * con sede, a academic el actor. Si un paso falla, el servidor deshace los
+ * anteriores (no quedan cuentas a medias) y la app solo muestra el motivo.
  */
 export async function createAccount({ name, lastName, documentNumber, email, phone, username, password, roleName, schoolId }) {
-  const step = async (label, fn) => {
-    try {
-      return await fn();
-    } catch (error) {
-      error.message = `${label}: ${error.message}`;
-      throw error;
-    }
-  };
-  const person = toSnakeDeep(await step(i18n.t('manageUsers.steps.person'), () => request({
-    method: POST,
-    url: 'api/v1/persons',
-    data: { documentNumber, name, lastName, ...(email ? { email } : {}), ...(phone ? { phone } : {}) },
-  })));
-  const user = toSnakeDeep(await step(i18n.t('manageUsers.steps.user'), () => request({
-    method: POST,
-    url: 'api/v1/users',
-    data: { personId: person.person_id, username, password, authenticationType: 'Local' },
-  })));
-  const roleId = await step(i18n.t('manageUsers.steps.role'), () => roleIdOf(roleName));
-  await step(i18n.t('manageUsers.steps.role'), () => request({ method: POST, url: `api/v1/users/${user.user_id}/roles`, data: { roleId } }));
   const actorTypeId = ACTOR_TYPE_BY_ROLE[roleName];
-  if (actorTypeId && schoolId) {
-    await step(i18n.t('manageUsers.steps.actor'), () => request({
-      method: POST,
-      url: 'api/v1/academic-actors',
-      data: { personId: person.person_id, actorTypeId, schoolId: Number(schoolId), actorCode: documentNumber },
-    }));
-  }
-  return { userId: user.user_id, personId: person.person_id };
+  const result = toSnakeDeep(await request({
+    method: POST,
+    url: 'api/v1/users/provision',
+    timeoutMs: 60000,
+    data: {
+      person: { documentNumber, name, lastName, ...(email ? { email } : {}), ...(phone ? { phone } : {}) },
+      username,
+      password,
+      roleName,
+      ...(actorTypeId && schoolId
+        ? { academicActor: { actorTypeId, schoolId: Number(schoolId), actorCode: documentNumber } }
+        : {}),
+    },
+  }));
+  return { userId: result.user_id, personId: result.person_id };
 }
 
 /**
