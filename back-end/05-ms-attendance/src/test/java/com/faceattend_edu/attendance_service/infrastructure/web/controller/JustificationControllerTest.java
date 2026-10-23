@@ -249,13 +249,33 @@ class JustificationControllerTest {
             // Act
             // Assert
             mockMvc.perform(patch(BASE + "/1/review")
+                            .requestAttr("X-User-Id", reviewer.toString())
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"reviewStatus\":\"Approved\",\"reviewedBy\":\"" + reviewer
-                                    + "\",\"resolutionNotes\":\"Accepted with certificate\"}"))
+                            .content("{\"reviewStatus\":\"Approved\",\"resolutionNotes\":\"Accepted with certificate\"}"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.justificationId").value(1))
                     .andExpect(jsonPath("$.reviewStatus").value("Approved"))
                     .andExpect(jsonPath("$.reviewedBy").value(reviewer.toString()));
+        }
+
+        @Test
+        @DisplayName("Given a reviewedBy in the body when PATCH review then the session user is recorded instead")
+        void givenForgedReviewedBy_whenPatchReview_thenSessionUserIsUsed() throws Exception {
+            UUID sessionUser = UUID.fromString("11111111-2222-3333-4444-555555555555");
+            UUID forged = UUID.fromString("99999999-8888-7777-6666-555555555555");
+            Justification reviewed = justification(1L, 100L, 2, "Medical leave", "Rejected");
+            reviewed.setReviewedBy(sessionUser);
+            when(reviewUseCase.review(eq(1L), eq("Rejected"), eq(sessionUser), eq("No certificate")))
+                    .thenReturn(reviewed);
+
+            mockMvc.perform(patch(BASE + "/1/review")
+                            .requestAttr("X-User-Id", sessionUser.toString())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"reviewStatus\":\"Rejected\",\"reviewedBy\":\"" + forged
+                                    + "\",\"resolutionNotes\":\"No certificate\"}"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.reviewedBy").value(sessionUser.toString()));
+            verify(reviewUseCase, never()).review(any(), any(), eq(forged), any());
         }
 
         @Test
