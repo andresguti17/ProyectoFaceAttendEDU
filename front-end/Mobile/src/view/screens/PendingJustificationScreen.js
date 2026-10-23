@@ -186,6 +186,7 @@ const DetailModal = ({
                          getRoleLabel,
                          getRoleColors,
                          colors,
+                         onOpenAttachment,
                      }) => {
     const {t, i18n} = useTranslation();
     const styles = useMemo(() => createPendingStyles(colors), [colors]);
@@ -392,7 +393,10 @@ const DetailModal = ({
                             {t('consultJustify.attachmentTitle')}
                         </Text>
                         {item.attachment ? (
-                            <View
+                            <TouchableOpacity
+                                accessibilityRole="button"
+                                accessibilityLabel={`${t('consultJustify.openDocument')} ${item.attachment.name}`}
+                                onPress={() => onOpenAttachment && onOpenAttachment(item.attachment)}
                                 style={[
                                     styles.attachmentBoxPending,
                                     { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border },
@@ -419,7 +423,10 @@ const DetailModal = ({
                                         {item.attachment.size}
                                     </Text>
                                 </View>
-                            </View>
+                                <Text style={{ color: colors.primary, fontWeight: '600' }}>
+                                    {t('consultJustify.openDocument')}
+                                </Text>
+                            </TouchableOpacity>
                         ) : (
                             <View
                                 style={[
@@ -544,6 +551,7 @@ export default function PendingJustificationScreen({ navigation }) {
         getTypeColors,
         getRoleLabel,
         getRoleColors,
+        openAttachment,
     } = usePendingJustificationViewModel();
 
     // Chips según rol: el profesor nunca ve "Docentes"; el estudiante no ve chips
@@ -700,6 +708,7 @@ export default function PendingJustificationScreen({ navigation }) {
                 getRoleLabel={getRoleLabel}
                 getRoleColors={getRoleColors}
                 colors={colors}
+                onOpenAttachment={openAttachment}
             />
             <ReturnButton onPress={handleBack} />
         </ScreenSafeArea>

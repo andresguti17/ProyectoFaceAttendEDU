@@ -2,7 +2,7 @@
   "expo": {
     "name": "FaceAttend EDU",
     "slug": "faceattend-edu",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -48,7 +48,8 @@
         {
           "cameraPermission": "FaceAttend EDU needs camera access to capture your face for attendance verification."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "extra": {
       "eas": {

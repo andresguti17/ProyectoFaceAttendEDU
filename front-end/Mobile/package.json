@@ -28,6 +28,7 @@
     "expo-localization": "~57.0.1",
     "expo-navigation-bar": "~57.0.3",
     "expo-secure-store": "~57.0.3",
+    "expo-sharing": "~57.0.24",
     "expo-status-bar": "~57.0.1",
     "expo-updates": "~57.0.26",
     "i18next": "^26.0.4",
