@@ -47,6 +47,8 @@ import {
 import { FutureNotice } from "./sections/FutureNotice";
 import {
     getCurrentPeriod,
+    normalizeAcademicPeriodType,
+    validatePeriodDates,
 } from "../../../core/constants/academicPeriods";
 import {
     getInstitutionConfig,
@@ -107,8 +109,14 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
     } = useEditableConfig(initialConfig, {
         onSave: async (cfg) => {
             // Transformar sessionTime a número antes de guardar
+            if (validatePeriodDates(cfg.periodStartDate, cfg.periodEndDate, cfg.academicPeriodType)) {
+                return false;
+            }
             const merged = {
                 ...cfg,
+                academicPeriodType: normalizeAcademicPeriodType(cfg.academicPeriodType),
+                periodStartDate: cfg.periodStartDate || null,
+                periodEndDate: cfg.periodEndDate || null,
                 confidenceThreshold: cfg.confidence,
                 sessionTime: parseInt(cfg.sessionTime),
             };
@@ -164,6 +172,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                 for (const key of keys) {
                     merged[key] = parseSetting(overrides[key], initialConfig[key]);
                 }
+                merged.academicPeriodType = normalizeAcademicPeriodType(merged.academicPeriodType);
                 if (merged.sessionTime != null) merged.sessionTime = String(merged.sessionTime);
                 reset(merged);
             })

@@ -18,7 +18,7 @@ import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { useDateFormat } from "../../hooks/useDateFormat";
-import { ACADEMIC_PERIOD_TYPES } from "../../../../core/constants/academicPeriods";
+import { ACADEMIC_PERIOD_TYPES, ACADEMIC_PERIOD_CONFIG } from "../../../../core/constants/academicPeriods";
 
 /**
  * Componente para seleccionar rango de fechas del período académico
@@ -141,11 +141,13 @@ export function DateRangePicker({
 
     // Validar formato de fecha YYYY-MM-DD
     const isValidDateFormat = (dateStr) => {
-        const regex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!regex.test(dateStr)) return false;
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr ?? "");
+        if (!match) return false;
 
-        const date = new Date(dateStr);
-        return date instanceof Date && !isNaN(date);
+        // Ida y vuelta por Date: rechaza días inexistentes (31/02, mes 13).
+        const [, y, m, d] = match.map(Number);
+        const date = new Date(y, m - 1, d);
+        return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
     };
 
     // Calcular diferencia en días entre dos fechas
@@ -228,7 +230,7 @@ export function DateRangePicker({
                 days,
                 weeks,
                 months,
-                message: t(`Un período ${periodType} no puede durar más de ${maxDurationMonths} meses`),
+                message: `${t("Un período")} ${t(ACADEMIC_PERIOD_CONFIG[periodType]?.labelKey ?? "").toLowerCase()} ${t("no puede durar más de")} ${maxDurationMonths} ${t("meses")}`,
                 type: "error",
             };
         }
@@ -260,7 +262,7 @@ export function DateRangePicker({
         setDisplayStartDate(text);
         const isoDate = displayToIsoFormat(text);
         onStartDateChange(isoDate);
-        if (text && !isValidDateFormat(text)) {
+        if (text && !isValidDateFormat(isoDate)) {
             setStartDateError(t("Formato inválido") + " (" + placeholderFormat + ")");
         } else {
             setStartDateError("");
@@ -271,7 +273,7 @@ export function DateRangePicker({
         setDisplayEndDate(text);
         const isoDate = displayToIsoFormat(text);
         onEndDateChange(isoDate);
-        if (text && !isValidDateFormat(text)) {
+        if (text && !isValidDateFormat(isoDate)) {
             setEndDateError(t("Formato inválido") + " (" + placeholderFormat + ")");
         } else {
             setEndDateError("");
@@ -286,8 +288,13 @@ export function DateRangePicker({
         end.setMonth(end.getMonth() + maxDurationMonths);
         end.setDate(0); // Último día del mes anterior
 
-        onStartDateChange(start.toISOString().split('T')[0]);
-        onEndDateChange(end.toISOString().split('T')[0]);
+        // Fecha local: toISOString() la pasa a UTC y puede correr el día.
+        const toLocalIso = (d) =>
+            `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        setStartDateError("");
+        setEndDateError("");
+        onStartDateChange(toLocalIso(start));
+        onEndDateChange(toLocalIso(end));
     };
 
     // Exponer suggestDates al componente padre si se proporciona la ref
@@ -330,7 +337,7 @@ export function DateRangePicker({
             {/* Campos de entrada de fecha */}
             <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
                 {/* Fecha de inicio */}
-                <View style={{ width: 120 }}>
+                <View style={{ width: 140 }}>
                     <Text style={labelStyle}>{t("Fecha de inicio")}</Text>
                     <View style={{ position: "relative" }}>
                         <TextInput
@@ -364,7 +371,7 @@ export function DateRangePicker({
                     </View>
                 </View>
                 {/* Fecha de fin */}
-                <View style={{ width: 120 }}>
+                <View style={{ width: 140 }}>
                     <Text style={labelStyle}>{t("Fecha de fin")}</Text>
                     <View style={{ position: "relative" }}>
                         <TextInput

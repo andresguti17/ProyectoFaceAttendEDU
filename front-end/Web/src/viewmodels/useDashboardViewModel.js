@@ -562,7 +562,16 @@ export function useDashboardViewModel() {
             : 0;
         const pendingToday = Math.max(0, classesToday - attendedToday);
 
-        const currentClass = ownCourses[0] || null;
+        // Clase de hoy según el horario de su ficha; sin clase hoy, el primer curso inscrito.
+        const todayClass = series.meta.currentClass || null;
+        const fallbackCourse = ownCourses[0] || null;
+        const currentClass = todayClass
+            ? {
+                  code: todayClass.environmentCode || todayClass.courseCode,
+                  name: todayClass.environmentName || todayClass.courseName,
+                  professor: todayClass.instructorName,
+              }
+            : fallbackCourse;
 
         return [
             {

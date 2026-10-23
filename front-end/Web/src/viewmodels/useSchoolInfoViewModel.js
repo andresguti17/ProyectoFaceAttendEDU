@@ -17,6 +17,7 @@ import { useAuth } from "../context/AuthContext";
 import { useRolePermissions } from "./useRolePermissions";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { academicApi } from "../services/api";
+import { isValidPhone, normalizePhone } from "../core/utils/validation";
 import { getActiveSchool } from "../services/api/referenceData";
 
 export function useSchoolInfoViewModel() {
@@ -103,7 +104,7 @@ export function useSchoolInfoViewModel() {
     const closeEdit = useCallback(() => setEditOpen(false), []);
 
     const setField = useCallback((key, value) => {
-        setForm((prev) => ({ ...prev, [key]: value }));
+        setForm((prev) => ({ ...prev, [key]: key === "phone" ? normalizePhone(value) : value }));
     }, []);
 
     const save = useCallback(async () => {
@@ -113,6 +114,11 @@ export function useSchoolInfoViewModel() {
         }
         if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
             setFeedback({ type: "error", message: t("El correo electrónico no es válido.") });
+            return;
+        }
+
+        if (form.phone?.trim() && !isValidPhone(form.phone.trim())) {
+            setFeedback({ type: "error", message: t("El teléfono no es válido (10 a 15 dígitos).") });
             return;
         }
 

@@ -123,7 +123,15 @@ export function isValidUrl(url) {
 export function isValidPhone(phone) {
   if (!phone) return false;
   const phoneRegex = /^\+?[\d\s\-()]+$/;
-  return phoneRegex.test(phone) && phone.replace(/\D/g, "").length >= 10;
+  const digits = phone.replace(/\D/g, "").length;
+  return phoneRegex.test(phone) && digits >= 10 && digits <= 15;
+}
+
+/** Deja solo lo que puede teclearse en un teléfono: dígitos, "+" inicial, espacios, guion y paréntesis (máx. 20). */
+export function normalizePhone(text) {
+  const raw = String(text ?? "").replace(/[^\d+\s\-()]/g, "");
+  const plus = raw.trimStart().startsWith("+") ? "+" : "";
+  return (plus + raw.replace(/\+/g, "")).slice(0, 20);
 }
 
 /**

@@ -32,7 +32,8 @@ export function useSessionTimeout({
     const [isExpired, setIsExpired] = useState(false);
     
     const intervalRef = useRef(null);
-    const lastActivityRef = useRef(() => Date.now());
+    const lastActivityRef = useRef(Date.now());
+    const expiredFiredRef = useRef(false);
     const onTimeoutRef = useRef(onTimeout);
     
     // Mantener la referencia actualizada
@@ -60,6 +61,7 @@ export function useSessionTimeout({
         }
         
         lastActivityRef.current = Date.now();
+        expiredFiredRef.current = false;
         setTimeRemaining(timeoutMinutes * 60);
         setIsWarning(false);
         setIsExpired(false);
@@ -133,10 +135,11 @@ export function useSessionTimeout({
 
 
 
-        // Inicializar lastActivityRef si es necesario
-        if (typeof lastActivityRef.current === 'function') {
-            lastActivityRef.current = lastActivityRef.current();
-        }
+        // Cada vez que se habilita (login nuevo, cambio de configuración) la cuenta
+        // regresiva parte de ahora: si conservara la última actividad de la sesión
+        // anterior, el temporizador vencería de inmediato y cerraría la sesión recién abierta.
+        lastActivityRef.current = Date.now();
+        expiredFiredRef.current = false;
 
         // Limpiar interval anterior si existe
         if (intervalRef.current) {
@@ -158,7 +161,9 @@ export function useSessionTimeout({
             setIsWarning(isInWarning);
 
             // Verificar si la sesión ha expirado
-            if (remainingSeconds <= 0) {
+            // Una sola vez: sin esto onTimeout se repetía cada segundo hasta desmontar.
+            if (remainingSeconds <= 0 && !expiredFiredRef.current) {
+                expiredFiredRef.current = true;
                 setIsExpired(true);
                 if (onTimeoutRef.current) {
                     onTimeoutRef.current();

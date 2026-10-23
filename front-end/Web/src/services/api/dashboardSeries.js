@@ -19,6 +19,7 @@ import {
     courseMap,
     listActors,
     listBlocks,
+    listEnvironments,
     personMap,
 } from "./referenceData";
 
@@ -118,7 +119,8 @@ async function scopedSessions({ maxSessions = 15, instructorActorId = null, coho
                       .map((b) => b?.scheduleBlockId ?? b?.schedule_block_id)
               )
             : null;
-    const today = new Date().toISOString().slice(0, 10);
+    // Fecha local: toISOString() es UTC y en UTC-5 ya es "mañana" desde las 7 pm.
+    const today = localIsoDate();
     const inScope = listOf(sessionsRes)
         .map(sessionOf)
         .filter((s) => s.id != null && s.date)
@@ -140,7 +142,74 @@ async function scopedSessions({ maxSessions = 15, instructorActorId = null, coho
     const closedToday = todaySessions.filter((s) =>
         ["closed", "cancelled"].includes(String(s.status ?? "").toLowerCase())
     ).length;
-    return { inWindow, todaySessions, closedToday };
+    // Bloques del alcance que caen hoy (lunes=1 … domingo=7), por hora de inicio.
+    const weekday = ((new Date().getDay() + 6) % 7) + 1;
+    const todayBlocks = blockList
+        .filter((b) => Number(b?.dayOfWeek ?? b?.day_of_week) === weekday)
+        .filter(
+            (b) =>
+                instructorActorId == null ||
+                String(b?.instructorActorId ?? b?.instructor_actor_id ?? "") === String(instructorActorId)
+        )
+        .filter(
+            (b) =>
+                cohortId == null || String(b?.cohortId ?? b?.cohort_id ?? "") === String(cohortId)
+        )
+        .sort((a, b) =>
+            String(a?.startsAt ?? a?.starts_at ?? "").localeCompare(String(b?.startsAt ?? b?.starts_at ?? ""))
+        );
+    return { inWindow, todaySessions, closedToday, todayBlocks };
+}
+
+function localIsoDate(date = new Date()) {
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/**
+ * De los bloques de hoy, el que se está dictando ahora; si no hay, el siguiente;
+ * si ya pasaron todos, el último. Con nombre del instructor y ambiente resueltos.
+ */
+async function currentBlockInfo(todayBlocks) {
+    if (!todayBlocks.length) return null;
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    const minutesOf = (time) => {
+        const m = /^(\d{1,2}):(\d{2})/.exec(String(time ?? ""));
+        return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+    };
+    const startOf = (b) => minutesOf(b?.startsAt ?? b?.starts_at);
+    const endOf = (b) => minutesOf(b?.endsAt ?? b?.ends_at);
+    const block =
+        todayBlocks.find((b) => startOf(b) <= nowMinutes && nowMinutes < endOf(b)) ??
+        todayBlocks.find((b) => startOf(b) > nowMinutes) ??
+        todayBlocks[todayBlocks.length - 1];
+
+    const [actors, persons, courses, environments] = await Promise.all([
+        actorMap().catch(() => new Map()),
+        personMap().catch(() => new Map()),
+        courseMap().catch(() => new Map()),
+        listEnvironments().catch(() => []),
+    ]);
+    const actorId = block?.instructorActorId ?? block?.instructor_actor_id;
+    const actor = actors.get?.(Number(actorId)) ?? actors.get?.(actorId);
+    const person = actor?.personId ? persons.get?.(actor.personId) : null;
+    const courseId = block?.courseId ?? block?.course_id;
+    const course = courses.get?.(Number(courseId)) ?? courses.get?.(courseId);
+    const environmentId = block?.environmentId ?? block?.environment_id;
+    const environment = listOf(environments).find(
+        (e) => String(e?.environmentId ?? e?.environment_id ?? "") === String(environmentId)
+    );
+    return {
+        instructorName: fullNameOf(person) || null,
+        courseName: course?.name ?? null,
+        courseCode: course?.code ?? null,
+        environmentCode: environment?.code ?? null,
+        environmentName: environment?.name ?? null,
+        startsAt: block?.startsAt ?? block?.starts_at ?? null,
+        endsAt: block?.endsAt ?? block?.ends_at ?? null,
+    };
 }
 
 function bucketSessions(sessions, recordsBySession) {
@@ -252,7 +321,8 @@ export async function instructorClassCounts() {
 export async function dashboardSeries({ role, instructorActorId = null, academicActorId = null, cohortId = null } = {}) {
     const scope =
         role === "student" ? { instructorActorId: null, cohortId } : { instructorActorId: role === "teacher" ? instructorActorId : null, cohortId: null };
-    const { inWindow, todaySessions, closedToday } = await scopedSessions(scope);
+    const { inWindow, todaySessions, closedToday, todayBlocks } = await scopedSessions(scope);
+    const currentClass = role === "student" ? await currentBlockInfo(todayBlocks).catch(() => null) : null;
     const daily =
         role === "student" && academicActorId != null
             ? await actorBuckets(academicActorId)
@@ -260,7 +330,11 @@ export async function dashboardSeries({ role, instructorActorId = null, academic
     return {
         daily,
         weekly: weeklyFromDaily(daily),
-        meta: { sessionsToday: todaySessions.length, sessionsClosedToday: closedToday },
+        meta: {
+            sessionsToday: todaySessions.length,
+            sessionsClosedToday: closedToday,
+            ...(role === "student" ? { currentClass } : {}),
+        },
     };
 }
 

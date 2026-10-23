@@ -72,7 +72,7 @@ export { DEFAULT_ACADEMIC_PERIOD };
 export function getConfiguredAcademicPeriodType() {
     try {
         const config = getInstitutionConfig();
-        return config.academicPeriodType || DEFAULT_ACADEMIC_PERIOD;
+        return normalizeAcademicPeriodType(config.academicPeriodType);
     } catch (error) {
         return DEFAULT_ACADEMIC_PERIOD;
     }
@@ -131,6 +131,55 @@ export function getAcademicPeriodWeeks(periodType = DEFAULT_ACADEMIC_PERIOD) {
 export function isValidWeekCount(weeks, periodType = DEFAULT_ACADEMIC_PERIOD) {
     const config = getAcademicPeriodConfig(periodType);
     return weeks >= config.minWeeks && weeks <= config.maxWeeks;
+}
+
+const PERIOD_TYPE_ALIASES = {
+    annual: ACADEMIC_PERIOD_TYPES.ANNUAL,
+    anual: ACADEMIC_PERIOD_TYPES.ANNUAL,
+    semestral: ACADEMIC_PERIOD_TYPES.SEMESTRAL,
+    semester: ACADEMIC_PERIOD_TYPES.SEMESTRAL,
+    quarterly: ACADEMIC_PERIOD_TYPES.QUARTERLY,
+    cuatrimestral: ACADEMIC_PERIOD_TYPES.QUARTERLY,
+    trimestral: ACADEMIC_PERIOD_TYPES.TRIMESTRAL,
+    trimester: ACADEMIC_PERIOD_TYPES.TRIMESTRAL,
+};
+
+/**
+ * Lleva cualquier forma guardada del tipo de período ("Semestral", "quarterly",
+ * etc.) al valor canónico de ACADEMIC_PERIOD_TYPES; si no se reconoce, el por defecto.
+ */
+export function normalizeAcademicPeriodType(value) {
+    const key = String(value ?? "").trim().toLowerCase();
+    return PERIOD_TYPE_ALIASES[key] ?? DEFAULT_ACADEMIC_PERIOD;
+}
+
+function parseIsoDate(value) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value ?? ""));
+    if (!m) return null;
+    const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    const date = new Date(y, mo - 1, d);
+    const ok = date.getFullYear() === y && date.getMonth() === mo - 1 && date.getDate() === d;
+    return ok ? date : null;
+}
+
+/**
+ * Valida las fechas del período contra su tipo. Ambas vacías es válido (se calcula
+ * por división del año). Devuelve null si está bien o el mensaje (español) del error.
+ */
+export function validatePeriodDates(startDate, endDate, periodType) {
+    if (!startDate && !endDate) return null;
+    if (!startDate || !endDate) return "Define la fecha de inicio y la de fin del período";
+    const start = parseIsoDate(startDate);
+    const end = parseIsoDate(endDate);
+    if (!start || !end) return "Las fechas del período no son válidas";
+    if (end <= start) return "La fecha de fin debe ser posterior a la fecha de inicio";
+    const days = Math.round((end - start) / 86400000);
+    if (days < 28) return "El período debe durar al menos 4 semanas (28 días)";
+    const months =
+        (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    const max = getAcademicPeriodConfig(normalizeAcademicPeriodType(periodType)).durationMonths;
+    if (months > max) return `El período no puede durar más de ${max} meses para el tipo seleccionado`;
+    return null;
 }
 
 /**
