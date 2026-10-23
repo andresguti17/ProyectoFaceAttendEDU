@@ -157,6 +157,9 @@ services:
       FACEATTEND_NOTIFICATION_LOGIN_URL: "${APP_LOGIN_URL:-}"
       # Alta pública de sedes (POST /api/v1/onboarding/schools): vacío = deshabilitada (503).
       FACEATTEND_ONBOARDING_SERVICE_USER_ID: "${ONBOARDING_SERVICE_USER_ID:-}"
+      # Personal data encrypted at rest (Ley 1581). Losing these keys makes the data unreadable.
+      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:?PII_ENCRYPTION_KEY is required (openssl rand -base64 32)}
+      PII_HASH_KEY: ${PII_HASH_KEY:?PII_HASH_KEY is required (openssl rand -base64 32)}
       FACEATTEND_ONBOARDING_ACADEMIC_URL: http://ms-academic:8083
       FACEATTEND_ONBOARDING_AUTHORIZATION_URL: http://ms-authorization:8082
       SERVER_PORT: 8081

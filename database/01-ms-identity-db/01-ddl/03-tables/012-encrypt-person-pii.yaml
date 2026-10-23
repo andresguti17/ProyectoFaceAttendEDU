@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-014-encrypt-person-pii
+      author: FaceAttendEDU
+      splitStatements: true
+      comment: >-
+        Personal data at rest (Ley 1581 art. 4-g): document number, e-mail, phone and blood type are
+        stored AES-256-GCM encrypted by ms-identity (enc:v1:...), so the columns grow. Uniqueness and the
+        login by e-mail move to keyed blind indexes (HMAC-SHA256 of the normalized value). Existing rows
+        are encrypted and indexed by the service at startup (PiiBackfillRunner).
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE identity.person ALTER COLUMN document_number TYPE VARCHAR(255);
+              ALTER TABLE identity.person ALTER COLUMN email TYPE VARCHAR(512);
+              ALTER TABLE identity.person ALTER COLUMN phone TYPE VARCHAR(255);
+              ALTER TABLE identity.person ALTER COLUMN blood_type TYPE VARCHAR(255);
+              ALTER TABLE identity.person ADD COLUMN IF NOT EXISTS email_hash VARCHAR(64);
+              ALTER TABLE identity.person ADD COLUMN IF NOT EXISTS document_hash VARCHAR(64);
+              ALTER TABLE identity.person DROP CONSTRAINT IF EXISTS uq_person_document;
+              DROP INDEX IF EXISTS identity.uq_person_email;
+              CREATE UNIQUE INDEX uq_person_email_hash ON identity.person (email_hash) WHERE deleted_at IS NULL AND email_hash IS NOT NULL;
+              CREATE UNIQUE INDEX uq_person_document_hash ON identity.person (document_hash) WHERE document_hash IS NOT NULL;
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS identity.uq_person_document_hash;
+              DROP INDEX IF EXISTS identity.uq_person_email_hash;
+              ALTER TABLE identity.person DROP COLUMN IF EXISTS document_hash;
+              ALTER TABLE identity.person DROP COLUMN IF EXISTS email_hash;

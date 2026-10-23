@@ -125,6 +125,17 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<systemPropertyVariables>
+						<!-- Test-only keys for the personal-data cipher; real keys come from PII_* env vars. -->
+						<faceattend.pii.encryption-key>AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=</faceattend.pii.encryption-key>
+						<faceattend.pii.hash-key>HxweHRwbGhkYFxYVFBMSERAPDg0MCwoJCAcGBQQDAgE=</faceattend.pii.hash-key>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
