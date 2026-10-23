@@ -9,7 +9,6 @@ import com.faceattend_edu.identity_service.application.port.in.CreatePersonUseCa
 import com.faceattend_edu.identity_service.application.port.in.GetPersonUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ListPersonsUseCase;
 import com.faceattend_edu.identity_service.application.port.in.UpdatePersonUseCase;
-import com.faceattend_edu.identity_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.identity_service.domain.model.Person;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -19,9 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -63,21 +60,14 @@ public class PersonController {
         int safePage = PageResponse.safePage(page);
         int safeLimit = PageResponse.safeLimit(limit);
         if (request.getAttribute(AuthTokenFilter.PERSON_SCOPE_ATTRIBUTE) instanceof Set<?> scope) {
-            // Quien no es administrador solo lista su alcance (propia, sus aprendices o sus instructores).
-            List<PersonDto> visible = scope.stream()
-                    .map(id -> {
-                        try {
-                            return personWebMapper.toDto(getPersonUseCase.getPerson((UUID) id));
-                        } catch (EntityNotFoundException e) {
-                            return null;
-                        }
-                    })
-                    .filter(Objects::nonNull)
-                    .sorted(Comparator.comparing(PersonDto::getLastName, Comparator.nullsLast(String::compareTo)))
+            // Quien no es administrador solo lista su alcance (propia, sus aprendices o sus
+            // instructores): una página en SQL, ordenada por apellido.
+            Set<UUID> personIds = scope.stream().map(id -> (UUID) id).collect(Collectors.toSet());
+            List<PersonDto> pageItems = listPersonsUseCase.listPersons(safePage - 1, safeLimit, personIds).stream()
+                    .map(personWebMapper::toDto)
                     .collect(Collectors.toList());
-            int from = Math.min((safePage - 1) * safeLimit, visible.size());
-            List<PersonDto> pageItems = visible.subList(from, Math.min(from + safeLimit, visible.size()));
-            return ResponseEntity.ok(PageResponse.ofSlice(pageItems, safePage, safeLimit, visible.size()));
+            return ResponseEntity.ok(PageResponse.ofSlice(pageItems, safePage, safeLimit,
+                    listPersonsUseCase.countPersons(personIds)));
         }
         List<PersonDto> slice = listPersonsUseCase.listPersons(safePage - 1, safeLimit).stream()
                 .map(personWebMapper::toDto)
