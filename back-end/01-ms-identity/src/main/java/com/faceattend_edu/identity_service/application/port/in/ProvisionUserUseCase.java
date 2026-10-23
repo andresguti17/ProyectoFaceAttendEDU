@@ -14,12 +14,15 @@ public interface ProvisionUserUseCase {
     /** Academic actor of the new account; {@code cohortId} only for apprentices (enrollment). */
     record Actor(int actorTypeId, long schoolId, String actorCode, Long cohortId) {}
 
+    /** The holder's acceptance of the privacy notice, registered by the administrator (Ley 1581). */
+    record Consent(String policyVersion, boolean biometricAccepted) {}
+
     record Command(Person person, String username, String password, boolean sendCredentials,
-                   String roleName, Actor actor) {}
+                   String roleName, Actor actor, Consent consent) {}
 
     record Result(UUID personId, UUID userId, String username, Long academicActorId, Long enrollmentId,
                   String credentialsEmail) {}
 
     /** @param callerToken the caller's session: the other services apply their own RBAC and scope to it */
-    Result provision(Command command, String callerToken);
+    Result provision(Command command, String callerToken, java.util.UUID callerUserId);
 }

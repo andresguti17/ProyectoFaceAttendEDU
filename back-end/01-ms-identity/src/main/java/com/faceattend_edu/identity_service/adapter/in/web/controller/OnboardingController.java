@@ -29,7 +29,8 @@ public class OnboardingController {
                 new OnboardSchoolUseCase.School(s.getCode().trim(), s.getName().trim(), s.getCityName(),
                         s.getAddress(), s.getPhone(), s.getEmail()),
                 new OnboardSchoolUseCase.Admin(a.getDocumentType(), a.getDocumentNumber().trim(), a.getName().trim(),
-                        a.getLastName().trim(), a.getEmail().trim(), a.getPhone(), a.getUsername().trim(), a.getPassword()));
+                        a.getLastName().trim(), a.getEmail().trim(), a.getPhone(), a.getUsername().trim(), a.getPassword(),
+                        a.getPrivacyPolicyVersion().trim(), Boolean.TRUE.equals(a.getBiometricAccepted())));
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of(
                 "schoolId", result.schoolId(),
                 "userId", result.userId(),

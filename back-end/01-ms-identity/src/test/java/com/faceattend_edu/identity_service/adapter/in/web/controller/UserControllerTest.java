@@ -343,6 +343,7 @@ class UserControllerTest {
         private static final String BODY = """
                 {"person":{"documentNumber":"1001","name":"Ana","lastName":"Rios","email":"ana@sede.edu.co"},
                  "username":"ana.rios","password":"Temporal-2026","sendCredentials":false,"roleName":"Aprendiz",
+                 "consent":{"policyVersion":"2026-10","biometricAccepted":true},
                  "academicActor":{"actorTypeId":1,"schoolId":4,"actorCode":"APR-1001","cohortId":9}}""";
 
         @org.junit.jupiter.api.Test
@@ -350,7 +351,7 @@ class UserControllerTest {
             UUID newPerson = UUID.randomUUID();
             UUID newUser = UUID.randomUUID();
             org.mockito.Mockito.when(provisionUserUseCase.provision(org.mockito.ArgumentMatchers.any(),
-                            org.mockito.ArgumentMatchers.eq("11111111-2222-3333-4444-555555555555")))
+                            org.mockito.ArgumentMatchers.eq("11111111-2222-3333-4444-555555555555"), org.mockito.ArgumentMatchers.any()))
                     .thenReturn(new com.faceattend_edu.identity_service.application.port.in.ProvisionUserUseCase.Result(
                             newPerson, newUser, "ana.rios", 30L, 40L, null));
 

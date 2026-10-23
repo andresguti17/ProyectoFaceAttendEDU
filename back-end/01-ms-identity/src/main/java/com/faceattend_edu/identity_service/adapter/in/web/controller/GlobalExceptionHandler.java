@@ -86,6 +86,12 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", ex.getMessage(), req);
     }
 
+    @ExceptionHandler(com.faceattend_edu.identity_service.domain.exception.ForbiddenException.class)
+    public ResponseEntity<Map<String, Object>> handleForbidden(
+            com.faceattend_edu.identity_service.domain.exception.ForbiddenException ex, HttpServletRequest req) {
+        return build(HttpStatus.FORBIDDEN, "FORBIDDEN", ex.getMessage(), req);
+    }
+
     @ExceptionHandler(AccountLockedException.class)
     public ResponseEntity<Map<String, Object>> handleLocked(AccountLockedException ex, HttpServletRequest req) {
         long seconds = Math.max(1, ex.getRetryAfter().toSeconds());
