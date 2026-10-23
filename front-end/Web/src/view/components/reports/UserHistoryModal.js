@@ -95,7 +95,7 @@ export default function UserHistoryModal({
                             fontWeight: "700",
                             color: c.text.primary,
                         }}>
-                            {formatDate(record.date, "DD/MM/YYYY")}
+                            {formatDate(record.date)}
                         </Text>
                         <Text style={{ fontSize: 13, color: c.text.disabled }}>•</Text>
                         <Text style={{
