@@ -2,6 +2,10 @@ package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
 import com.faceattend_edu.identity_service.adapter.in.web.dto.CreateUserRequest;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.PageResponse;
+import com.faceattend_edu.identity_service.adapter.in.web.dto.ProvisionUserRequest;
+import com.faceattend_edu.identity_service.adapter.in.web.mapper.PersonWebMapper;
+import com.faceattend_edu.identity_service.application.port.in.ProvisionUserUseCase;
+import com.faceattend_edu.identity_service.domain.exception.UnauthorizedException;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.UserDto;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserWebMapper;
 import com.faceattend_edu.identity_service.adapter.in.web.security.AuthTokenFilter;
@@ -38,6 +42,8 @@ public class UserController {
     private final ActivateUserUseCase activateUserUseCase;
     private final NotifyUserCredentialsUseCase notifyUserCredentialsUseCase;
     private final UserWebMapper userWebMapper;
+    private final ProvisionUserUseCase provisionUserUseCase;
+    private final PersonWebMapper personWebMapper;
 
     @PostMapping
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest request) {
@@ -51,6 +57,33 @@ public class UserController {
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}").buildAndExpand(created.getUserId()).toUri();
         return ResponseEntity.created(location).body(body);
+    }
+
+    /**
+     * Registers person + user + academic actor (+ enrollment) + role in one call. Any failed
+     * step is undone on the server (no orphan rows); the other services apply their own RBAC
+     * and school scope to the caller's session.
+     */
+    @PostMapping("/provision")
+    public ResponseEntity<ProvisionUserUseCase.Result> provision(@Valid @RequestBody ProvisionUserRequest request,
+                                                                 HttpServletRequest http) {
+        String header = http.getHeader("Authorization");
+        if (header == null || !header.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            throw new UnauthorizedException("Authentication required");
+        }
+        ProvisionUserRequest.AcademicActor actor = request.getAcademicActor();
+        ProvisionUserUseCase.Command command = new ProvisionUserUseCase.Command(
+                personWebMapper.toDomain(request.getPerson()),
+                request.getUsername().trim(),
+                request.getPassword(),
+                Boolean.TRUE.equals(request.getSendCredentials()),
+                request.getRoleName().trim(),
+                actor == null ? null
+                        : new ProvisionUserUseCase.Actor(actor.getActorTypeId(), actor.getSchoolId(), actor.getActorCode(), actor.getCohortId()));
+        ProvisionUserUseCase.Result result = provisionUserUseCase.provision(command, header.substring(7).trim());
+        URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/users/{id}").buildAndExpand(result.userId()).toUri();
+        return ResponseEntity.created(location).body(result);
     }
 
     @GetMapping

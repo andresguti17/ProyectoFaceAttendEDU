@@ -118,6 +118,13 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE", ex.getMessage(), req);
     }
 
+    @ExceptionHandler(com.faceattend_edu.identity_service.domain.exception.DownstreamRejectedException.class)
+    public ResponseEntity<Map<String, Object>> handleDownstreamRejected(
+            com.faceattend_edu.identity_service.domain.exception.DownstreamRejectedException ex, HttpServletRequest req) {
+        HttpStatus status = HttpStatus.valueOf(ex.getStatus());
+        return build(status, status.name(), ex.getMessage(), req);
+    }
+
     @ExceptionHandler(OnboardingUnavailableException.class)
     public ResponseEntity<Map<String, Object>> handleOnboardingUnavailable(OnboardingUnavailableException ex, HttpServletRequest req) {
         log.warn("Onboarding unavailable: {}", ex.getMessage(), ex);
