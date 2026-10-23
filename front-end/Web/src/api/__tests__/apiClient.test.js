@@ -9,13 +9,28 @@ import {
 
 beforeEach(() => {
     global.localStorage.clear();
+    global.sessionStorage.clear();
     global.fetch = jest.fn();
     setUnauthorizedHandler(null);
 });
 
-describe('token storage (web branch: localStorage)', () => {
+describe('token storage (web branch: sessionStorage)', () => {
     it('returns null when there is no saved session', async () => {
         expect(await getToken()).toBeNull();
+    });
+
+    it('keeps the session in sessionStorage, never in localStorage', async () => {
+        await saveToken('abc123');
+        expect(global.sessionStorage.getItem('auth_token')).toContain('abc123');
+        expect(global.localStorage.getItem('auth_token')).toBeNull();
+    });
+
+    it('removes a session that an older version left in localStorage', () => {
+        global.localStorage.setItem('auth_token', JSON.stringify({ token: 'old' }));
+        jest.isolateModules(() => {
+            require('../apiClient');
+        });
+        expect(global.localStorage.getItem('auth_token')).toBeNull();
     });
 
     it('round-trips a saved token', async () => {

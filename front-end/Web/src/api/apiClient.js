@@ -4,7 +4,7 @@
 //  Toda petición al backend pasa por aquí:
 //  - Base URL del gateway Kong (EXPO_PUBLIC_API_URL)
 //  - Token Bearer automático desde la sesión guardada
-//    { token, savedAt, expiresAt, email } (localStorage en web, AsyncStorage en nativo)
+//    { token, savedAt, expiresAt, email } (sessionStorage en web, AsyncStorage en nativo)
 //  - Timeout + 1 reintento en GET idempotentes ante fallo de red
 //  - Errores tipados ApiError {status, code, message}
 // ============================================================
@@ -25,9 +25,21 @@ export class ApiError extends Error {
 const TOKEN_KEY = "auth_token";
 const SESSION_USER_KEY = "@faceattend:session_user";
 
+// Web: la sesión vive en sessionStorage (se borra al cerrar la pestaña y no queda en
+// disco como en localStorage). Las sesiones que versiones anteriores dejaron en
+// localStorage se eliminan al cargar el módulo: el usuario solo vuelve a iniciar sesión.
+if (Platform.OS === "web") {
+    try {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(SESSION_USER_KEY);
+    } catch {
+        /* almacenamiento no disponible */
+    }
+}
+
 async function readRaw(key) {
     try {
-        if (Platform.OS === "web") return localStorage.getItem(key);
+        if (Platform.OS === "web") return sessionStorage.getItem(key);
         const AS = (await import("@react-native-async-storage/async-storage")).default;
         return await AS.getItem(key);
     } catch {
@@ -38,7 +50,7 @@ async function readRaw(key) {
 async function writeRaw(key, value) {
     try {
         if (Platform.OS === "web") {
-            localStorage.setItem(key, value);
+            sessionStorage.setItem(key, value);
             return true;
         }
         const AS = (await import("@react-native-async-storage/async-storage")).default;
@@ -52,7 +64,7 @@ async function writeRaw(key, value) {
 async function removeRaw(key) {
     try {
         if (Platform.OS === "web") {
-            localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
             return true;
         }
         const AS = (await import("@react-native-async-storage/async-storage")).default;
