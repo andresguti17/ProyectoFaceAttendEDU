@@ -44,6 +44,7 @@ from infrastructure.persistence.mongo_client import (
 )
 from infrastructure.web.routers.facial_router import router as facial_router
 from infrastructure.web.routers.fingerprint_router import router as fingerprint_router
+from infrastructure.web.routers.privacy_router import router as privacy_router
 from infrastructure.web.routers.summary_router import router as summary_router
 from infrastructure.web.routers.update_router import router as update_router
 from infrastructure.web.routers.ws_router import router as ws_router
@@ -118,6 +119,12 @@ def _error_body(error: str, message: str, request: Request, **extra) -> dict:
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     # Fiabilidad/Compatibilidad: envolvente uniforme sin fuga de stack.
+    # A structured detail ({"code", "message"}) keeps its code, e.g. BIOMETRIC_CONSENT_REQUIRED (428).
+    if isinstance(exc.detail, dict) and exc.detail.get("code"):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=_error_body(str(exc.detail["code"]), str(exc.detail.get("message") or ""), request),
+        )
     return JSONResponse(
         status_code=exc.status_code,
         content=_error_body(
@@ -205,6 +212,7 @@ app.include_router(facial_router)
 app.include_router(fingerprint_router)
 app.include_router(update_router)
 app.include_router(summary_router)
+app.include_router(privacy_router)
 app.include_router(ws_router)
 
 

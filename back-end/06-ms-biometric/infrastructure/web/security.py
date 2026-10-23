@@ -441,6 +441,45 @@ async def ensure_can_enroll(request: Request, person_id: str, enrolled_at: datet
     )
 
 
+BIOMETRIC_CONSENT_REQUIRED = "BIOMETRIC_CONSENT_REQUIRED"
+
+
+def bearer_or_none(request: Request | None) -> str | None:
+    if request is None:
+        return None
+    header = request.headers.get("authorization", "")
+    return header[7:].strip() if header.lower().startswith("bearer ") else None
+
+
+async def ensure_biometric_consent(person_id: str, token: str | None) -> None:
+    """Ley 1581 (arts. 6-a and 9): no biometric data is stored without the holder's
+    prior, express authorization. Read from identity with the caller's session;
+    fails closed (503) when identity cannot answer."""
+    settings = get_settings()
+    if not settings.consent_check_enabled:
+        return
+    if not token:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing bearer token")
+    try:
+        code, body = await _get_json(f"{settings.identity_url}/api/v1/persons/{quote(person_id)}/consent", token)
+    except httpx.HTTPError:
+        logger.warning("identity unreachable while checking the biometric authorization")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify the biometric data authorization")
+    if code == 200 and body and body.get("biometricAuthorized") is True:
+        return
+    if code in (200, 404):
+        raise HTTPException(
+            status.HTTP_428_PRECONDITION_REQUIRED,
+            detail={
+                "code": BIOMETRIC_CONSENT_REQUIRED,
+                "message": "The holder has not authorized the processing of biometric data",
+            },
+        )
+    if code == 403:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Person outside your scope")
+    raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify the biometric data authorization")
+
+
 async def authenticate_websocket(websocket: WebSocket, permission: str | None) -> str | None:
     """Same rule as `require_permission`, for a WS handshake.
 

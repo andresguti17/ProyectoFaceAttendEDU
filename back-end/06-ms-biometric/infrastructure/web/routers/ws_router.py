@@ -111,6 +111,7 @@ from infrastructure.web.routers.fingerprint_router import (
 from infrastructure.web.security import (
     WebSocketAuthError,
     authenticate_websocket,
+    ensure_biometric_consent,
     extract_ws_token,
     face_threshold_for_caller,
 )
@@ -192,6 +193,8 @@ def _error_code_for_status(status_code: int) -> str:
         return "NotFound"
     if status_code == 409:
         return "Conflict"
+    if status_code == 428:
+        return "ConsentRequired"
     if status_code == 429:
         return "TooManyRequests"
     if status_code < 500:
@@ -213,6 +216,7 @@ async def _dispatch(
     secret: str,
     settings: Settings,
     correlation_id: str,
+    token: str | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any] | None]:
     """Validate `raw_payload` and call the matching REST route handler directly.
 
@@ -225,6 +229,7 @@ async def _dispatch(
     is_fingerprint = message_type.startswith("fingerprint.")
 
     if message_type in (FACIAL_ENROLL, FINGERPRINT_ENROLL):
+        await ensure_biometric_consent(data.person_id, token)
         template = (
             await enroll_fingerprint(data, fingerprint_repo)
             if is_fingerprint
@@ -349,6 +354,7 @@ async def _handle_frame(
             secret=secret,
             settings=settings,
             correlation_id=str(uuid4()),
+            token=extract_ws_token(websocket),
         )
     except ValidationError:
         await websocket.send_json(_error_frame(envelope.client_message_id, "BadRequest", "invalid payload"))

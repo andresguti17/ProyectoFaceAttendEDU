@@ -61,3 +61,8 @@ class BiometricRepositoryPort(ABC):
     @abstractmethod
     async def deactivate(self, person_id: str, finger_number: int | None = None) -> int:
         """Soft-delete the active templates of a scope. Returns how many were deactivated."""
+
+    @abstractmethod
+    async def purge(self, person_id: str) -> int:
+        """Hard-delete every template of the person, history and tombstones included
+        (Ley 1581 art. 8-e: deletion when the authorization is revoked). Returns how many."""

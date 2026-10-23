@@ -418,6 +418,8 @@ services:
       # de sesión — el servicio no emite sesiones, delega en identity/authorization.
       # Sin fallback a propósito, igual que el resto de secretos del stack.
       BIOMETRIC_LIVENESS_CHALLENGE_SECRET: ${BIOMETRIC_LIVENESS_CHALLENGE_SECRET:?Set BIOMETRIC_LIVENESS_CHALLENGE_SECRET in .env (>= 32 random chars)}
+      # Face encodings and fingerprint samples encrypted at rest (Ley 1581). Losing it makes them unreadable.
+      BIOMETRIC_ENCRYPTION_KEY: ${BIOMETRIC_ENCRYPTION_KEY:?BIOMETRIC_ENCRYPTION_KEY is required (openssl rand -base64 32)}
       BIOMETRIC_LIVENESS_TTL_SECONDS: ${BIOMETRIC_LIVENESS_TTL_SECONDS:-120}
       BIOMETRIC_RATE_LIMIT_MAX_ATTEMPTS: ${BIOMETRIC_RATE_LIMIT_MAX_ATTEMPTS:-20}
       BIOMETRIC_RATE_LIMIT_WINDOW_SECONDS: ${BIOMETRIC_RATE_LIMIT_WINDOW_SECONDS:-60}
