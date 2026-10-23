@@ -10,6 +10,7 @@ import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Alert, Badge, BaseModal, Button, TextArea } from "../../components/common";
 import { useTheme } from "../../components/hooks/useTheme";
+import { useDateFormat } from "../../components/hooks/useDateFormat";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { REVIEW_STATUS_LABELS } from "../../../viewmodels/useJustificationsViewModel";
 
@@ -67,6 +68,7 @@ export function JustificationDetailModal({
     const { theme } = useTheme();
     const c = theme.colors;
     const { t } = useTranslation();
+    const { formatDate } = useDateFormat();
     const [decisionError, setDecisionError] = useState(null);
 
     if (!row) return null;
@@ -132,7 +134,7 @@ export function JustificationDetailModal({
                         <Field label={t("Alumno")} value={row.personName} />
                     </View>
                     <View style={{ flexBasis: 130, flexGrow: 1 }}>
-                        <Field label={t("Fecha del registro")} value={row.date} />
+                        <Field label={t("Fecha del registro")} value={row.date ? formatDate(row.date) : ""} />
                     </View>
                     <View style={{ flexBasis: 160, flexGrow: 1 }}>
                         <Field label={t("Tipo")} value={typeName} />

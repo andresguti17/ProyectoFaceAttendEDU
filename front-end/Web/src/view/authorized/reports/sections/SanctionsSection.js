@@ -27,7 +27,7 @@ import { getSanctions, getSanctionsStats } from "../../../../models/data/sanctio
 function SancionHistoryRow({ sancion, index, isLast }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
-    const { formatDate } = useDateFormat();
+    const { formatDate, formatDateTime } = useDateFormat();
     const c = theme.colors;
     
     return (
@@ -121,7 +121,7 @@ function SancionHistoryRow({ sancion, index, isLast }) {
                 </View>
 
                 <Text style={{ fontSize: 11, color: c.text.disabled }}>
-                    {t("Notificado el")} {formatDate(sancion.notificationDate, "DD/MM/YYYY HH:mm")}
+                    {t("Notificado el")} {formatDateTime(sancion.notificationDate)}
                 </Text>
             </View>
 

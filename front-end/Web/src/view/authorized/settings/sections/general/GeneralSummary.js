@@ -20,7 +20,7 @@ import { useTranslation } from "../../../../../core/utils/i18n/hooks/useTranslat
 import { StatsRow } from "../../../../components/settings/tabs";
 import {
     ACADEMIC_PERIOD_CONFIG,
-    getFullPeriodLabel,
+    formatPeriodDateRange,
 } from "../../../../../core/constants/academicPeriods";
 import { useSettingsSectionStyles } from "../../modals/useSettingsSectionStyles";
 
@@ -31,6 +31,7 @@ export function GeneralSummary({
     periodEndDate,
     isAutomaticPeriod,
     automaticPeriod,
+    currentPeriod,
     currentLanguageLabel,
     dateFormat,
     timeFormat24h,
@@ -58,11 +59,13 @@ export function GeneralSummary({
             <StatsRow
                 label={t("Período actual")}
                 value={
-                    periodStartDate && periodEndDate
-                        ? `${getFullPeriodLabel(automaticPeriod)} ${isAutomaticPeriod ? t("(Auto)") : t("(Manual)")}`
-                        : t("No configurado - usar división del año")
+                    currentPeriod
+                        ? `${currentPeriod.label} (${formatPeriodDateRange({ startDate: currentPeriod.startIso, endDate: currentPeriod.endIso })}) · ${
+                              currentPeriod.fromDates ? (isAutomaticPeriod ? t("Auto") : t("Manual")) : t("Calendario")
+                          }`
+                        : t("Sin definir")
                 }
-                icon="calendar-check"
+                icon="check-circle"
                 color="#8B5CF6"
             />
             <Divider />

@@ -38,7 +38,7 @@ import { getAttendanceThresholds } from "../../../../models/data/userDerivedData
 function UserRow({ user, index, isLast, onPress, isExportMode, isSelected, onToggleSelect }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
-    const { formatDate } = useDateFormat();
+    const { formatDate, formatDateTime } = useDateFormat();
     const c = theme.colors;
     
     const statusConfig = {
@@ -179,7 +179,7 @@ function UserRow({ user, index, isLast, onPress, isExportMode, isSelected, onTog
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                                 <Feather name="calendar" size={12} color={c.text.secondary} style={{ marginTop: 1 }} />
                                 <Text style={{ fontSize: 12, color: c.text.secondary, lineHeight: 14 }}>
-                                    {formatDate(user.date, "DD/MM/YYYY")}
+                                    {formatDate(user.date)}
                                 </Text>
                             </View>
                         </>
@@ -237,7 +237,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
     const { t } = useTranslation();
     const appData = useAppData();
     const pushNotification = usePushNotification();
-    const { formatDate } = useDateFormat();
+    const { formatDate, formatDateTime } = useDateFormat();
     const c = theme.colors;
 
     const [searchValue, setSearchValue] = useState({ searchType: "student", searchText: "" });
@@ -739,7 +739,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                 [t("Nombre")]: user.studentName,
                 [t("Ficha")]: user.fichaName || user.ficha,
                 [t("Ambiente")]: user.environment,
-                [t("Fecha")]: user.date ? formatDate(user.date, "DD/MM/YYYY") : t("Sin registro"),
+                [t("Fecha")]: user.date ? formatDate(user.date) : t("Sin registro"),
                 [t("Estado")]: user.late ? t("Retardo") : (user.status === "present" ? t("Presente") : t("Ausente")),
                 [t("Horario Programado")]: user.scheduledStartTime && user.scheduledEndTime 
                     ? `${user.scheduledStartTime} - ${user.scheduledEndTime}` 
@@ -886,7 +886,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                         key: "date", 
                         label: t("Fecha"), 
                         width: "15%",
-                        render: (value) => value ? formatDate(value, "DD/MM/YYYY") : t("Sin registro")
+                        render: (value) => value ? formatDate(value) : t("Sin registro")
                     },
                     {
                         key: "status",
@@ -1097,11 +1097,11 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
         <h1>${t("Históricos de Asistencia Seleccionados")}</h1>
         <p>${t("Registros seleccionados para exportación")} - ${exportType === "simple" ? t("Exportación sencilla") : t("Exportación detallada")}</p>
         ${dateRange.start && dateRange.end ? `
-        <p><strong>${t("Rango de fechas")}:</strong> ${formatDate(dateRange.start, "DD/MM/YYYY")} - ${formatDate(dateRange.end, "DD/MM/YYYY")}</p>
+        <p><strong>${t("Rango de fechas")}:</strong> ${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}</p>
         ` : `
         <p><strong>${t("Fecha de último registro mostrada")}</strong></p>
         `}
-        <p>${t("Fecha de generación")}: ${formatDate(new Date(), "DD/MM/YYYY HH:mm")}</p>
+        <p>${t("Fecha de generación")}: ${formatDateTime(new Date())}</p>
     </div>
 
     <div class="summary">

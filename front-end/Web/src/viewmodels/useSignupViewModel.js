@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { authApi } from "../services/api/authApi";
+import { normalizePhone } from "../core/utils/validation";
 import {
     EMPTY_FORM,
     validateSchoolStep,
@@ -27,6 +28,8 @@ const NORMALIZERS = {
     cityName: onlyLettersAndSpaces,
     adminName: onlyLettersAndSpaces,
     adminLastName: onlyLettersAndSpaces,
+    phone: normalizePhone,
+    adminPhone: normalizePhone,
     documentNumber: (v) => String(v ?? "").replace(/[^A-Za-z0-9]/g, ""),
 };
 

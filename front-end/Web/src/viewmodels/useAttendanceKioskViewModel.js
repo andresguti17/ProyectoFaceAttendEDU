@@ -130,7 +130,12 @@ export function useAttendanceKioskViewModel() {
     const todaysBlocks = useMemo(
         () =>
             blocks.filter(
-                (b) => b.instructorActorId === user?.academicActorId && b.dayOfWeek === isoWeekday()
+                // Comparación por texto/número: el id llega como number del bloque y
+                // puede venir como string en la sesión (o al revés).
+                (b) =>
+                    user?.academicActorId != null &&
+                    String(b.instructorActorId) === String(user.academicActorId) &&
+                    Number(b.dayOfWeek) === isoWeekday()
             ),
         [blocks, user?.academicActorId]
     );

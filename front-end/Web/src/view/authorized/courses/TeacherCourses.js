@@ -18,6 +18,7 @@ import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAuth } from "../../../context/AuthContext";
 import { listBlocks, listCohorts, listEnvironments, optional } from "../../../services/api/referenceData";
 import { CourseDetailModal } from "./modals";
+import { formatClockTime } from "../../../core/constants/dateFormats";
 
 const DAY_LABELS = { 1: "Lun", 2: "Mar", 3: "Mié", 4: "Jue", 5: "Vie", 6: "Sáb", 7: "Dom" };
 
@@ -79,8 +80,8 @@ function TeacherCourseCard({ course, meta, onPress, onStudentsPress }) {
     const rooms = [...new Set(myBlocks.map((b) => meta.envs.get(Number(b.environmentId ?? b.environment_id))).filter(Boolean))];
     const slots = myBlocks.map((b) => {
         const day = DAY_LABELS[Number(blockDay(b))] ?? "";
-        const from = String(b.startsAt ?? b.starts_at ?? "").slice(0, 5);
-        const to = String(b.endsAt ?? b.ends_at ?? "").slice(0, 5);
+        const from = formatClockTime(b.startsAt ?? b.starts_at ?? "");
+        const to = formatClockTime(b.endsAt ?? b.ends_at ?? "");
         return `${day} ${from}–${to}`.trim();
     }).filter((s) => s);
 

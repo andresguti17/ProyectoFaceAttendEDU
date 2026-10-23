@@ -17,7 +17,7 @@ import { useDateFormat } from "../view/components/hooks/useDateFormat";
 export function useHistoricosViewModel(filteredUsers) {
     const { theme } = useTheme();
     const { t } = useTranslation();
-    const { formatDate } = useDateFormat();
+    const { formatDate, formatDateTime } = useDateFormat();
     const c = theme.colors;
 
     /**
@@ -29,7 +29,7 @@ export function useHistoricosViewModel(filteredUsers) {
             [t("Nombre")]: user.studentName,
             [t("Ficha")]: user.fichaName || user.ficha,
             [t("Ambiente")]: user.environment,
-            [t("Fecha")]: user.date ? formatDate(user.date, "DD/MM/YYYY") : t("Sin registro"),
+            [t("Fecha")]: user.date ? formatDate(user.date) : t("Sin registro"),
             [t("Estado")]: user.late ? t("Retardo") : (user.status === "present" ? t("Presente") : t("Ausente")),
             [t("Horario Programado")]: user.scheduledStartTime && user.scheduledEndTime 
                 ? `${user.scheduledStartTime} - ${user.scheduledEndTime}` 
@@ -92,7 +92,7 @@ export function useHistoricosViewModel(filteredUsers) {
                 key: "date", 
                 label: t("Fecha"), 
                 width: "12%",
-                render: (value) => value ? formatDate(value, "DD/MM/YYYY") : t("Sin registro")
+                render: (value) => value ? formatDate(value) : t("Sin registro")
             },
             {
                 key: "status",
@@ -229,7 +229,7 @@ export function useHistoricosViewModel(filteredUsers) {
     <div class="header">
         <h1>${t("Históricos de Asistencia")}</h1>
         <p>${t("Historial completo de registros de asistencia")}</p>
-        <p>${t("Fecha de generación")}: ${formatDate(new Date(), "DD/MM/YYYY HH:mm")}</p>
+        <p>${t("Fecha de generación")}: ${formatDateTime(new Date())}</p>
     </div>
 
     <div class="summary">

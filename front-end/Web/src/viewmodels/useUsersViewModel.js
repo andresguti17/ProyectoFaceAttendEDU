@@ -163,7 +163,7 @@ export function validateUserForm(form) {
     if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
     // Campos opcionales de persona (PersonDto): formato fecha si se informa.
     if (String(form.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form.birthDate).trim())) {
-        return "La fecha de nacimiento debe tener formato AAAA-MM-DD";
+        return "La fecha de nacimiento está incompleta o no es válida";
     }
 
     // Validación adicional para estudiantes

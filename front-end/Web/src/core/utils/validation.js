@@ -123,7 +123,13 @@ export function isValidUrl(url) {
 export function isValidPhone(phone) {
   if (!phone) return false;
   const phoneRegex = /^\+?[\d\s\-()]+$/;
-  return phoneRegex.test(phone) && phone.replace(/\D/g, "").length >= 10;
+  const digits = phone.replace(/\D/g, "").length;
+  return phoneRegex.test(phone) && digits >= 10 && digits <= 15;
+}
+
+/** Teléfono: solo dígitos (máx. 15, el límite E.164). */
+export function normalizePhone(text) {
+  return String(text ?? "").replace(/\D/g, "").slice(0, 15);
 }
 
 /**

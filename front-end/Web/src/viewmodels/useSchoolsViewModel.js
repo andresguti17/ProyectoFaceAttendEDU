@@ -17,6 +17,7 @@ import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../context/AppDataContext";
 import { useRolePermissions } from "./useRolePermissions";
 import { academicApi } from "../services/api";
+import { isValidPhone, normalizePhone } from "../core/utils/validation";
 
 // Umbral de asistencia mínima (mismo criterio de "en riesgo" que Reportes).
 export const ATTENDANCE_THRESHOLD = 75;
@@ -36,6 +37,8 @@ export function validateSchoolForm(form, isEdit) {
     if (!isEdit && !form.code?.trim()) return "El código de la sede es obligatorio.";
     if (form.email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
         return "El correo electrónico no es válido.";
+    if (form.phone?.trim() && !isValidPhone(form.phone.trim()))
+        return "El teléfono no es válido (10 a 15 dígitos).";
     // Ciudad: nombre del catálogo externo, elegido en el dropdown de texto
     // (la columna city_name del modelo admite 100 caracteres).
     if (String(form.cityName ?? "").length > 100)
@@ -183,7 +186,7 @@ export function useSchoolsViewModel() {
     }, []);
 
     const setField = useCallback((key, value) => {
-        setForm((prev) => ({ ...prev, [key]: value }));
+        setForm((prev) => ({ ...prev, [key]: key === "phone" ? normalizePhone(value) : value }));
     }, []);
 
     const save = useCallback(async () => {

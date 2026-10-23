@@ -2,6 +2,8 @@
 //  Formatos de Fecha y Hora - SIMPLIFICADO
 // ============================================================
 
+import { getInstitutionConfig } from "../config/institutionConfig";
+
 /**
  * Formatos de fecha disponibles
  */
@@ -21,6 +23,32 @@ export const DATE_FORMATS = {
 };
 
 export const DEFAULT_DATE_FORMAT = "DD/MM/YYYY";
+
+// Formato elegido en Configuración. Se usa cuando quien llama no pasa uno explícito, de modo
+// que todo campo que muestre fecha u hora siga el ajuste sin tener que leerlo cada vez.
+// Se guarda en memoria y se renueva cuando la configuración cambia.
+let configuredFormats = null;
+if (typeof window !== "undefined" && window.addEventListener) {
+    window.addEventListener("institutionConfigUpdated", () => {
+        configuredFormats = null;
+    });
+}
+
+function configured() {
+    if (!configuredFormats) {
+        let cfg = {};
+        try {
+            cfg = getInstitutionConfig() ?? {};
+        } catch {
+            cfg = {};
+        }
+        configuredFormats = {
+            dateFormat: cfg.dateFormat || DEFAULT_DATE_FORMAT,
+            timeFormat24h: cfg.timeFormat24h ?? true,
+        };
+    }
+    return configuredFormats;
+}
 
 /**
  * Convierte la entrada a Date. Un texto SOLO de fecha (YYYY-MM-DD) se interpreta
@@ -65,7 +93,8 @@ function applyTokens(dateObj, pattern) {
  * Formatear fecha según formato configurado. Los tres formatos predefinidos
  * usan el switch; cualquier otro patrón se resuelve por tokens.
  */
-export function formatDate(date, format = DEFAULT_DATE_FORMAT) {
+export function formatDate(date, format) {
+    format = format ?? configured().dateFormat;
     const dateObj = toDate(date);
 
     if (!(dateObj instanceof Date) || isNaN(dateObj)) {
@@ -91,7 +120,8 @@ export function formatDate(date, format = DEFAULT_DATE_FORMAT) {
 /**
  * Formatear hora según formato 12h/24h
  */
-export function formatTime(date, is24Hour = false) {
+export function formatTime(date, is24Hour) {
+    is24Hour = is24Hour ?? configured().timeFormat24h;
     const dateObj = toDate(date);
 
     if (!(dateObj instanceof Date) || isNaN(dateObj)) {
@@ -111,8 +141,19 @@ export function formatTime(date, is24Hour = false) {
 }
 
 /**
+ * Hora de reloj ("08:00" o "08:00:00", como llega del backend) según el formato 12h/24h
+ * configurado. Si no es una hora válida la devuelve tal cual.
+ */
+export function formatClockTime(time, is24Hour) {
+    const m = /^(\d{1,2}):(\d{2})/.exec(String(time ?? ""));
+    if (!m) return String(time ?? "");
+    const d = new Date(2000, 0, 1, Number(m[1]), Number(m[2]));
+    return formatTime(d, is24Hour);
+}
+
+/**
  * Formatear fecha y hora
  */
-export function formatDateTime(date, dateFormat = DEFAULT_DATE_FORMAT, is24Hour = false) {
+export function formatDateTime(date, dateFormat, is24Hour) {
     return `${formatDate(date, dateFormat)} ${formatTime(date, is24Hour)}`;
 }

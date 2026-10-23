@@ -16,6 +16,7 @@ import {
     getInstitutionConfig,
     saveInstitutionConfig,
 } from "../../core/config/institutionConfig";
+import { normalizeAcademicPeriodType } from "../../core/constants/academicPeriods";
 import { academicApi } from "./academicApi";
 import { configurationApi } from "./configurationApi";
 
@@ -227,6 +228,7 @@ export async function syncInstitutionConfigFromBackend(schoolId) {
         const target = field === "confidence" ? "confidenceThreshold" : field;
         base[target] = parseSetting(raw, base[target]);
     }
+    base.academicPeriodType = normalizeAcademicPeriodType(base.academicPeriodType);
 
     // El nombre institucional es el de la sede (se edita en Configuración > Sede).
     try {

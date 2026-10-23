@@ -157,7 +157,11 @@ export function TextInput({
 
         <RNTextInput
           value={value}
-          onChangeText={onChangeText}
+          onChangeText={
+            type === "phone"
+              ? (text) => onChangeText?.(String(text ?? "").replace(/\D/g, "").slice(0, 15))
+              : onChangeText
+          }
           placeholder={placeholder}
           placeholderTextColor={theme.colors.text.disabled}
           editable={!disabled}
