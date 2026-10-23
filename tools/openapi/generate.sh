@@ -64,6 +64,13 @@ done
 
 mvn -B -q -f "$ROOT/back-end/shared/auth-java/pom.xml" install -DskipTests
 
+# Identity refuses to start without its encryption keys; throwaway ones are enough to read the spec.
+export PII_ENCRYPTION_KEY="${PII_ENCRYPTION_KEY:-$(head -c 32 /dev/urandom | base64)}"
+export PII_HASH_KEY="${PII_HASH_KEY:-$(head -c 32 /dev/urandom | base64)}"
+# Attendance builds its MinIO client at startup (no connection is made to serve the spec).
+export FACEATTEND_STORAGE_ACCESS_KEY="${FACEATTEND_STORAGE_ACCESS_KEY:-openapi}"
+export FACEATTEND_STORAGE_SECRET_KEY="${FACEATTEND_STORAGE_SECRET_KEY:-openapi-local-only}"
+
 port=18080
 for svc in "${SERVICES[@]}"; do
   port=$((port + 1))

@@ -1136,6 +1136,53 @@
         "tags": [
           "attendance-relations-controller"
         ]
+      },
+      "post": {
+        "operationId": "upload",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportingDocumentResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "justification-document-controller"
+        ]
       }
     },
     "/api/v1/justifications/{id}/review": {
@@ -1304,6 +1351,38 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/SupportingDocumentResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "supporting-document-controller"
+        ]
+      }
+    },
+    "/api/v1/supporting-documents/{id}/content": {
+      "get": {
+        "operationId": "content",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "format": "byte",
+                  "type": "string"
                 }
               }
             },
@@ -2105,6 +2184,38 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/SupportingDocumentResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "supporting-document-controller"
+        ]
+      }
+    },
+    "/supporting-documents/{id}/content": {
+      "get": {
+        "operationId": "content_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "format": "byte",
+                  "type": "string"
                 }
               }
             },

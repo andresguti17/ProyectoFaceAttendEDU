@@ -1193,6 +1193,46 @@
         "summary": "Gateway Prefixed Health"
       }
     },
+    "/api/v1/biometric/persons/{person_id}": {
+      "delete": {
+        "operationId": "delete_person_biometrics_api_v1_biometric_persons__person_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Person Biometrics",
+        "tags": [
+          "biometric"
+        ]
+      }
+    },
     "/api/v1/biometric/summary": {
       "get": {
         "description": "Who has an active template, for list screens: ids only, never the templates.",
