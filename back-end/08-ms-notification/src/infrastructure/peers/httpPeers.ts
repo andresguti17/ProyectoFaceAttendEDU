@@ -241,6 +241,26 @@ export class HttpPeers implements Peers {
     return rows.filter((r) => r.status !== false).map((r) => ({ schoolId: Number(r.schoolId), name: String(r.name) }));
   }
 
+  async listClosedSessions(from: string, to: string): Promise<SessionInfo[]> {
+    const rows = await this.getAll('scheduling', `/api/v1/class-sessions?from=${from}&to=${to}&sessionStatus=Closed`);
+    return rows.map((row) => ({
+      classSessionId: Number(row.classSessionId),
+      scheduleBlockId: Number(row.scheduleBlockId),
+      sessionDate: String(row.sessionDate),
+      sessionStatus: String(row.sessionStatus),
+    }));
+  }
+
+  async getSessionCounts(sessionId: number): Promise<AttendanceCounts> {
+    const rows = await this.getList('attendance', `/api/v1/class-sessions/${sessionId}/attendance`);
+    const counts: AttendanceCounts = { present: 0, late: 0, absent: 0, justified: 0, total: rows.length };
+    for (const row of rows) {
+      const key = String(row.attendanceStatus ?? '').toLowerCase() as 'present' | 'late' | 'absent' | 'justified';
+      if (key in counts) counts[key] += 1;
+    }
+    return counts;
+  }
+
   async getAttendanceCounts(actorIds: number[]): Promise<Map<number, AttendanceCounts>> {
     const result = new Map<number, AttendanceCounts>();
     for (let i = 0; i < actorIds.length; i += SUMMARY_CHUNK) {

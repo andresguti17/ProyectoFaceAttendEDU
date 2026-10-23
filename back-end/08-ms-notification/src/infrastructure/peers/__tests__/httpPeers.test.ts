@@ -166,6 +166,26 @@ describe('HttpPeers', () => {
     expect(counts.get(120)?.absent).toBe(4);
   });
 
+  it('lists the closed sessions of a date range and counts a session by status', async () => {
+    const { fetchFn } = fakeFetch({
+      [LOGIN]: { status: 200, body: { sessionId: 's' } },
+      'GET http://scheduling/api/v1/class-sessions?from=2026-10-14&to=2026-10-20&sessionStatus=Closed&limit=100&offset=0': {
+        status: 200,
+        body: [{ classSessionId: 5, scheduleBlockId: 2, sessionDate: '2026-10-15', sessionStatus: 'Closed' }],
+      },
+      'GET http://attendance/api/v1/class-sessions/5/attendance': {
+        status: 200,
+        body: [{ attendanceStatus: 'Present' }, { attendanceStatus: 'Present' }, { attendanceStatus: 'Late' }, { attendanceStatus: 'Absent' }, { attendanceStatus: 'Justified' }],
+      },
+    });
+    const peers = new HttpPeers(cfg, fetchFn);
+
+    expect(await peers.listClosedSessions('2026-10-14', '2026-10-20')).toEqual([
+      { classSessionId: 5, scheduleBlockId: 2, sessionDate: '2026-10-15', sessionStatus: 'Closed' },
+    ]);
+    expect(await peers.getSessionCounts(5)).toEqual({ present: 2, late: 1, absent: 1, justified: 1, total: 5 });
+  });
+
   it('reads the school settings as a name -> value map', async () => {
     const { fetchFn } = fakeFetch({
       [LOGIN]: { status: 200, body: { sessionId: 's' } },

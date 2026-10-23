@@ -95,3 +95,40 @@ export function atRiskEmail(report: AtRiskReport): EmailMessage {
     htmlBody: html,
   };
 }
+
+export interface SummaryLine {
+  /** "Course (ficha 123)". */
+  label: string;
+  sessions: number;
+  absent: number;
+  /** Attendance percentage, already rounded, or null when nothing was recorded. */
+  rate: number | null;
+}
+
+export interface SummaryReport {
+  to: string;
+  recipientName: string;
+  kind: 'daily' | 'weekly';
+  /** "2026-10-21" for the daily summary, "2026-10-12 al 2026-10-18" for the weekly report. */
+  period: string;
+  scope: string;
+  lines: SummaryLine[];
+}
+
+export function summaryEmail(report: SummaryReport): EmailMessage {
+  const greeting = report.recipientName ? `Hola, ${report.recipientName}: ` : '';
+  const what = report.kind === 'daily' ? 'Resumen de asistencia del' : 'Reporte semanal de asistencia,';
+  const intro = `${greeting}${what} ${report.period} en ${report.scope}.`;
+  const items = report.lines.map((line) => {
+    const rate = line.rate === null ? 'sin registros' : `asistencia ${line.rate}%`;
+    return `${line.label}: ${line.sessions} clase(s), ${rate}, ${line.absent} ausencia(s)`;
+  });
+  const title = report.kind === 'daily' ? 'Resumen diario' : 'Reporte semanal';
+  const { text, html } = page(title, intro, items, 'Puedes desactivar este correo en Configuración > Notificaciones.');
+  return {
+    to: report.to,
+    subject: `${title} de asistencia (${report.period}) - ${APP_NAME}`,
+    textBody: text,
+    htmlBody: html,
+  };
+}

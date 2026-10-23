@@ -17,7 +17,7 @@ import { runJustificationConsumer } from './infrastructure/messaging/justificati
 import { runClassSessionConsumer } from './infrastructure/messaging/classSession.consumer';
 import type { AlertDeps } from './application/attendanceAlerts/deps';
 import { HttpPeers, peerConfigFromEnv } from './infrastructure/peers/httpPeers';
-import { startRiskScheduler, type RiskScheduler } from './infrastructure/scheduler/riskScheduler';
+import { startAttendanceSchedulers, type RiskScheduler } from './infrastructure/scheduler/riskScheduler';
 
 const app = Fastify({ logger: true });
 const startedAt = Date.now();
@@ -139,7 +139,7 @@ async function start() {
         app.log.error({ err }, 'class-session consumer failed');
       });
     }
-    riskScheduler = startRiskScheduler(deps);
+    riskScheduler = startAttendanceSchedulers(deps);
     app.log.info('attendance alerts enabled (absence e-mails on class close, daily at-risk pass)');
   } else {
     app.log.info('attendance alerts disabled: NOTIFICATION_SERVICE_USERNAME/PASSWORD not set');
