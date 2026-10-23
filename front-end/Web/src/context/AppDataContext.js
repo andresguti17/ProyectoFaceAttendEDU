@@ -15,6 +15,8 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
+import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
+import { syncInstitutionConfigFromBackend } from "../services/api/settingsPersistence";
 import { resetReferenceData, setActiveSchool, setUsersListAllowed } from "../services/api/referenceData";
 import { useAuth } from "./AuthContext";
 
@@ -286,6 +288,8 @@ export function AppDataProvider({ children }) {
         // La sede del usuario acota todas las cargas de abajo. Debe fijarse ANTES
         // de pedir nada: setActiveSchool limpia la caché si la sede cambió.
         setActiveSchool(user.schoolId ?? null);
+        // Ajustes de la sede (asistencia mínima, reconocimiento, avisos) para todos los roles.
+        syncInstitutionConfigFromBackend(user.schoolId ?? null).catch(() => {});
         // /users exige identity.person:write (solo administración): se prohibe
         // la petición ANTES de que ningún Storage la dispare con Instructor/Aprendiz.
         setUsersListAllowed(user?.role === "admin");
@@ -305,16 +309,42 @@ export function AppDataProvider({ children }) {
         // Instructor y Aprendiz recibían 403 y el banner de error aparecía en
         // todas sus pantallas, así que para esos roles la carga ni se lanza.
         const canListUsers = user?.role === "admin";
+
+        // Las filas nacen con hasFacial/hasFingerprint en false; lo registrado vive en
+        // ms-biometric, así que sin esto la lista vuelve a "Pendiente" al recargar.
+        // Si el rol no puede consultarlo (403) o falla, las filas quedan como están.
+        const biometricFlags = biometricCaptureApi
+            .summaryAll()
+            .then((r) => ({
+                face: new Set((r?.face_person_ids ?? []).map(String)),
+                fingerprint: new Set((r?.fingerprint_person_ids ?? []).map(String)),
+            }))
+            .catch(() => null);
+        const withBiometrics = (rows, flags) =>
+            !flags
+                ? rows
+                : rows.map((row) =>
+                      row.personId == null
+                          ? row
+                          : {
+                                ...row,
+                                hasFacial: flags.face.has(String(row.personId)),
+                                hasFingerprint: flags.fingerprint.has(String(row.personId)),
+                            }
+                  );
+
         Promise.allSettled([
             canListUsers ? loadUsers() : Promise.resolve([]),
             loadEnvironments(),
             loadFichas(),
             loadCourses(),
-        ]).then((results) => {
+        ]).then(async (results) => {
+            const flags = await biometricFlags;
             if (cancelled) return;
-            const [u, e, f, c] = results.map((r) =>
+            const [rawUsers, e, f, c] = results.map((r) =>
                 r.status === "fulfilled" ? r.value : []
             );
+            const u = withBiometrics(rawUsers, flags);
             const failed = results.filter((r) => r.status === "rejected");
             if (failed.length > 0) {
                 const messages = failed.map((r) => r.reason?.message || "error desconocido");
@@ -334,7 +364,8 @@ export function AppDataProvider({ children }) {
             startProgressiveUserLoading([], c, u);
 
             loadStudents()
-                .then((s) => {
+                .then(async (loaded) => {
+                    const s = withBiometrics(loaded, await biometricFlags);
                     if (cancelled) return;
                     setStudents(s);
                     startProgressiveUserLoading(s, c, u);

@@ -162,10 +162,10 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={stylesCommon.modalWrapper}>
-                            <ScrollView
+                            <ScrollView persistentScrollbar
                                 contentContainerStyle={stylesCommon.modalScrollContent}
                                 keyboardShouldPersistTaps="handled"
-                                showsVerticalScrollIndicator={false}
+                                showsVerticalScrollIndicator
                             >
                                 <View style={[
                                     stylesCommon.passwordModalCard,

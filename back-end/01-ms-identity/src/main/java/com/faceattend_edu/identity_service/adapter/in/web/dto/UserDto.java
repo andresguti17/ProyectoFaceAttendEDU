@@ -13,6 +13,7 @@ public class UserDto {
     private String authenticationType;
     private Boolean status;
     private Boolean mustChangePassword;
+    private Boolean twoFactorEnabled;
     /** SENT | SKIPPED | FAILED when the create call asked to email the credentials; null otherwise. */
     private String credentialsEmail;
     private LocalDateTime lastAccess;

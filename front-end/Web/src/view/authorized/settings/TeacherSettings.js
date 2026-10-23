@@ -11,7 +11,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Card } from "../../components/common";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useEditableConfig } from "../../components/hooks/useEditableConfig";
-import { SecurityMeter } from "../../components/settings/tabs";
 import {
     NotificationsSettings,
     SecuritySettings,
@@ -22,10 +21,12 @@ import {
     WeeklyReportToggle,
     AtRiskAlertToggle,
     DailySummaryToggle,
-    TwoFactorRow,
+    TwoFactorSetup,
+    OwnSecurityMeter,
     SessionTimeInput,
     AccentBlock,
 } from "./sections";
+import { FutureNotice } from "./sections/FutureNotice";
 import {
     getInstitutionConfig,
     updateInstitutionConfig,
@@ -84,6 +85,7 @@ export function TeacherSettings({ section, onSave, onDiscard, onDiscardColors, o
         notifications: (
             <NotificationsSettings
                 sections={[
+                    <FutureNotice message={t("Los correos (ausencias de la clase, estudiantes en riesgo, resumen diario y reporte semanal) llegan a las direcciones registradas de docentes y administradores de la sede, según lo que actives aquí.")} />,
                     <EmailAlertToggle
                         value={config.emailAlert}
                         onToggle={() => updateConfig("emailAlert", !config.emailAlert)}
@@ -111,14 +113,9 @@ export function TeacherSettings({ section, onSave, onDiscard, onDiscardColors, o
         security: (
             <SecuritySettings
                 title={t("Seguridad")}
-                header={<SecurityMeter twoFactor={config.twoFactor} sessionTime={config.sessionTime} />}
+                header={<OwnSecurityMeter sessionTime={config.sessionTime} />}
                 sections={[
-                    <TwoFactorRow
-                        value={config.twoFactor}
-                        onToggle={() => updateConfig("twoFactor", !config.twoFactor)}
-                        description={t("Requiere un código adicional al iniciar sesión. Protege la cuenta aunque alguien obtenga tu contraseña.")}
-                        warningText={t("Sin 2FA, la cuenta queda vulnerable si la contraseña se compromete. Se recomienda activarlo.")}
-                    />,
+                    <TwoFactorSetup />,
                     <SessionTimeInput
                         value={config.sessionTime}
                         onChange={(value) => updateConfig("sessionTime", value)}

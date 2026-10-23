@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -77,27 +78,38 @@ public class OnboardSchoolUseCaseImpl implements OnboardSchoolUseCase {
 
         Long schoolId = null;
         Long actorId = null;
-        boolean roleAssigned = false;
         try {
             schoolId = provisioning.createSchool(token, school);
             provisioning.assignAdminRole(token, created.getUserId());
-            roleAssigned = true;
             actorId = provisioning.linkAdminToSchool(
                     token, person.getPersonId(), schoolId, ADMIN_ACTOR_PREFIX + school.code());
             return new Result(schoolId, person.getPersonId(), created.getUserId());
         } catch (RuntimeException ex) {
             log.warn("School onboarding failed for school={} admin={}: {}",
                     school.code(), admin.username(), ex.getMessage());
-            rollback(token, created.getUserId(), schoolId, actorId, roleAssigned);
+            rollback(token, created.getUserId(), person.getPersonId(), school.code(), schoolId, actorId);
             if (ex instanceof OnboardingUnavailableException || ex instanceof DuplicateEntityException) throw ex;
             throw new OnboardingUnavailableException("School registration could not be completed", ex);
         }
     }
 
-    private void rollback(String token, UUID userId, Long schoolId, Long actorId, boolean roleAssigned) {
-        run(() -> { if (actorId != null) provisioning.deleteActor(token, actorId); });
-        run(() -> { if (roleAssigned) provisioning.removeAdminRole(token, userId); });
-        run(() -> { if (schoolId != null) provisioning.deleteSchool(token, schoolId); });
+    /**
+     * Undoes the remote resources. A step that threw may still have gone through (a timeout
+     * does not mean the other service did nothing), so nothing is skipped just because its own
+     * call failed: the role is always removed, and a school or actor whose id we never got is
+     * looked up (the person and the code are ours, created moments ago). Each step is
+     * independent and a missing resource counts as done.
+     */
+    private void rollback(String token, UUID userId, UUID personId, String schoolCode, Long schoolId, Long actorId) {
+        run(() -> {
+            List<Long> actors = actorId != null ? List.of(actorId) : provisioning.findActorIdsByPerson(token, personId);
+            for (Long id : actors) provisioning.deleteActor(token, id);
+        });
+        run(() -> provisioning.removeAdminRole(token, userId));
+        run(() -> {
+            Long id = schoolId != null ? schoolId : provisioning.findSchoolIdByCode(token, schoolCode);
+            if (id != null) provisioning.deleteSchool(token, id);
+        });
     }
 
     private void run(Runnable step) {

@@ -60,7 +60,15 @@
     "forgotPassword": "Forgot password?",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
-    "errorTitle": "Could not log in"
+    "errorTitle": "Could not log in",
+    "codeTitle": "Verify your identity",
+    "codeSubtitle": "Enter the 6-digit code we sent to {{email}}.",
+    "code": "Verification code",
+    "codePlaceholder": "000000",
+    "verify": "Verify",
+    "useOtherAccount": "Use another account",
+    "invalidCode": "Wrong or expired code",
+    "errorCode": "Enter the 6 digits of the code"
   },
   "tabs": {
     "home": "Home",
@@ -1127,6 +1135,10 @@
     "saveErrorMsg": "A problem occurred while saving your facial record."
   },
   "faceCapture": {
+    "blockedTitle": "Restricted access",
+    "updateLocked": "Complete the questionnaire in \"Facial recognition failed?\" first to update your face.",
+    "alreadyRegistered": "Your face is already registered. Only an administrator can register it again.",
+    "replaceNotAllowed": "To replace your registered face you need an update request approved after your last registration.",
     "blink": "Blink once",
     "turn": "Slowly turn your head",
     "openMouth": "Open and close your mouth",

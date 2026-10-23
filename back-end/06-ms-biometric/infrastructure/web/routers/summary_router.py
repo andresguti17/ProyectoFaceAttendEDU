@@ -20,6 +20,19 @@ router = APIRouter(
 )
 
 
+@router.get("/api/v1/biometric/summary")
+async def biometric_summary_all(
+    facial_repository: BiometricRepositoryPort = Depends(get_facial_repository),
+    fingerprint_repository: BiometricRepositoryPort = Depends(get_fingerprint_repository),
+):
+    """Who has an active template, for list screens: ids only, never the templates."""
+    face_ids = sorted({template.person_id for template in await facial_repository.list_active()})
+    fingerprint_ids = sorted(
+        {template.person_id for template in await fingerprint_repository.list_active()}
+    )
+    return {"face_person_ids": face_ids, "fingerprint_person_ids": fingerprint_ids}
+
+
 @router.get("/api/v1/biometric/{person_id}/summary")
 async def biometric_summary(
     person_id: str,

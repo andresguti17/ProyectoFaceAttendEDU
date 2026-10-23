@@ -1,0 +1,94 @@
+databaseChangeLog:
+  - changeSet:
+      id: notif-005-create-notification-log-table
+      author: Andres Gutierrez
+      comment: >-
+        One row per notification already sent (or alert pass already run), keyed by what it was about,
+        so a redelivered Kafka event or a restarted scheduler never sends the same thing twice.
+        It stores no personal data: only the kind, the dedupe key and the school.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                schemaName: notification
+                tableName: notification_log
+      changes:
+        - createTable:
+            schemaName: notification
+            tableName: notification_log
+            columns:
+              - column:
+                  name: log_id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_notification_log
+                    nullable: false
+              - column:
+                  name: kind
+                  type: VARCHAR(40)
+                  constraints:
+                    nullable: false
+                  remarks: "ABSENCE_REPORT | AT_RISK_REPORT | ..."
+              - column:
+                  name: dedupe_key
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+                  remarks: "What it was about, e.g. session:1216 or risk:30:2026-10-22:actor:7"
+              - column:
+                  name: school_id
+                  type: INT
+                  constraints:
+                    nullable: true
+                  remarks: "Cross-context reference to Academic.school (NO FK)"
+              - column:
+                  name: sent_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: updated_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deleted_by
+                  type: UUID
+                  constraints:
+                    nullable: true
+              - column:
+                  name: row_version
+                  type: BIGINT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_notification_log_dedupe ON notification.notification_log (kind, dedupe_key) WHERE deleted_at IS NULL
+        - sql:
+            sql: CREATE INDEX idx_notification_log_school ON notification.notification_log (school_id)
+      rollback:
+        - dropTable:
+            schemaName: notification
+            tableName: notification_log

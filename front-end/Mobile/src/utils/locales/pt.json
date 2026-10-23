@@ -60,7 +60,15 @@
     "forgotPassword": "Esqueceu sua senha?",
     "showPassword": "Mostrar senha",
     "hidePassword": "Ocultar senha",
-    "errorTitle": "Não foi possível entrar"
+    "errorTitle": "Não foi possível entrar",
+    "codeTitle": "Verifique sua identidade",
+    "codeSubtitle": "Digite o código de 6 dígitos que enviamos para {{email}}.",
+    "code": "Código de verificação",
+    "codePlaceholder": "000000",
+    "verify": "Verificar",
+    "useOtherAccount": "Usar outra conta",
+    "invalidCode": "Código incorreto ou expirado",
+    "errorCode": "Digite os 6 dígitos do código"
   },
   "tabs": {
     "home": "Início",
@@ -1127,6 +1135,10 @@
     "saveErrorMsg": "Ocorreu um problema ao salvar seu registro facial."
   },
   "faceCapture": {
+    "blockedTitle": "Acesso restrito",
+    "updateLocked": "Preencha primeiro o questionário em \"Falha no reconhecimento facial?\" para atualizar o seu rosto.",
+    "alreadyRegistered": "O seu rosto já está registado. Só um administrador pode voltar a registá-lo.",
+    "replaceNotAllowed": "Para substituir o seu rosto registado precisa de um pedido de atualização aprovado após o último registo.",
     "blink": "Pisque uma vez",
     "turn": "Gire lentamente a cabeça",
     "openMouth": "Abra e feche a boca",

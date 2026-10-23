@@ -10,11 +10,22 @@ describe('configurationPermission', () => {
   it('gates academic config reads too — a plain GET must not be free for any authenticated role', () => {
     expect(configurationPermission('GET', '/api/v1/configurations/academic')).toBe('configuration:manage');
     expect(configurationPermission('GET', '/api/v1/academic-configurations')).toBe('configuration:manage');
-    expect(configurationPermission('GET', '/api/v1/schools/1/configurations')).toBe('configuration:manage');
+  });
+
+  it('lets any authenticated role read the settings of a school (the route limits it to the caller\'s own)', () => {
+    expect(configurationPermission('GET', '/api/v1/schools/1/configurations')).toBeNull();
+    expect(configurationPermission('POST', '/api/v1/schools/1/configurations')).toBe('configuration:manage');
   });
 
   it('gates security config reads too (unchanged behaviour)', () => {
     expect(configurationPermission('GET', '/api/v1/configurations/security')).toBe('configuration:manage');
+  });
+
+  it('lets every role read the allow-listed public security settings, and nothing else of security', () => {
+    expect(configurationPermission('GET', '/api/v1/configurations/security/public')).toBeNull();
+    expect(configurationPermission('POST', '/api/v1/configurations/security/public')).toBe('configuration:manage');
+    expect(configurationPermission('GET', '/api/v1/configurations/security/1')).toBe('configuration:manage');
+    expect(configurationPermission('GET', '/api/v1/security-configurations')).toBe('configuration:manage');
   });
 
   it('leaves every other GET free of a specific permission (session alone suffices)', () => {

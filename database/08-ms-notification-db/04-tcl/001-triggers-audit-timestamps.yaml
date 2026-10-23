@@ -40,3 +40,47 @@ databaseChangeLog:
       rollback:
         - sql:
             sql: DROP TRIGGER IF EXISTS trg_alert_audit_timestamps ON notification.alert;
+
+  - changeSet:
+      id: notif-006-ensure-audit-timestamps-triggers
+      author: Andres Gutierrez
+      comment: >-
+        Recreates the audit function and the triggers of the tables that already existed. They are
+        recorded as applied but some databases lost them (inserts then fail on created_at NOT NULL),
+        so this is idempotent: CREATE OR REPLACE and DROP IF EXISTS before CREATE.
+      changes:
+        - sqlFile:
+            path: 001-create-audit-timestamps-function.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+        - sql:
+            sql: |
+              DROP TRIGGER IF EXISTS trg_alert_type_audit_timestamps ON notification.alert_type;
+              CREATE TRIGGER trg_alert_type_audit_timestamps
+              BEFORE INSERT OR UPDATE ON notification.alert_type
+              FOR EACH ROW
+              EXECUTE FUNCTION notification.fn_audit_timestamps();
+        - sql:
+            sql: |
+              DROP TRIGGER IF EXISTS trg_alert_audit_timestamps ON notification.alert;
+              CREATE TRIGGER trg_alert_audit_timestamps
+              BEFORE INSERT OR UPDATE ON notification.alert
+              FOR EACH ROW
+              EXECUTE FUNCTION notification.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: SELECT 1
+
+  - changeSet:
+      id: notif-004-create-trigger-notification-log
+      author: Andres Gutierrez
+      changes:
+        - sql:
+            sql: |
+              CREATE TRIGGER trg_notification_log_audit_timestamps
+              BEFORE INSERT OR UPDATE ON notification.notification_log
+              FOR EACH ROW
+              EXECUTE FUNCTION notification.fn_audit_timestamps();
+      rollback:
+        - sql:
+            sql: DROP TRIGGER IF EXISTS trg_notification_log_audit_timestamps ON notification.notification_log;

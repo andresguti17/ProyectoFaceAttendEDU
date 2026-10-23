@@ -7,7 +7,6 @@ import {
     KeyboardAvoidingView,
     LayoutAnimation,
     Platform,
-    SafeAreaView,
     ScrollView,
     Text,
     TouchableOpacity,
@@ -16,9 +15,10 @@ import {
     Vibration,
     View,
 } from 'react-native';
+import ScreenSafeArea from '../../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../../components/common/ThemeContext';
-import BackButton from '../../components/common/BackButton';
+import ReturnButton from '../../components/auth/ReturnButton';
 import {createLoginStyles} from '../Styles/Verifycodescreen/Style';
 
 // Componentes
@@ -219,27 +219,21 @@ export default function VerifyCodeScreen({ route, navigation }) {
     const errorMessage = getErrorMessage();
 
     return (
-        <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
+        <ScreenSafeArea style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}>
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior="padding"
                 keyboardVerticalOffset={0}
             >
-                <ScrollView
+                <ScrollView persistentScrollbar
                     contentContainerStyle={{ flexGrow: 1 }}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
-                    showsVerticalScrollIndicator={false}
+                    showsVerticalScrollIndicator
                     bounces={false}
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
                         <View style={[styles.container, { backgroundColor: colors.backgroundWhite }]}>
-
-                            {/* Botón volver */}
-                            <BackButton
-                                onPress={codeVerification.isLoading ? undefined : () => navigation.goBack()}
-                                style={codeVerification.isLoading && { opacity: 0.5 }}
-                            />
 
                             <View style={styles.contentContainer}>
                                 <View style={styles.recoveryIconContainer}>
@@ -372,6 +366,7 @@ export default function VerifyCodeScreen({ route, navigation }) {
                 confirmPasswordRef={confirmPasswordRef}
                 onClose={closePasswordModal}
             />
-        </SafeAreaView>
+            <ReturnButton disabled={codeVerification.isLoading} />
+        </ScreenSafeArea>
     );
 }

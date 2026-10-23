@@ -1,11 +1,13 @@
 import {useCallback, useState} from "react";
 import i18n from "../../../utils/i18n";
 
+// Fuera del hook: así showAlert/showError son estables y no disparan efectos en bucle.
+const isAlertEnabled = (type) => {
+    const enabledTypes = ['default', 'warning', 'error', 'confirm', 'success']; // ← agrega 'success'
+    return enabledTypes.includes(type);
+};
+
 export const useCustomAlert = () => {
-    const isAlertEnabled = (type) => {
-        const enabledTypes = ['default', 'warning', 'error', 'confirm', 'success']; // ← agrega 'success'
-        return enabledTypes.includes(type);
-    };
     const [alertConfig, setAlertConfig] = useState({
         visible: false,
         title: "",
@@ -26,7 +28,7 @@ export const useCustomAlert = () => {
             buttons,
             type,
         });
-    }, [isAlertEnabled]);
+    }, []);
 
     const hideAlert = useCallback(() => {
         setAlertConfig(prev => ({...prev, visible: false}));

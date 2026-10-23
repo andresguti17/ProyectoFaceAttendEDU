@@ -12,8 +12,12 @@ import { RepositoryError } from './infrastructure/persistence/errors';
 import { createNotificationRepositories } from './infrastructure/persistence/postgres';
 import { registerAuthGuard } from './infrastructure/http/authGuard';
 import { notificationPermission } from './infrastructure/http/permissions';
-import { smtpConfigFromEnv } from './infrastructure/email/sender';
+import { smtpConfigFromEnv, sendEmail } from './infrastructure/email/sender';
 import { runJustificationConsumer } from './infrastructure/messaging/justification.consumer';
+import { runClassSessionConsumer } from './infrastructure/messaging/classSession.consumer';
+import type { AlertDeps } from './application/attendanceAlerts/deps';
+import { HttpPeers, peerConfigFromEnv } from './infrastructure/peers/httpPeers';
+import { startAttendanceSchedulers, type RiskScheduler } from './infrastructure/scheduler/riskScheduler';
 
 const app = Fastify({ logger: true });
 const startedAt = Date.now();
@@ -110,7 +114,39 @@ async function start() {
     });
   }
 
+  // Absence e-mails and at-risk alerts need a service account to read the other services; without
+  // NOTIFICATION_SERVICE_USERNAME/PASSWORD the feature stays off and the rest keeps working.
+  const peerConfig = peerConfigFromEnv();
+  let riskScheduler: RiskScheduler | undefined;
+  if (peerConfig) {
+    const smtp = smtpConfigFromEnv();
+    const deps: AlertDeps = {
+      peers: new HttpPeers(peerConfig),
+      log: repositories.notificationLog,
+      alerts: repositories.alerts,
+      alertTypes: repositories.alertTypes,
+      sendEmail: async (message) => {
+        await sendEmail(smtp, message);
+      },
+      logger: {
+        info: (message, data) => app.log.info(data ?? {}, message),
+        warn: (message, data) => app.log.warn(data ?? {}, message),
+      },
+    };
+    if (brokersEnv) {
+      const brokers = brokersEnv.split(',').map((b) => b.trim()).filter(Boolean);
+      runClassSessionConsumer(brokers, deps).catch((err) => {
+        app.log.error({ err }, 'class-session consumer failed');
+      });
+    }
+    riskScheduler = startAttendanceSchedulers(deps);
+    app.log.info('attendance alerts enabled (absence e-mails on class close, daily at-risk pass)');
+  } else {
+    app.log.info('attendance alerts disabled: NOTIFICATION_SERVICE_USERNAME/PASSWORD not set');
+  }
+
   app.addHook('onClose', async () => {
+    riskScheduler?.stop();
     await closeDatabase().catch(() => undefined);
   });
 

@@ -18,6 +18,9 @@ export interface IEnrollmentRepository extends ICrudRepository<EnrollmentRecord,
   /** Domain write used by `CreateEnrollmentUseCase`; stamps the generated id back onto the entity. */
   save(e: Enrollment): Promise<void>;
 
+  /** Enrolls, or brings back a deleted enrollment of the same actor + cohort (the unique pair counts deleted rows). */
+  createOrRestore(draft: EnrollmentDraft): Promise<EnrollmentRecord>;
+
   findByCohort(cohortId: number, page?: PageOptions): Promise<EnrollmentRecord[]>;
   countByCohort(cohortId: number): Promise<number>;
   findByAcademicActor(academicActorId: number, page?: PageOptions): Promise<EnrollmentRecord[]>;

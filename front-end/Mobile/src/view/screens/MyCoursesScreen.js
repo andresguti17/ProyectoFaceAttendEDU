@@ -1,14 +1,14 @@
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import React, {useMemo} from "react";
 import {
   ActivityIndicator,
   Image,
-  SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {createMyCoursesStyles} from "./Styles/MyCoursesScreen/Style";
 import { useMyCoursesViewModel } from "../../viewmodels/useMyCoursesViewModel";
 
@@ -71,10 +71,9 @@ export default function MyCoursesScreen({ navigation }) {
     role === "teacher" ? t("teacher.myCoursesDesc") : t("student.myCoursesDesc");
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.backgroundWhite }]}>
+    <ScreenSafeArea style={[styles.safeArea, { backgroundColor: colors.backgroundWhite }]}>
       <View style={styles.container}>
         <View style={styles.headerRow}>
-          <BackButton onPress={() => navigation?.navigate("DashboardScreen")} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>{title}</Text>
         </View>
         <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
@@ -102,8 +101,8 @@ export default function MyCoursesScreen({ navigation }) {
             <Text style={[styles.centerText, { color: colors.text }]}>{t("courses.empty")}</Text>
           </View>
         ) : (
-          <ScrollView
-              showsVerticalScrollIndicator={false}
+          <ScrollView persistentScrollbar
+              showsVerticalScrollIndicator
               contentContainerStyle={{ paddingBottom: 24 }}
           >
             {fichas.map((ficha) => (
@@ -117,6 +116,7 @@ export default function MyCoursesScreen({ navigation }) {
           </ScrollView>
         )}
       </View>
-    </SafeAreaView>
+        <ReturnButton onPress={() => navigation?.navigate("DashboardScreen")} />
+    </ScreenSafeArea>
   );
 }

@@ -12,7 +12,7 @@ const FRAMES_PER_GESTURE = 6;
 const FRAME_INTERVAL_MS = 280;
 const GESTURE_ATTEMPTS = 2;
 const MAX_FRAME_WIDTH = 640;
-export const REGISTER_GESTURES = 3;
+export const REGISTER_GESTURES = 1;
 
 const ACTION_KEYS = {
     blink: 'faceCapture.blink',
@@ -139,7 +139,7 @@ export function useFaceLivenessCapture() {
             setStatus(t('faceCapture.registered'), 'ok');
             return true;
         } catch (error) {
-            setStatus(error?.message || t('faceCapture.genericError'), 'error');
+            setStatus(error?.status === 403 ? t('faceCapture.replaceNotAllowed') : (error?.message || t('faceCapture.genericError')), 'error');
             return false;
         } finally {
             resetLiveness();

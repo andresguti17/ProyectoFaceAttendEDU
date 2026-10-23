@@ -39,6 +39,9 @@ public class UserJpaEntity {
     @Column(name = "must_change_password", nullable = false)
     private Boolean mustChangePassword = false;
 
+    @Column(name = "two_factor_enabled", nullable = false)
+    private Boolean twoFactorEnabled = false;
+
     @Column(name = "last_access")
     private LocalDateTime lastAccess;
 

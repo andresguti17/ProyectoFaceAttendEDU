@@ -4,6 +4,7 @@ import {useTheme} from '../view/components/common/ThemeContext';
 import {useNavigation} from '@react-navigation/native';
 import {getCurrentUser, getCurrentUserRole} from "../services/UserService";
 import {useLanguageRefresh} from '../utils/useLanguageRefresh';
+import {useUser} from '../utils/UserContext';
 import {useCustomAlert} from '../view/components/common/useCustomAlert';
 import {backendGet} from '../api/backend';
 import ENV from '../config/env';
@@ -24,7 +25,9 @@ export function useFacialFailViewModel() {
     const [userRole, setUserRole] = useState(null);
     const [showQuestionnaire, setShowQuestionnaire] = useState(false);
     const [showFacialUpdate, setShowFacialUpdate] = useState(false);
-    const [verified, setVerified] = useState(false);
+    // El desbloqueo vive en el contexto: sobrevive a salir y volver a la pantalla (solo en la sesión).
+    const {faceUpdateUnlocked, unlockFaceUpdate} = useUser();
+    const verified = faceUpdateUnlocked;
     const [attempts, setAttempts] = useState(0);
     const [verifying, setVerifying] = useState(false);
     const updateKey = useLanguageRefresh();
@@ -57,12 +60,9 @@ export function useFacialFailViewModel() {
             showError(t('facialFail.lockedTitle'), t('facialFail.lockedMessage'));
             return;
         }
-        if (verified) {
-            goToFaceUpdate();
-            return;
-        }
+        if (verified) return;
         setShowQuestionnaire(true);
-    }, [locked, verified, goToFaceUpdate, showError, t]);
+    }, [locked, verified, showError, t]);
     const closeQuestionnaire = useCallback(() => setShowQuestionnaire(false), []);
 
     const handleQuestionnaireSuccess = useCallback(async (data) => {
@@ -84,15 +84,15 @@ export function useFacialFailViewModel() {
                 );
                 return;
             }
-            setVerified(true);
-            showSuccess(t('facialFail.success'), t('facialFail.verifiedMessage'), goToFaceUpdate);
+            unlockFaceUpdate();
+            showSuccess(t('facialFail.success'), t('facialFail.verifiedMessage'));
         } catch (error) {
             console.error('Error verificando cuestionario:', error);
             showError(t('facialFail.verifyErrorTitle'), t('facialFail.verifyErrorMessage'));
         } finally {
             setVerifying(false);
         }
-    }, [attempts, goToFaceUpdate, showError, showSuccess, t]);
+    }, [attempts, unlockFaceUpdate, showError, showSuccess, t]);
 
     // Paso 2: actualización facial, solo tras verificar el cuestionario
     const openFacialUpdate = useCallback(() => {

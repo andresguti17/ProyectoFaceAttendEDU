@@ -15,6 +15,8 @@ callers that already have a computed encoding.
 """
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
@@ -22,7 +24,7 @@ from domain.entities.fingerprint_embedding import FingerprintEmbedding
 from domain.entities.match_log import BiometricMatchLog
 from domain.fingerprint_decode import decode_fingerprint
 from domain.fingerprint_matching import fingerprint_keypoint_score
-from domain.policies import fingerprint_quality_ok
+from domain.policies import MIN_FINGERPRINT_QUALITY, fingerprint_quality_ok
 from domain.ports.out.biometric_repository import BiometricRepositoryPort
 from domain.ports.out.match_log_repository import MatchLogRepositoryPort
 from domain.similarity import cosine
@@ -40,6 +42,8 @@ from infrastructure.web.security import require_permission
 from infrastructure.web.schemas.responses import template_response
 
 # Templates are sensitive: only roles that capture attendance (admin, instructor).
+logger = logging.getLogger(__name__)
+
 router = APIRouter(
     prefix="/api/v1/biometric/fingerprint",
     tags=["fingerprint"],
@@ -255,12 +259,16 @@ async def enroll_fingerprint_sample(
     settings: Settings = Depends(get_settings),
 ):
     if not fingerprint_quality_ok(req.quality):
+        logger.warning(
+            "enroll-sample refused: quality %s below the minimum %s", req.quality, MIN_FINGERPRINT_QUALITY
+        )
         raise HTTPException(status_code=400, detail="Fingerprint sample quality too low")
     try:
         query_image = decode_fingerprint(
             req.data_base64, settings.max_image_bytes, settings.max_image_pixels
         )
     except ValueError as exc:
+        logger.warning("enroll-sample refused: %s (format=%s)", exc, req.sample_format)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     # O(active raw-sample records) keypoint-matching calls — the same cost

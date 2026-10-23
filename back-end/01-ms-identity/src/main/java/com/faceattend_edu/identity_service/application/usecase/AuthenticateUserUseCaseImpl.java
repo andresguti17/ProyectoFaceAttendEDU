@@ -9,6 +9,7 @@ import com.faceattend_edu.identity_service.application.port.out.SaveUserSessionP
 import com.faceattend_edu.identity_service.application.port.out.UpdateUserPort;
 import com.faceattend_edu.identity_service.config.AuthProperties;
 import com.faceattend_edu.identity_service.domain.exception.AccountLockedException;
+import com.faceattend_edu.identity_service.domain.exception.TwoFactorRequiredException;
 import com.faceattend_edu.identity_service.domain.exception.UnauthorizedException;
 import com.faceattend_edu.identity_service.domain.model.User;
 import com.faceattend_edu.identity_service.domain.model.UserSession;
@@ -30,6 +31,7 @@ public class AuthenticateUserUseCaseImpl implements AuthenticateUserUseCase {
     private final LoginAttemptPort loginAttemptPort;
     private final AuthProperties authProperties;
     private final DomainEventPublisher eventPublisher;
+    private final TwoFactorChallenge twoFactorChallenge;
 
     @Override
     @Transactional
@@ -56,6 +58,12 @@ public class AuthenticateUserUseCaseImpl implements AuthenticateUserUseCase {
             throw new UnauthorizedException("Invalid email or password");
         }
         loginAttemptPort.reset(identifier);
+
+        // Right password, but the account asked for a second factor: no session until the e-mailed
+        // code is entered (POST /auth/login/verify). Last access is only touched on the real login.
+        if (user.isTwoFactorEnabled()) {
+            throw new TwoFactorRequiredException(twoFactorChallenge.begin(user));
+        }
 
         user.touchLastAccess();
         updateUserPort.updateUser(user);

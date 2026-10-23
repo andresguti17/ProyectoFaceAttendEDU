@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: cfg-partial-unique-indexes
+      author: Andres Gutierrez
+      comment: >-
+        Unique keys become partial (WHERE deleted_at IS NULL): rows are only ever soft-deleted, so a
+        full unique index kept a deleted row's key reserved and re-creating or re-enrolling the same
+        thing failed with a unique violation. Existing live rows are already unique, so nothing conflicts.
+      changes:
+        - sql:
+            sql: ALTER TABLE configuration.academic_configuration DROP CONSTRAINT IF EXISTS uq_academic_configuration
+        - sql:
+            sql: DROP INDEX IF EXISTS configuration.uq_academic_configuration
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_academic_configuration ON configuration.academic_configuration (school_id, configuration_name) WHERE deleted_at IS NULL
+        - sql:
+            sql: ALTER TABLE configuration.security_configuration DROP CONSTRAINT IF EXISTS security_configuration_configuration_name_key
+        - sql:
+            sql: DROP INDEX IF EXISTS configuration.security_configuration_configuration_name_key
+        - sql:
+            sql: CREATE UNIQUE INDEX uq_security_configuration_name ON configuration.security_configuration (configuration_name) WHERE deleted_at IS NULL
+      rollback:
+        - sql:
+            sql: DROP INDEX IF EXISTS configuration.uq_academic_configuration
+        - sql:
+            sql: ALTER TABLE configuration.academic_configuration ADD CONSTRAINT uq_academic_configuration UNIQUE (school_id, configuration_name)
+        - sql:
+            sql: DROP INDEX IF EXISTS configuration.uq_security_configuration_name
+        - sql:
+            sql: ALTER TABLE configuration.security_configuration ADD CONSTRAINT security_configuration_configuration_name_key UNIQUE (configuration_name)

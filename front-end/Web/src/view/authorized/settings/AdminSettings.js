@@ -12,11 +12,11 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card } from "../../components/common";
 import { useAuth } from "../../../context/AuthContext";
 import { pushInstitutionConfig, loadBackendOverrides, parseSetting } from "../../../services/api/settingsPersistence";
+import { hasSuperAdminRole } from "../../../core/utils/backendRoles";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useDateFormat } from "../../components/hooks/useDateFormat";
 import { useEditableConfig } from "../../components/hooks/useEditableConfig";
-import { SecurityMeter } from "../../components/settings/tabs";
 import {
     GeneralSettings,
     FaceSettings,
@@ -39,10 +39,12 @@ import {
     DailySummaryToggle,
     PushNotificationToggle,
     PushNotificationLimit,
-    TwoFactorRow,
+    TwoFactorSetup,
+    OwnSecurityMeter,
     SessionTimeInput,
     AccentBlock,
 } from "./sections";
+import { FutureNotice } from "./sections/FutureNotice";
 import {
     getCurrentPeriod,
 } from "../../../core/constants/academicPeriods";
@@ -50,7 +52,37 @@ import {
     getInstitutionConfig,
     updateInstitutionConfig,
     checkPeriodExpiration,
+    onInstitutionConfigChange,
 } from "../../../core/config/institutionConfig";
+
+function buildInitialConfig(config) {
+    return {
+        institutionName: config.institutionName,
+        institutionSlug: config.institutionSlug,
+        academicPeriodType: config.academicPeriodType,
+        periodStartDate: config.periodStartDate || "",
+        periodEndDate: config.periodEndDate || "",
+        isAutomaticPeriod: config.isAutomaticPeriod ?? true,
+        dateFormat: config.dateFormat || "DD/MM/YYYY",
+        timeFormat24h: config.timeFormat24h ?? false,
+        minAttendance: config.minAttendance,
+        daysUntilSanction: config.daysUntilSanction,
+        consecutiveDaysForSanction: config.consecutiveDaysForSanction ?? 3,
+        tardyToleranceMinutes: config.tardyToleranceMinutes ?? 15,
+        confidence: config.confidenceThreshold,
+        autoRegister: config.autoRegister,
+        emailAlert: config.emailAlert,
+        weeklyReport: config.weeklyReport,
+        atRiskAlert: config.atRiskAlert,
+        dailySummary: config.dailySummary,
+        pushNotifications: config.pushNotifications ?? true,
+        pushDuration: config.pushDuration ?? 0,
+        pushNotificationLimit: config.pushNotificationLimit ?? 15,
+        pushNotificationLimitByType: config.pushNotificationLimitByType ?? 5,
+        twoFactor: config.twoFactor,
+        sessionTime: String(config.sessionTime),
+    };
+}
 
 export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onSaveSuccessColors, previewAccent, onPreviewChange, previewTheme, onHasChanges, onColorChanges }) {
     const { isSmall } = useResponsive();
@@ -62,33 +94,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
     const [showExpirationAlert, setShowExpirationAlert] = useState(true);
 
     // ── Configuración inicial ─────────────────────────────────
-    const initialConfig = useMemo(() => {
-        const config = getInstitutionConfig();
-        return {
-            institutionName: config.institutionName,
-            institutionSlug: config.institutionSlug,
-            academicPeriodType: config.academicPeriodType,
-            periodStartDate: config.periodStartDate || "",
-            periodEndDate: config.periodEndDate || "",
-            isAutomaticPeriod: config.isAutomaticPeriod ?? true,
-            dateFormat: config.dateFormat || "DD/MM/YYYY",
-            timeFormat24h: config.timeFormat24h ?? false,
-            minAttendance: config.minAttendance,
-            daysUntilSanction: config.daysUntilSanction,
-            consecutiveDaysForSanction: config.consecutiveDaysForSanction ?? 3,
-            confidence: config.confidenceThreshold,
-            autoRegister: config.autoRegister,
-            savePhotos: config.savePhotos,
-            emailAlert: config.emailAlert,
-            weeklyReport: config.weeklyReport,
-            atRiskAlert: config.atRiskAlert,
-            dailySummary: config.dailySummary,
-            pushNotifications: config.pushNotifications ?? true,
-            pushDuration: config.pushDuration ?? 0,
-            twoFactor: config.twoFactor,
-            sessionTime: String(config.sessionTime),
-        };
-    }, []);
+    const initialConfig = useMemo(() => buildInitialConfig(getInstitutionConfig()), []);
 
     // ── Hook genérico de configuración editable ───────────────
     const {
@@ -111,7 +117,9 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
             // Réplica en el backend (upsert por clave); si falla, el
             // guardado se reporta como fallido para no mostrar éxito falso.
             try {
-                await pushInstitutionConfig(user?.schoolId ?? null, merged);
+                await pushInstitutionConfig(user?.schoolId ?? null, merged, {
+                    canWriteSecurity: hasSuperAdminRole(user?.roles),
+                });
                 return true;
             } catch {
                 return false;
@@ -119,6 +127,22 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
         },
         onHasChanges,
     });
+
+    // ── Sincronización con la sede ────────────────────────────
+    // Al iniciar sesión (o tras recargar) los ajustes de la sede llegan DESPUÉS de
+    // montar esta pantalla: si no hay cambios sin guardar, el formulario los toma.
+    const hasChangesRef = useRef(false);
+    useEffect(() => {
+        hasChangesRef.current = hasChanges;
+    }, [hasChanges]);
+    useEffect(
+        () =>
+            onInstitutionConfigChange(() => {
+                if (!hasChangesRef.current) reset(buildInitialConfig(getInstitutionConfig()));
+            }),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        []
+    );
 
     // ── Registrar callbacks con el padre ──────────────────────
     useEffect(() => {
@@ -183,6 +207,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         academicPeriodType={config.academicPeriodType}
                         onPeriodTypeChange={(value) => updateConfig("academicPeriodType", value)}
                         isSmall={isSmall}
+                        nameLocked={user?.schoolId != null}
                     />,
                     <LanguageBlock />,
                     <DateFormatBlock
@@ -229,6 +254,8 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         onDaysSanctionChange={(value) => updateConfig("daysUntilSanction", value)}
                         consecutiveDaysForSanction={config.consecutiveDaysForSanction}
                         onConsecutiveDaysChange={(value) => updateConfig("consecutiveDaysForSanction", value)}
+                        tardyToleranceMinutes={config.tardyToleranceMinutes}
+                        onTardyToleranceChange={(value) => updateConfig("tardyToleranceMinutes", value)}
                     />,
                     <ConfidenceSlider
                         value={config.confidence}
@@ -238,8 +265,6 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         confidence={config.confidence}
                         autoRegister={config.autoRegister}
                         onAutoRegister={() => updateConfig("autoRegister", !config.autoRegister)}
-                        savePhotos={config.savePhotos}
-                        onSavePhotos={() => updateConfig("savePhotos", !config.savePhotos)}
                     />,
                 ]}
             />
@@ -247,6 +272,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
         notifications: (
             <NotificationsSettings
                 sections={[
+                    <FutureNotice message={t("Los correos (ausencias de la clase, estudiantes en riesgo, resumen diario y reporte semanal) llegan a las direcciones registradas de docentes y administradores de la sede, según lo que actives aquí.")} />,
                     <EmailAlertToggle
                         value={config.emailAlert}
                         onToggle={() => updateConfig("emailAlert", !config.emailAlert)}
@@ -289,14 +315,12 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
         security: (
             <SecuritySettings
                 title={t("Seguridad")}
-                header={<SecurityMeter twoFactor={config.twoFactor} sessionTime={config.sessionTime} />}
+                header={<OwnSecurityMeter sessionTime={config.sessionTime} />}
                 sections={[
-                    <TwoFactorRow
-                        value={config.twoFactor}
-                        onToggle={() => updateConfig("twoFactor", !config.twoFactor)}
-                        description={t("Requiere un código adicional al iniciar sesión. Protege la cuenta aunque alguien obtenga tu contraseña.")}
-                        warningText={t("Sin 2FA, la cuenta queda vulnerable si la contraseña se compromete. Se recomienda activarlo.")}
-                    />,
+                    ...(user?.schoolId != null ? [
+                        <FutureNotice message={t("El tiempo de sesión es global de la plataforma: lo define el Super Administrador. Tu cambio solo se aplica en este navegador.")} />,
+                    ] : []),
+                    <TwoFactorSetup />,
                     <SessionTimeInput
                         value={config.sessionTime}
                         onChange={(value) => updateConfig("sessionTime", value)}

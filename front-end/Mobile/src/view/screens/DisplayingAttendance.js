@@ -6,13 +6,13 @@ import {
     Image,
     Modal,
     Platform,
-    SafeAreaView,
     ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import DateTimePicker from "@react-native-community/datetimepicker";
 import {createDisplayingAttendanceStyles} from "./Styles/DisplayingAttendance/Style";
 import BottomBar from "../components/common/NavigationBar";
@@ -76,8 +76,8 @@ function TeacherDetailModal({item, visible, onClose, colors, t, isDark}) {
                     backgroundColor: colors.separator,
                 }]}/>
 
-                <ScrollView
-                    showsVerticalScrollIndicator={false}
+                <ScrollView persistentScrollbar
+                    showsVerticalScrollIndicator
                     contentContainerStyle={styles.sheetScrollContent}
                 >
                     {/* Cabecera */}
@@ -181,8 +181,8 @@ function StudentDetailModal({item, visible, onClose, colors, t, isDark}) {
                     backgroundColor: colors.separator,
                 }]}/>
 
-                <ScrollView
-                    showsVerticalScrollIndicator={false}
+                <ScrollView persistentScrollbar
+                    showsVerticalScrollIndicator
                     contentContainerStyle={styles.sheetScrollContent}
                 >
                     {/* Cabecera */}
@@ -447,7 +447,7 @@ export default function DisplayingAttendance() {
     const styles = React.useMemo(() => createDisplayingAttendanceStyles(colors), [colors]);
 
     return (
-        <SafeAreaView
+        <ScreenSafeArea
             style={[styles.safeArea, {backgroundColor: colors.background}]}
             key={`${updateKey}`}
         >
@@ -590,7 +590,7 @@ export default function DisplayingAttendance() {
                         </TouchableOpacity>
                     </View>
                 ) : (
-                <FlatList
+                <FlatList persistentScrollbar
                     data={activeData}
                     keyExtractor={item => item.id.toString()}
                     style={styles.listStyle}
@@ -622,6 +622,6 @@ export default function DisplayingAttendance() {
                 <StudentDetailModal item={detailItem} visible={showDetailModal} onClose={closeDetail} colors={colors}
                                     t={t} isDark={isDark}/>
             )}
-        </SafeAreaView>
+        </ScreenSafeArea>
     );
 }

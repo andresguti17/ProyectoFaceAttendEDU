@@ -16,6 +16,7 @@ import { Platform } from "react-native";
 import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
 import { personMap, fullName } from "../services/api/referenceData";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+import { fingerprintQualityCode, fingerprintQualityMessage } from "./fingerprintQuality";
 
 // ms-biometric exige finger_number (1..10); el lector no lo reporta, así que
 // lo elige quien registra (FingerSelector). Si no se indica, se usa el pulgar derecho.
@@ -68,10 +69,16 @@ export function loadDigitalPersonaSdk() {
     return sdkPromise;
 }
 
-function normalizeFingerprintQuality(event) {
-    const value = event?.quality ?? event?.code ?? event?.qualityCode ?? event?.value ?? event;
-    const quality = Number(value);
-    return Number.isInteger(quality) && quality >= 0 && quality <= 100 ? quality : null;
+// onQualityReported entrega un Fingerprint.QualityCode del SDK, NO un porcentaje:
+// 0 = Good y 1..24 = problema (NoImage, TooLight, TooDark, NotCentered...). Leerlo
+// como 0-100 convertía una huella buena en "calidad 0" y ms-biometric la rechazaba
+// (mínimo 30). Se traduce a la escala del servicio: Good -> 100, cualquier problema -> 0.
+const SDK_QUALITY_GOOD = 0;
+
+export function normalizeFingerprintQuality(event) {
+    const code = Number(event?.quality ?? event?.code ?? event?.qualityCode ?? event?.value ?? event);
+    if (!Number.isInteger(code) || code < 0) return null;
+    return code === SDK_QUALITY_GOOD ? 100 : 0;
 }
 
 /** El lector entrega la muestra como string, o como "[chunk][chunk]" URL-encoded. */
@@ -222,7 +229,10 @@ export function useFingerprintReader({ vm, socket, onIdentified, fingerNumber = 
 
         state.api.onQualityReported = (event) => {
             state.quality = normalizeFingerprintQuality(event);
+            state.qualityMessage = fingerprintQualityMessage(fingerprintQualityCode(event));
             setQuality(state.quality);
+            // Qué corregir, mientras el usuario todavía tiene el dedo en el lector.
+            if (state.qualityMessage) setReaderState(t(state.qualityMessage));
         };
         state.api.onSamplesAcquired = async (event) => {
             if (state.sample || state.stopping) return;
@@ -231,9 +241,18 @@ export function useFingerprintReader({ vm, socket, onIdentified, fingerNumber = 
                 setReaderState(t("El lector no devolvió una muestra válida. Intenta capturar de nuevo."));
                 return;
             }
-            state.sample = { format: event.sampleFormat ?? null, data: sampleData, quality: state.quality };
+            state.sample = {
+                format: event.sampleFormat ?? null,
+                data: sampleData,
+                quality: state.quality,
+                qualityMessage: state.qualityMessage ?? null,
+            };
             setSampleReady(true);
-            setReaderState(t("Huella capturada. Retira el dedo; ya puedes guardar o verificar."));
+            setReaderState(
+                state.qualityMessage
+                    ? t(state.qualityMessage)
+                    : t("Huella capturada. Retira el dedo; ya puedes guardar o verificar.")
+            );
             state.stopping = true;
             try {
                 await state.api.stopAcquisition(event.deviceUid || state.device);
@@ -294,6 +313,9 @@ export function useFingerprintReader({ vm, socket, onIdentified, fingerNumber = 
     const takeSample = () => {
         const sample = stateRef.current.sample;
         if (!sample) throw new Error(t("Captura una huella primero."));
+        // El lector ya dijo qué falló: se avisa aquí, sin enviar una muestra que el servidor
+        // rechazaría con un "calidad baja" sin detalle.
+        if (sample.qualityMessage) throw new Error(t(sample.qualityMessage));
         return sample;
     };
 
@@ -362,6 +384,9 @@ export function useFingerprintReader({ vm, socket, onIdentified, fingerNumber = 
         stopCapture,
         saveFingerprint,
         loginFingerprint,
+        // Descarta la muestra pendiente (p. ej. tras un reconocimiento fallido) para poder
+        // volver a armar el lector.
+        discardSample: consumeSample,
         __setSampleForTest: (sample) => {
             stateRef.current.sample = sample;
             setSampleReady(true);

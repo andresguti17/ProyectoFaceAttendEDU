@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-012-add-app-user-two-factor-enabled
+      author: Andres Gutierrez
+      splitStatements: false
+      comment: true cuando la persona activó el código por correo como segundo factor al iniciar sesión.
+      changes:
+        - sql:
+            sql: ALTER TABLE identity.app_user ADD COLUMN IF NOT EXISTS two_factor_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+      rollback:
+        - sql:
+            sql: ALTER TABLE identity.app_user DROP COLUMN IF EXISTS two_factor_enabled;

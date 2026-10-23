@@ -108,7 +108,12 @@ from infrastructure.web.routers.fingerprint_router import (
     identify_fingerprint_sample,
     verify_fingerprint,
 )
-from infrastructure.web.security import WebSocketAuthError, authenticate_websocket
+from infrastructure.web.security import (
+    WebSocketAuthError,
+    authenticate_websocket,
+    extract_ws_token,
+    face_threshold_for_caller,
+)
 from infrastructure.web.ws.connection_manager import ConnectionManager
 from infrastructure.web.ws.idempotency import IdempotencyCache
 
@@ -203,6 +208,7 @@ async def _dispatch(
     fingerprint_repo: BiometricRepositoryPort,
     match_logs: MatchLogRepositoryPort,
     threshold: float,
+    face_threshold: float,
     fp_threshold: int,
     secret: str,
     settings: Settings,
@@ -238,13 +244,13 @@ async def _dispatch(
         result = (
             await verify_fingerprint(data, fake_request, fingerprint_repo, match_logs, threshold)
             if is_fingerprint
-            else await verify_facial(data, fake_request, facial_repo, match_logs, threshold)
+            else await verify_facial(data, fake_request, facial_repo, match_logs, face_threshold)
         )
         return result, None
 
     if message_type == FACIAL_IDENTIFY_IMAGE:
         result = await identify_facial_image(
-            data, fake_request, facial_repo, match_logs, threshold, secret, settings
+            data, fake_request, facial_repo, match_logs, face_threshold, secret, settings
         )
         event = {
             "event_type": direction,
@@ -276,7 +282,7 @@ async def _dispatch(
     result = (
         await identify_fingerprint(data, fake_request, fingerprint_repo, match_logs, threshold)
         if is_fingerprint
-        else await identify_facial(data, fake_request, facial_repo, match_logs, threshold)
+        else await identify_facial(data, fake_request, facial_repo, match_logs, face_threshold)
     )
     event = {
         "event_type": direction,
@@ -298,6 +304,7 @@ async def _handle_frame(
     fingerprint_repo: BiometricRepositoryPort,
     match_logs: MatchLogRepositoryPort,
     threshold: float,
+    face_threshold: float,
     fp_threshold: int,
     idempotency: IdempotencyCache,
     manager: ConnectionManager,
@@ -337,6 +344,7 @@ async def _handle_frame(
             fingerprint_repo=fingerprint_repo,
             match_logs=match_logs,
             threshold=threshold,
+            face_threshold=face_threshold,
             fp_threshold=fp_threshold,
             secret=secret,
             settings=settings,
@@ -411,6 +419,12 @@ async def biometric_ws(
                 await websocket.close(code=1001, reason="idle timeout")
                 break
 
+            # Per frame (cached ~30 s) so a long-lived kiosk connection follows
+            # a confidence change without reconnecting.
+            face_threshold = await face_threshold_for_caller(
+                user_id, extract_ws_token(websocket), 1.0 - settings.face_match_max_distance
+            )
+
             await _handle_frame(
                 websocket,
                 raw,
@@ -418,6 +432,7 @@ async def biometric_ws(
                 fingerprint_repo=fingerprint_repo,
                 match_logs=match_logs,
                 threshold=threshold,
+                face_threshold=face_threshold,
                 fp_threshold=fp_threshold,
                 idempotency=idempotency,
                 manager=manager,

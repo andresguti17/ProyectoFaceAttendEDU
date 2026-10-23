@@ -52,6 +52,7 @@ Table app_user {
   authentication_type varchar [not null, note: 'Local, Windows, External']
   status boolean [not null, default: true]
   must_change_password boolean [not null, default: false, note: 'true cuando las credenciales iniciales se entregaron por correo; se apaga al cambiar la contraseña']
+  two_factor_enabled boolean [not null, default: false, note: 'true cuando la persona activó el código por correo como segundo factor al iniciar sesión']
   last_access datetime [null]
 
   created_at datetime [not null]
@@ -188,7 +189,7 @@ Ref: user_role.role_id > role.role_id
 
 Table school {
   school_id int [pk, increment]
-  code varchar [not null, unique]
+  code varchar [not null]
   name varchar [not null]
   city_id varchar [null, note: 'External catalog via countriesnow API, no FK']
   address varchar [null]
@@ -206,6 +207,8 @@ Table school {
   updated_by uuid [null]
   deleted_by uuid [null]
   row_version bigint [not null, default: 1]
+
+  indexes { code [unique, name: 'uq_school_code', where: 'deleted_at IS NULL'] }
 }
 
 Table program {
@@ -223,7 +226,7 @@ Table program {
   deleted_by uuid [null]
   row_version bigint [not null, default: 1]
 
-  indexes { (school_id, code) [unique, name: 'uq_program_code_school'] }
+  indexes { (school_id, code) [unique, name: 'uq_program_code_school', where: 'deleted_at IS NULL'] }
 }
 
 Table academic_period {
@@ -242,14 +245,14 @@ Table academic_period {
   deleted_by uuid [null]
   row_version bigint [not null, default: 1]
 
-  indexes { (school_id, name) [unique, name: 'uq_period_name_school'] }
+  indexes { (school_id, name) [unique, name: 'uq_period_name_school', where: 'deleted_at IS NULL'] }
 }
 
 Table cohort {
   cohort_id bigint [pk, increment]
   program_id int [not null]
   academic_period_id int [not null]
-  code varchar [not null, unique]
+  code varchar [not null]
   status boolean [not null, default: true]
 
   created_at datetime [not null]
@@ -259,6 +262,8 @@ Table cohort {
   updated_by uuid [null]
   deleted_by uuid [null]
   row_version bigint [not null, default: 1]
+
+  indexes { code [unique, name: 'uq_cohort_code', where: 'deleted_at IS NULL'] }
 }
 
 Table course {
@@ -277,7 +282,7 @@ Table course {
   deleted_by uuid [null]
   row_version bigint [not null, default: 1]
 
-  indexes { (program_id, code) [unique, name: 'uq_course_code_program'] }
+  indexes { (program_id, code) [unique, name: 'uq_course_code_program', where: 'deleted_at IS NULL'] }
 }
 
 Table academic_actor_type {
@@ -313,8 +318,8 @@ Table academic_actor {
   row_version bigint [not null, default: 1]
 
   indexes {
-    (school_id, actor_type_id, actor_code) [unique, name: 'uq_actor_code_school_type']
-    (person_id, actor_type_id, school_id) [unique, name: 'uq_actor_person_type_school']
+    (school_id, actor_type_id, actor_code) [unique, name: 'uq_actor_code_school_type', where: 'deleted_at IS NULL']
+    (person_id, actor_type_id, school_id) [unique, name: 'uq_actor_person_type_school', where: 'deleted_at IS NULL']
     deleted_at [name: 'idx_actor_deleted']
   }
 }
@@ -335,7 +340,7 @@ Table enrollment {
   row_version bigint [not null, default: 1]
 
   indexes {
-    (academic_actor_id, cohort_id) [unique, name: 'uq_enrollment_actor_cohort']
+    (academic_actor_id, cohort_id) [unique, name: 'uq_enrollment_actor_cohort', where: 'deleted_at IS NULL']
     cohort_id [name: 'idx_enrollment_cohort']
     deleted_at [name: 'idx_enrollment_deleted']
   }
@@ -375,7 +380,7 @@ Table environment {
   deleted_by uuid [null]
   row_version bigint [not null, default: 1]
 
-  indexes { (school_id, code) [unique, name: 'uq_environment_code_school'] }
+  indexes { (school_id, code) [unique, name: 'uq_environment_code_school', where: 'deleted_at IS NULL'] }
 }
 
 Table schedule_block {
@@ -397,8 +402,8 @@ Table schedule_block {
   row_version bigint [not null, default: 1]
 
   indexes {
-    (environment_id, day_of_week, starts_at) [unique, name: 'uq_block_environment_slot']
-    (instructor_actor_id, day_of_week, starts_at) [unique, name: 'uq_block_instructor_slot']
+    (environment_id, day_of_week, starts_at) [unique, name: 'uq_block_environment_slot', where: 'deleted_at IS NULL']
+    (instructor_actor_id, day_of_week, starts_at) [unique, name: 'uq_block_instructor_slot', where: 'deleted_at IS NULL']
     cohort_id [name: 'idx_block_cohort']
     course_id [name: 'idx_block_course']
   }
@@ -423,7 +428,7 @@ Table class_session {
   row_version bigint [not null, default: 1]
 
   indexes {
-    (schedule_block_id, session_date) [unique, name: 'uq_session_block_date']
+    (schedule_block_id, session_date) [unique, name: 'uq_session_block_date', where: 'deleted_at IS NULL']
     session_date [name: 'idx_session_date']
   }
 }
@@ -463,7 +468,7 @@ Table attendance_record {
   row_version bigint [not null, default: 1]
 
   indexes {
-    (class_session_id, academic_actor_id) [unique, name: 'uq_attendance_session_actor']
+    (class_session_id, academic_actor_id) [unique, name: 'uq_attendance_session_actor', where: 'deleted_at IS NULL']
     academic_actor_id [name: 'idx_attendance_actor']
     deleted_at [name: 'idx_attendance_deleted']
   }
@@ -486,15 +491,15 @@ Table justification_type {
   row_version bigint [not null, default: 1]
 
   indexes {
-    (school_id, name) [unique, name: 'uq_justification_type_school_name']
+    (school_id, name) [unique, name: 'uq_justification_type_school_name', where: 'deleted_at IS NULL']
     school_id [name: 'idx_justification_type_school']
-    (name) [unique, name: 'uq_justification_type_global_name', where: 'school_id IS NULL']
+    (name) [unique, name: 'uq_justification_type_global_name', where: 'school_id IS NULL AND deleted_at IS NULL']
   }
 }
 
 Table justification {
   justification_id bigint [pk, increment]
-  attendance_record_id bigint [not null, unique]
+  attendance_record_id bigint [not null]
   justification_type_id int [not null]
   reason text [not null]
   submitted_at datetime [not null]
@@ -512,6 +517,7 @@ Table justification {
   row_version bigint [not null, default: 1]
 
   indexes {
+    attendance_record_id [unique, name: 'uq_justification_attendance_record', where: 'deleted_at IS NULL']
     justification_type_id [name: 'idx_justification_type']
     reviewed_by [name: 'idx_justification_reviewer']
   }
@@ -623,6 +629,27 @@ Table alert {
   }
 }
 
+Table notification_log {
+  log_id bigint [pk, increment]
+  kind varchar [not null, note: 'ABSENCE_REPORT / AT_RISK_REPORT']
+  dedupe_key varchar [not null, note: 'What it was about, e.g. session:1216; no personal data']
+  school_id int [null, note: 'academic.school.school_id (cross-context, NO FK)']
+  sent_at datetime [not null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    (kind, dedupe_key) [unique, name: 'uq_notification_log_dedupe', where: 'deleted_at IS NULL']
+    school_id [name: 'idx_notification_log_school']
+  }
+}
+
 // Relaciones internas (Notification)
 Ref: alert.alert_type_id > alert_type.alert_type_id
 
@@ -648,12 +675,12 @@ Table academic_configuration {
   deleted_by uuid [null]
   row_version bigint [not null, default: 1]
 
-  indexes { (school_id, configuration_name) [unique, name: 'uq_academic_configuration'] }
+  indexes { (school_id, configuration_name) [unique, name: 'uq_academic_configuration', where: 'deleted_at IS NULL'] }
 }
 
 Table security_configuration {
   configuration_id int [pk, increment]
-  configuration_name varchar [not null, unique]
+  configuration_name varchar [not null]
   configuration_value varchar [not null]
   description varchar [null]
 
@@ -664,6 +691,8 @@ Table security_configuration {
   updated_by uuid [null]
   deleted_by uuid [null]
   row_version bigint [not null, default: 1]
+
+  indexes { configuration_name [unique, name: 'uq_security_configuration_name', where: 'deleted_at IS NULL'] }
 }
 
 Table biometric_update_case {

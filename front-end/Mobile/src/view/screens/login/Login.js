@@ -4,13 +4,13 @@ import {
     Image,
     Keyboard,
     KeyboardAvoidingView,
-    SafeAreaView,
     Text,
     TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
+import ScreenSafeArea from '../../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {useLanguageRefresh} from '../../../utils/useLanguageRefresh';
 import {useTheme} from '../../components/common/ThemeContext';
@@ -120,6 +120,7 @@ export default function LoginScreen({ onLogin, navigation }) {
 
     const emailInputRef = useRef(null);
     const passwordInputRef = useRef(null);
+    const codeInputRef = useRef(null);
 
     const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
     const [isTerminosModalVisible, setIsTerminosModalVisible] = useState(false);
@@ -128,6 +129,7 @@ export default function LoginScreen({ onLogin, navigation }) {
     const {
         email, password, terms, isLoading, error, errorTimestamp,
         setEmail, setPassword, setTerms, submit,
+        codeStep, code, maskedEmail, setCode, submitCode, cancelCode,
     } = useLoginViewModel({ onLogin });
 
     // Inyección de lógica corregida
@@ -141,7 +143,7 @@ export default function LoginScreen({ onLogin, navigation }) {
 
     return (
         <>
-            <SafeAreaView
+            <ScreenSafeArea
                 style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]}
                 key={refreshKey}
             >
@@ -170,100 +172,142 @@ export default function LoginScreen({ onLogin, navigation }) {
                                     </View>
 
                                     <Text style={[styles.textoSesion, { color: colors.text }]}>
-                                        {t('login.title')}
+                                        {codeStep ? t('login.codeTitle') : t('login.title')}
                                     </Text>
 
-                                    <FormInput
-                                        ref={emailInputRef}
-                                        label={t('login.email')}
-                                        colors={colors}
-                                        value={email}
-                                        onChangeText={setEmail}
-                                        placeholder={t('login.emailPlaceholder')}
-                                        keyboardType="email-address"
-                                        autoCapitalize="none"
-                                        autoCorrect={false}
-                                        returnKeyType="next"
-                                        blurOnSubmit={false}
-                                        onSubmitEditing={() => passwordInputRef.current?.focus()}
-                                        accessibilityLabel={t('login.email')}
-                                    />
-
-                                    <View>
-                                        <FormInput
-                                            ref={passwordInputRef}
-                                            label={t('login.password')}
-                                            colors={colors}
-                                            value={password}
-                                            onChangeText={setPassword}
-                                            placeholder={t('login.passwordPlaceholder')}
-                                            secureTextEntry={!showPassword}
-                                            textContentType="password"
-                                            returnKeyType="done"
-                                            onSubmitEditing={Keyboard.dismiss}
-                                            accessibilityLabel={t('login.password')}
-                                        />
-                                        <TouchableOpacity
-                                            onPress={() => setShowPassword((v) => !v)}
-                                            activeOpacity={0.7}
-                                            accessibilityRole="button"
-                                            accessibilityLabel={t(showPassword ? 'login.hidePassword' : 'login.showPassword')}
-                                            // Centrado vertical sobre la caja del input: el contenedor
-                                            // deja marginBottom 20 y la caja mide ~42 (texto 16 +
-                                            // paddings) frente a 34 del botón (22 + padding 6*2):
-                                            // 20 + (42-34)/2 = 24 desde abajo.
-                                            style={{ position: 'absolute', right: 10, bottom: 24, padding: 6 }}
-                                        >
-                                            <Image
-                                                source={require('../../../assets/images/esconder.png')}
-                                                style={{
-                                                    width: 22,
-                                                    height: 22,
-                                                    tintColor: colors.textMuted,
-                                                    opacity: showPassword ? 1 : 0.4,
-                                                }}
+                                    {codeStep && (
+                                        <>
+                                            <Text style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: 16 }}>
+                                                {t('login.codeSubtitle', { email: maskedEmail || t('login.email') })}
+                                            </Text>
+                                            <FormInput
+                                                ref={codeInputRef}
+                                                label={t('login.code')}
+                                                colors={colors}
+                                                value={code}
+                                                onChangeText={(v) => setCode(String(v).replace(/\D/g, '').slice(0, 6))}
+                                                placeholder={t('login.codePlaceholder')}
+                                                keyboardType="number-pad"
+                                                maxLength={6}
+                                                autoFocus
+                                                textContentType="oneTimeCode"
+                                                returnKeyType="done"
+                                                onSubmitEditing={submitCode}
+                                                accessibilityLabel={t('login.code')}
                                             />
-                                        </TouchableOpacity>
-                                    </View>
-
-                                    {showForgotLink && (
-                                        <Animated.View style={[styles.forgotPasswordContainer, animatedStyles]}>
-                                            <TouchableOpacity
-                                                onPress={handleForgotPassword}
-                                                activeOpacity={0.7}
+                                            <PrimaryButton
+                                                title={isLoading ? t('login.loading') : t('login.verify')}
+                                                onPress={submitCode}
+                                                disabled={isLoading}
                                                 accessibilityRole="button"
-                                                accessibilityLabel={t('login.forgotPassword')}
+                                            />
+                                            <TouchableOpacity
+                                                onPress={cancelCode}
+                                                activeOpacity={0.7}
+                                                style={{ alignSelf: 'center', marginTop: 16 }}
+                                                accessibilityRole="button"
+                                                accessibilityLabel={t('login.useOtherAccount')}
                                             >
-                                                <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>
-                                                    {t('login.forgotPassword')}
-                                                </Text>
+                                                <Text style={{ color: colors.primary }}>{t('login.useOtherAccount')}</Text>
                                             </TouchableOpacity>
-                                        </Animated.View>
+                                        </>
                                     )}
 
-                                    <View style={styles.rowContainer}>
-                                        <SelectableButton
-                                            checked={terms}
-                                            onCheckChange={setTerms}
-                                            accessibilityLabel={t('login.terms')}
-                                        />
-                                        <TouchableOpacity
-                                            onPress={() => setIsTerminosModalVisible(true)}
-                                            activeOpacity={0.7}
-                                            accessibilityRole="button"
-                                        >
-                                            <Text style={[styles.terminosText, { color: colors.primary }]}>
-                                                {t('login.terms')}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
+                                    {!codeStep && (
+                                        <>
+                                            <FormInput
+                                                ref={emailInputRef}
+                                                label={t('login.email')}
+                                                colors={colors}
+                                                value={email}
+                                                onChangeText={setEmail}
+                                                placeholder={t('login.emailPlaceholder')}
+                                                keyboardType="email-address"
+                                                autoCapitalize="none"
+                                                autoCorrect={false}
+                                                returnKeyType="next"
+                                                blurOnSubmit={false}
+                                                onSubmitEditing={() => passwordInputRef.current?.focus()}
+                                                accessibilityLabel={t('login.email')}
+                                            />
 
-                                    <PrimaryButton
-                                        title={isLoading ? t('login.loading') : t('login.title')}
-                                        onPress={submit}
-                                        disabled={isLoading}
-                                        accessibilityRole="button"
-                                    />
+                                            <View>
+                                                <FormInput
+                                                    ref={passwordInputRef}
+                                                    label={t('login.password')}
+                                                    colors={colors}
+                                                    value={password}
+                                                    onChangeText={setPassword}
+                                                    placeholder={t('login.passwordPlaceholder')}
+                                                    secureTextEntry={!showPassword}
+                                                    textContentType="password"
+                                                    returnKeyType="done"
+                                                    onSubmitEditing={Keyboard.dismiss}
+                                                    accessibilityLabel={t('login.password')}
+                                                />
+                                                <TouchableOpacity
+                                                    onPress={() => setShowPassword((v) => !v)}
+                                                    activeOpacity={0.7}
+                                                    accessibilityRole="button"
+                                                    accessibilityLabel={t(showPassword ? 'login.hidePassword' : 'login.showPassword')}
+                                                    // Centrado vertical sobre la caja del input: el contenedor
+                                                    // deja marginBottom 20 y la caja mide ~42 (texto 16 +
+                                                    // paddings) frente a 34 del botón (22 + padding 6*2):
+                                                    // 20 + (42-34)/2 = 24 desde abajo.
+                                                    style={{ position: 'absolute', right: 10, bottom: 24, padding: 6 }}
+                                                >
+                                                    <Image
+                                                        source={require('../../../assets/images/esconder.png')}
+                                                        style={{
+                                                            width: 22,
+                                                            height: 22,
+                                                            tintColor: colors.textMuted,
+                                                            opacity: showPassword ? 1 : 0.4,
+                                                        }}
+                                                    />
+                                                </TouchableOpacity>
+                                            </View>
+
+                                            {showForgotLink && (
+                                                <Animated.View style={[styles.forgotPasswordContainer, animatedStyles]}>
+                                                    <TouchableOpacity
+                                                        onPress={handleForgotPassword}
+                                                        activeOpacity={0.7}
+                                                        accessibilityRole="button"
+                                                        accessibilityLabel={t('login.forgotPassword')}
+                                                    >
+                                                        <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>
+                                                            {t('login.forgotPassword')}
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                </Animated.View>
+                                            )}
+
+                                            <View style={styles.rowContainer}>
+                                                <SelectableButton
+                                                    checked={terms}
+                                                    onCheckChange={setTerms}
+                                                    accessibilityLabel={t('login.terms')}
+                                                />
+                                                <TouchableOpacity
+                                                    onPress={() => setIsTerminosModalVisible(true)}
+                                                    activeOpacity={0.7}
+                                                    accessibilityRole="button"
+                                                >
+                                                    <Text style={[styles.terminosText, { color: colors.primary }]}>
+                                                        {t('login.terms')}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            </View>
+
+                                            <PrimaryButton
+                                                title={isLoading ? t('login.loading') : t('login.title')}
+                                                onPress={submit}
+                                                disabled={isLoading}
+                                                accessibilityRole="button"
+                                            />
+                                        </>
+                                    )}
                                 </View>
 
                                 <TouchableOpacity
@@ -290,7 +334,7 @@ export default function LoginScreen({ onLogin, navigation }) {
                         </TouchableWithoutFeedback>
                     </ScrollView>
                 </KeyboardAvoidingView>
-            </SafeAreaView>
+            </ScreenSafeArea>
 
             <CustomAlert
                 visible={alertConfig.visible}

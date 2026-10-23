@@ -19,6 +19,7 @@ from infrastructure.persistence.mongo_embedding_repository import MongoEmbedding
 from infrastructure.persistence.mongo_match_log_repository import MongoMatchLogRepository
 from infrastructure.persistence.mongo_update_case_repository import MongoUpdateCaseRepository
 from infrastructure.security.rate_limit import RateLimiter
+from infrastructure.web.security import face_threshold_for_caller
 
 
 def get_mongo_client(request: Request) -> MongoClient:
@@ -62,6 +63,18 @@ def get_match_log_repository(
 def get_similarity_threshold(settings: Settings = Depends(get_settings)) -> float:
     """Cosine score at or above which a comparison counts as a match."""
     return settings.similarity_threshold
+
+
+async def get_face_match_threshold(request: Request, settings: Settings = Depends(get_settings)) -> float:
+    """Face score (`1 - Euclidean distance`) at or above which two faces match.
+
+    The school's own confidence (Settings > Reconocimiento) when the caller has
+    one; the service default otherwise.
+    """
+    default = 1.0 - settings.face_match_max_distance
+    header = request.headers.get("authorization", "")
+    token = header[7:].strip() if header.lower().startswith("bearer ") else None
+    return await face_threshold_for_caller(getattr(request.state, "user_id", None), token, default)
 
 
 def get_fingerprint_match_threshold(settings: Settings = Depends(get_settings)) -> int:

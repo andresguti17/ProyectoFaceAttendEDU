@@ -13,16 +13,14 @@ ScrollViewContent: {
     },
 
 buttonContainer: {
-        marginBottom: Platform.OS === 'ios' ? 60 : 130,
         marginHorizontal: 20
     },
 
 containerAddJustification: {
         flex: 1,
-        marginTop: 25,
+        marginTop: 10,
         paddingHorizontal: 20,
         paddingVertical: 20,
-        paddingTop: Platform.OS === "android" ? 50 : 10,
     },
 
 descriptionText: {

@@ -93,3 +93,19 @@ test("the liveness challenge announces every gesture the screen can show, withou
     expect(supported).not.toContain("turn");
 });
 
+
+test("a 200 with detected:false is a failed gesture attempt: it is repeated and then reported, never identified", async () => {
+    biometricCaptureApi.livenessStep.mockResolvedValue({ challenge_token: "t0", completed: false, detected: false });
+    biometricCaptureApi.identifyFace.mockClear();
+    biometricCaptureApi.livenessStep.mockClear();
+    const vm = { run: (op) => op(), setStatus: jest.fn(), requirePersonId: jest.fn() };
+    const getHook = renderHook({ vm });
+    getHook().videoRef.current = { videoWidth: 10, videoHeight: 10 };
+
+    await act(async () => {
+        await expect(getHook().loginFace()).rejects.toThrow("Liveness gesture not detected");
+    });
+
+    expect(biometricCaptureApi.livenessStep).toHaveBeenCalledTimes(2); // GESTURE_ATTEMPTS
+    expect(biometricCaptureApi.identifyFace).not.toHaveBeenCalled();
+}, 30000);

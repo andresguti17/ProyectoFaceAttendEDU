@@ -1,8 +1,9 @@
 import React, {useMemo} from "react";
-import {Platform, SafeAreaView, ScrollView, Text, TouchableOpacity, View} from "react-native";
+import {Platform, ScrollView, Text, TouchableOpacity, View} from "react-native";
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from "react-i18next";
 import {useTheme} from '../components/common/ThemeContext';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import CustomAlert from '../components/common/CustomAlert';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {createValidAllJustificationsStyles} from "./Styles/ValidAllJustifications/Style";
@@ -77,13 +78,12 @@ export default function JustificationsScreen() {
     );
 
     return (
-        <SafeAreaView
+        <ScreenSafeArea
             style={[styles.validAllJustificationsSafeArea, { backgroundColor: colors.background }]}
             key={`${updateKey}`}
         >
-            <View style={[styles.validAllJustificationsContainer, { backgroundColor: colors.background,  marginTop: Platform.OS === "ios" ? 0 : 50, marginHorizontal: 10 } ]}>
+            <View style={[styles.validAllJustificationsContainer, { backgroundColor: colors.background, marginHorizontal: 10 } ]}>
                 <View style={[styles.validAllJustificationsHeader, { backgroundColor: colors.background, flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
-                    <BackButton onPress={handleBack} />
                     <Text style={[styles.validAllJustificationsTitle, { color: colors.text, flex: 1 }]}>
                         {t("justifications.validList")}
                     </Text>
@@ -96,7 +96,7 @@ export default function JustificationsScreen() {
 
                 <PrimaryButton title={t('admin.addNewJustification')} onPress={createType} />
 
-                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.validAllJustificationsScrollContent}>
+                <ScrollView persistentScrollbar showsVerticalScrollIndicator contentContainerStyle={styles.validAllJustificationsScrollContent}>
                     {justifications.length > 0 ? (
                         categories.map((category) => {
                             const categoryItems = getJustificationsByCategory(category);
@@ -135,6 +135,7 @@ export default function JustificationsScreen() {
                 onClose={hideAlert}
                 type={alertConfig.type}
             />
-        </SafeAreaView>
+            <ReturnButton onPress={handleBack} />
+        </ScreenSafeArea>
     );
 }

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { PageOptions } from '../../domain/ports/out/ICrudRepository';
 import type { AcademicRepositories } from '../persistence/postgres';
 import { createCallerSchoolResolver, mayDeleteCourse, ScopeError as SchoolScopeError, type CallerSchool } from './callerSchool';
+import { ownSchoolEdit } from './schoolEditPolicy';
 
 /**
  * HTTP adapters — 03-ms-academic.
@@ -218,8 +219,21 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     if (!id) return notFound(reply);
     const parsed = schoolBody.partial().safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid school payload', parsed.error.flatten());
-    if (!(await requireSuperAdminForSchool(req, reply))) return reply;
-    const updated = await repos.schools.update(id, parsed.data);
+    const caller = await callerSchoolOf(req, reply);
+    if (!caller) return reply;
+    let changes: Record<string, unknown> = parsed.data;
+    if (!caller.isSuperAdmin) {
+      // A school Administrador edits its own school's name and contact data only.
+      if (id !== caller.schoolId) return notFound(reply);
+      const current = await repos.schools.findById(id);
+      if (!current) return notFound(reply);
+      const edit = ownSchoolEdit(current, parsed.data);
+      if (!edit.allowed) {
+        return reply.code(403).send({ error: 'Forbidden', message: edit.reason, timestamp: new Date().toISOString() });
+      }
+      changes = edit.changes;
+    }
+    const updated = await repos.schools.update(id, changes);
     if (!updated) return notFound(reply);
     return updated;
   });
@@ -235,7 +249,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
   app.delete('/api/v1/schools/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
     if (!(await requireSuperAdminForSchool(req, reply))) return reply;
-    if (!id || !(await repos.schools.softDelete(id))) return notFound(reply);
+    if (!id || !(await repos.schools.softDeleteCascade(id))) return notFound(reply);
     return reply.code(204).send();
   });
 
@@ -757,7 +771,8 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
       ]);
       if (actorSchool !== caller.schoolId || cohortSchool !== caller.schoolId) return forbiddenOtherSchool(reply);
     }
-    const created = await repos.enrollments.create(parsed.data);
+    // Re-enrolling someone who was unenrolled brings their old row back (see createOrRestore).
+    const created = await repos.enrollments.createOrRestore(parsed.data);
     return reply.code(201).send(created);
   });
   app.get('/api/v1/enrollments', async (req, reply) => {

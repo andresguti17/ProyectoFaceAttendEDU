@@ -237,6 +237,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         // Bootstrap: login/logout públicos; el resto de /api/** exige sesión.
         if (path.equals("/api/v1/auth/login") && method.equalsIgnoreCase("POST")) return true;
         if (path.equals("/api/v1/auth/logout") && method.equalsIgnoreCase("POST")) return true;
+        // Second step of a login with two-factor: the password already passed and there is no session yet.
+        if (path.equals("/api/v1/auth/login/verify") && method.equalsIgnoreCase("POST")) return true;
         // Rotación de sesión (refresh token): el sessionId viejo viaja en el cuerpo
         // y se cierra al emitir el nuevo, por eso no exige bearer previo.
         if (path.equals("/api/v1/auth/refresh") && method.equalsIgnoreCase("POST")) return true;
@@ -262,6 +264,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         if (method.equalsIgnoreCase("POST") && path.equals("/api/v1/auth/change-password")) return null;
         // Perfil propio: la cuenta sale de la sesión y el caso de uso solo toca campos editables.
         if (method.equalsIgnoreCase("PUT") && path.equals("/api/v1/auth/me/profile")) return null;
+        // Segundo factor propio: basta la sesión; los casos de uso piden la contraseña o el código.
+        if (method.equalsIgnoreCase("POST") && path.startsWith("/api/v1/auth/two-factor/")) return null;
         if (!method.equalsIgnoreCase("GET")) return WRITE;
         // Listados completos de cuentas y sesiones: solo administración.
         if (path.equals("/api/v1/users") || path.equals("/api/v1/sessions")) return WRITE;

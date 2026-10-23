@@ -21,6 +21,7 @@ from urllib.parse import quote
 import httpx
 from fastapi import HTTPException, Request, WebSocket, status
 
+from domain.similarity import face_threshold_from_confidence
 from infrastructure.config.settings import get_settings
 
 logger = logging.getLogger("biometric.security")
@@ -116,7 +117,7 @@ def _bearer(request: Request) -> str:
     return token
 
 
-def _extract_ws_token(websocket: WebSocket) -> str | None:
+def extract_ws_token(websocket: WebSocket) -> str | None:
     """Browsers cannot set custom headers on a WS handshake, so the token also
     travels as `?token=`; non-browser clients may still send a Bearer header."""
     token = websocket.query_params.get("token")
@@ -261,6 +262,55 @@ async def resolve_caller_school(user_id: str, token: str) -> tuple[bool, str | N
     return result
 
 
+# ── Per-school face confidence ─────────────────────────────────────────────
+#
+# Settings > Reconocimiento stores the school's confidence as the academic
+# configuration `web.facial_confidence` (ms-configuration). Recognition reads it
+# with the caller's own session; any failure falls back to the service default,
+# so a configuration outage never blocks taking attendance.
+
+_FACE_CONFIDENCE_KEY = "web.facial_confidence"
+_SCHOOL_CONFIDENCE_TTL_SECONDS = 30.0
+# school_id -> (confidence percent or None, expira_en_monotonic)
+_school_confidence_cache: dict[str, tuple[float | None, float]] = {}
+
+
+async def _school_face_confidence(school_id: str, token: str) -> float | None:
+    hit = _school_confidence_cache.get(school_id)
+    if hit is not None and hit[1] > time.monotonic():
+        return hit[0]
+    settings = get_settings()
+    value: float | None = None
+    try:
+        rows = await _get_list(
+            f"{settings.configuration_url}/api/v1/schools/{quote(school_id)}/configurations", token
+        )
+        for row in rows:
+            if isinstance(row, dict) and row.get("configurationName") == _FACE_CONFIDENCE_KEY:
+                value = float(row.get("configurationValue"))
+    except (httpx.HTTPError, ValueError, TypeError):
+        logger.warning("cannot read the school face confidence; using the default")
+        value = None
+    if len(_school_confidence_cache) > _AUTH_CACHE_MAX_ENTRIES:
+        _school_confidence_cache.clear()
+    _school_confidence_cache[school_id] = (value, time.monotonic() + _SCHOOL_CONFIDENCE_TTL_SECONDS)
+    return value
+
+
+async def face_threshold_for_caller(user_id: str | None, token: str | None, default: float) -> float:
+    """Face score threshold for the caller's school; `default` when it has none."""
+    if not user_id or not token:
+        return default
+    try:
+        is_super_admin, school_id = await resolve_caller_school(user_id, token)
+    except HTTPException:
+        return default
+    if is_super_admin or school_id is None:
+        return default
+    percent = await _school_face_confidence(school_id, token)
+    return default if percent is None else face_threshold_from_confidence(percent)
+
+
 async def ensure_can_touch_person(request: Request, person_id: str) -> None:
     """Who may request/list biometric update cases FOR `person_id`.
 
@@ -402,7 +452,7 @@ async def authenticate_websocket(websocket: WebSocket, permission: str | None) -
     settings = get_settings()
     if not settings.auth_enabled:
         return None
-    token = _extract_ws_token(websocket)
+    token = extract_ws_token(websocket)
     if not token:
         raise WebSocketAuthError(WS_CLOSE_UNAUTHORIZED, "Missing bearer token")
     try:

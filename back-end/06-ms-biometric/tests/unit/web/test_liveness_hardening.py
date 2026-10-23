@@ -22,6 +22,14 @@ def _challenge(client, **params):
     return client.get(f"{FACIAL_PREFIX}/liveness-challenge", params={"actions": 2, **params})
 
 
+def test_single_gesture_challenge_token_is_accepted():
+    from infrastructure.web.liveness import verify_liveness_challenge
+
+    token, actions = create_liveness_challenge(SECRET, 60, 1)
+    assert len(actions) == 1
+    assert verify_liveness_challenge(SECRET, token) == (actions, 0)
+
+
 def _step(client, token, index=0):
     return client.post(
         f"{FACIAL_PREFIX}/liveness-step",

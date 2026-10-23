@@ -7,7 +7,7 @@ import { isValidEmail } from "../core/utils/validation";
 
 export function useLoginViewModel(onSuccess) {
     const { t } = useTranslation();
-    const { login } = useAuth();
+    const { login, verifyLoginCode } = useAuth();
 
     const emailRef = useRef("");
     const passwordRef = useRef("");
@@ -19,6 +19,12 @@ export function useLoginViewModel(onSuccess) {
 
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    // Login con segundo factor: tras la contraseña se pide el código que llegó al correo.
+    const [step, setStep] = useState("credentials"); // "credentials" | "code"
+    const [maskedEmail, setMaskedEmail] = useState("");
+    const [code, setCodeState] = useState("");
+    const [codeError, setCodeError] = useState("");
     
     // Errores individuales por campo
     const [emailError, setEmailError] = useState("");
@@ -180,6 +186,17 @@ export function useLoginViewModel(onSuccess) {
         clearInterval(progressInterval);
         setLoading(false);
 
+        // Contraseña correcta, pero la cuenta pide el código de su correo: segundo paso.
+        if (result && typeof result === "object" && result.twoFactorRequired) {
+            setEmailProgress(0);
+            setPasswordProgress(0);
+            setMaskedEmail(result.maskedEmail || "");
+            setCodeState("");
+            setCodeError("");
+            setStep("code");
+            return;
+        }
+
         // Manejar el resultado (puede ser string de error o objeto con success/redirectRoute)
         const isError = typeof result === 'string';
         const err = isError ? result : null;
@@ -237,7 +254,42 @@ export function useLoginViewModel(onSuccess) {
         }
     }
 
+    function setCode(v) {
+        setCodeState(String(v).replace(/\D/g, "").slice(0, 6));
+        setCodeError("");
+    }
+
+    function backToCredentials() {
+        setStep("credentials");
+        setCodeState("");
+        setCodeError("");
+    }
+
+    async function handleVerifyCode() {
+        if (code.length !== 6) {
+            setCodeError(t("Escribe los 6 dígitos del código"));
+            return;
+        }
+        setLoading(true);
+        const result = await verifyLoginCode({ email: emailRef.current, code })
+            .catch((e) => (typeof e === "string" ? e : e?.message || "No se pudo iniciar sesión"));
+        setLoading(false);
+
+        if (typeof result === "string") {
+            setCodeError(t(result));
+            return;
+        }
+        onSuccess(result?.redirectRoute ?? null);
+    }
+
     return {
+        step,
+        maskedEmail,
+        code,
+        codeError,
+        setCode,
+        backToCredentials,
+        handleVerifyCode,
         showPassword,
         loading,
         emailDisplay,

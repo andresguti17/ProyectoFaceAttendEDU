@@ -64,6 +64,8 @@ export const biometricCaptureApi = {
         }),
 
     // ── Resumen y ciclo de vida ──
+    /** Ids de las personas con rostro / huella activos (para pintar las listas). */
+    summaryAll: () => call(endpoints.biometric.summaryAll, { method: "GET", timeoutMs: 8000 }),
     summary: (personId) => call(endpoints.biometric.summaryByPerson(personId), { method: "GET" }),
     revokeFace: (personId) => call(endpoints.biometric.facialByPerson(personId), { method: "DELETE" }),
     listFingerprints: (personId) => call(endpoints.biometric.fingerprintsByPerson(personId), { method: "GET" }),

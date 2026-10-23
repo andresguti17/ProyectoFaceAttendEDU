@@ -410,7 +410,7 @@ class TestMatchAudit:
         assert entries[0].biometric_type is BiometricType.FACIAL
         assert entries[0].matched is True
         assert entries[0].person_id == PERSON
-        assert entries[0].threshold == pytest.approx(0.85)
+        assert entries[0].threshold == pytest.approx(0.5)
 
     def test_failed_identify_is_audited(self, client, stores):
         _enroll_facial(client, person_id=OTHER_PERSON, encoding=ORTHOGONAL_VECTOR)

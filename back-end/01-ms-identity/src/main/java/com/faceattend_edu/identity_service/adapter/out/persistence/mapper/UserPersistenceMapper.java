@@ -23,7 +23,8 @@ public class UserPersistenceMapper {
             entity.getCreatedAt(),
             entity.getUpdatedAt(),
             entity.getLastAccess(),
-            Boolean.TRUE.equals(entity.getMustChangePassword())
+            Boolean.TRUE.equals(entity.getMustChangePassword()),
+            Boolean.TRUE.equals(entity.getTwoFactorEnabled())
         );
     }
 
@@ -40,6 +41,7 @@ public class UserPersistenceMapper {
         entity.setUpdatedAt(domain.getUpdatedAt());
         entity.setLastAccess(domain.getLastAccess());
         entity.setMustChangePassword(domain.isMustChangePassword());
+        entity.setTwoFactorEnabled(domain.isTwoFactorEnabled());
         return entity;
     }
 }

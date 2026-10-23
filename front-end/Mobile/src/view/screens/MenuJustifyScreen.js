@@ -1,15 +1,15 @@
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import React, {useMemo} from 'react';
 import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import CustomLogo from '../components/common/logo';
 import Separador from '../components/common/Separador';
@@ -68,15 +68,14 @@ export default function MenuJustifyScreen() {
   );
 
   return (
-      <SafeAreaView style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]} key={`${updateKey}`}>
+      <ScreenSafeArea style={[styles.safeAreaWhite, { backgroundColor: colors.backgroundWhite }]} key={`${updateKey}`}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardview}>
 
-          <ScrollView
+          <ScrollView persistentScrollbar
               style={styles.ScrollView}
-              contentContainerStyle={[styles.ScrollViewContent, { paddingBottom: 24 }]}
-              showsVerticalScrollIndicator={false}
+              contentContainerStyle={[styles.ScrollViewContent]}
+              showsVerticalScrollIndicator
           >
-            <BackButton onPress={handleBack} />
             <View style={styles.containerMenuJustify}>
               <View style={styles.mainContent}>
                 <Header title={isStudent ? t('justify.title') : t('admin.justificationManagement')} />
@@ -102,6 +101,7 @@ export default function MenuJustifyScreen() {
           </ScrollView>
 
         </KeyboardAvoidingView>
-      </SafeAreaView>
+          <ReturnButton onPress={handleBack} />
+      </ScreenSafeArea>
   );
 }

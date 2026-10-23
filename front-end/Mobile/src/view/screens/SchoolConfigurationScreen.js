@@ -7,7 +7,6 @@ import {
     KeyboardAvoidingView,
     Modal,
     Platform,
-    SafeAreaView,
     ScrollView,
     Switch,
     Text,
@@ -16,8 +15,9 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {createSchoolConfigStyles} from './Styles/SchoolConfigurationScreen/Style';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import {useSchoolConfigurationViewModel} from "../../viewmodels/useSchoolConfigurationViewModel";
 import {useTheme} from '../../view/components/common/ThemeContext';
 import {useUser} from '../../utils/UserContext';
@@ -185,14 +185,13 @@ const SchoolConfigurationScreen = ({ navigation }) => {
     // ─────────────────────────────────────────────
 
     return (
-        <SafeAreaView style={[styles.safeAreaSchoolConfig, { backgroundColor: colors.background }]}>
+        <ScreenSafeArea style={[styles.safeAreaSchoolConfig, { backgroundColor: colors.background }]}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={[styles.containerSchoolConfig, { backgroundColor: colors.background }]}
             >
                 {/* ── Header ── */}
                 <View style={[styles.headerSchoolConfig, { backgroundColor: colors.navBar, borderBottomColor: colors.border }]}>
-                    <BackButton onPress={() => navigation?.goBack()} />
                     <Text style={[styles.headerTitleSchoolConfig, { color: colors.text }]}>
                         {t('schoolConfig.title')}
                     </Text>
@@ -205,10 +204,10 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
 
-                <ScrollView
+                <ScrollView persistentScrollbar
                     style={{ flex: 1 }}
                     contentContainerStyle={styles.scrollContentSchoolConfig}
-                    showsVerticalScrollIndicator={false}
+                    showsVerticalScrollIndicator
                     keyboardShouldPersistTaps="handled"
                 >
                     <View style={styles.mainContentSchoolConfig}>
@@ -623,7 +622,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                 </Text>
                             </View>
                         ) : (
-                            <ScrollView
+                            <ScrollView persistentScrollbar
                                 keyboardShouldPersistTaps="handled"
                                 showsVerticalScrollIndicator
                             >
@@ -744,7 +743,7 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                                         })}
                                     </Text>
                                 )}
-                                <ScrollView
+                                <ScrollView persistentScrollbar
                                     keyboardShouldPersistTaps="handled"
                                     showsVerticalScrollIndicator
                                 >
@@ -839,7 +838,8 @@ const SchoolConfigurationScreen = ({ navigation }) => {
                     </View>
                 </TouchableWithoutFeedback>
             </Modal>
-        </SafeAreaView>
+            <ReturnButton onPress={() => navigation?.goBack()} />
+        </ScreenSafeArea>
     );
 };
 

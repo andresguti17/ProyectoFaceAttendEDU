@@ -214,7 +214,7 @@ export default function FaceModule({ vm, mode }) {
                     leftIcon={<Feather name={isRegister ? "user-plus" : "user-check"} size={16} color={c.brand.textOnPrimary} />}
                     onPress={isRegister ? face.registerFace : face.loginFace}
                 >
-                    {isRegister ? t("Registrar rostro (3 gestos)") : t("Reconocer rostro (2 gestos)")}
+                    {isRegister ? t("Registrar rostro (1 gesto)") : t("Reconocer rostro (2 gestos)")}
                 </Button>
                 {face.cameraReady && (
                     <Button variant="outline" disabled={vm.busy} onPress={face.stopCamera}>
@@ -226,7 +226,7 @@ export default function FaceModule({ vm, mode }) {
             <Text style={{ color: c.text.secondary, fontSize: 12, lineHeight: 18 }}>
                 {isRegister
                     ? t(
-                          "Prueba de vida activa: se te pedirán 3 gestos aleatorios (parpadear, girar la cabeza, abrir la boca). Si el usuario ya existe, su rostro se actualiza."
+                          "Prueba de vida activa: se te pedirá 1 gesto aleatorio (parpadear, girar la cabeza, abrir la boca, sonreír o asentir). Si el usuario ya existe, su rostro se actualiza."
                       )
                     : t(
                           "Prueba de vida activa: se te pedirán 2 gestos aleatorios y el rostro se comparará con todas las personas registradas."

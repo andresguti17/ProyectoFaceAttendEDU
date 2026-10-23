@@ -16,6 +16,7 @@ export function authError(code, key) {
 }
 
 const LOGIN_ENDPOINT = 'api/v1/auth/login';
+const LOGIN_VERIFY_ENDPOINT = 'api/v1/auth/login/verify';
 const LOGOUT_ENDPOINT = 'api/v1/auth/logout';
 const PERSONS_ENDPOINT = 'api/v1/persons';
 const USERS_ENDPOINT = 'api/v1/users';
@@ -117,6 +118,52 @@ async function evaluatePermission(userId, permission) {
   return true;
 }
 
+// Con la sesión ya emitida: guarda el token, carga roles y perfil y arma la respuesta de la app.
+async function completeLogin(session, identity) {
+  let person = null;
+  let username = identity;
+
+  const sessionId = session?.sessionId || session?.session_id || session?.id;
+  const userId = session?.userId || session?.user_id;
+  if (!sessionId || !userId) throw authError('SESSION_NOT_CREATED', 'authErrors.sessionNotCreated');
+
+  // Guardar el token ANTES de las llamadas autenticadas (roles, perfil, evaluate).
+  const saved = await saveToken(String(sessionId), identity);
+  if (!saved) throw authError('SESSION_NOT_SAVED', 'authErrors.sessionNotSaved');
+
+  // 3. Load roles + profile in parallel (una sola ronda tras guardar el
+  // token). Antes eran 3 llamadas secuenciales pesadas que excedían el
+  // timeout en dispositivos físicos.
+  const [roleNames, profile] = await Promise.all([fetchRoleNames(userId), resolveProfile(userId)]);
+  if (!roleNames || roleNames.length === 0) {
+    throw authError('NO_ROLES', 'authErrors.noRoles');
+  }
+
+  // 3b. Verificar que el rol tenga permisos efectivos.
+  await evaluatePermission(userId, 'attendance.record:read');
+
+  // 3c. Complete the profile (person data); the session was opened with the email.
+  if (!person?.person_id) {
+    person = profile.person ? toSnakeDeep(profile.person) : person;
+    if (profile.username) username = profile.username;
+  }
+  const personName = person ? [person.name, person.last_name].filter(Boolean).join(' ') : null;
+
+  // 4. Build AuthResponse keeping the app-level shape.
+  return AuthResponse.fromApi({
+    token: String(sessionId),
+    user: {
+      user_id: userId,
+      person_id: person?.person_id || null,
+      username,
+      email: person?.email || (identity.includes('@') ? identity : null),
+      name: personName,
+      roles: roleNames,
+      person: person || null,
+    },
+  });
+}
+
 export const AuthService = {
   login: async (email, password) => {
     // Login directo por correo: el backend resuelve email -> usuario vía
@@ -124,8 +171,6 @@ export const AuthService = {
     // listados de persons/users ya no son públicos).
     const identity = (email || '').trim();
     let session = null;
-    let person = null;
-    let username = identity;
 
     try {
       session = await doLogin(identity, password);
@@ -135,45 +180,30 @@ export const AuthService = {
       throw err;
     }
 
-    const sessionId = session?.sessionId || session?.session_id || session?.id;
-    const userId = session?.userId || session?.user_id;
-    if (!sessionId || !userId) throw authError('SESSION_NOT_CREATED', 'authErrors.sessionNotCreated');
-
-    // Guardar el token ANTES de las llamadas autenticadas (roles, perfil, evaluate).
-    const saved = await saveToken(String(sessionId), identity);
-    if (!saved) throw authError('SESSION_NOT_SAVED', 'authErrors.sessionNotSaved');
-
-    // 3. Load roles + profile in parallel (una sola ronda tras guardar el
-    // token). Antes eran 3 llamadas secuenciales pesadas que excedían el
-    // timeout en dispositivos físicos.
-    const [roleNames, profile] = await Promise.all([fetchRoleNames(userId), resolveProfile(userId)]);
-    if (!roleNames || roleNames.length === 0) {
-      throw authError('NO_ROLES', 'authErrors.noRoles');
+    // Contraseña correcta, pero la cuenta pide el código de su correo: aún no hay sesión.
+    if (session?.twoFactorRequired === true) {
+      return { twoFactorRequired: true, maskedEmail: session.maskedEmail || null };
     }
 
-    // 3b. Verificar que el rol tenga permisos efectivos.
-    await evaluatePermission(userId, 'attendance.record:read');
+    return completeLogin(session, identity);
+  },
 
-    // 3c. Complete the profile (person data); the session was opened with the email.
-    if (!person?.person_id) {
-      person = profile.person ? toSnakeDeep(profile.person) : person;
-      if (profile.username) username = profile.username;
+  // Segundo paso del login con 2FA: el código del correo abre la sesión.
+  verifyLoginCode: async (email, code) => {
+    const identity = (email || '').trim();
+    let session = null;
+    try {
+      session = await request({
+        method: POST,
+        url: LOGIN_VERIFY_ENDPOINT,
+        data: { identifier: identity, code: String(code || '').trim() },
+        requiresAuth: false,
+      });
+    } catch (err) {
+      if (err && (err.status === 400 || err.status === 401)) throw authError('INVALID_CODE', 'login.invalidCode');
+      throw err;
     }
-    const personName = person ? [person.name, person.last_name].filter(Boolean).join(' ') : null;
-
-    // 4. Build AuthResponse keeping the app-level shape.
-    return AuthResponse.fromApi({
-      token: String(sessionId),
-      user: {
-        user_id: userId,
-        person_id: person?.person_id || null,
-        username,
-        email: person?.email || (identity.includes('@') ? identity : null),
-        name: personName,
-        roles: roleNames,
-        person: person || null,
-      },
-    });
+    return completeLogin(session, identity);
   },
 
   // GET /api/v1/auth/me?email=|username= — perfil de usuario por identificador (público en el gateway).

@@ -1,4 +1,4 @@
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import React, {useEffect, useMemo, useState} from 'react';
 import {
     ActivityIndicator,
@@ -7,7 +7,6 @@ import {
     Modal,
     Platform,
     Pressable,
-    SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
@@ -15,6 +14,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {useTranslation} from 'react-i18next';
 import {createPendingStyles} from './Styles/PendingJustificationScreen/Style';
 import {readableOn} from '../../theme/contrast';
@@ -259,9 +259,9 @@ const DetailModal = ({
                         </TouchableOpacity>
                     </View>
 
-                    <ScrollView
+                    <ScrollView persistentScrollbar
                         contentContainerStyle={styles.modalScrollPending}
-                        showsVerticalScrollIndicator={false}
+                        showsVerticalScrollIndicator
                         keyboardShouldPersistTaps="handled"
                     >
                         {/* ── Usuario ── */}
@@ -602,23 +602,22 @@ export default function PendingJustificationScreen({ navigation }) {
     // Si ya hay error (p. ej. sin rol), mostrarlo en vez de girar infinito.
     if (loadingRole && !error) {
         return (
-            <SafeAreaView style={[styles.safeAreaPending, {backgroundColor: colors.background}]}>
+            <ScreenSafeArea style={[styles.safeAreaPending, {backgroundColor: colors.background}]}>
                 <View style={[
                     styles.containerPending,
                 ]}>
                     <ActivityIndicator color={colors.primary} size="large"/>
                 </View>
-            </SafeAreaView>
+            </ScreenSafeArea>
         );
     }
 
     return (
-        <SafeAreaView style={[styles.safeAreaPending, { backgroundColor: colors.background }]}>
+        <ScreenSafeArea style={[styles.safeAreaPending, { backgroundColor: colors.background }]}>
             <View style={styles.containerPending}>
                 {/* Header */}
                 <View style={[styles.headerPending, { backgroundColor: colors.background }]}>
                     <View style={styles.headerTopRowPending}>
-                        <BackButton onPress={handleBack} />
                         <View style={{ flex: 1 }}>
                             <Text style={[styles.headerTitlePending, {color: colors.text}]}>
                                 {t('consultJustify.headerTitle')}
@@ -671,14 +670,14 @@ export default function PendingJustificationScreen({ navigation }) {
                         </View>
                     </View>
                 ) : (
-                <FlatList
+                <FlatList persistentScrollbar
                     style={{ flex: 1 }}
                     data={filtered}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
                     contentContainerStyle={styles.listContentPending}
                     ListEmptyComponent={ListEmpty}
-                    showsVerticalScrollIndicator={false}
+                    showsVerticalScrollIndicator
                 />
                 )}
 
@@ -702,6 +701,7 @@ export default function PendingJustificationScreen({ navigation }) {
                 getRoleColors={getRoleColors}
                 colors={colors}
             />
-        </SafeAreaView>
+            <ReturnButton onPress={handleBack} />
+        </ScreenSafeArea>
     );
 }

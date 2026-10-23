@@ -2,6 +2,7 @@ package com.faceattend_edu.identity_service.application.port.out;
 
 import com.faceattend_edu.identity_service.application.port.in.OnboardSchoolUseCase;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -12,6 +13,12 @@ import java.util.UUID;
 public interface SchoolProvisioningPort {
 
     boolean schoolCodeExists(String sessionToken, String code);
+
+    /** Id of the school with that code, or null. Used to tell whether a call that timed out had actually gone through. */
+    Long findSchoolIdByCode(String sessionToken, String code);
+
+    /** Ids of the academic actors of that person (empty when none). */
+    List<Long> findActorIdsByPerson(String sessionToken, UUID personId);
 
     /** Creates the school inactive (status=false) and returns its id. */
     long createSchool(String sessionToken, OnboardSchoolUseCase.School school);

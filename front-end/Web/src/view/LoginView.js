@@ -70,6 +70,53 @@ export default function LoginView({
         }
     };
 
+    const codeStep = vm.step === "code";
+
+    const codeFields = (
+        <View style={{ gap: FORM_SPACING.fieldGap }}>
+            <TextInput
+                label={t("Código de verificación")}
+                placeholder="000000"
+                value={vm.code}
+                onChangeText={vm.setCode}
+                onKeyPress={(e) => { if (e.nativeEvent.key === 'Enter' && !vm.loading) vm.handleVerifyCode(); }}
+                type="number"
+                maxLength={6}
+                autoFocus
+                leftIcon={<Feather name="shield" size={20} color={c.text.secondary} />}
+                error={!!vm.codeError}
+                errorMessage={vm.codeError}
+            />
+            <TouchableOpacity onPress={vm.backToCredentials} style={{ alignSelf: "flex-end", marginTop: 6 }}>
+                <Text style={{ fontSize: 14, color: c.brand.primary, fontWeight: "500" }}>
+                    {t("Usar otra cuenta")}
+                </Text>
+            </TouchableOpacity>
+        </View>
+    );
+
+    const codeActions = (
+        <React.Fragment>
+            <View style={{ marginTop: 20 }}>
+                <Button
+                    onPress={vm.handleVerifyCode}
+                    disabled={vm.loading}
+                    loading={vm.loading}
+                >
+                    {vm.loading ? t("Verificando…") : t("Verificar")}
+                </Button>
+            </View>
+            <View style={{ marginTop: 12 }}>
+                <AuthCopyright />
+            </View>
+        </React.Fragment>
+    );
+
+    const title = codeStep ? t("Verifica tu identidad") : t("Inicio de sesión");
+    const subtitle = codeStep
+        ? t("Escribe el código de 6 dígitos que enviamos a {{email}}.").replace("{{email}}", vm.maskedEmail || t("tu correo"))
+        : t("Bienvenido de vuelta. Ingresa tus credenciales.");
+
     const fields = (
         <View style={{ gap: FORM_SPACING.fieldGap }}>
             <TextInput
@@ -157,11 +204,11 @@ export default function LoginView({
     if (isSmall) {
         return (
             <AuthMobileLayout
-                title={t("Inicio de sesión")}
-                subtitle={t("Bienvenido de vuelta. Ingresa tus credenciales.")}
+                title={title}
+                subtitle={subtitle}
             >
-                {fields}
-                {formActions}
+                {codeStep ? codeFields : fields}
+                {codeStep ? codeActions : formActions}
             </AuthMobileLayout>
         );
     }
@@ -253,14 +300,14 @@ export default function LoginView({
                     marginBottom: 6,
                     letterSpacing: -0.5,
                 }}>
-                    {t("Inicio de sesión")}
+                    {title}
                 </Text>
                 <Text style={{
                     fontSize: 15,
                     color: c.text.secondary,
                     lineHeight: 22,
                 }}>
-                    {t("Bienvenido de vuelta. Ingresa tus credenciales.")}
+                    {subtitle}
                 </Text>
             </View>
 
@@ -289,13 +336,13 @@ export default function LoginView({
                         },
                     }}
                 >
-                    {fields}
+                    {codeStep ? codeFields : fields}
                 </CustomScrollBar>
             </View>
 
             {/* Botón y footer - compacto, cerca del formulario */}
             <View style={{ marginTop: -18 }}>
-                {formActions}
+                {codeStep ? codeActions : formActions}
             </View>
         </View>
     );

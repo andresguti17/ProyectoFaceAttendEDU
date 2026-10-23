@@ -26,9 +26,9 @@ export default function RegisterModal({ isVisible, onClose }) {
         <View style={[styleAuth.modalContainerRegister, { backgroundColor: colors.modalBackground }]}>
           <Text style={[styleAuth.titleRegister, { color: colors.modalText }]}>{t('registerModal.title')}</Text>
 
-          <ScrollView
+          <ScrollView persistentScrollbar
             style={styleAuth.contentRegister}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator
           >
             <Text style={[styleAuth.paragraphRegister, { color: colors.modalTextSecondary }]}>
               {t('registerModal.description')}

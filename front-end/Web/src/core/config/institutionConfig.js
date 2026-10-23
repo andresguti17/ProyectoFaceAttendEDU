@@ -69,6 +69,7 @@ const DEFAULT_INSTITUTION_CONFIG = {
     minAttendance: 80,
     daysUntilSanction: 15,
     consecutiveDaysForSanction: 3, // Días consecutivos de inasistencia para sanción (1-5)
+    tardyToleranceMinutes: 15,     // Minutos tras el inicio de la clase antes de marcar "Tarde"
     
     // Idioma
     language: "es",
@@ -80,7 +81,6 @@ const DEFAULT_INSTITUTION_CONFIG = {
     // Reconocimiento facial
     confidenceThreshold: 85,
     autoRegister: true,
-    savePhotos: false,
     
     // Notificaciones
     emailAlert: true,
@@ -108,6 +108,13 @@ const DEFAULT_INSTITUTION_CONFIG = {
     // DEPRECADO: Mantener por compatibilidad con versiones antiguas
     accentColor: "#3B82F6",
 };
+
+/**
+ * Copia de los valores por defecto (para restablecer ajustes por sede)
+ */
+export function getDefaultInstitutionConfig() {
+    return { ...DEFAULT_INSTITUTION_CONFIG };
+}
 
 /**
  * Obtener la configuración institucional desde localStorage
@@ -176,8 +183,6 @@ export function updateInstitutionConfigField(key, value) {
 
 /**
  * Actualizar múltiples propiedades de la configuración
- * Si se detecta un cambio de período (fecha final cambiada y expirada), 
- * también limpia los horarios de los ambientes
  * 
  * @param {Object} updates - Objeto con las propiedades a actualizar
  * @returns {boolean} True si se actualizó exitosamente
@@ -185,32 +190,6 @@ export function updateInstitutionConfigField(key, value) {
 export function updateInstitutionConfig(updates) {
     const config = getInstitutionConfig();
     const newConfig = { ...config, ...updates };
-    
-    // Detectar si cambió el período y si ya expiró
-    const periodChanged = 
-        updates.periodEndDate && 
-        updates.periodEndDate !== config.periodEndDate;
-    
-    if (periodChanged) {
-        const newEndDate = new Date(updates.periodEndDate);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        newEndDate.setHours(0, 0, 0, 0);
-        
-        // Si el nuevo período ya expiró, limpiar horarios
-        if (newEndDate < today) {
-            console.log("[Config] Período ya expirado detectado al actualizar configuración. Limpiando horarios...");
-            
-            // Limpiar horarios de forma asíncrona (no bloqueante)
-            clearAllSchedules().then(success => {
-                if (success) {
-                    console.log("[Config] ✅ Horarios limpiados exitosamente");
-                } else {
-                    console.warn("[Config] ⚠️ Error al limpiar horarios");
-                }
-            });
-        }
-    }
     
     return saveInstitutionConfig(newConfig);
 }
@@ -390,69 +369,34 @@ export function calculateNextPeriod() {
 }
 
 /**
- * Borrar todos los horarios de todos los ambientes al finalizar un período
- * Esto NO elimina los ambientes ni los cursos, solo limpia los horarios asignados
- * 
- * @returns {Promise<boolean>} True si se borraron exitosamente
- */
-export async function clearAllSchedules() {
-    try {
-        // Importar dinámicamente para evitar dependencias circulares
-        const { loadEnvironments, saveEnvironments } = await import("../../models/data/EnvironmentStorage");
-        
-        const environments = await loadEnvironments();
-        
-        // Limpiar los horarios de cada ambiente
-        const updatedEnvironments = environments.map(env => ({
-            ...env,
-            schedules: [] // Vaciar el array de horarios
-        }));
-        
-        await saveEnvironments(updatedEnvironments);
-        
-        console.log(`[PeriodAdvance] ✅ Horarios borrados: ${environments.length} ambientes limpiados`);
-        return true;
-    } catch (error) {
-        console.error("[PeriodAdvance] ❌ Error al borrar horarios:", error);
-        return false;
-    }
-}
-
-/**
- * Avanzar automáticamente al próximo período (solo si isAutomaticPeriod es true)
- * Al avanzar, borra todos los horarios asignados a los ambientes
- * 
- * @returns {Promise<boolean>} True si se avanzó exitosamente
+ * Avanzar al próximo período (solo si isAutomaticPeriod es true).
+ *
+ * Solo calcula y guarda las fechas nuevas en la configuración local; quien lo llama
+ * (el administrador de la sede) las sube a los ajustes de la sede para que el avance
+ * ocurra una vez para todos. Los horarios reales viven en el backend y no se tocan.
+ *
+ * @returns {Promise<{periodStartDate: string, periodEndDate: string}|null>} las fechas nuevas, o null si no avanzó
  */
 export async function advanceToNextPeriod() {
     const config = getInstitutionConfig();
-    
+
     if (!config.isAutomaticPeriod) {
         console.warn("Cannot advance to next period: automatic period is disabled");
-        return false;
+        return null;
     }
-    
+
     const nextPeriod = calculateNextPeriod();
-    
+
     if (!nextPeriod) {
         console.warn("Cannot calculate next period: missing start/end dates");
-        return false;
+        return null;
     }
-    
-    // Borrar todos los horarios antes de avanzar el período
-    const schedulesCleared = await clearAllSchedules();
-    
-    if (!schedulesCleared) {
-        console.warn("[PeriodAdvance] ⚠️ No se pudieron borrar los horarios, pero se continuará con el avance del período");
-    }
-    
-    // Actualizar las fechas del período
-    const configUpdated = updateInstitutionConfig({
+
+    const dates = {
         periodStartDate: nextPeriod.periodStartDate,
         periodEndDate: nextPeriod.periodEndDate,
-    });
-    
-    return configUpdated && schedulesCleared;
+    };
+    return updateInstitutionConfig(dates) ? dates : null;
 }
 
 /**

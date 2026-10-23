@@ -76,6 +76,23 @@ class TestLiveness:
         assert len(body["actions"]) == 2
         assert body["challenge_token"]
 
+    def test_an_undetected_gesture_is_a_200_that_does_not_advance_the_step(self, client, monkeypatch, stores):
+        monkeypatch.setattr(facial_router, "decode_image", lambda data, max_bytes, max_pixels: "decoded")
+        monkeypatch.setattr(facial_router, "validate_liveness", lambda images, action: False)
+        token = _challenge(client, actions=2)["challenge_token"]
+        body = {"challenge_token": token, "action_index": 0, "images": [FAKE_IMAGE] * 6}
+
+        response = client.post(f"{FACIAL_PREFIX}/liveness-step", json=body)
+        assert response.status_code == 200
+        assert response.json() == {"challenge_token": token, "completed": False, "detected": False}
+        assert stores["match_logs"].entries[-1].operation == "LIVENESS_FAILURE"
+
+        # The same token is still valid for the retry: the step did not move.
+        monkeypatch.setattr(facial_router, "validate_liveness", lambda images, action: True)
+        retry = client.post(f"{FACIAL_PREFIX}/liveness-step", json=body)
+        assert retry.status_code == 200
+        assert retry.json()["detected"] is True
+
     def test_invalid_action_count_is_rejected(self, client):
         assert client.get(f"{FACIAL_PREFIX}/liveness-challenge", params={"actions": 5}).status_code == 422
 
@@ -98,7 +115,7 @@ class TestLiveness:
             token = body["challenge_token"]
         assert body["completed"] is True
 
-    def test_failed_gesture_is_rejected_and_audited(self, client, monkeypatch, stores):
+    def test_failed_gesture_is_reported_as_not_detected_and_audited(self, client, monkeypatch, stores):
         monkeypatch.setattr(facial_router, "decode_image", lambda data, max_bytes, max_pixels: "decoded")
         monkeypatch.setattr(facial_router, "validate_liveness", lambda images, action: False)
         challenge = _challenge(client, actions=2)
@@ -110,7 +127,8 @@ class TestLiveness:
                 "images": [FAKE_IMAGE] * 6,
             },
         )
-        assert response.status_code == 400
+        assert response.status_code == 200
+        assert response.json()["detected"] is False
         assert stores["match_logs"].entries[-1].operation == "LIVENESS_FAILURE"
 
     def test_reused_liveness_step_is_rejected(self, client, monkeypatch):
@@ -171,6 +189,50 @@ class TestEnrollImage:
             json={"person_id": PERSON, "image_base64": FAKE_IMAGE, "challenge_token": token2},
         )
         assert response.status_code == 409
+
+    def test_enroll_image_accepts_a_single_gesture_challenge(self, client, monkeypatch):
+        monkeypatch.setattr(facial_router, "face_encoding", lambda image: [1.0, 0.0, 0.0, 0.0])
+        token = _completed_challenge_token(client, monkeypatch, actions=1)
+        response = client.post(
+            f"{FACIAL_PREFIX}/enroll-image",
+            json={"person_id": PERSON, "image_base64": FAKE_IMAGE, "challenge_token": token},
+        )
+        assert response.status_code == 201
+
+    def test_enroll_image_allows_a_similar_but_distinct_face(self, client, monkeypatch):
+        # Cosine 0.857 (over the 0.85 identify threshold, the old false duplicate)
+        # but Euclidean 0.6 apart, beyond the 0.5 duplicate distance.
+        token = self._consume_challenge(client, monkeypatch, [1.0, 0.0, 0.0, 0.0])
+        client.post(
+            f"{FACIAL_PREFIX}/enroll-image",
+            json={"person_id": OTHER_PERSON, "image_base64": FAKE_IMAGE, "challenge_token": token},
+        )
+        token2 = self._consume_challenge(client, monkeypatch, [1.0, 0.6, 0.0, 0.0])
+        response = client.post(
+            f"{FACIAL_PREFIX}/enroll-image",
+            json={"person_id": PERSON, "image_base64": FAKE_IMAGE, "challenge_token": token2},
+        )
+        assert response.status_code == 201
+
+    def test_duplicate_check_follows_the_school_confidence(self, client, monkeypatch):
+        # Faces 0.45 apart: the same person at the default 0.5 distance...
+        token = self._consume_challenge(client, monkeypatch, [1.0, 0.0, 0.0, 0.0])
+        client.post(
+            f"{FACIAL_PREFIX}/enroll-image",
+            json={"person_id": OTHER_PERSON, "image_base64": FAKE_IMAGE, "challenge_token": token},
+        )
+        token2 = self._consume_challenge(client, monkeypatch, [1.0, 0.45, 0.0, 0.0])
+        body = {"person_id": PERSON, "image_base64": FAKE_IMAGE, "challenge_token": token2}
+        assert client.post(f"{FACIAL_PREFIX}/enroll-image", json=body).status_code == 409
+
+        # ...but different people for a school set to 90 % (max distance 0.40).
+        async def school_confidence(user_id, token, default):
+            return 0.60
+
+        monkeypatch.setattr(dependencies, "face_threshold_for_caller", school_confidence)
+        token3 = self._consume_challenge(client, monkeypatch, [1.0, 0.45, 0.0, 0.0])
+        body["challenge_token"] = token3
+        assert client.post(f"{FACIAL_PREFIX}/enroll-image", json=body).status_code == 201
 
     def test_enroll_image_rejects_a_frame_with_no_face(self, client, monkeypatch):
         token = self._consume_challenge(client, monkeypatch, None)

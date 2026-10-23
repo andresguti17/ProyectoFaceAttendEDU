@@ -6,7 +6,6 @@ import {
     Modal,
     Platform,
     Pressable,
-    SafeAreaView,
     ScrollView,
     Text,
     TextInput,
@@ -14,12 +13,13 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {createManageEnvironmentStyles} from './Styles/ManageEnviromentScreen/Style';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {useCustomAlert} from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {useManageEnvironmentViewModel} from '../../viewmodels/useManageEnvironmentViewModel';
 
@@ -255,9 +255,8 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-            <SafeAreaView style={[styles.manageEnvironmentContainer, {backgroundColor: colors.background}]}>
+            <ScreenSafeArea style={[styles.manageEnvironmentContainer, {backgroundColor: colors.background}]}>
                 <View style={[styles.manageEnvironmentHeader, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
-                    <BackButton onPress={handleBack} />
                     <Text style={[styles.manageEnvironmentTitle, {color: colors.text, flex: 1}]}>
                         {t('manageAmbientes.title')}
                     </Text>
@@ -284,7 +283,7 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                     />
                 </View>
 
-                <FlatList
+                <FlatList persistentScrollbar
                     data={searchQuery ? searchResults : ambientes}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
@@ -315,11 +314,11 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                                 Así los toques dentro del formulario no lo atraviesan. */}
                             <Pressable style={styles.manageEnvironmentBackdrop} onPress={handleBackdropPress}/>
 
-                            <ScrollView
+                            <ScrollView persistentScrollbar
                                 style={[styles.manageEnvironmentSheet, {backgroundColor: colors.card}]}
                                 contentContainerStyle={styles.manageEnvironmentSheetContent}
                                 keyboardShouldPersistTaps="handled"
-                                showsVerticalScrollIndicator={true}
+                                showsVerticalScrollIndicator
                                 bounces={false}
                             >
                                 {renderFormFields()}
@@ -336,7 +335,8 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
                     onClose={hideAlert}
                     type={alertConfig.type}
                 />
-            </SafeAreaView>
+                <ReturnButton onPress={handleBack} />
+            </ScreenSafeArea>
         </TouchableWithoutFeedback>
     );
 }

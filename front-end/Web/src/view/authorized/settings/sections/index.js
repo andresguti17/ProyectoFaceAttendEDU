@@ -10,6 +10,7 @@ export { AccentBlock }            from "./appearance/AccentBlock";
 
 // security
 export { TwoFactorRow }           from "./security/TwoFactorRow";
+export { TwoFactorSetup, OwnSecurityMeter } from "./security/TwoFactorSetup";
 export { SessionTimeInput }       from "./security/SessionTimeInput";
 
 // notifications

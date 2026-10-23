@@ -6,7 +6,6 @@ import {
     Modal,
     Platform,
     Pressable,
-    SafeAreaView,
     ScrollView,
     Text,
     TextInput,
@@ -14,12 +13,13 @@ import {
     TouchableWithoutFeedback,
     View,
 } from 'react-native';
+import ScreenSafeArea from '../components/common/ScreenSafeArea';
 import {createManageUsersStyles} from './Styles/ManageUsersScreen/Style';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../components/common/ThemeContext';
 import {useCustomAlert} from '../components/common/useCustomAlert';
 import CustomAlert from '../components/common/CustomAlert';
-import BackButton from '../components/common/BackButton';
+import ReturnButton from '../components/auth/ReturnButton';
 import PrimaryButton from '../components/auth/PrimaryButton';
 import {ROLE_OPTIONS, useManageUsersViewModel} from '../../viewmodels/useManageUsersViewModel';
 import {validateEmail} from '../../utils/validators';
@@ -277,9 +277,8 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-            <SafeAreaView style={[styles.manageUsersContainer, {backgroundColor: colors.background}]}>
+            <ScreenSafeArea style={[styles.manageUsersContainer, {backgroundColor: colors.background}]}>
                 <View style={[styles.manageUsersHeader, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
-                    <BackButton onPress={handleBack} />
                     <Text style={[styles.manageUsersTitle, {color: colors.text, flex: 1}]}>
                         {t('manageUsers.title')}
                     </Text>
@@ -326,7 +325,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                     />
                 </View>
 
-                <FlatList
+                <FlatList persistentScrollbar
                     data={tab === 'students' ? students : teachers}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
@@ -354,11 +353,11 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                         <View style={styles.manageUsersOverlay}>
                             <Pressable style={styles.manageUsersBackdrop} onPress={handleBackdropPress}/>
 
-                            <ScrollView
+                            <ScrollView persistentScrollbar
                                 style={[styles.manageUsersSheet, {backgroundColor: colors.card}]}
                                 contentContainerStyle={styles.manageUsersSheetContent}
                                 keyboardShouldPersistTaps="handled"
-                                showsVerticalScrollIndicator={true}
+                                showsVerticalScrollIndicator
                                 bounces={false}
                             >
                                 {renderEditContent()}
@@ -375,7 +374,8 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                     onClose={hideAlert}
                     type={alertConfig.type}
                 />
-            </SafeAreaView>
+                <ReturnButton onPress={handleBack} />
+            </ScreenSafeArea>
         </TouchableWithoutFeedback>
     );
 }

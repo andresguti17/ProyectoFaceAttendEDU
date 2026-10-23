@@ -107,10 +107,10 @@ export default function PasswordUpdateModal() {
                 >
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                         <View style={stylesCommon.modalWrapper}>
-                            <ScrollView
+                            <ScrollView persistentScrollbar
                                 contentContainerStyle={stylesCommon.modalScrollContent}
                                 keyboardShouldPersistTaps="handled"
-                                showsVerticalScrollIndicator={false}
+                                showsVerticalScrollIndicator
                             >
                                 <View style={[
                                     stylesCommon.passwordModalCard,

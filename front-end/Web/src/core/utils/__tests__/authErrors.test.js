@@ -1,4 +1,4 @@
-import { loginErrorMessage, LOGIN_MESSAGES } from "../authErrors";
+import { loginErrorMessage, loginCodeErrorMessage, LOGIN_MESSAGES } from "../authErrors";
 
 describe("loginErrorMessage", () => {
     it("maps wrong credentials (400/401) to the credentials message", () => {
@@ -27,5 +27,22 @@ describe("loginErrorMessage", () => {
     it("falls back to the error message or a generic one", () => {
         expect(loginErrorMessage({ status: 418, message: "Soy una tetera" })).toBe("Soy una tetera");
         expect(loginErrorMessage(undefined)).toBe(LOGIN_MESSAGES.generic);
+    });
+});
+
+describe("second factor messages", () => {
+    it("tells the person the e-mailed code could not be sent instead of a generic outage", () => {
+        const msg = loginErrorMessage({ status: 503, message: "The verification code could not be sent" });
+        expect(msg).toBe(LOGIN_MESSAGES.codeNotSent);
+    });
+
+    it("treats a 401 while typing the code as a wrong code, not wrong credentials", () => {
+        expect(loginCodeErrorMessage({ status: 401 })).toBe(LOGIN_MESSAGES.invalidCode);
+        expect(loginCodeErrorMessage({ status: 400 })).toBe(LOGIN_MESSAGES.invalidCode);
+    });
+
+    it("keeps the lock and outage messages for the code step", () => {
+        expect(loginCodeErrorMessage({ status: 423 })).toBe(LOGIN_MESSAGES.locked);
+        expect(loginCodeErrorMessage({ status: 502 })).toBe(LOGIN_MESSAGES.serverUnavailable);
     });
 });
