@@ -24,7 +24,7 @@ docker exec faceattend-postgres rm /tmp/faceattend_db.dump
 
 docker cp "$DIR/mongo.archive.gz" faceattend-mongo:/tmp/mongo.archive
 docker exec faceattend-mongo mongorestore --drop --gzip --archive=/tmp/mongo.archive \
-  --username "${MONGO_USER:-mongoadmin}" --password "${MONGO_PASSWORD:-mongopass}" --authenticationDatabase admin
+  --username "${MONGO_USER:?MONGO_USER is required}" --password "${MONGO_PASSWORD:?MONGO_PASSWORD is required}" --authenticationDatabase admin
 docker exec faceattend-mongo rm /tmp/mongo.archive
 
 echo "Restored from $DIR"
