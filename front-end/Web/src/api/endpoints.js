@@ -29,6 +29,7 @@ export const endpoints = {
         personById: (id) => `${API_V1}/persons/${id}`,
         personStatus: (id) => `${API_V1}/persons/${id}/status`,
         users: `${API_V1}/users`,
+        usersProvision: `${API_V1}/users/provision`,
         userById: (id) => `${API_V1}/users/${id}`,
         userActivate: (id) => `${API_V1}/users/${id}/activate`,
         userStatus: (id) => `${API_V1}/users/${id}/status`,
