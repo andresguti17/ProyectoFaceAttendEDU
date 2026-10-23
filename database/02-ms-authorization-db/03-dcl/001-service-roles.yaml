@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: dcl-001-service-role-authorization
+      author: FaceAttendEDU
+      # Re-applied on every update so tables added later are covered too (all statements are idempotent).
+      runAlways: true
+      comment: >-
+        Data isolation per service: svc_authorization (NOLOGIN) may only read and write the authorization
+        schema. The service logs in with its own user, member of this role, created by
+        database/scripts/create-service-logins.sh (passwords from the environment, never here).
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              DO $$
+              BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'svc_authorization') THEN
+                  CREATE ROLE svc_authorization NOLOGIN;
+                END IF;
+              END
+              $$;
+        - sql:
+            splitStatements: true
+            sql: |
+              REVOKE ALL ON SCHEMA "authorization" FROM PUBLIC;
+              GRANT USAGE ON SCHEMA "authorization" TO svc_authorization;
+              GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA "authorization" TO svc_authorization;
+              GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA "authorization" TO svc_authorization;
+              GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA "authorization" TO svc_authorization;
+              ALTER DEFAULT PRIVILEGES IN SCHEMA "authorization" GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO svc_authorization;
+              ALTER DEFAULT PRIVILEGES IN SCHEMA "authorization" GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO svc_authorization;
+      rollback:
+        - sql:
+            sql: SELECT 1

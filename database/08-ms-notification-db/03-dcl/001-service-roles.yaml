@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: dcl-001-service-role-notification
+      author: FaceAttendEDU
+      # Re-applied on every update so tables added later are covered too (all statements are idempotent).
+      runAlways: true
+      comment: >-
+        Data isolation per service: svc_notification (NOLOGIN) may only read and write the notification
+        schema. The service logs in with its own user, member of this role, created by
+        database/scripts/create-service-logins.sh (passwords from the environment, never here).
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              DO $$
+              BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'svc_notification') THEN
+                  CREATE ROLE svc_notification NOLOGIN;
+                END IF;
+              END
+              $$;
+        - sql:
+            splitStatements: true
+            sql: |
+              REVOKE ALL ON SCHEMA "notification" FROM PUBLIC;
+              GRANT USAGE ON SCHEMA "notification" TO svc_notification;
+              GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA "notification" TO svc_notification;
+              GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA "notification" TO svc_notification;
+              GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA "notification" TO svc_notification;
+              ALTER DEFAULT PRIVILEGES IN SCHEMA "notification" GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO svc_notification;
+              ALTER DEFAULT PRIVILEGES IN SCHEMA "notification" GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO svc_notification;
+      rollback:
+        - sql:
+            sql: SELECT 1

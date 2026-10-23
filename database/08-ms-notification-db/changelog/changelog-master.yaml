@@ -8,3 +8,7 @@ databaseChangeLog:
   - include:
       file: ../02-dml/changelog.yaml
       relativeToChangelogFile: true
+  # Last: the per-service role grants cover every table created above.
+  - include:
+      file: ../03-dcl/changelog.yaml
+      relativeToChangelogFile: true
