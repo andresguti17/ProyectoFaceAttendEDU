@@ -135,9 +135,9 @@ export function JustificationTypesManager() {
     const withSupport = types.filter(needsSupport).length;
 
     return (
-        <Card padding="lg" style={{ gap: 16 }}>
+        <Card padding="lg">
             {/* Encabezado */}
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12, flexShrink: 1 }}>
                     <View
                         style={{
@@ -172,7 +172,7 @@ export function JustificationTypesManager() {
 
             {/* Filtros por alcance */}
             {types.length > 0 && (
-                <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+                <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
                     {[
                         { key: "all", label: `${t("Todos")} (${counts.all})` },
                         { key: "global", label: `${t("Globales")} (${counts.global})` },
@@ -190,7 +190,11 @@ export function JustificationTypesManager() {
                 </View>
             )}
 
-            {error && <Alert type="error" message={error} />}
+            {error && (
+                <View style={{ marginBottom: 16 }}>
+                    <Alert type="error" message={error} />
+                </View>
+            )}
 
             {loading ? (
                 <View style={{ paddingVertical: 24, alignItems: "center" }}>
