@@ -52,6 +52,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      minio:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: ${NEON_JDBC_URL}
       SPRING_DATASOURCE_USERNAME: ${ATTENDANCE_DB_USER:-attendance_app}

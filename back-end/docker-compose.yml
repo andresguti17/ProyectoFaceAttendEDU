@@ -38,6 +38,27 @@ services:
       retries: 10
       start_period: 20s
 
+  # MinIO — justification supporting documents (ADR-009). The official images
+  # are no longer published; this one is built from MinIO's source and pinned by
+  # digest. Objects are encrypted at rest with SSE-S3 using MINIO_KMS_SECRET_KEY
+  # (ADR-016). No port is published: only ms-attendance reaches it.
+  minio:
+    image: cgr.dev/chainguard/minio@sha256:d88920d6a50bd0b088223b688be3b76c63e6205dbe494437f67ba1240ea12880
+    container_name: faceattend-minio
+    mem_limit: 512m
+    cpus: "0.5"
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      # <key-name>:<base64 of 32 random bytes>. Losing it makes the stored files unreadable.
+      MINIO_KMS_SECRET_KEY: ${MINIO_KMS_SECRET_KEY:?MINIO_KMS_SECRET_KEY is required}
+    volumes:
+      - minio_data:/data
+    networks:
+      - faceattend-data
+
   redis:
     image: redis:7-alpine
     container_name: faceattend-redis
@@ -244,6 +265,8 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      minio:
+        condition: service_started
     environment:
       JAVA_OPTS: "-Xmx768m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}?stringtype=unspecified
@@ -260,6 +283,11 @@ services:
       # Alcance por actor: matrículas (academic) y fichas que dicta el instructor (scheduling).
       FACEATTEND_AUTH_ACADEMIC_URL: http://ms-academic:8083
       FACEATTEND_AUTH_SCHEDULING_URL: http://ms-scheduling:8084
+      # Supporting documents (MinIO, ADR-009).
+      FACEATTEND_STORAGE_ENDPOINT: http://minio:9000
+      FACEATTEND_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      FACEATTEND_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      FACEATTEND_STORAGE_BUCKET: justification-documents
       SERVER_PORT: 8085
     ports:
       - "${BIND_IP:-127.0.0.1}:8085:8085"
@@ -629,5 +657,6 @@ networks:
 
 volumes:
   mongo_data:
+  minio_data:
   redis_data:
   kafka_data:
