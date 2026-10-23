@@ -49,3 +49,10 @@ testcontainers = {extras = ["mongodb"], version = "^4.0.0"}
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+# Coverage gate (CI installs pytest-cov and runs pytest --cov=.): measured, rounded down.
+[tool.coverage.run]
+omit = ["tests/*", "conftest.py", ".venv/*"]
+
+[tool.coverage.report]
+fail_under = 74

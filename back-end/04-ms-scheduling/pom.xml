@@ -27,6 +27,8 @@
 		<url/>
 	</scm>
 	<properties>
+		<!-- measured line coverage, rounded down; raise it as tests grow (goal: 0.70, tdd-guide) -->
+		<jacoco.line.minimum>0.51</jacoco.line.minimum>
 		<java.version>21</java.version>
 	</properties>
 	<dependencies>
@@ -127,6 +129,41 @@
 
 	<build>
 		<plugins>
+			<!-- Coverage gate (CI): the build fails if line coverage drops below jacoco.line.minimum. -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.13</version>
+				<executions>
+					<execution>
+						<goals><goal>prepare-agent</goal></goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals><goal>report</goal></goals>
+					</execution>
+					<execution>
+						<id>check</id>
+						<phase>test</phase>
+						<goals><goal>check</goal></goals>
+						<configuration>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${jacoco.line.minimum}</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
