@@ -13,6 +13,8 @@
 //        node tools/e2e/user-provisioning-rollback.mjs
 
 const API = (process.env.API_URL || "http://localhost:8000").replace(/\/+$/, "");
+// Ley 1581: provisioning requires the holder's acceptance of the current privacy notice.
+const CONSENT = { policyVersion: process.env.PRIVACY_POLICY_VERSION || "2026-10", biometricAccepted: false };
 for (const name of ["ADMIN_IDENTIFIER", "ADMIN_PASSWORD", "SCHOOL_ID"]) {
   if (!process.env[name]) {
     console.error(`${name} is required`);
@@ -46,6 +48,7 @@ async function main() {
     username: `rollback.${stamp}`,
     password: "Temporal-2026!",
     roleName: "Aprendiz",
+    consent: CONSENT,
     academicActor: { actorTypeId: 1, schoolId: Number(process.env.SCHOOL_ID), actorCode: document, cohortId: 999999999 },
   });
   console.log(`invalid provisioning -> ${failed.status} ${JSON.stringify(failed.data).slice(0, 160)}`);
@@ -63,6 +66,7 @@ async function main() {
     username: `provision.${stamp}`,
     password: "Temporal-2026!",
     roleName: "Administrador",
+    consent: CONSENT,
   });
   console.log(`valid provisioning -> ${ok.status}`);
   if (ok.status !== 201) process.exit(1);
