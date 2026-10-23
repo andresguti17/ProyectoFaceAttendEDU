@@ -119,8 +119,8 @@ services:
   # ──────────────────────────────────────────────────────────────
   ms-identity:
     build:
-      context: ./01-ms-identity
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 01-ms-identity/Dockerfile
     image: faceattend/ms-identity:latest
     container_name: faceattend-ms-identity
     mem_limit: 1g
@@ -178,8 +178,8 @@ services:
 
   ms-authorization:
     build:
-      context: ./02-ms-authorization
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 02-ms-authorization/Dockerfile
     image: faceattend/ms-authorization:latest
     container_name: faceattend-ms-authorization
     mem_limit: 1g
@@ -217,8 +217,8 @@ services:
 
   ms-scheduling:
     build:
-      context: ./04-ms-scheduling
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 04-ms-scheduling/Dockerfile
     image: faceattend/ms-scheduling:latest
     container_name: faceattend-ms-scheduling
     mem_limit: 1g
@@ -255,8 +255,8 @@ services:
 
   ms-attendance:
     build:
-      context: ./05-ms-attendance
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 05-ms-attendance/Dockerfile
     image: faceattend/ms-attendance:latest
     container_name: faceattend-ms-attendance
     mem_limit: 1g
@@ -312,8 +312,8 @@ services:
   # ──────────────────────────────────────────────────────────────
   ms-academic:
     build:
-      context: ./03-ms-academic
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 03-ms-academic/Dockerfile
     image: faceattend/ms-academic:latest
     container_name: faceattend-ms-academic
     mem_limit: 256m
@@ -347,8 +347,8 @@ services:
 
   ms-configuration:
     build:
-      context: ./07-ms-configuration
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 07-ms-configuration/Dockerfile
     image: faceattend/ms-configuration:latest
     container_name: faceattend-ms-configuration
     mem_limit: 256m
@@ -449,8 +449,8 @@ services:
   # ──────────────────────────────────────────────────────────────
   ms-notification:
     build:
-      context: ./08-ms-notification
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 08-ms-notification/Dockerfile
     image: faceattend/ms-notification:latest
     container_name: faceattend-ms-notification
     mem_limit: 128m
@@ -523,8 +523,8 @@ services:
   # ──────────────────────────────────────────────────────────────
   ms-quality:
     build:
-      context: ./09-ms-quality
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 09-ms-quality/Dockerfile
     image: faceattend/ms-quality:latest
     container_name: faceattend-ms-quality
     mem_limit: 256m

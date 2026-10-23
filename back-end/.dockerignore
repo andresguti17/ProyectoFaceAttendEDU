@@ -1,0 +1,14 @@
+# Build context of the Java and Node services is back-end/ (they need shared/).
+# Keep local build output, dependencies and secrets out of it.
+**/node_modules
+**/dist
+**/target
+**/coverage
+**/.nyc_output
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/npm-debug.log
+**/.env
+**/.env.*
+.git
