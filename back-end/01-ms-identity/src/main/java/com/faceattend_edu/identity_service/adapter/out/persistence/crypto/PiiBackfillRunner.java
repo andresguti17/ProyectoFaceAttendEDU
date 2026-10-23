@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -18,6 +19,9 @@ import java.util.UUID;
  * it only touches rows without a document blind index, in small transactions, so it can be
  * interrupted and restarted. Until a row is processed it stays readable (the converter
  * passes plaintext through) and the login falls back to the plain e-mail for it.
+ *
+ * <p>It also runs every few minutes: rows written outside the service (the first admin from
+ * database/scripts/bootstrap-admin.sh is inserted with SQL) get encrypted without a restart.</p>
  */
 @Slf4j
 @Component
@@ -28,6 +32,12 @@ public class PiiBackfillRunner implements ApplicationRunner {
 
     private final PersonJpaRepository repository;
     private final TransactionTemplate transactionTemplate;
+
+    @Scheduled(initialDelayString = "${faceattend.privacy.pii-backfill-interval-ms:300000}",
+            fixedDelayString = "${faceattend.privacy.pii-backfill-interval-ms:300000}")
+    public void runPeriodically() {
+        run(null);
+    }
 
     @Override
     public void run(ApplicationArguments args) {
