@@ -25,6 +25,10 @@ export function useLoginViewModel({onLogin}) {
     const [code, setCode] = useState("");
     const [maskedEmail, setMaskedEmail] = useState("");
 
+    // Contraseña inicial: la app no entra hasta cambiarla (el gateway también
+    // rechaza escrituras mientras la sesión tenga mustChangePassword).
+    const [pendingLogin, setPendingLogin] = useState(null);
+
     const {t} = useTranslation();
     const {loadThemeForRole} = useTheme();
 
@@ -102,9 +106,20 @@ export function useLoginViewModel({onLogin}) {
         await loadThemeForRole(role);
         await restoreLanguageForRole(role);
 
+        if (authResponse.mustChangePassword) {
+            setPendingLogin({role, token: authResponse.token});
+            return;
+        }
+
         if (onLogin) {
             onLogin(role, authResponse.token);
         }
+    };
+
+    const onForcedPasswordChanged = () => {
+        const pending = pendingLogin;
+        setPendingLogin(null);
+        if (pending && onLogin) onLogin(pending.role, pending.token);
     };
 
     const submit = async () => {
@@ -189,5 +204,6 @@ export function useLoginViewModel({onLogin}) {
         setEmail, setPassword, setTerms,
         submit, clearError, resetFailedAttempts,
         codeStep, code, maskedEmail, setCode, submitCode, cancelCode,
+        mustChangePassword: pendingLogin !== null, onForcedPasswordChanged,
     };
 }

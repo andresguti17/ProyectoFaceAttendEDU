@@ -19,12 +19,14 @@ import {createCommonStyles} from './style/Style';
 import {PasswordService} from '../../../services/passwordService';
 import {areAllRequirementsMet, validatePasswordRequirements} from '../../../utils/passwordValidator';
 
-export default function PasswordUpdateModal() {
+// forced: cambio obligatorio tras entrar con la contraseña inicial. Sin botón
+// de apertura ni de cancelar; al terminar llama a onChanged.
+export default function PasswordUpdateModal({ forced = false, onChanged } = {}) {
     const { t } = useTranslation();
     const { colors } = useTheme();
     const stylesCommon = useMemo(() => createCommonStyles(colors), [colors]);
 
-    const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
+    const [isPasswordModalVisible, setPasswordModalVisible] = useState(forced);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -45,6 +47,7 @@ export default function PasswordUpdateModal() {
     };
 
     const closePasswordModal = () => {
+        if (forced) return;
         setPasswordModalVisible(false);
         resetPasswordForm();
     };
@@ -71,7 +74,13 @@ export default function PasswordUpdateModal() {
                 t('profile.passwordModal.successTitle'),
                 t('profile.passwordModal.successMessage')
             );
-            closePasswordModal();
+            if (forced) {
+                setPasswordModalVisible(false);
+                resetPasswordForm();
+                if (onChanged) onChanged();
+            } else {
+                closePasswordModal();
+            }
         } catch (error) {
             setPasswordLoading(false);
             setPasswordError(error?.message || t('profile.passwordModal.errorGeneric'));
@@ -81,7 +90,7 @@ export default function PasswordUpdateModal() {
     return (
         <>
             {/* ── Trigger button ── */}
-            <TouchableOpacity
+            {!forced && <TouchableOpacity
                 style={[stylesCommon.passwordSettingsButton, { backgroundColor: colors.card }]}
                 onPress={openPasswordModal}
                 activeOpacity={0.75}
@@ -92,7 +101,7 @@ export default function PasswordUpdateModal() {
                     </Text>
                 </View>
                 <Text style={{ fontSize: 20, color: colors.textSecondary, marginLeft: 4 }}>›</Text>
-            </TouchableOpacity>
+            </TouchableOpacity>}
 
             {/* ── Modal ── */}
             <Modal
@@ -196,14 +205,14 @@ export default function PasswordUpdateModal() {
                                                 disabled={passwordLoading}
                                             />
                                         </View>
-                                        <TouchableOpacity
+                                        {!forced && <TouchableOpacity
                                             onPress={closePasswordModal}
                                             style={stylesCommon.passwordModalCancelButton}
                                         >
                                             <Text style={[stylesCommon.passwordModalCancelText, { color: colors.primary }]}>
                                                 {t('profile.passwordModal.cancel')}
                                             </Text>
-                                        </TouchableOpacity>
+                                        </TouchableOpacity>}
                                     </View>
                                 </View>
                             </ScrollView>
