@@ -11,6 +11,7 @@ import { View, Text, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, AnimatedDropdown, BaseModal, TextInput } from "../common";
 import { DateInput } from "../common/inputs/DateInput";
+import { useDateFormat } from "../hooks/useDateFormat";
 import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
@@ -24,6 +25,7 @@ export default function RegisterFichaModal({ visible, onClose, onCreated }) {
     const { theme } = useTheme();
     const { isSmall } = useResponsive();
     const { t } = useTranslation();
+    const { formatDate } = useDateFormat();
     const c = theme.colors;
     const { user } = useAuth();
 
@@ -72,7 +74,7 @@ export default function RegisterFichaModal({ visible, onClose, onCreated }) {
     }));
     const periodItems = periods.map((p) => ({
         value: String(p.academicPeriodId),
-        label: `${p.name} (${p.startsOn} → ${p.endsOn})`,
+        label: `${p.name} (${formatDate(p.startsOn)} → ${formatDate(p.endsOn)})`,
         icon: "calendar",
     }));
 

@@ -173,8 +173,6 @@ function toInternalFormat(formatted, format) {
     // Extraer solo números
     const numbers = formatted.replace(/\D/g, '');
     
-    if (numbers.length !== 8) return ''; // Debe tener 8 dígitos
-    
     let year, month, day;
     
     if (format === 'YYYY-MM-DD') {
@@ -189,6 +187,12 @@ function toInternalFormat(formatted, format) {
         day = numbers.slice(0, 2);
         month = numbers.slice(2, 4);
         year = numbers.slice(4, 8);
+    }
+    
+    if (numbers.length < 8) {
+        // Incompleta: se emite la parte escrita en orden ISO (p. ej. "2005-03") para que
+        // el formulario padre la rechace como fecha inválida en vez de guardarla vacía.
+        return [year, month, day].filter(Boolean).join('-');
     }
     
     return `${year}-${month}-${day}`;
@@ -266,19 +270,18 @@ export function DateInput({
     
     // Manejar cambios en el input
     const handleChange = useCallback((text) => {
-        // Marcar que este cambio viene del usuario
-        isUserInputRef.current = true;
-        
         // Formatear el texto según la configuración
         const formatted = formatDateValue(text, dateFormat);
         setDisplayValue(formatted);
         
         // Convertir a formato interno y notificar al padre
         const internal = toInternalFormat(formatted, dateFormat);
+        // Solo si el valor cambia habrá re-ejecución del efecto que debe ignorarse.
+        isUserInputRef.current = internal !== (value || '');
         
         // Notificar siempre al padre con el valor actual
         onChangeText(internal);
-    }, [dateFormat, onChangeText]);
+    }, [dateFormat, onChangeText, value]);
     
     // Determinar el placeholder según el formato
     const getPlaceholder = () => {

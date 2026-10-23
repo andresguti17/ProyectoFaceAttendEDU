@@ -12,6 +12,7 @@ import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Alert, Badge, Button, Card, EmptyState } from "../../components/common";
 import { useTheme } from "../../components/hooks/useTheme";
+import { useDateFormat } from "../../components/hooks/useDateFormat";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { REVIEW_STATUS_LABELS } from "../../../viewmodels/useJustificationsViewModel";
@@ -21,8 +22,6 @@ const REVIEW_META = {
     Approved: { variant: "success", icon: "check-circle", color: "success" },
     Rejected: { variant: "danger", icon: "x-circle", color: "danger" },
 };
-
-const shortStamp = (value) => String(value || "").replace("T", " ").slice(0, 16) || "—";
 
 /** Un paso del recorrido (enviada / resuelta): punto, rótulo y fecha. */
 function FlowStep({ icon, color, label, stamp, c }) {
@@ -58,6 +57,8 @@ export function ReviewJustifications({ vm }) {
     const c = theme.colors;
     const { isSmall } = useResponsive();
     const { t } = useTranslation();
+    const { formatDate, formatDateTime } = useDateFormat();
+    const stamp = (value) => (value ? formatDateTime(value) : "—");
     const [resolvedFilter, setResolvedFilter] = useState("all");
 
     const showPending = vm.reviewTab === "pending";
@@ -179,7 +180,7 @@ export function ReviewJustifications({ vm }) {
                                         >
                                             <Feather name="calendar" size={12} color={c.text.secondary} />
                                             <Text style={{ color: c.text.secondary, fontSize: 12 }}>
-                                                {item.date || "—"}
+                                                {item.date ? formatDate(item.date) : "—"}
                                             </Text>
                                             <Text style={{ color: c.text.secondary, fontSize: 12, flexShrink: 1 }}>
                                                 {`· ${vm.typeNameOf(item.justificationTypeId)}`}
@@ -205,14 +206,14 @@ export function ReviewJustifications({ vm }) {
                                                     icon="send"
                                                     color={c.text.secondary}
                                                     label={t("Enviada")}
-                                                    stamp={shortStamp(item.submittedAt)}
+                                                    stamp={stamp(item.submittedAt)}
                                                     c={c}
                                                 />
                                                 <FlowStep
                                                     icon={meta.icon}
                                                     color={accent}
                                                     label={t(REVIEW_STATUS_LABELS[item.reviewStatus] || item.reviewStatus)}
-                                                    stamp={shortStamp(item.reviewedAt)}
+                                                    stamp={stamp(item.reviewedAt)}
                                                     c={c}
                                                 />
                                             </View>

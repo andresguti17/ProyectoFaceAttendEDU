@@ -11,6 +11,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, AnimatedDropdown, BaseModal, TextInput } from "../common";
+import { DateInput } from "../common/inputs/DateInput";
 import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
@@ -202,13 +203,12 @@ export default function EditUserModal({ visible, onClose, onSubmit, user, canCha
 
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: isSmall ? 0 : 12 }}>
                 <View style={{ flex: 1 }}>
-                    <TextInput
-                        label={t("Nacimiento (AAAA-MM-DD)")}
+                    <DateInput
+                        label={t("Nacimiento")}
                         value={form?.birthDate ?? ""}
                         onChangeText={v => setField("birthDate", v)}
-                        placeholder={t("Ej: 2005-03-14")}
                         error={showErrors && !!String(form?.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form?.birthDate).trim())}
-                        errorMessage={t("Formato AAAA-MM-DD")}
+                        errorMessage={t("Fecha incompleta o inválida")}
                     />
                 </View>
                 <View style={{ flex: 1 }}>

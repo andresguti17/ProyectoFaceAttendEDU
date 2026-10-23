@@ -210,7 +210,7 @@ export function useAcademicViewModel() {
             const from = String(startsOn ?? "").trim();
             const to = String(endsOn ?? "").trim();
             if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
-                return "Las fechas deben tener formato AAAA-MM-DD";
+                return "Las fechas están incompletas o no son válidas";
             }
             if (from >= to) return "El inicio debe ser anterior al fin";
 

@@ -97,7 +97,7 @@ export function DateRangePicker({
                 days: 0,
                 weeks: 0,
                 months: 0,
-                message: t("Formato de fecha inválido (usa AAAA-MM-DD)"),
+                message: t("Fecha incompleta o inválida"),
                 type: "error",
             };
         }
@@ -108,7 +108,7 @@ export function DateRangePicker({
                 days: 0,
                 weeks: 0,
                 months: 0,
-                message: t("Formato de fecha inválido (usa AAAA-MM-DD)"),
+                message: t("Fecha incompleta o inválida"),
                 type: "error",
             };
         }

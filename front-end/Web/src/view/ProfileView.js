@@ -16,6 +16,7 @@ import React, { useState } from "react";
 import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Alert, Avatar, Badge, Button, Card, PageHeader, TextInput, AnimatedDropdown } from "./components/common";
+import { DateInput } from "./components/common/inputs/DateInput";
 import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
@@ -323,11 +324,10 @@ export default function ProfileView() {
                                             <GroupLabel>{t("Datos personales")}</GroupLabel>
                                             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 14 }}>
                                                 <View style={{ flex: 1 }}>
-                                                    <TextInput
+                                                    <DateInput
                                                         label={t("Fecha de nacimiento")}
                                                         value={vm.values.birthDate}
                                                         onChangeText={(v) => vm.setField("birthDate", v)}
-                                                        placeholder={t("AAAA-MM-DD")}
                                                         leftIcon={<Feather name="calendar" size={18} color={c.text.secondary} />}
                                                         error={!!vm.errors.birthDate}
                                                         errorMessage={vm.errors.birthDate}
