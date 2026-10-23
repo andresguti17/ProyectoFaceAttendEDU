@@ -68,6 +68,7 @@ Variables obligatorias (genere cada secreto con `openssl rand -base64 32`):
 | `BIND_IP=127.0.0.1`, `KONG_PROXY_BIND_IP=127.0.0.1` | perímetro: nada de la aplicación escucha fuera del host |
 | `ONBOARDING_SERVICE_USER_ID` | cuenta de servicio del alta pública de sedes (ver §7) |
 | `KONG_CORS_ORIGINS` | orígenes web permitidos por CORS, separados por coma (p. ej. el dominio de Vercel); sin valor por defecto en producción |
+| `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_KMS_SECRET_KEY` | almacenamiento de soportes de justificación; la clave KMS (`nombre:$(openssl rand -base64 32)`) cifra cada archivo y debe respaldarse aparte: sin ella los soportes no se pueden leer |
 | `IDENTITY_DB_PASSWORD` … `NOTIFICATION_DB_PASSWORD` (8) | un usuario de Neon por servicio (`<servicio>_app`), limitado a su esquema; también como secrets del environment `production` para `deploy-database.yml`, que los crea con `database/scripts/create-service-logins.sh` |
 
 Las migraciones (`deploy-database.yml`) leen `NEON_JDBC_URL`, `NEON_USER` y `NEON_PASSWORD` de los secrets del environment `production` y siempre se ejecutan con `--contexts=seed` (catálogos); los changesets `demo` nunca llegan a producción.
