@@ -1,6 +1,7 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
 import com.faceattend_edu.identity_service.domain.exception.AccountLockedException;
+import com.faceattend_edu.identity_service.domain.exception.TooManyLoginAttemptsException;
 import com.faceattend_edu.identity_service.domain.exception.DomainException;
 import com.faceattend_edu.identity_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.identity_service.domain.exception.EmailDeliveryException;
@@ -91,6 +92,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.LOCKED)
                 .header("Retry-After", String.valueOf(seconds))
                 .body(envelope(HttpStatus.LOCKED, "ACCOUNT_LOCKED", ex.getMessage(), req));
+    }
+
+    @ExceptionHandler(TooManyLoginAttemptsException.class)
+    public ResponseEntity<Map<String, Object>> handleTooManyAttempts(TooManyLoginAttemptsException ex, HttpServletRequest req) {
+        long seconds = Math.max(1, ex.getRetryAfter().toSeconds());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(seconds))
+                .body(envelope(HttpStatus.TOO_MANY_REQUESTS, "TOO_MANY_ATTEMPTS", ex.getMessage(), req));
     }
 
     @ExceptionHandler(DuplicateEntityException.class)

@@ -49,6 +49,14 @@ public class AuthProperties {
     @Value("${faceattend.auth.lockout-minutes:30}")
     private long lockoutMinutes = 30;
 
+    /** Failed logins from one client IP before it gets HTTP 429 (successful logins do not count). */
+    @Value("${faceattend.auth.max-failed-logins-per-ip:10}")
+    private int maxFailedLoginsPerIp = 10;
+
+    /** Window and block length, in seconds, of the per-IP counter. */
+    @Value("${faceattend.auth.failed-login-ip-window-seconds:60}")
+    private long failedLoginIpWindowSeconds = 60;
+
     /** URL interna de notification (red compose: http://ms-notification:8088). */
     @Value("${faceattend.notification.base-url:http://localhost:8088}")
     private String notificationBaseUrl = "http://localhost:8088";
@@ -67,6 +75,10 @@ public class AuthProperties {
 
     public Duration lockoutDuration() {
         return Duration.ofMinutes(lockoutMinutes);
+    }
+
+    public Duration failedLoginIpWindow() {
+        return Duration.ofSeconds(failedLoginIpWindowSeconds);
     }
 
     public Duration codeTtl() {

@@ -164,4 +164,34 @@ class AuthenticateUserUseCaseImplTest {
             assertThatThrownBy(() -> useCase.authenticate(IDENTIFIER, "bad")).isInstanceOf(UnauthorizedException.class);
         }
     }
+
+    @Test
+    void theEleventhFailedLoginFromTheSameIpWithinAMinuteGets429() {
+        when(hasher.matches(any(), any())).thenReturn(false);
+        String ip = "203.0.113.7";
+        // Ten different identifiers, so the per-account lock (5) never fires.
+        for (int i = 0; i < 10; i++) {
+            String identifier = "user" + i + "@example.com";
+            when(loadUser.loadUserByIdentifier(identifier)).thenReturn(activeUser());
+            assertThatThrownBy(() -> useCase.authenticate(identifier, "wrong", ip))
+                    .isInstanceOf(UnauthorizedException.class);
+        }
+
+        assertThatThrownBy(() -> useCase.authenticate("other@example.com", "secret", ip))
+                .isInstanceOf(com.faceattend_edu.identity_service.domain.exception.TooManyLoginAttemptsException.class);
+        // Another address is not affected.
+        when(loadUser.loadUserByIdentifier("other@example.com")).thenReturn(activeUser());
+        assertThatThrownBy(() -> useCase.authenticate("other@example.com", "wrong", "198.51.100.9"))
+                .isInstanceOf(UnauthorizedException.class);
+    }
+
+    @Test
+    void successfulLoginsDoNotUseTheIpQuota() {
+        User user = activeUser();
+        when(loadUser.loadUserByIdentifier(IDENTIFIER)).thenReturn(user);
+        when(hasher.matches("secret", "hash")).thenReturn(true);
+        for (int i = 0; i < 30; i++) {
+            assertThat(useCase.authenticate(IDENTIFIER, "secret", "203.0.113.7")).isNotNull();
+        }
+    }
 }
