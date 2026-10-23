@@ -99,3 +99,9 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://${NOTIFICATION_DB_USER:-notification_app}:${NOTIFICATION_DB_PASSWORD:?NOTIFICATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=notification&sslmode=require
+
+  # ── Gateway ──
+  kong-gateway:
+    environment:
+      # Real web origins only (e.g. the Vercel domain). No default in production.
+      KONG_CORS_ORIGINS: ${KONG_CORS_ORIGINS:?KONG_CORS_ORIGINS is required (comma-separated https origins of the web app)}
