@@ -329,7 +329,7 @@ Usa la keystore gestionada por EAS y `autoIncrement` sube el `versionCode`. Para
    & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" install -r .\faceattend-edu.apk
    ```
 3. **Emulador:** arrastra el `.apk` a la ventana.
-4. Antes de abrir la app, desde el navegador del teléfono: `https://faceattend-edu.duckdns.org/health/quality` debe mostrar JSON. Si no carga, la app tampoco conectará.
+4. Antes de abrir la app, desde el navegador del teléfono: `https://faceattend-edu.duckdns.org/api/v1/persons` debe mostrar un JSON con `"status":401` (el gateway responde y exige sesión). Si no carga, la app tampoco conectará.
 5. **Comprobar que el dispositivo tiene la última versión publicada:**
    - **APK:** *Ajustes → Apps → FaceAttend EDU* muestra `versionName` (= `version` de `app.json`); `versionCode` sube con cada build `production` (`eas build:list`).
    - **OTA** (tras 14.3): abre la app, ciérrala por completo y ábrela de nuevo (la actualización se descarga al abrir y se aplica al siguiente arranque). `eas update:list --branch <canal>` muestra el *Update ID* publicado; compara con el que informa el dispositivo (**Supuesto:** el equipo muestra `Updates.updateId` de `expo-updates` en una pantalla de ajustes; el repo no lo hace hoy). Alternativa sin código: tras publicar, cambia un texto visible de la app y verifica que aparece.
@@ -339,7 +339,7 @@ Usa la keystore gestionada por EAS y `autoIncrement` sube el `versionCode`. Para
 | Síntoma | Causa probable | Solución |
 |---|---|---|
 | El build entrega un `.aab` | Falta `android.buildType: "apk"` en el perfil | Ya está en `preview` y `production`; revisa `eas config` |
-| Login con "error de red" | URL `CHANGE_ME_*`, `localhost` o `10.0.2.2` grabada, o dominio caído | Corregir `env` del perfil y **recompilar** (un `.env` local no afecta a EAS); probar `/health/quality` |
+| Login con "error de red" | URL `CHANGE_ME_*`, `localhost` o `10.0.2.2` grabada, o dominio caído | Corregir `env` del perfil y **recompilar** (un `.env` local no afecta a EAS); probar `/api/v1/persons` (debe responder 401) |
 | Funciona en el navegador, falla en la app con HTTPS | Certificado no emitido o inválido | `docker logs` del contenedor Caddy; puertos 80/443 abiertos |
 | `Project not found` / pide `projectId` | No se ejecutó `eas init` o la cuenta no es la del proyecto | 14.1 |
 | `Invalid UUID appId` / `slug` no coincide | `slug` o propietario distintos al proyecto en Expo | No cambiar `slug`; `eas project:info` |
@@ -424,7 +424,7 @@ Marca cada punto en orden; si uno falla, no avances.
 - [ ] 20.13 Un cambio nativo (p. ej. un permiso) **no** llega por OTA: requiere repetir 20.6–20.8.
 
 **D. Conexión al backend**
-- [ ] 20.14 Desde el navegador del teléfono: `https://faceattend-edu.duckdns.org/health/quality` devuelve JSON.
+- [ ] 20.14 Desde el navegador del teléfono: `https://faceattend-edu.duckdns.org/api/v1/persons` devuelve JSON con `status` 401.
 - [ ] 20.15 Login en la app con un usuario de prueba entra al panel. Equivalente desde el PC:
   ```powershell
   curl.exe -s -X POST https://faceattend-edu.duckdns.org/api/v1/auth/login -H "Content-Type: application/json" -d "{\"identifier\":\"<usuario>\",\"password\":\"<clave>\"}"
