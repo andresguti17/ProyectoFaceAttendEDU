@@ -29,10 +29,19 @@ spring:
       hibernate.hbm2ddl.create_namespaces: true
   kafka:
     bootstrap-servers: localhost:9092
+  servlet:
+    multipart:
+      # ERF 6.1: supporting documents up to 5 MB (the request carries a little more).
+      max-file-size: 5MB
+      max-request-size: 6MB
   liquibase:
     # Las migraciones viven en ../database/ (fuente canonica); el servicio no auto-migra.
     enabled: false
 faceattend:
+  # MinIO (ADR-009). Credentials come only from the environment (FACEATTEND_STORAGE_*).
+  storage:
+    endpoint: http://localhost:9000
+    bucket: justification-documents
   auth:
     identity-url: http://localhost:8081
     authorization-url: http://localhost:8082

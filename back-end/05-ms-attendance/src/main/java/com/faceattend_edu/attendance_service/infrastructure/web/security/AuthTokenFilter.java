@@ -225,7 +225,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         if (path.startsWith("/api/v1/justification-types")) return "configuration:manage";
         // Aprendiz radica sus propias justificaciones y soportes (HU-JUS-001) sin poder escribir asistencia.
         if (method.equalsIgnoreCase("POST")
-                && (path.equals("/api/v1/justifications") || path.equals("/api/v1/supporting-documents"))) {
+                && (path.equals("/api/v1/justifications") || path.equals("/api/v1/supporting-documents")
+                    || path.matches("/api/v1/justifications/[^/]+/documents"))) {
             return "attendance.justification:request";
         }
         return "attendance.record:write";
