@@ -11,6 +11,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card } from "../../components/common";
 import { useAuth } from "../../../context/AuthContext";
+import { syncAcademicPeriodFromSettings } from "../../../services/api/periodSync";
 import { pushInstitutionConfig, loadBackendOverrides, parseSetting } from "../../../services/api/settingsPersistence";
 import { hasSuperAdminRole } from "../../../core/utils/backendRoles";
 import { useResponsive } from "../../components/hooks/useResponsive";
@@ -128,6 +129,8 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                 await pushInstitutionConfig(user?.schoolId ?? null, merged, {
                     canWriteSecurity: hasSuperAdminRole(user?.roles),
                 });
+                // Académico debe reflejar el mismo período vigente que Configuración.
+                await syncAcademicPeriodFromSettings(user?.schoolId ?? null, merged);
                 return true;
             } catch {
                 return false;

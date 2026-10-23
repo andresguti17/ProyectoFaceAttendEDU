@@ -14,6 +14,9 @@ import { Alert, Badge, Button, Card, EmptyState, PageHeader } from "./components
 import { ConfirmModal } from "./components/common/modals/ConfirmModal";
 import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
+import { useDateFormat } from "./components/hooks/useDateFormat";
+import { ACADEMIC_PERIOD_CONFIG, getConfiguredAcademicPeriodType } from "../core/constants/academicPeriods";
+import { currentPeriodOf } from "../services/api/periodSync";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useAcademicViewModel } from "../viewmodels/useAcademicViewModel";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
@@ -66,6 +69,7 @@ export default function AcademicView() {
     const { theme } = useTheme();
     const c = theme.colors;
     const { t } = useTranslation();
+    const { formatDate } = useDateFormat();
     const vm = useAcademicViewModel();
     const permissions = useRolePermissions();
     const [showNewFicha, setShowNewFicha] = useState(false);
@@ -291,14 +295,14 @@ export default function AcademicView() {
                                         <Item
                                             key={period.academicPeriodId}
                                             title={period.name}
-                                            subtitle={`${period.startsOn || "—"} → ${period.endsOn || "—"}`}
+                                            subtitle={`${period.startsOn ? formatDate(period.startsOn) : "—"} → ${period.endsOn ? formatDate(period.endsOn) : "—"} · ${t(ACADEMIC_PERIOD_CONFIG[getConfiguredAcademicPeriodType()].labelKey)}`}
                                             badge={
                                                 <Badge
                                                     variant={period.isActive ? "success" : "default"}
                                                     size="sm"
                                                     icon={period.isActive ? "check-circle" : undefined}
                                                 >
-                                                    {period.isActive ? t("Activo") : t("Cerrado")}
+                                                    {period.isActive ? (currentPeriodOf(vm.periods)?.academicPeriodId === period.academicPeriodId ? t("Vigente") : t("Activo")) : t("Cerrado")}
                                                 </Badge>
                                             }
                                             actions={
