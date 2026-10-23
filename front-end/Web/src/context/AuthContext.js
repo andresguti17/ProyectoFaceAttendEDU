@@ -20,7 +20,7 @@ import { useSessionTimeout } from "../core/hooks/useSessionTimeout";
 import { clearToken, getToken, saveToken, setUnauthorizedHandler } from "../api/apiClient";
 import { roleNamesFrom, toUiRole } from "../core/utils/backendRoles";
 import { authApi } from "../services/api/authApi";
-import { loginErrorMessage } from "../core/utils/authErrors";
+import { loginErrorMessage, loginCodeErrorMessage } from "../core/utils/authErrors";
 
 // ── Roles del backend → roles de la UI ────────────────────────
 // Mapa compartido con UserStorage en core/utils/backendRoles.js.
@@ -330,21 +330,8 @@ export function AuthProvider({ children }) {
         return () => setUnauthorizedHandler(null);
     }, []);
 
-    const login = useCallback(async (credentials) => {
-        if (!credentials?.email || !credentials?.password) {
-            return "Completa todos los campos";
-        }
-
-        let session;
-        try {
-            session = await authApi.login({
-                email: credentials.email,
-                password: credentials.password,
-            });
-        } catch (err) {
-            return loginErrorMessage(err);
-        }
-
+    // Con la sesión ya emitida: roles, perfil, sede y estado de sesión del usuario.
+    const finishLogin = useCallback(async (session, identifier) => {
         const sessionId = session?.sessionId ?? session?.session_id ?? session?.id;
         const userId = session?.userId ?? session?.user_id;
         if (!sessionId || !userId) {
@@ -352,7 +339,7 @@ export function AuthProvider({ children }) {
         }
 
         // El token se guarda antes de las llamadas autenticadas, como en Mobile.
-        const saved = await saveToken(String(sessionId), { email: credentials.email });
+        const saved = await saveToken(String(sessionId), { email: identifier });
         if (!saved) return "No se pudo guardar la sesión";
 
         let roles;
@@ -398,16 +385,18 @@ export function AuthProvider({ children }) {
             personId,
             schoolId: school?.schoolId ?? null,
             academicActorId: school?.academicActorId ?? null,
-            username: userDto?.username ?? credentials.email,
-            email: person?.email ?? credentials.email,
+            username: userDto?.username ?? identifier,
+            email: person?.email ?? identifier,
             name: person
                 ? `${person.name ?? ""} ${person.lastName ?? person.last_name ?? ""}`.trim()
-                : credentials.email,
+                : identifier,
             role,
             roles: roleNames,
             avatar: null,
             // La cuenta aún usa la contraseña inicial: AuthMiddleware fuerza el cambio.
             mustChangePassword: session?.mustChangePassword === true,
+            // Código por correo al iniciar sesión (lo activa la propia persona en Seguridad).
+            twoFactorEnabled: userDto?.twoFactorEnabled === true,
         };
 
         // ── Sesión limpia (trabajo propio: timeout + ruta deseada) ──
@@ -437,6 +426,42 @@ export function AuthProvider({ children }) {
         console.log('[AuthContext] Login successful, returning:', { success: true, redirectRoute });
         return { success: true, redirectRoute };
     }, [consumeIntendedRoute, sessionTimeout]);
+
+    const login = useCallback(async (credentials) => {
+        if (!credentials?.email || !credentials?.password) {
+            return "Completa todos los campos";
+        }
+
+        let session;
+        try {
+            session = await authApi.login({
+                email: credentials.email,
+                password: credentials.password,
+            });
+        } catch (err) {
+            return loginErrorMessage(err);
+        }
+
+        // Contraseña correcta pero la cuenta pide un código: aún no hay sesión.
+        if (session?.twoFactorRequired === true) {
+            return { twoFactorRequired: true, maskedEmail: session.maskedEmail ?? null };
+        }
+
+        return finishLogin(session, credentials.email);
+    }, [finishLogin]);
+
+    // Segundo paso del login con 2FA: el código del correo abre la sesión.
+    const verifyLoginCode = useCallback(async ({ email, code }) => {
+        if (!email || !code) return "Escribe el código que llegó a tu correo";
+
+        let session;
+        try {
+            session = await authApi.verifyLogin({ email, code });
+        } catch (err) {
+            return loginCodeErrorMessage(err);
+        }
+        return finishLogin(session, email);
+    }, [finishLogin]);
 
     // Cambio obligatorio (o voluntario) de la contraseña de la sesión actual.
     // Devuelve null si salió bien o un mensaje para mostrar; al terminar apaga
@@ -529,13 +554,14 @@ export function AuthProvider({ children }) {
             clearIntendedRoute,
             consumeIntendedRoute,
             login,
+            verifyLoginCode,
             logout,
             register,
             changePassword,
             updateSessionUser,
             sessionTimeout,
         }),
-        [user, isLoadingAuth, sessionExpiredByTimeout, isLoadingTimeoutFlag, intendedRoute, saveIntendedRoute, clearIntendedRoute, consumeIntendedRoute, login, logout, register, changePassword, updateSessionUser, sessionTimeout]
+        [user, isLoadingAuth, sessionExpiredByTimeout, isLoadingTimeoutFlag, intendedRoute, saveIntendedRoute, clearIntendedRoute, consumeIntendedRoute, login, verifyLoginCode, logout, register, changePassword, updateSessionUser, sessionTimeout]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

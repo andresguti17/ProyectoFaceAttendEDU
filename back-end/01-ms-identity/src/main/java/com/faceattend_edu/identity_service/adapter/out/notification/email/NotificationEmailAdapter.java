@@ -1,6 +1,7 @@
 package com.faceattend_edu.identity_service.adapter.out.notification.email;
 
 import com.faceattend_edu.identity_service.application.port.out.SendCredentialsEmailPort;
+import com.faceattend_edu.identity_service.application.port.out.SendLoginCodePort;
 import com.faceattend_edu.identity_service.application.port.out.SendRecoveryEmailPort;
 import com.faceattend_edu.identity_service.config.AuthProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +29,11 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-public class NotificationEmailAdapter implements SendRecoveryEmailPort, SendCredentialsEmailPort {
+public class NotificationEmailAdapter implements SendRecoveryEmailPort, SendCredentialsEmailPort, SendLoginCodePort {
 
     static final String TEMPLATE_VERIFICATION_CODE = "verification_code";
     static final String TEMPLATE_USER_CREDENTIALS = "user_credentials";
+    static final String TEMPLATE_LOGIN_CODE = "login_code";
     static final String EMAILS_PATH = "/api/v1/emails";
 
     private final AuthProperties authProperties;
@@ -72,6 +74,15 @@ public class NotificationEmailAdapter implements SendRecoveryEmailPort, SendCred
             log.warn("Email delivery failed to={} error={}", to, ex.getMessage());
             return false;
         }
+    }
+
+    @Override
+    public boolean sendLoginCode(String to, String recipientName, String code, Duration ttl) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("code", code);
+        data.put("minutes", String.valueOf(Math.max(1, ttl.toMinutes())));
+        if (recipientName != null && !recipientName.isBlank()) data.put("recipientName", recipientName);
+        return deliver(to, TEMPLATE_LOGIN_CODE, data);
     }
 
     @Override

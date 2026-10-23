@@ -28,6 +28,8 @@ public class User {
     private LocalDateTime lastAccess;
     /** true once initial credentials were handed over by email; cleared on the next password change. */
     private boolean mustChangePassword;
+    /** The person asked for an e-mailed code after the password on every login. */
+    private boolean twoFactorEnabled;
 
     private static final Set<String> ALLOWED_AUTH_TYPES = new HashSet<>(Arrays.asList("Local", "Windows", "External"));
 

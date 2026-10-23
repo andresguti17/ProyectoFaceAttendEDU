@@ -39,6 +39,7 @@ class AuthenticateUserUseCaseImplTest {
     @Mock UpdateUserPort updateUser;
     @Mock HashPasswordPort hasher;
     @Mock DomainEventPublisher eventPublisher;
+    @Mock TwoFactorChallenge twoFactorChallenge;
 
     private AuthProperties properties;
     private AuthenticateUserUseCaseImpl useCase;
@@ -47,7 +48,7 @@ class AuthenticateUserUseCaseImplTest {
     void setUp() {
         properties = new AuthProperties();
         useCase = new AuthenticateUserUseCaseImpl(
-                loadUser, saveSession, updateUser, hasher, new InMemoryLoginAttemptAdapter(), properties, eventPublisher);
+                loadUser, saveSession, updateUser, hasher, new InMemoryLoginAttemptAdapter(), properties, eventPublisher, twoFactorChallenge);
         lenient().when(saveSession.saveUserSession(any(UserSession.class))).thenAnswer(call -> call.getArgument(0));
     }
 
@@ -63,6 +64,32 @@ class AuthenticateUserUseCaseImplTest {
     private void wrongPassword(User user) {
         when(loadUser.loadUserByIdentifier(IDENTIFIER)).thenReturn(user);
         when(hasher.matches(any(), any())).thenReturn(false);
+    }
+
+    @Test
+    void anAccountWithTwoFactorGetsACodeInsteadOfASession() {
+        User user = activeUser();
+        user.setTwoFactorEnabled(true);
+        when(loadUser.loadUserByIdentifier(IDENTIFIER)).thenReturn(user);
+        when(hasher.matches("secret", "hash")).thenReturn(true);
+        when(twoFactorChallenge.begin(user)).thenReturn("c***@example.com");
+
+        assertThatThrownBy(() -> useCase.authenticate(IDENTIFIER, "secret"))
+                .isInstanceOf(com.faceattend_edu.identity_service.domain.exception.TwoFactorRequiredException.class)
+                .hasFieldOrPropertyWithValue("maskedEmail", "c***@example.com");
+
+        org.mockito.Mockito.verify(saveSession, org.mockito.Mockito.never()).saveUserSession(any(UserSession.class));
+    }
+
+    @Test
+    void aWrongPasswordNeverSendsACode() {
+        User user = activeUser();
+        user.setTwoFactorEnabled(true);
+        wrongPassword(user);
+
+        assertThatThrownBy(() -> useCase.authenticate(IDENTIFIER, "bad")).isInstanceOf(UnauthorizedException.class);
+
+        org.mockito.Mockito.verifyNoInteractions(twoFactorChallenge);
     }
 
     @Test

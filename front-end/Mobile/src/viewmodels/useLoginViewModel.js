@@ -20,6 +20,11 @@ export function useLoginViewModel({onLogin}) {
     const [errorTimestamp, setErrorTimestamp] = useState(0);
     const [failedAttempts, setFailedAttempts] = useState(0);
 
+    // Login con segundo factor: tras la contraseña se pide el código que llegó al correo.
+    const [codeStep, setCodeStep] = useState(false);
+    const [code, setCode] = useState("");
+    const [maskedEmail, setMaskedEmail] = useState("");
+
     const {t} = useTranslation();
     const {loadThemeForRole} = useTheme();
 
@@ -51,7 +56,7 @@ export function useLoginViewModel({onLogin}) {
     // la pantalla ya muestra el alerta con el motivo.
     const isExpectedLoginError = (err) =>
         (err instanceof ApiError && [0, 400, 401, 403, 408].includes(err.status)) ||
-        ["INVALID_CREDENTIALS", "ACCOUNT_DISABLED", "NO_ROLES", "ROLE_WITHOUT_PERMISSIONS"].includes(err?.code);
+        ["INVALID_CREDENTIALS", "INVALID_CODE", "ACCOUNT_DISABLED", "NO_ROLES", "ROLE_WITHOUT_PERMISSIONS"].includes(err?.code);
 
     const handleError = (err) => {
         const newCount = failedAttempts + 1;
@@ -62,6 +67,44 @@ export function useLoginViewModel({onLogin}) {
         // Antes todo lo que no era ApiError salía como "credenciales inválidas"
         // aunque el problema fuera otro.
         setErrorWithTimestamp(err?.message || t("httpErrors.unknown"));
+    };
+
+    // Con la sesión ya emitida (directa o tras el código): guarda el perfil, el tema y avisa a la app.
+    const finishLogin = async (authResponse) => {
+        if (!authResponse || !authResponse.token) {
+            throw authError("SESSION_NOT_CREATED", "authErrors.sessionNotCreated");
+        }
+
+        const userData = authResponse.user;
+        const saved = await saveToken(authResponse.token, userData?.email || email);
+
+        if (!saved) {
+            throw authError("SESSION_NOT_SAVED", "authErrors.sessionNotSaved");
+        }
+
+        const role = getHighestRole(userData?.roles ?? []);
+        if (!role) {
+            throw authError("NO_ROLES", "authErrors.noRoles");
+        }
+
+        setFailedAttempts(0);
+        await AsyncStorage.setItem('userEmail', userData?.email || email);
+        try {
+          await AsyncStorage.setItem('userProfile', JSON.stringify({
+            userId: userData?.user_id || null,
+            personId: userData?.person_id || null,
+            username: userData?.username || null,
+            email: userData?.email || email,
+            name: userData?.name || null,
+            roles: userData?.roles ?? [],
+          }));
+        } catch {}
+        await loadThemeForRole(role);
+        await restoreLanguageForRole(role);
+
+        if (onLogin) {
+            onLogin(role, authResponse.token);
+        }
     };
 
     const submit = async () => {
@@ -75,40 +118,14 @@ export function useLoginViewModel({onLogin}) {
         try {
             const authResponse = await AuthService.login(email, password);
 
-            if (!authResponse || !authResponse.token) {
-                throw authError("SESSION_NOT_CREATED", "authErrors.sessionNotCreated");
+            if (authResponse?.twoFactorRequired) {
+                setMaskedEmail(authResponse.maskedEmail || "");
+                setCode("");
+                setCodeStep(true);
+                return;
             }
 
-            const userData = authResponse.user;
-            const saved = await saveToken(authResponse.token, userData?.email || email);
-
-            if (!saved) {
-                throw authError("SESSION_NOT_SAVED", "authErrors.sessionNotSaved");
-            }
-
-            const role = getHighestRole(userData?.roles ?? []);
-            if (!role) {
-                throw authError("NO_ROLES", "authErrors.noRoles");
-            }
-
-            setFailedAttempts(0);
-            await AsyncStorage.setItem('userEmail', userData?.email || email);
-            try {
-              await AsyncStorage.setItem('userProfile', JSON.stringify({
-                userId: userData?.user_id || null,
-                personId: userData?.person_id || null,
-                username: userData?.username || null,
-                email: userData?.email || email,
-                name: userData?.name || null,
-                roles: userData?.roles ?? [],
-              }));
-            } catch {}
-            await loadThemeForRole(role);
-            await restoreLanguageForRole(role);
-
-            if (onLogin) {
-                onLogin(role, authResponse.token);
-            }
+            await finishLogin(authResponse);
         } catch (err) {
             // Sólo los fallos inesperados van a consola: el alerta de la
             // pantalla ya informa al usuario y LogBox deja de pintar el
@@ -125,6 +142,38 @@ export function useLoginViewModel({onLogin}) {
         }
     };
 
+    const submitCode = async () => {
+        setError(null);
+        setErrorTimestamp(0);
+
+        if (code.trim().length !== 6) {
+            setErrorWithTimestamp(t("login.errorCode"));
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await finishLogin(await AuthService.verifyLoginCode(email, code.trim()));
+        } catch (err) {
+            if (!isExpectedLoginError(err)) {
+                console.error("Error al verificar el código:", err);
+            }
+            handleError(err);
+            try {
+                await removeToken();
+            } catch {}
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const cancelCode = () => {
+        setCodeStep(false);
+        setCode("");
+        setError(null);
+        setErrorTimestamp(0);
+    };
+
     const clearError = () => {
         setError(null);
         setErrorTimestamp(0);
@@ -139,5 +188,6 @@ export function useLoginViewModel({onLogin}) {
         failedAttempts, maxFailedAttempts: MAX_FAILED_ATTEMPTS,
         setEmail, setPassword, setTerms,
         submit, clearError, resetFailedAttempts,
+        codeStep, code, maskedEmail, setCode, submitCode, cancelCode,
     };
 }

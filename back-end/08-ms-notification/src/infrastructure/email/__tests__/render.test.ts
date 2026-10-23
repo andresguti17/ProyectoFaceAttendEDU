@@ -1,4 +1,4 @@
-import { render, subjectFor, SUPPORTED_TEMPLATES, TEMPLATE_USER_CREDENTIALS, TEMPLATE_VERIFICATION_CODE } from '../render';
+import { render, subjectFor, SUPPORTED_TEMPLATES, TEMPLATE_LOGIN_CODE, TEMPLATE_USER_CREDENTIALS, TEMPLATE_VERIFICATION_CODE } from '../render';
 
 describe('render', () => {
   it('rejects an unknown template', () => {
@@ -19,6 +19,23 @@ describe('render', () => {
   });
   it('fixes the subject regardless of input', () => {
     expect(subjectFor(TEMPLATE_VERIFICATION_CODE)).toBe('Restablece tu contraseña - FaceAttend EDU');
+  });
+});
+
+describe('login_code template', () => {
+  it('is on the whitelist, with its own fixed subject, and requires the code', () => {
+    expect(SUPPORTED_TEMPLATES).toContain(TEMPLATE_LOGIN_CODE);
+    expect(subjectFor(TEMPLATE_LOGIN_CODE)).toBe('Tu código de acceso - FaceAttend EDU');
+    expect(() => render(TEMPLATE_LOGIN_CODE, {})).toThrow(/data.code is required/);
+  });
+
+  it('renders the code and the validity, escaping the name', () => {
+    const { text, html } = render(TEMPLATE_LOGIN_CODE, { Code: '123456', Minutes: '5', RecipientName: '<b>Ana</b>' });
+    expect(text).toContain('123456');
+    expect(text).toContain('5 minutos');
+    expect(html).toContain('123456');
+    expect(html).toContain('&lt;b&gt;Ana&lt;/b&gt;');
+    expect(html).not.toContain('<b>Ana</b>');
   });
 });
 

@@ -60,7 +60,15 @@
     "forgotPassword": "Forgot password?",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
-    "errorTitle": "Could not log in"
+    "errorTitle": "Could not log in",
+    "codeTitle": "Verify your identity",
+    "codeSubtitle": "Enter the 6-digit code we sent to {{email}}.",
+    "code": "Verification code",
+    "codePlaceholder": "000000",
+    "verify": "Verify",
+    "useOtherAccount": "Use another account",
+    "invalidCode": "Wrong or expired code",
+    "errorCode": "Enter the 6 digits of the code"
   },
   "tabs": {
     "home": "Home",

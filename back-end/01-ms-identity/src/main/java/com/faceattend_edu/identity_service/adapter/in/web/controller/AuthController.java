@@ -2,15 +2,22 @@ package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
 import com.faceattend_edu.identity_service.adapter.in.web.dto.AuthRequest;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.RefreshSessionRequest;
+import com.faceattend_edu.identity_service.adapter.in.web.dto.TwoFactorCodeRequest;
+import com.faceattend_edu.identity_service.adapter.in.web.dto.TwoFactorPasswordRequest;
+import com.faceattend_edu.identity_service.adapter.in.web.dto.TwoFactorStatusDto;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.UserDto;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.UserSessionDto;
+import com.faceattend_edu.identity_service.adapter.in.web.dto.VerifyLoginCodeRequest;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserSessionWebMapper;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserWebMapper;
 import com.faceattend_edu.identity_service.application.port.in.AuthenticateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CloseUserSessionUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetUserByUsernameUseCase;
+import com.faceattend_edu.identity_service.application.port.in.ManageTwoFactorUseCase;
+import com.faceattend_edu.identity_service.application.port.in.VerifyLoginCodeUseCase;
 import com.faceattend_edu.identity_service.application.port.in.RefreshSessionUseCase;
 import com.faceattend_edu.identity_service.domain.exception.EntityNotFoundException;
+import com.faceattend_edu.identity_service.domain.exception.TwoFactorRequiredException;
 import com.faceattend_edu.identity_service.domain.exception.UnauthorizedException;
 import com.faceattend_edu.identity_service.domain.exception.ValidationException;
 import com.faceattend_edu.identity_service.domain.model.User;
@@ -31,13 +38,61 @@ public class AuthController {
     private final CloseUserSessionUseCase closeUserSessionUseCase;
     private final GetUserByUsernameUseCase getUserByUsernameUseCase;
     private final RefreshSessionUseCase refreshSessionUseCase;
+    private final VerifyLoginCodeUseCase verifyLoginCodeUseCase;
+    private final ManageTwoFactorUseCase manageTwoFactorUseCase;
     private final UserSessionWebMapper sessionWebMapper;
     private final UserWebMapper userWebMapper;
 
     @PostMapping("/login")
     public ResponseEntity<UserSessionDto> login(@Valid @RequestBody AuthRequest authRequest) {
+        try {
+            return ResponseEntity.ok(sessionWebMapper.toDto(
+                    authenticateUserUseCase.authenticate(authRequest.getIdentifier(), authRequest.getPassword())));
+        } catch (TwoFactorRequiredException challenge) {
+            // 200 without a session: the client asks for the e-mailed code and calls /login/verify.
+            UserSessionDto pending = new UserSessionDto();
+            pending.setTwoFactorRequired(true);
+            pending.setMaskedEmail(challenge.getMaskedEmail());
+            return ResponseEntity.ok(pending);
+        }
+    }
+
+    /** Second step of a login with two-factor: the e-mailed code opens the session. */
+    @PostMapping("/login/verify")
+    public ResponseEntity<UserSessionDto> verifyLogin(@Valid @RequestBody VerifyLoginCodeRequest request) {
         return ResponseEntity.ok(sessionWebMapper.toDto(
-                authenticateUserUseCase.authenticate(authRequest.getIdentifier(), authRequest.getPassword())));
+                verifyLoginCodeUseCase.verify(request.getIdentifier(), request.getCode())));
+    }
+
+    /** Starts enabling the second factor: checks the password and e-mails a code. */
+    @PostMapping("/two-factor/enable")
+    public ResponseEntity<TwoFactorStatusDto> requestEnableTwoFactor(@Valid @RequestBody TwoFactorPasswordRequest request,
+                                                                     HttpServletRequest http) {
+        String masked = manageTwoFactorUseCase.requestEnable(caller(http), request.getPassword());
+        return ResponseEntity.accepted().body(new TwoFactorStatusDto(false, masked));
+    }
+
+    /** Finishes enabling with the e-mailed code. */
+    @PostMapping("/two-factor/confirm")
+    public ResponseEntity<TwoFactorStatusDto> confirmTwoFactor(@Valid @RequestBody TwoFactorCodeRequest request,
+                                                               HttpServletRequest http) {
+        manageTwoFactorUseCase.confirmEnable(caller(http), request.getCode());
+        return ResponseEntity.ok(new TwoFactorStatusDto(true, null));
+    }
+
+    @PostMapping("/two-factor/disable")
+    public ResponseEntity<TwoFactorStatusDto> disableTwoFactor(@Valid @RequestBody TwoFactorPasswordRequest request,
+                                                               HttpServletRequest http) {
+        manageTwoFactorUseCase.disable(caller(http), request.getPassword());
+        return ResponseEntity.ok(new TwoFactorStatusDto(false, null));
+    }
+
+    private static UUID caller(HttpServletRequest http) {
+        Object caller = http.getAttribute("X-User-Id");
+        if (caller == null) {
+            throw new UnauthorizedException("Authentication required");
+        }
+        return UUID.fromString(String.valueOf(caller));
     }
 
     /**

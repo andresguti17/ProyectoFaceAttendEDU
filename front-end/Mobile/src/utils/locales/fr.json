@@ -60,7 +60,15 @@
     "forgotPassword": "Mot de passe oublié ?",
     "showPassword": "Afficher le mot de passe",
     "hidePassword": "Masquer le mot de passe",
-    "errorTitle": "Connexion impossible"
+    "errorTitle": "Connexion impossible",
+    "codeTitle": "Vérifiez votre identité",
+    "codeSubtitle": "Saisissez le code à 6 chiffres envoyé à {{email}}.",
+    "code": "Code de vérification",
+    "codePlaceholder": "000000",
+    "verify": "Vérifier",
+    "useOtherAccount": "Utiliser un autre compte",
+    "invalidCode": "Code incorrect ou expiré",
+    "errorCode": "Saisissez les 6 chiffres du code"
   },
   "tabs": {
     "home": "Accueil",

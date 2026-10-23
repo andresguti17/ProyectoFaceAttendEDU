@@ -35,3 +35,6 @@ databaseChangeLog:
   - include:
       file: 03-tables/009-add-must-change-password-to-app-user.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 03-tables/010-add-two-factor-to-app-user.yaml
+      relativeToChangelogFile: true

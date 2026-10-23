@@ -60,7 +60,15 @@
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "showPassword": "Mostrar contraseña",
     "hidePassword": "Ocultar contraseña",
-    "errorTitle": "No se pudo iniciar sesión"
+    "errorTitle": "No se pudo iniciar sesión",
+    "codeTitle": "Verifica tu identidad",
+    "codeSubtitle": "Escribe el código de 6 dígitos que enviamos a {{email}}.",
+    "code": "Código de verificación",
+    "codePlaceholder": "000000",
+    "verify": "Verificar",
+    "useOtherAccount": "Usar otra cuenta",
+    "invalidCode": "Código incorrecto o vencido",
+    "errorCode": "Escribe los 6 dígitos del código"
   },
   "tabs": {
     "home": "Inicio",
