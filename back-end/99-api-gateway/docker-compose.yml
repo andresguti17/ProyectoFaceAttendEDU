@@ -30,7 +30,7 @@ services:
       KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
     ports:
       - '0.0.0.0:${KONG_PROXY_PORT:-8000}:8000'
-      - '${BIND_IP:-127.0.0.1}:${KONG_ADMIN_PORT:-8001}:8001'
+      - '127.0.0.1:${KONG_ADMIN_PORT:-8001}:8001'
     volumes:
       - ./kong/kong.yml:/kong/kong.yml:ro
     networks:
