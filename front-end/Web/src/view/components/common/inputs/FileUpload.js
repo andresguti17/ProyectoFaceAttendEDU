@@ -131,13 +131,16 @@ export function FileUpload({
         });
 
         if (result.type === "success" || !result.canceled) {
-          const files = result.canceled ? [] : (Array.isArray(result) ? result : [result]);
-          
+          // expo-document-picker >= 48 devuelve { canceled, assets: [...] }.
+          const files = result.canceled ? [] : (result.assets ?? (Array.isArray(result) ? result : [result]));
+
           const newFiles = files.map((file) => ({
             uri: file.uri,
             name: file.name,
             size: file.size || 0,
             type: file.mimeType || "application/octet-stream",
+            // En web, el File del navegador: es lo que se sube.
+            file: file.file ?? null,
           }));
 
           // Validar tamaño

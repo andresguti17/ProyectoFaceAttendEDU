@@ -234,24 +234,26 @@ export function request(path, opts = {}) {
 async function performRequest(path, opts, method) {
     const timeoutMs = opts.timeoutMs ?? API_TIMEOUT_MS;
     const token = await getToken();
+    // FormData (archivos) viaja tal cual: el navegador pone el Content-Type multipart con su boundary.
+    const isForm = typeof FormData !== "undefined" && opts.body instanceof FormData;
     const headers = {
-        "Content-Type": "application/json",
+        ...(isForm ? {} : { "Content-Type": "application/json" }),
         ...(opts.headers ?? {}),
     };
     if (token) headers.Authorization = `Bearer ${token}`;
 
     const url = buildUrl(path, opts.query, opts.baseUrl);
-    const init = {
-        method,
-        headers,
-        body: opts.body !== undefined && method !== "GET" ? JSON.stringify(opts.body) : undefined,
-    };
+    let body;
+    if (opts.body !== undefined && method !== "GET") body = isForm ? opts.body : JSON.stringify(opts.body);
+    const init = { method, headers, body };
 
     let lastErr = null;
     const attempts = opts.retryOnceOnNetworkError === false || method !== "GET" ? 1 : 2;
     for (let i = 0; i < attempts; i += 1) {
         try {
             const res = await fetchWithTimeout(url, init, timeoutMs);
+            // responseType "blob": archivos (p. ej. el soporte de una justificación).
+            if (opts.responseType === "blob" && res.ok) return await res.blob();
             const data = await parseBody(res);
             if (!res.ok) {
                 // Con businessUnauthorized, un 401 con cuerpo FastAPI ({detail}) es una respuesta
