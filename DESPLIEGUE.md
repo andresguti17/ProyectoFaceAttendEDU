@@ -1,325 +1,192 @@
 # FaceAttend EDU — Despliegue en AWS EC2 con Neon PostgreSQL
 
 > **Contenido:** Parte I (secciones 1–12): backend en AWS EC2 + Neon + Vercel. **Parte II (secciones 13–20, al final):** APK con EAS Build, actualizaciones OTA y validación de persistencia de la app móvil.
-
-## Estado Final: ✅ DESPLIEGUE COMPLETADO
-
-**Fecha:** 2026-10-16  
-**Instancia:** AWS EC2 t3.xlarge (ec2-32-199-154-193.compute-1.amazonaws.com)  
-**Región:** us-east-1  
-**Almacenamiento:** 150GB EBS gp3
+>
+> **Regla de esta guía:** ningún host, usuario, contraseña ni clave real se escribe aquí. Todos los valores viven en el secret `ENV_PROD_FILE` de GitHub Actions (que se copia a `.env.prod` en el servidor) o en el gestor de secretos del equipo.
 
 ---
 
-## 1. Resumen Ejecutivo
+## 1. Arquitectura desplegada
 
-### Infraestructura Desplegada
-- **13 contenedores Docker en ejecución** (9 microservicios + 3 infraestructura + Kong)
-- **Kong API Gateway** exponiendo toda la arquitectura en puerto 8000
-- **Neon PostgreSQL** con 8 esquemas (bounded contexts completamente inicializados)
-- **MongoDB, Redis, Kafka** para almacenamiento y mensajería
-- **Portainer** para gestión de contenedores
+- **EC2** (Debian, t3.xlarge, 150 GB gp3) con Docker Compose: 9 microservicios, Kong, MongoDB, Redis, Kafka, Portainer y Caddy.
+- **Neon PostgreSQL**: 8 esquemas (uno por bounded context), migrados con Liquibase desde GitHub Actions.
+- **Vercel**: frontend web estático (`expo export`), que llama a `https://<API_DOMAIN>`.
+- **Caddy** termina TLS (Let's Encrypt) delante de Kong. Es lo único que escucha en Internet.
 
-### Microservicios (9/9 - Todos Operacionales)
-1. **ms-identity** (8081) - Gestión de identidad
-2. **ms-authorization** (8082) - Control de acceso RBAC
-3. **ms-academic** (8083) - Académico y currículo
-4. **ms-scheduling** (8084) - Horarios y bloques
-5. **ms-attendance** (8085) - Asistencia
-6. **ms-biometric** (8086) - Biométrico (facial/huella)
-7. **ms-configuration** (8087) - Configuración
-8. **ms-notification** (8088) - Notificaciones
-9. **ms-quality** (8089) - Calidad (ISO 9001)
+```
+Internet ──443/80──▶ Caddy ──red Docker──▶ Kong :8000 ──▶ ms-* :8081-8089 ──▶ Neon / MongoDB / Redis / Kafka
+```
+
+| Servicio | Puerto | Publicado en el host | Acceso |
+|---|---|---|---|
+| Caddy | 80 / 443 | `0.0.0.0` | Internet (único punto de entrada) |
+| Kong proxy | 8000 | `127.0.0.1` (`KONG_PROXY_BIND_IP=127.0.0.1`) | solo Caddy y el propio host |
+| Kong admin | 8001 | `127.0.0.1` fijo | túnel SSH |
+| ms-* | 8081–8089 | `127.0.0.1` (`BIND_IP=127.0.0.1`) | solo Kong |
+| MongoDB / Redis / Kafka | 27017 / 6379 / 9092 | `127.0.0.1` fijo | solo la red Docker y el host |
+| Portainer | 9443 | `127.0.0.1` fijo | túnel SSH |
 
 ---
 
-## 2. Endpoints de Producción
+## 2. Perímetro de red (security group de AWS)
 
-### Kong API Gateway
-```
-PROXY API (para frontend):
-http://ec2-32-199-154-193.compute-1.amazonaws.com:8000
+Reglas de entrada **únicas** del security group de la instancia:
 
-ADMIN CONSOLE (gestión de rutas):
-http://ec2-32-199-154-193.compute-1.amazonaws.com:8001
-```
+| Puerto | Origen | Motivo |
+|---|---|---|
+| 443/tcp y 443/udp | `0.0.0.0/0` | HTTPS (Caddy) |
+| 80/tcp | `0.0.0.0/0` | Desafío ACME de Let's Encrypt y redirección a HTTPS |
+| 22/tcp | IP pública del operador (`/32`) | SSH de administración y despliegue de GitHub Actions* |
 
-### Variable de Entorno para Vercel
-```
-EXPO_PUBLIC_API_URL=http://ec2-32-199-154-193.compute-1.amazonaws.com:8000
-```
+\* Si el despliegue por SSH desde GitHub Actions necesita el 22 abierto a más rangos, restrinja a los rangos publicados de GitHub (`https://api.github.com/meta`, clave `actions`) o use un runner autoalojado. **Nunca** abra 8000, 8001, 8081–8089, 5432, 27017, 6379, 9092 ni 9443.
 
----
+Verificación desde fuera de la VPC (cualquier equipo con Internet):
 
-## 3. Base de Datos Neon PostgreSQL
-
-### Conexión
-```
-postgresql://faceattend_db_owner:***@ep-nameless-wind-b6xj3sjk-pooler.c-2.sa-east-1.aws.neon.tech/faceattend_db?sslmode=require
-```
-
-### Esquemas Creados (8/8 por Liquibase)
-| Esquema | Bounded Context | Estado |
-|---------|-----------------|--------|
-| identity | Identity Management | ✅ Creado |
-| authorization | Authorization (RBAC) | ✅ Creado |
-| academic | Academic & Curriculum | ✅ Creado |
-| scheduling | Scheduling | ✅ Creado |
-| attendance | Attendance Tracking | ✅ Creado |
-| biometric | Biometric Data | ✅ Creado |
-| configuration | System Configuration | ✅ Creado |
-| notification | Notifications & Alerts | ✅ Creado |
-
-**Todas las migraciones Liquibase completadas exitosamente (exit code 0)**
-
----
-
-## 4. Servicios de Infraestructura
-
-### MongoDB
-```
-Host: ec2-32-199-154-193.compute-1.amazonaws.com:27017
-Usuario: mongoadmin
-Contraseña: mongopass
-Propósito: Embeddings biométricos (facial/huella)
-Estado: ✅ Healthy
-```
-
-### Redis
-```
-Host: ec2-32-199-154-193.compute-1.amazonaws.com:6379
-Propósito: Caché y sesiones
-Estado: ✅ Healthy
-```
-
-### Apache Kafka (KRaft)
-```
-Host: ec2-32-199-154-193.compute-1.amazonaws.com:9092
-Cluster ID: faceattend-kraft-cluster-id-0001
-Propósito: Event streaming y mensajería
-Estado: ✅ Running
-```
-
-### Portainer CE
-```
-URL: http://ec2-32-199-154-193.compute-1.amazonaws.com:9443
-Propósito: Gestión visual de contenedores Docker
-Estado: ✅ Running
-```
-
----
-
-## 5. Requisitos Previos (Completados)
-
-### ✅ Requisitos de Infraestructura
-- [x] Instancia EC2 t3.xlarge provisionada
-- [x] 150GB EBS gp3 configurado
-- [x] Security groups con puertos abiertos (8000, 8001, 8081-8089, 27017, 6379, 9092)
-- [x] Docker y Docker Compose instalados
-
-### ✅ Preparación de Código
-- [x] back-end/docker-compose.yml actualizado (sin postgres local)
-- [x] JDBC URLs reemplazadas con Neon
-- [x] Archivos Liquibase mapeados correctamente
-
-### ✅ Configuración Neon
-- [x] Cuenta Neon creada
-- [x] Base de datos faceattend_db inicializada
-- [x] Usuario faceattend_db_owner con permisos
-
----
-
-## 6. Procedimiento de Despliegue Ejecutado
-
-### Fase 1: Preparación del Servidor
 ```bash
-# Conectar a EC2
-ssh -i conector-faceattend-edu.pem admin@ec2-32-199-154-193.compute-1.amazonaws.com
-
-# Crear archivo .env.prod con credenciales Neon
-NEON_JDBC_URL=jdbc:postgresql://ep-nameless-wind-b6xj3sjk-pooler.c-2.sa-east-1.aws.neon.tech/faceattend_db?sslmode=require&channel_binding=require
-NEON_USER=faceattend_db_owner
-NEON_PASSWORD=***
-BIND_IP=0.0.0.0
-BIOMETRIC_LIVENESS_CHALLENGE_SECRET=***
+for p in 22 80 443 8000 8001 8081 8086 9092 27017 6379 9443; do
+  nc -z -w 3 <API_DOMAIN> $p && echo "$p ABIERTO" || echo "$p cerrado"
+done
 ```
 
-### Fase 2: Migraciones Liquibase (Neon)
-```bash
-docker compose --env-file .env.prod -f database/docker-compose.neon.yml up
-```
-**Resultado:** 8 migraciones completadas secuencialmente (identity → notification)
-
-### Fase 3: Construcción de Microservicios
-```bash
-docker compose --env-file .env.prod -f back-end/docker-compose.yml up --build -d
-```
-**Resultado:** 9 imágenes Docker construidas exitosamente
-
-### Fase 4: Inicio de Kong + Infraestructura
-```bash
-docker compose --env-file .env.prod \
-  -f docker-compose-simple.yml \
-  -f back-end/docker-compose.yml \
-  up -d
-```
-**Resultado:** 13/13 contenedores en ejecución
+Solo 80 y 443 (y 22 desde la IP del operador) deben responder.
 
 ---
 
-## 7. Estado de Salud de Servicios
+## 3. Secretos de producción (`ENV_PROD_FILE`)
 
-| Servicio | Puerto | Estado | Health |
-|----------|--------|--------|--------|
-| Kong Gateway | 8000 | ✅ UP | Starting |
-| Kong Admin | 8001 | ✅ UP | Starting |
-| ms-identity | 8081 | ✅ UP | Starting |
-| ms-authorization | 8082 | ✅ UP | Starting |
-| ms-academic | 8083 | ✅ UP | Starting |
-| ms-scheduling | 8084 | ✅ UP | Starting |
-| ms-attendance | 8085 | ✅ UP | Starting |
-| ms-biometric | 8086 | ✅ UP | Healthy |
-| ms-configuration | 8087 | ✅ UP | Starting |
-| ms-notification | 8088 | ✅ UP | Healthy |
-| ms-quality | 8089 | ✅ UP | Starting |
-| MongoDB | 27017 | ✅ UP | Healthy |
-| Redis | 6379 | ✅ UP | Healthy |
-| Kafka | 9092 | ✅ UP | Running |
+El workflow `deploy-backend.yml` copia el secret `ENV_PROD_FILE` a `$DEPLOY_DIR/.env.prod`. Compose **falla al arrancar** si falta cualquier contraseña obligatoria (`${VAR:?}`): no existen valores por defecto.
+
+Variables obligatorias (genere cada secreto con `openssl rand -base64 32`):
+
+| Variable | Uso |
+|---|---|
+| `NEON_JDBC_URL`, `NEON_HOST`, `NEON_USER`, `NEON_PASSWORD`, `POSTGRES_DB` | conexión a Neon (copiar del panel de Neon; nunca a este documento) |
+| `POSTGRES_PASSWORD` | requerido por la interpolación del compose base; use el mismo valor que `NEON_PASSWORD` |
+| `MONGO_USER`, `MONGO_PASSWORD` | usuario root de MongoDB (autenticación obligatoria) |
+| `BIOMETRIC_LIVENESS_CHALLENGE_SECRET` | firma de los retos de prueba de vida (≥ 32 caracteres) |
+| `API_DOMAIN` | nombre DNS del host (Caddy) |
+| `BIND_IP=127.0.0.1`, `KONG_PROXY_BIND_IP=127.0.0.1` | perímetro: nada de la aplicación escucha fuera del host |
+| `ONBOARDING_SERVICE_USER_ID` | cuenta de servicio del alta pública de sedes (ver §7) |
+
+Las migraciones (`deploy-database.yml`) leen `NEON_JDBC_URL`, `NEON_USER` y `NEON_PASSWORD` de los secrets del environment `production` y siempre se ejecutan con `--contexts=seed` (catálogos); los changesets `demo` nunca llegan a producción.
 
 ---
 
-## 8. Despliegue de Frontend en Vercel
+## 4. Procedimiento de despliegue
 
-### Pasos para Desplegar
-1. **Crear proyecto en Vercel** (o importar repositorio)
-2. **Rama:** `fix/frontend-mocked-requests`
-3. **Variable de entorno:**
-   ```
-   EXPO_PUBLIC_API_URL=http://ec2-32-199-154-193.compute-1.amazonaws.com:8000
-   ```
-4. **Deploy:** El frontend se conectará automáticamente al Kong API Gateway
+El despliegue es automático al hacer push a `main` (`deploy-production.yml`): CI → migraciones en Neon → backend en EC2 → frontend en Vercel. El script remoto es `.github/scripts/deploy-backend-remote.sh`:
 
-### Flujo de Peticiones
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --remove-orphans
 ```
-Frontend (Vercel)
-    ↓
-Kong API Gateway (8000)
-    ↓
-Microservicio Correspondiente (8081-8089)
-    ↓
-Neon PostgreSQL / MongoDB / Redis
+
+Despliegue manual equivalente (desde el host, con el repo clonado en `DEPLOY_DIR`):
+
+```bash
+ssh -i <llave-del-equipo>.pem admin@<API_DOMAIN>
+cd <DEPLOY_DIR>
+git fetch --prune origin && git checkout --detach <sha>
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --remove-orphans
+docker ps --format "{{.Names}} | {{.Ports}}"   # ningún puerto salvo 80/443 en 0.0.0.0
 ```
 
 ---
 
-## 9. Monitoreo y Mantenimiento
+## 5. Administrador inicial (sin credenciales por defecto)
 
-### Portainer (Gestión de Contenedores)
-```
-URL: https://ec2-32-199-154-193.compute-1.amazonaws.com:9443
-Acceso: SSH tunnel recomendado
-ssh -L 9443:127.0.0.1:9443 admin@ec2-32-199-154-193.compute-1.amazonaws.com
-```
+Las migraciones **no crean ninguna cuenta**. Las cuentas de la versión anterior (`admin.faceattend`, `instructor.faceattend`, `aprendiz.faceattend`), cuyas contraseñas estaban publicadas en el repositorio, quedan deshabilitadas por el changeset `004-disable-seeded-default-accounts` en cuanto corren las migraciones.
 
-### Health Checks
+Crear el primer Super Administrador (una sola vez, desde un equipo con `psql` y acceso a Neon):
+
 ```bash
-# Ver estado de contenedores
+export PSQL="psql <cadena de conexión de Neon, tomada del gestor de secretos>"
+BOOTSTRAP_ADMIN_USERNAME=<usuario> \
+BOOTSTRAP_ADMIN_EMAIL=<correo institucional> \
+BOOTSTRAP_ADMIN_PASSWORD='<contraseña temporal de 12+ caracteres>' \
+  ./database/scripts/bootstrap-admin.sh
+```
+
+Para reactivar la cuenta histórica con una contraseña nueva, en lugar de crear otra:
+
+```bash
+BOOTSTRAP_ADMIN_USERNAME=admin.faceattend BOOTSTRAP_ADMIN_PASSWORD='<nueva>' \
+  ./database/scripts/bootstrap-admin.sh --reset
+```
+
+Garantías:
+- La contraseña viaja como variable de `psql` (`:'pw'`) y se guarda con bcrypt de costo 12; nunca queda en el repositorio ni en una migración.
+- La cuenta nace con `must_change_password = TRUE`: la web, el móvil y el gateway (Kong) obligan a cambiarla en el primer ingreso; hasta entonces el gateway solo permite lecturas y el cambio de clave.
+- El script nunca se ejecuta solo (ni en compose ni en CI).
+
+Comprobación: un login con las credenciales antiguas responde **401**, y el login con la cuenta nueva devuelve `mustChangePassword: true`.
+
+---
+
+## 6. MongoDB: autenticación y rotación de la contraseña
+
+MongoDB arranca con `mongod --auth` y el usuario root sale de `MONGO_USER`/`MONGO_PASSWORD`. `MONGO_INITDB_ROOT_*` solo se aplican **la primera vez** que se crea el volumen, así que cambiar la variable no cambia la contraseña real. Para rotarla en un volumen existente:
+
+```bash
+# En el host, con ambos valores en el entorno (no en el historial: use `read -s`)
+read -s MONGO_OLD_PASSWORD; read -s MONGO_NEW_PASSWORD; export MONGO_USER MONGO_OLD_PASSWORD MONGO_NEW_PASSWORD
+./database/scripts/rotate-mongo-password.sh
+# Actualice MONGO_PASSWORD en el secret ENV_PROD_FILE (y en .env.prod) y recree los consumidores
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --force-recreate mongodb ms-biometric
+```
+
+---
+
+## 7. Alta pública de sedes
+
+`POST /api/v1/onboarding/schools` abre una sesión interna como la cuenta de servicio `ONBOARDING_SERVICE_USER_ID` (un `user_id` de un Super Administrador dedicado, nunca el de una persona). Sin esa variable el endpoint responde 503. Créela con `bootstrap-admin.sh` (usuario propio, contraseña aleatoria que nadie usa) y copie su `user_id` al secret.
+
+---
+
+## 8. Frontend en Vercel
+
+Variable del proyecto en Vercel: `EXPO_PUBLIC_API_URL=https://<API_DOMAIN>`. El flujo es Vercel → `https://<API_DOMAIN>` (Caddy) → Kong → microservicio.
+
+---
+
+## 9. Operación y monitoreo
+
+Todo acceso administrativo va por túnel SSH:
+
+```bash
+ssh -L 9443:127.0.0.1:9443 -L 8001:127.0.0.1:8001 admin@<API_DOMAIN>   # Portainer y Kong admin
 docker ps
-
-# Ver logs de Kong
 docker logs faceattend-kong
-
-# Ver logs de microservicio específico
 docker logs faceattend-ms-identity
-
-# Test Kong
-curl http://ec2-32-199-154-193.compute-1.amazonaws.com:8000/
-```
-
-### Escalado (Futuro)
-Los servicios pueden escalarse horizontalmente añadiendo réplicas en docker-compose.yml:
-```yaml
-services:
-  ms-identity:
-    deploy:
-      replicas: 3
+curl -s -o /dev/null -w '%{http_code}\n' https://<API_DOMAIN>/api/v1/health
 ```
 
 ---
 
 ## 10. Troubleshooting
 
-### Contenedor Restarting
-**Causa:** Healthcheck falla al conectar a dependencias  
-**Solución:** Esperar 30-60 segundos para que los servicios se estabilicen
-
-### Kong no responde
-**Causa:** No detecta microservicios upstream  
-**Solución:** Verificar que todos los microservicios están healthy en `docker ps`
-
-### Conexión Neon fallando
-**Causa:** Credenciales incorrectas o firewall bloqueando  
-**Solución:** Verificar NEON_JDBC_URL, NEON_USER, NEON_PASSWORD en .env.prod
-
-### Frontend no conecta
-**Causa:** EXPO_PUBLIC_API_URL incorrecta  
-**Solución:** Usar `http://ec2-32-199-154-193.compute-1.amazonaws.com:8000` (sin HTTPS)
+| Síntoma | Causa probable | Solución |
+|---|---|---|
+| `docker compose` termina con `... is required` | falta un secreto en `.env.prod` | agregarlo al secret `ENV_PROD_FILE` (ver §3) |
+| Contenedor reiniciando | healthcheck de una dependencia | esperar 30–60 s y revisar `docker logs` |
+| ms-biometric no conecta a Mongo | contraseña rotada solo en un lado | alinear `MONGO_PASSWORD` con la real (§6) |
+| Neon rechaza la conexión | credenciales o host | revisar `NEON_*` en el secret |
+| Login del admin responde 401 | la migración 004 deshabilitó la cuenta histórica | `bootstrap-admin.sh --reset` (§5) |
+| Frontend no conecta | `EXPO_PUBLIC_API_URL` distinta del dominio | usar `https://<API_DOMAIN>` |
 
 ---
 
-## 11. Recursos Consumidos
+## 11. Recursos de referencia
 
-### Almacenamiento
-```
-EBS: 150GB (134GB disponibles)
-Docker Images: ~4GB
-Containers: ~1.5GB
-Databases: ~2GB
-```
-
-### Memoria
-```
-Asignada: 16GB (t3.xlarge)
-Microservicios: ~8GB (4 contenedores Java × 2GB c/u)
-Infraestructura: ~4GB (MongoDB, Kafka, Redis)
-Sistema: ~4GB
-```
-
-### Procesos Clave
-```
-Java (9 microservicios): ~75% CPU pico durante init
-Python (ms-biometric): ~30% CPU
-Nginx/Kong: ~5% CPU
-```
+- EBS 150 GB; imágenes Docker ~4 GB; bases ~2 GB.
+- Memoria 16 GB: microservicios Java ~8 GB, infraestructura ~4 GB.
 
 ---
 
-## 12. Información de Contacto y Soporte
+## 12. Datos sensibles de la instancia
 
-### Configuración de AWS
-- **Región:** us-east-1
-- **Instancia:** ec2-32-199-154-193.compute-1.amazonaws.com
-- **Usuario SSH:** admin
-- **Llave:** conector-faceattend-edu.pem
-
-### Credenciales Almacenadas en EC2
-```
-~/.env.prod (variables de entorno del despliegue)
-```
-
-### Próximos Pasos
-1. ✅ Backend desplegado y operacional
-2. ⏳ Desplegar frontend en Vercel con EXPO_PUBLIC_API_URL
-3. ⏳ Configurar dominio DNS personalizado (si aplica)
-4. ⏳ Implementar HTTPS con certificado (recomendado para producción)
-5. ⏳ Configurar backups automáticos de Neon
-
----
-
-**Despliegue Completado:** 2026-10-16 18:50 UTC  
-**Estado:** ✅ BACKEND PRODUCCIÓN + FRONTEND LISTO PARA DEPLOY  
-**Versión:** 1.0 - Full Backend DDD Microservices + Vercel Frontend
-
+- `.env.prod` vive solo en `$DEPLOY_DIR` del servidor (permisos `600`) y en el secret `ENV_PROD_FILE`.
+- La llave SSH del equipo se guarda en el gestor de secretos; nunca en el repositorio.
+- Rotación: contraseñas de Mongo y Neon cada 6 meses o ante cualquier sospecha de exposición (ver `fae-docs/00-governance/security-policy.md`).
 
 ---
 
@@ -414,7 +281,7 @@ La app habla **solo con Kong** (nunca con la base de datos). `src/config/env.js`
 | Pruebas | `preview` | `https://faceattend-edu.duckdns.org` | dominio de producción (única instancia; no hay staging) |
 | Producción | `production` | `https://faceattend-edu.duckdns.org` | Caddy termina TLS y reenvía a Kong `:8000` (`Caddyfile.prod`) |
 
-Verificado el 2026-10-19: `https://faceattend-edu.duckdns.org/health/quality` → **200** y `http://faceattend-edu.duckdns.org:8000/health/quality` → **200**. La raíz `/` responde 404 porque ese dominio es solo la API (el sitio web vive en Vercel). **Supuesto:** el equipo mantiene ese dominio apuntando a la instancia EC2; el nombre `ec2-…amazonaws.com` de la Parte I no es estable (cambia si se detiene la instancia).
+Producción solo responde por `https://faceattend-edu.duckdns.org` (Caddy, puertos 80/443); el puerto 8000 de Kong ya no es accesible desde Internet (§2). La raíz `/` responde 404 porque ese dominio es solo la API (el sitio web vive en Vercel). **Supuesto:** el equipo mantiene ese dominio apuntando a la instancia EC2; el nombre `ec2-…amazonaws.com` no es estable (cambia si se detiene la instancia).
 
 Cómo se inyecta: EAS **no sube `.env`** (está en `.gitignore`), por eso la URL va en el bloque `env` de cada perfil de `eas.json`. Para un build local con Gradle se usa `front-end/Mobile/.env`.
 
@@ -522,7 +389,7 @@ En un entorno local con el mismo código (no contra producción), 2026-10-19: in
 4. **Ruta heredada:** `LEGACY_ENDPOINT_MAP['face/register']` (`src/api/apiClient.js`) apunta a `/facial/enroll` (requiere vector y permiso de personal). La pantalla actual usa `enroll-image`; no usar esa ruta.
 5. **Fotograma de inscripción:** se enrola el fotograma central de los 18 capturados (`frames[floor(len/2)]`), que cae a mitad de un gesto (parpadeo, giro, boca abierta). Con una foto neutra el reconocimiento fue 0.998; con la cara real en pleno gesto podría bajar. **Sin verificar en dispositivo.** Si el quiosco no te reconoce, probar a inscribir un fotograma neutro.
 6. **OTA no operativa hoy:** falta `expo-updates`, `projectId` y `updates.url`, y `updates.enabled` es `false` (14.3).
-7. **Configuración inconsistente en la Parte I:** esa sección lista el host `ec2-32-199-154-193…` y el archivo de entorno de producción otro (`ec2-77-113-116-1…`); el dominio estable es `faceattend-edu.duckdns.org`. Usa siempre el dominio.
+7. **Host de la instancia:** el nombre `ec2-…amazonaws.com` cambia si se detiene la instancia; el dominio estable es `faceattend-edu.duckdns.org`. Usa siempre el dominio.
 8. **`newArchEnabled: false`** en `app.json` con RN 0.86 y `react-native-reanimated 4` (que exige la arquitectura nueva): el APK compila, pero no se ha ejecutado en dispositivo. Verificar al probar.
 
 ### 19.5 Supuestos explícitos
