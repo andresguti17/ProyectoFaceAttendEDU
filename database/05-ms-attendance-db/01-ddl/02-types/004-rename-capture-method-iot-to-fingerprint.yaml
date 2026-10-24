@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-011-rename-capture-method-iot-to-fingerprint
+      author: Andres Gutierrez
+      splitStatements: false
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: "1"
+            sql: >
+              SELECT count(*) FROM pg_enum e
+              JOIN pg_type t ON t.oid = e.enumtypid
+              JOIN pg_namespace n ON n.oid = t.typnamespace
+              WHERE n.nspname = 'attendance' AND t.typname = 'capture_method' AND e.enumlabel = 'IOT'
+      changes:
+        - sql:
+            sql: ALTER TYPE attendance.capture_method RENAME VALUE 'IOT' TO 'FINGERPRINT'
+      rollback:
+        - sql:
+            sql: ALTER TYPE attendance.capture_method RENAME VALUE 'FINGERPRINT' TO 'IOT'

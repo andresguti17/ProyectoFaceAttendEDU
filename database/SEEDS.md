@@ -210,7 +210,7 @@ databaseChangeLog:
 | Academic | `enrollment_status` | Active, Withdrawn, Completed |
 | Scheduling | `class_session_status` | Open, Closed, Cancelled |
 | Attendance | `attendance_status` | Present, Absent, Late, Justified |
-| Attendance | `capture_method` | FACIAL, MANUAL, IOT, IMPORT |
+| Attendance | `capture_method` | FACIAL, MANUAL, FINGERPRINT, IMPORT |
 | Attendance | `review_status` | Pending, Approved, Rejected |
 | Configuration | `biometric_type` | FACIAL, FINGERPRINT |
 | Configuration | `update_status` | Pending, In_Review, Approved, Rejected |

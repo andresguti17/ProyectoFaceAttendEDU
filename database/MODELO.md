@@ -7,7 +7,7 @@ FaceAttend-Edu es una plataforma de **gestión de asistencia mediante reconocimi
 - Gestión de personas, usuarios y credenciales
 - Estructura académica (sedes, programas, cohortes, cursos)
 - Horarios y sesiones de clase
-- Registro de asistencia con múltiples fuentes (facial, manual, IoT, import)
+- Registro de asistencia con múltiples fuentes (facial, manual, huella, import (carga masiva))
 - Justificaciones con soporte documental
 - Actualización de plantillas biométricas con flujo de aprobación (biometric_update_case unifica FACIAL/FINGERPRINT)
 - Alertas y notificaciones
@@ -157,7 +157,7 @@ enrollment → cohort
 
 **ENUMs:**
 - `attendance_status`: Present, Absent, Late, Justified
-- `capture_method`: FACIAL, MANUAL, IOT, IMPORT
+- `capture_method`: FACIAL, MANUAL, FINGERPRINT, IMPORT
 - `review_status`: Pending, Approved, Rejected
 
 ---
@@ -299,7 +299,7 @@ authorization.user_role                        enrollment │
 | Academic | `enrollment_status` | Active, Withdrawn, Completed |
 | Scheduling | `class_session_status` | Open, Closed, Cancelled |
 | Attendance | `attendance_status` | Present, Absent, Late, Justified |
-| Attendance | `capture_method` | FACIAL, MANUAL, IOT, IMPORT |
+| Attendance | `capture_method` | FACIAL, MANUAL, FINGERPRINT, IMPORT |
 | Attendance | `review_status` | Pending, Approved, Rejected |
 | Configuration | `biometric_type` | FACIAL, FINGERPRINT |
 | Configuration | `update_status` | Pending, In_Review, Approved, Rejected |
