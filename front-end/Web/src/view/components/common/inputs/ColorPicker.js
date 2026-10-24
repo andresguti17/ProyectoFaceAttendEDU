@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 /**
@@ -83,6 +84,7 @@ export function ColorPicker({
   style,
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   const handleSelect = (color) => {
     if (disabled) return;
@@ -170,7 +172,7 @@ export function ColorPicker({
 
       {error && errorMessage && (
         <Text style={[styles.message, { color: theme.colors.status.error }]}>
-          {errorMessage}
+          {t(errorMessage)}
         </Text>
       )}
     </View>

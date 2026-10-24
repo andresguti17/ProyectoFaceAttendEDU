@@ -14,6 +14,7 @@ import React from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../../components/hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 /**
@@ -29,6 +30,7 @@ export default function CoursesLoadingFooter({
     completeMessage = "¡Ya llegaste hasta el final de la lista!",
 }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const c = theme.colors;
 
     return (
@@ -54,7 +56,7 @@ export default function CoursesLoadingFooter({
                 <View style={styles.completeContainer}>
                     <Feather name="check-circle" size={16} color={c.status.success} />
                     <Text style={[styles.message, { color: c.text.secondary }]}>
-                        {completeMessage}
+                        {t(completeMessage)}
                     </Text>
                 </View>
             )}

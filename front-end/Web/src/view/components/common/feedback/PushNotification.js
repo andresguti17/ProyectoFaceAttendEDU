@@ -21,6 +21,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from "re
 import { Feather } from "@expo/vector-icons";
 import tinycolor from "tinycolor2";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { getContrastTextColor } from "../../../../core/utils/colorHelpers";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 import { getInstitutionConfig } from "../../../../core/config/institutionConfig";
@@ -620,6 +621,7 @@ const calculateColorsForTime = (seconds, themeColors) => {
 
 function PushNotificationItem({ notification, onDismiss, onNavigate }) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const c = theme.colors;
   const [animation] = useState(new Animated.Value(0));
   const [progressAnim] = useState(new Animated.Value(1));
@@ -820,7 +822,7 @@ function PushNotificationItem({ notification, onDismiss, onNavigate }) {
               style={[styles.title, { color: config.textColor }]}
               numberOfLines={1}
             >
-              {notification.title}
+              {t(notification.title)}
             </Text>
             
             {/* Mini contador (solo si showTimer es true) */}
@@ -873,7 +875,7 @@ function PushNotificationItem({ notification, onDismiss, onNavigate }) {
             style={[styles.message, { color: config.textColor }]}
             numberOfLines={2}
           >
-            {notification.message}
+            {t(notification.message)}
           </Text>
 
           {/* NO ACTION BUTTONS - Solo auto-dismiss */}

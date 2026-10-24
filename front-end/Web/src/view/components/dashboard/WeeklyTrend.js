@@ -270,7 +270,7 @@ export function WeeklyTrend({
                             items={dropdownItems}
                             value={selectedPeriod.id}
                             onSelect={handlePeriodSelect}
-                            placeholder="Selecciona período"
+                            placeholder={t("Selecciona período")}
                             triggerHeight={36}
                             maxVisible={6}
                         />

@@ -13,6 +13,7 @@ import React from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../hooks/useTheme";
+import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { 
     getPasswordStrength, 
     getPasswordStrengthLevel 
@@ -79,6 +80,7 @@ export default function PasswordStrengthIndicator({ password, show = false }) {
  * Item individual de requisito con animación de tachado y colapso
  */
 function RequirementItem({ requirement, colors }) {
+    const { t } = useTranslation();
     // Estado de completado local
     const [isCompleted, setIsCompleted] = React.useState(requirement.test);
     const [shouldRender, setShouldRender] = React.useState(true);
@@ -170,7 +172,7 @@ function RequirementItem({ requirement, colors }) {
                         textDecorationLine: isCompleted ? 'line-through' : 'none',
                     }
                 ]}>
-                    {requirement.label}
+                    {t(requirement.label)}
                 </Text>
             </View>
         </Animated.View>
