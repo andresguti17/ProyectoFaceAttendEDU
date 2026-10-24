@@ -86,47 +86,6 @@ registerFacePerson: {
         marginTop: 10,
     },
 
-livenessBanner: {
-        position: 'absolute',
-        left: 12,
-        right: 12,
-        bottom: 12,
-        borderRadius: 14,
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-        backgroundColor: 'rgba(15, 23, 42, 0.78)',
-        alignItems: 'center',
-    },
-
-livenessLabel: {
-        color: '#94A3B8',
-        fontSize: 11,
-        fontWeight: '700',
-        letterSpacing: 1,
-    },
-
-livenessAction: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: '700',
-        marginTop: 4,
-        textAlign: 'center',
-    },
-
-livenessProgress: {
-        color: '#CBD5E1',
-        fontSize: 12,
-        marginTop: 4,
-    },
-
-registerFacePerson: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#1E293B',
-        textAlign: 'center',
-        marginTop: 10,
-    },
-
 registerFaceActions: {
         marginTop: 25,
         gap: 10,
