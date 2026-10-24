@@ -1,51 +1,27 @@
 // ============================================================
 //  FaceAttend EDU — Staff provisioning (teacher/admin registration)
 //
-//  Cadena de alta verificada contra el backend:
-//  1. POST /api/v1/persons          (PersonDto, camelCase)
-//  2. POST /api/v1/users            (CreateUserRequest: personId, username, password)
-//  3. POST /api/v1/users/{id}/roles ({roleId}, resuelto por nombre)
-//  4. Solo docentes: POST /api/v1/academic-actors (actorTypeId 2 = INSTRUCTOR)
-//     Solo admins:    POST /api/v1/academic-actors (actorTypeId 3 = ADMIN,
-//                     vínculo admin→sede para acotar su sesión)
-//
-//  Los admins no llevan academic_actor: la identidad es agnóstica de
-//  sede (AGENTS.md §2.6) y el actor solo existe para STUDENT/INSTRUCTOR.
+//  Una sola llamada: POST /api/v1/users/provision. identity crea persona y
+//  usuario y pide a academic el actor (y la matrícula del aprendiz) y a
+//  authorization el rol, con la sesión de quien llama. Si un paso falla, el
+//  servidor deshace los anteriores: no quedan filas huérfanas ni hay
+//  compensación en el navegador.
+//  Tipos de actor: 1 = aprendiz, 2 = instructor, 3 = administrador de sede.
 // ============================================================
 
 import { authApi } from "./authApi";
 import { generateTemporaryPassword } from "../../core/utils/passwordGenerator";
 import { academicApi } from "./academicApi";
-import { authorizationApi } from "./authorizationApi";
 import { listBlocks, listCohorts, listCourses, listPrograms, personMap, resetReferenceData } from "./referenceData";
 
-// Nombres de rol aceptados (ES actuales + legados EN): los IDs
-// autoincrementales dependen del seed, nunca se hardcodean.
-// "Super Administrador" queda FUERA a propósito: el alta por UI nunca
-// otorga el rol global (solo se asigna desde la matriz existente o por
-// cambio de rol de un super, HU-IAM-010).
-const ROLE_ALIASES = {
-    admin: new Set(["administrador", "school admin"]),
-    teacher: new Set(["instructor"]),
-    student: new Set(["aprendiz", "student"]),
+// Rol que pide la UI -> rol del catálogo y tipo de actor académico. "Super
+// Administrador" queda FUERA a propósito: el alta por UI nunca otorga el rol
+// global (el servidor también lo rechaza).
+const ROLE_BY_KIND = {
+    admin: { roleName: "Administrador", actorTypeId: 3 },
+    teacher: { roleName: "Instructor", actorTypeId: 2 },
+    student: { roleName: "Aprendiz", actorTypeId: 1 },
 };
-
-function normalizeRoleName(name) {
-    return String(name ?? "")
-        .trim()
-        .toLowerCase()
-        .replace(/_/g, " ")
-        .replace(/\s+/g, " ");
-}
-
-function resolveRoleId(roles, kind) {
-    const list = Array.isArray(roles) ? roles : roles?.content ?? [];
-    const aliases = ROLE_ALIASES[kind] ?? new Set();
-    const found = list.find((r) =>
-        aliases.has(normalizeRoleName(r?.roleName ?? r?.role_name))
-    );
-    return found?.roleId ?? found?.role_id ?? null;
-}
 
 function splitName(fullName) {
     const parts = String(fullName ?? "").trim().split(/\s+/).filter(Boolean);
@@ -217,11 +193,8 @@ async function resolveSchoolId(explicit) {
 }
 
 /**
- * Crea persona + actor + usuario + rol (en ese orden para poder
- * compensar: el actor se crea antes que el usuario porque el usuario
- * no tiene endpoint de borrado).
- * Si algo falla tras crear la persona, se intenta borrar el actor y
- * la persona para no dejar huérfanos en identity/academic.
+ * Alta de docente o administrador de sede en una sola llamada al servidor.
+ * El servidor deshace todo si un paso falla (persona, usuario, actor, rol).
  */
 export async function provisionStaff({
     name,
@@ -234,81 +207,38 @@ export async function provisionStaff({
     details = {},
     sendCredentials = false,
 }) {
+    const target = ROLE_BY_KIND[role];
+    if (!target || role === "student") throw new Error("Unsupported staff role");
     const { name: firstName, lastName } = splitName(name);
     await assertPersonUnique({ documentNumber, email });
-    const person = await authApi.createPerson({
-        documentNumber: String(documentNumber).trim(),
-        name: firstName,
-        lastName,
-        email: String(email).trim().toLowerCase(),
-        status: true,
-        ...personDetails(details),
+    const targetSchoolId = await resolveSchoolId(schoolId);
+    const requestedUsername = usernameFromEmail(email);
+    const result = await authApi.provisionUser({
+        person: {
+            documentNumber: String(documentNumber).trim(),
+            name: firstName,
+            lastName,
+            email: String(email).trim().toLowerCase(),
+            status: true,
+            ...personDetails(details),
+        },
+        username: requestedUsername,
+        password,
+        sendCredentials,
+        roleName: target.roleName,
+        academicActor: { actorTypeId: target.actorTypeId, schoolId: targetSchoolId, actorCode: String(code).trim() },
     });
-    const personId = person?.personId ?? person?.person_id ?? null;
-    if (!personId) throw new Error("Person creation returned no id");
 
-    let actorId = null;
-    try {
-        if (role === "teacher" || role === "admin") {
-            // INSTRUCTOR en docentes, ADMIN vinculado a sede en admins:
-            // la sesión queda acotada a la sede elegida en vez de global.
-            const targetSchoolId = await resolveSchoolId(schoolId);
-            const actor = await academicApi.createActor({
-                personId,
-                actorTypeId: role === "teacher" ? 2 : 3,
-                schoolId: targetSchoolId,
-                actorCode: String(code).trim(),
-                startedOn: new Date().toISOString().slice(0, 10),
-                status: true,
-            });
-            actorId = actor?.academicActorId ?? actor?.academic_actor_id ?? null;
-        }
-
-        const requestedUsername = usernameFromEmail(email);
-        const user = await authApi.createUser({
-            personId,
-            username: requestedUsername,
-            password,
-            authenticationType: "Local",
-            sendCredentials,
-        });
-        const userId = user?.userId ?? user?.user_id ?? null;
-        if (!userId) throw new Error("User creation returned no id");
-
-        const roles = await authorizationApi.listRoles();
-        const roleId = resolveRoleId(roles, role);
-        if (roleId != null) {
-            await authorizationApi.assignRole(userId, roleId);
-        }
-
-        // listActors()/personMap()/userByPersonMap() de referenceData.js se
-        // memorizan por sesión: sin esto, loadUsers() seguiría devolviendo
-        // la lista de antes de crear esta persona.
-        resetReferenceData();
-
-        // El username real es el que confirma el backend, no el campo "código"
-        // del formulario (que nunca se envía como username): el espejo local
-        // debe usar este valor o la fila queda duplicada frente a la que
-        // trae el siguiente loadUsers().
-        return {
-            personId,
-            userId,
-            username: user?.username ?? requestedUsername,
-            credentialsEmail: user?.credentialsEmail ?? null,
-        };
-    } catch (err) {
-        try {
-            if (actorId != null) await academicApi.deleteActor(actorId);
-        } catch {
-            // La compensación es best-effort: se propaga el error original.
-        }
-        try {
-            await authApi.deletePerson(personId);
-        } catch {
-            // La compensación es best-effort: se propaga el error original.
-        }
-        throw err;
-    }
+    // listActors()/personMap()/userByPersonMap() de referenceData.js se
+    // memorizan por sesión: sin esto, loadUsers() seguiría devolviendo
+    // la lista de antes de crear esta persona.
+    resetReferenceData();
+    return {
+        personId: result?.personId ?? null,
+        userId: result?.userId ?? null,
+        username: result?.username ?? requestedUsername,
+        credentialsEmail: result?.credentialsEmail ?? null,
+    };
 }
 
 /**
@@ -320,14 +250,9 @@ export function credentialsNotice(form, provisioned) {
     return { credentialsEmail: provisioned?.credentialsEmail ?? "FAILED" };
 }
 
-function enrollmentIdOf(response) {
-    return response?.enrollmentId ?? response?.enrollment_id ?? response?.id ?? null;
-}
-
 /**
- * Crea estudiante completo: persona + actor STUDENT + matrícula +
- * usuario + rol. Orden compensable (matrícula, actor y persona tienen
- * DELETE; el usuario no).
+ * Alta de estudiante completo (persona + actor + matrícula + usuario + rol) en
+ * una sola llamada; el servidor deshace todo si un paso falla.
  * @throws si el curso no tiene fichas vigentes o falta la ficha.
  */
 export async function provisionStudent({
@@ -358,79 +283,38 @@ export async function provisionStudent({
 
     const { name: firstName, lastName } = splitName(name);
     await assertPersonUnique({ documentNumber, email });
-    const person = await authApi.createPerson({
-        documentNumber: String(documentNumber).trim(),
-        name: firstName,
-        lastName,
-        email: String(email).trim().toLowerCase(),
-        status: true,
-        ...personDetails(details),
-    });
-    const personId = person?.personId ?? person?.person_id ?? null;
-    if (!personId) throw new Error("Person creation returned no id");
-
-    let actorId = null;
-    let enrollmentId = null;
-    try {
-        const actor = await academicApi.createActor({
-            personId,
-            actorTypeId: 1,
+    const result = await authApi.provisionUser({
+        person: {
+            documentNumber: String(documentNumber).trim(),
+            name: firstName,
+            lastName,
+            email: String(email).trim().toLowerCase(),
+            status: true,
+            ...personDetails(details),
+        },
+        username: usernameFromEmail(email),
+        password,
+        sendCredentials,
+        roleName: ROLE_BY_KIND.student.roleName,
+        academicActor: {
+            actorTypeId: ROLE_BY_KIND.student.actorTypeId,
             schoolId: target.schoolId,
             actorCode: String(code).trim(),
-            startedOn: new Date().toISOString().slice(0, 10),
-            status: true,
-        });
-        actorId = actor?.academicActorId ?? actor?.academic_actor_id ?? null;
-        if (actorId == null) throw new Error("Actor creation returned no id");
-
-        const enrollment = await academicApi.createEnrollment({
-            academicActorId: actorId,
             cohortId: target.cohortId,
-            enrolledOn: new Date().toISOString().slice(0, 10),
-            enrollmentStatus: "Active",
-        });
-        enrollmentId = enrollmentIdOf(enrollment);
+        },
+    });
 
-        const user = await authApi.createUser({
-            personId,
-            username: usernameFromEmail(email),
-            password,
-            authenticationType: "Local",
-            sendCredentials,
-        });
-        const userId = user?.userId ?? user?.user_id ?? null;
-        if (!userId) throw new Error("User creation returned no id");
-
-        const roles = await authorizationApi.listRoles();
-        const roleId = resolveRoleId(roles, "student");
-        if (roleId != null) {
-            await authorizationApi.assignRole(userId, roleId);
-        }
-
-        // La importación masiva pasa resetCache=false: resetear la caché de
-        // referencia en CADA fila recargaba persons/courses/cohorts por
-        // estudiante y reventaba el rate-limit de Kong (60 req/min en
-        // identity) a mitad de la tanda, dejando altas a medias.
-        if (resetCache) resetReferenceData();
-        return {
-            personId,
-            userId,
-            actorId,
-            cohortId: target.cohortId,
-            credentialsEmail: user?.credentialsEmail ?? null,
-        };
-    } catch (err) {
-        try {
-            if (enrollmentId != null) await academicApi.deleteEnrollment(enrollmentId);
-        } catch {}
-        try {
-            if (actorId != null) await academicApi.deleteActor(actorId);
-        } catch {}
-        try {
-            await authApi.deletePerson(personId);
-        } catch {}
-        throw err;
-    }
+    // La importación masiva pasa resetCache=false: resetear la caché de
+    // referencia en CADA fila recargaba persons/courses/cohorts por
+    // estudiante y reventaba el rate-limit de Kong a mitad de la tanda.
+    if (resetCache) resetReferenceData();
+    return {
+        personId: result?.personId ?? null,
+        userId: result?.userId ?? null,
+        actorId: result?.academicActorId ?? null,
+        cohortId: target.cohortId,
+        credentialsEmail: result?.credentialsEmail ?? null,
+    };
 }
 
 // Contraseña de respaldo para altas masivas SIN envío de credenciales: la
@@ -513,10 +397,8 @@ export async function importStudents(drafts, { sendCredentials = true } = {}) {
         } catch (e) {
             errors.push({ student: label, reason: importErrorReason(e) });
         }
-        // Pausa entre filas: cada estudiante cuesta 3 llamadas a identity y
-        // el rate-limit del gateway es 60 req/min; sin este ritmo la tanda
-        // reventaba el límite a mitad de importación (429) y dejaba alumnos
-        // creados a medias (persona/actor sin usuario).
+        // Pausa entre filas para no saturar el rate-limit del gateway. Ya no
+        // quedan altas a medias: el servidor deshace una fila que falla.
         if (i < rows.length - 1) await new Promise((r) => setTimeout(r, 2600));
     }
     return { success, errors, credentials };

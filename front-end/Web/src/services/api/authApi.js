@@ -93,7 +93,6 @@ export const authApi = {
     getPerson: (id) => request(endpoints.identity.personById(id), { method: "GET" }),
     createPerson: (b) => request(endpoints.identity.persons, { method: "POST", body: b }),
     updatePerson: (id, b) => request(endpoints.identity.personById(id), { method: "PUT", body: b }),
-    deletePerson: (id) => request(endpoints.identity.personById(id), { method: "DELETE" }),
     setPersonStatus: (id, status) =>
         request(endpoints.identity.personStatus(id), { method: "PATCH", query: { status } }),
 
@@ -103,6 +102,8 @@ export const authApi = {
     getUserByUsername: (username) =>
         request(endpoints.identity.users, { method: "GET", query: { username } }),
     createUser: (b) => request(endpoints.identity.users, { method: "POST", body: b }),
+    // Alta compuesta en el servidor (persona + usuario + actor + matrícula + rol, con compensación).
+    provisionUser: (b) => request(endpoints.identity.usersProvision, { method: "POST", body: b, timeoutMs: 60000 }),
     updateUser: (id, b) => request(endpoints.identity.userById(id), { method: "PUT", body: b }),
     deleteUser: (id) => request(endpoints.identity.userById(id), { method: "DELETE" }),
     setUserStatus: (id, status) =>

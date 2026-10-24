@@ -50,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(controllers = UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import(UserWebMapper.class)
+@Import({UserWebMapper.class, com.faceattend_edu.identity_service.adapter.in.web.mapper.PersonWebMapper.class})
 @DisplayName("UserController HTTP tests (MockMvc)")
 class UserControllerTest {
 
@@ -71,6 +71,8 @@ class UserControllerTest {
     private ActivateUserUseCase activateUserUseCase;
     @MockitoBean
     private NotifyUserCredentialsUseCase notifyUserCredentialsUseCase;
+    @MockitoBean
+    private com.faceattend_edu.identity_service.application.port.in.ProvisionUserUseCase provisionUserUseCase;
 
     private UUID personId;
     private UUID userId;
@@ -331,6 +333,44 @@ class UserControllerTest {
                     .andExpect(status().isNoContent());
 
             verify(changeUserStatusUseCase).changeStatus(userId, false);
+        }
+    }
+
+    @org.junit.jupiter.api.Nested
+    @org.junit.jupiter.api.DisplayName("POST /api/v1/users/provision")
+    class ProvisionTests {
+
+        private static final String BODY = """
+                {"person":{"documentNumber":"1001","name":"Ana","lastName":"Rios","email":"ana@sede.edu.co"},
+                 "username":"ana.rios","password":"Temporal-2026","sendCredentials":false,"roleName":"Aprendiz",
+                 "academicActor":{"actorTypeId":1,"schoolId":4,"actorCode":"APR-1001","cohortId":9}}""";
+
+        @org.junit.jupiter.api.Test
+        void provisionsWithTheCallerSessionAndAnswers201() throws Exception {
+            UUID newPerson = UUID.randomUUID();
+            UUID newUser = UUID.randomUUID();
+            org.mockito.Mockito.when(provisionUserUseCase.provision(org.mockito.ArgumentMatchers.any(),
+                            org.mockito.ArgumentMatchers.eq("11111111-2222-3333-4444-555555555555")))
+                    .thenReturn(new com.faceattend_edu.identity_service.application.port.in.ProvisionUserUseCase.Result(
+                            newPerson, newUser, "ana.rios", 30L, 40L, null));
+
+            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/v1/users/provision")
+                            .header("Authorization", "Bearer 11111111-2222-3333-4444-555555555555")
+                            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                            .content(BODY))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isCreated())
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.userId").value(newUser.toString()))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.enrollmentId").value(40));
+        }
+
+        @org.junit.jupiter.api.Test
+        void aMissingPersonIsRejectedBeforeAnyCall() throws Exception {
+            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/v1/users/provision")
+                            .header("Authorization", "Bearer 11111111-2222-3333-4444-555555555555")
+                            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                            .content("{\"username\":\"x\",\"password\":\"Temporal-2026\",\"roleName\":\"Aprendiz\"}"))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest());
+            org.mockito.Mockito.verifyNoInteractions(provisionUserUseCase);
         }
     }
 }
