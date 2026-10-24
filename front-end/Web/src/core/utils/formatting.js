@@ -125,21 +125,35 @@ export function normalizeText(text) {
  */
 export function slugify(text) {
   if (!text) return "";
-  return text
-    .toString()
-    .toLowerCase()
-    .trim()
-    // Normalizar caracteres con acentos/tildes
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    // Reemplazar espacios con guiones
-    .replace(/\s+/g, "-")
-    // Eliminar caracteres especiales excepto letras, números y guiones
-    .replace(/[^\w\-]+/g, "")
-    // Eliminar guiones múltiples
-    .replace(/\-\-+/g, "-")
-    // Eliminar guiones al inicio y final
-    .replace(/^-+|-+$/g, "");
+  return trimDashes(
+    text
+      .toString()
+      .toLowerCase()
+      .trim()
+      // Normalizar caracteres con acentos/tildes
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      // Reemplazar espacios con guiones
+      .replace(/\s+/g, "-")
+      // Eliminar caracteres especiales excepto letras, números y guiones
+      .replace(/[^\w\-]+/g, "")
+      // Eliminar guiones múltiples
+      .replace(/\-\-+/g, "-"),
+  );
+}
+
+/**
+ * Quita los guiones del inicio y del final en una sola pasada:
+ * /^-+|-+$/g retrocede de forma cuadrática con rachas largas de guiones.
+ * @param {string} text
+ * @returns {string}
+ */
+export function trimDashes(text) {
+  let start = 0;
+  let end = text.length;
+  while (start < end && text[start] === "-") start += 1;
+  while (end > start && text[end - 1] === "-") end -= 1;
+  return text.slice(start, end);
 }
 
 /**

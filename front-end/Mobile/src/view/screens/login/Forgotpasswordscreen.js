@@ -20,6 +20,7 @@ import ReturnButton from '../../components/auth/ReturnButton';
 import {VerificationService, VerificationError} from '../../../services/verificationService';
 import {VerificationErrorType} from '../../../services/constants/auths';
 import {createLoginStyles} from '../Styles/Forgotpasswordscreen/Style';
+import {validateEmail} from '../../../utils/validators';
 
 const COOLDOWN_MS = 60000;
 const REQUEST_TIMEOUT_MS = 15000;
@@ -28,8 +29,7 @@ const FOCUS_DELAY_MS = 400;
 
 function isValidEmail(email) {
     if (!email || typeof email !== 'string') return false;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email.trim());
+    return validateEmail(email.trim());
 }
 
 function initializeLayoutAnimations() {

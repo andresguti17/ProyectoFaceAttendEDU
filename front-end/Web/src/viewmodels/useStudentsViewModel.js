@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { provisionStudent, credentialsNotice } from "../services/api/staffProvisioning";
+import { isValidEmail } from "../core/utils/validation";
 
 // ── Tipos de formulario ───────────────────────────────────
 
@@ -67,7 +68,7 @@ export function validateStudentFormDetailed(form) {
     
     if (!form.email.trim()) {
         errors.push({ field: 'email', message: 'El correo electrónico es requerido' });
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    } else if (!isValidEmail(form.email.trim())) {
         errors.push({ field: 'email', message: 'El formato del correo electrónico no es válido' });
     }
     

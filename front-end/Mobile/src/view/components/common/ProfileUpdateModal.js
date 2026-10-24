@@ -19,6 +19,7 @@ import PrimaryButton from '../auth/PrimaryButton';
 import {createCommonStyles} from './style/Style';
 import {PersonService} from '../../../services/PersonService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {validateEmail} from '../../../utils/validators';
 
 export default function ProfileUpdateModal({ userInfo = {}, personId = null, onSaved = null }) {
     const { t } = useTranslation();
@@ -59,10 +60,6 @@ export default function ProfileUpdateModal({ userInfo = {}, personId = null, onS
         resetProfileForm();
     };
 
-    const validateEmail = (email) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    };
 
     const handleProfileUpdate = async () => {
         setProfileError('');

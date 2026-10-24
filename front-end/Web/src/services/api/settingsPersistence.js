@@ -17,6 +17,7 @@ import {
     saveInstitutionConfig,
 } from "../../core/config/institutionConfig";
 import { normalizeAcademicPeriodType } from "../../core/constants/academicPeriods";
+import { trimDashes } from "../../core/utils/formatting";
 import { academicApi } from "./academicApi";
 import { configurationApi } from "./configurationApi";
 
@@ -187,12 +188,11 @@ export async function loadBackendOverrides(schoolId) {
 }
 
 const slugify = (text) =>
-    String(text)
+    trimDashes(String(text)
         .normalize("NFD")
         .replace(/[̀-ͯ]/g, "")
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
+        .replace(/[^a-z0-9]+/g, "-"));
 
 function storedConfigSchool() {
     try {
