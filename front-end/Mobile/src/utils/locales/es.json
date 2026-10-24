@@ -1367,5 +1367,16 @@
     "revokeConfirm": "Se eliminarán tus plantillas de rostro y huella. ¿Continuar?",
     "revokeButton": "Revocar y eliminar mis datos biométricos",
     "revoked": "Autorización revocada y datos biométricos eliminados."
+  },
+  "push": {
+    "permission": {
+      "title": "Notificaciones de alertas",
+      "body": "FaceAttend EDU te avisará en este dispositivo cuando tengas una alerta nueva, como el resultado de una justificación. A continuación el sistema te pedirá permiso."
+    },
+    "denied": {
+      "title": "Notificaciones desactivadas",
+      "body": "No recibirás avisos de alertas en este dispositivo. Para activarlos, abre los ajustes del sistema, entra en FaceAttend EDU > Notificaciones y permítelas. Mientras tanto, tus alertas siguen en Novedades.",
+      "open_settings": "Abrir ajustes"
+    }
   }
 }
