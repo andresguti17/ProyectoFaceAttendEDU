@@ -52,28 +52,43 @@ services:
       configuration-liquibase:
         condition: service_completed_successfully
 
+  db-service-logins:
+    depends_on:
+      notification-liquibase:
+        condition: service_completed_successfully
+
   ms-identity:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       identity-liquibase:
         condition: service_completed_successfully
 
   ms-authorization:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       authorization-liquibase:
         condition: service_completed_successfully
 
   ms-academic:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       academic-liquibase:
         condition: service_completed_successfully
 
   ms-scheduling:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       scheduling-liquibase:
         condition: service_completed_successfully
 
   ms-attendance:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       attendance-liquibase:
         condition: service_completed_successfully
 
@@ -84,11 +99,15 @@ services:
 
   ms-configuration:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       configuration-liquibase:
         condition: service_completed_successfully
 
   ms-notification:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       notification-liquibase:
         condition: service_completed_successfully
 
@@ -96,6 +115,8 @@ services:
   # database is migrated (postgres is healthy through the liquibase chain).
   ms-quality:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       notification-liquibase:
         condition: service_completed_successfully
 

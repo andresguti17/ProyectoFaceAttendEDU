@@ -75,6 +75,25 @@ jobs:
           done
           exit $failed
 
+      # Un usuario por microservicio, miembro del rol de su esquema (03-dcl): cada
+      # servicio solo puede leer y escribir su propio esquema. Idempotente.
+      - name: Usuarios de base de datos por servicio
+        env:
+          IDENTITY_DB_PASSWORD: ${{ secrets.IDENTITY_DB_PASSWORD }}
+          AUTHORIZATION_DB_PASSWORD: ${{ secrets.AUTHORIZATION_DB_PASSWORD }}
+          ACADEMIC_DB_PASSWORD: ${{ secrets.ACADEMIC_DB_PASSWORD }}
+          SCHEDULING_DB_PASSWORD: ${{ secrets.SCHEDULING_DB_PASSWORD }}
+          ATTENDANCE_DB_PASSWORD: ${{ secrets.ATTENDANCE_DB_PASSWORD }}
+          CONFIGURATION_DB_PASSWORD: ${{ secrets.CONFIGURATION_DB_PASSWORD }}
+          QUALITY_DB_PASSWORD: ${{ secrets.QUALITY_DB_PASSWORD }}
+          NOTIFICATION_DB_PASSWORD: ${{ secrets.NOTIFICATION_DB_PASSWORD }}
+        run: |
+          # libpq URL desde la JDBC (sin credenciales: van por PGUSER/PGPASSWORD).
+          export PGUSER="$NEON_USER" PGPASSWORD="$NEON_PASSWORD"
+          export PSQL="psql ${NEON_JDBC_URL#jdbc:}"
+          sudo apt-get install -y -qq postgresql-client >/dev/null
+          bash database/scripts/create-service-logins.sh
+
       - name: Limpiar contenedores
         if: always()
         working-directory: database

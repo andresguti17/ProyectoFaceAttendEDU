@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: dcl-001-service-role-scheduling
+      author: FaceAttendEDU
+      # Re-applied on every update so tables added later are covered too (all statements are idempotent).
+      runAlways: true
+      comment: >-
+        Data isolation per service: svc_scheduling (NOLOGIN) may only read and write the scheduling
+        schema. The service logs in with its own user, member of this role, created by
+        database/scripts/create-service-logins.sh (passwords from the environment, never here).
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              DO $$
+              BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'svc_scheduling') THEN
+                  CREATE ROLE svc_scheduling NOLOGIN;
+                END IF;
+              END
+              $$;
+        - sql:
+            splitStatements: true
+            sql: |
+              REVOKE ALL ON SCHEMA "scheduling" FROM PUBLIC;
+              GRANT USAGE ON SCHEMA "scheduling" TO svc_scheduling;
+              GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA "scheduling" TO svc_scheduling;
+              GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA "scheduling" TO svc_scheduling;
+              GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA "scheduling" TO svc_scheduling;
+              ALTER DEFAULT PRIVILEGES IN SCHEMA "scheduling" GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO svc_scheduling;
+              ALTER DEFAULT PRIVILEGES IN SCHEMA "scheduling" GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO svc_scheduling;
+      rollback:
+        - sql:
+            sql: SELECT 1

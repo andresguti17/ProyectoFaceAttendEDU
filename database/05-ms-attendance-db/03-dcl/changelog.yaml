@@ -1,1 +1,4 @@
-databaseChangeLog: []
+databaseChangeLog:
+  - include:
+      file: 001-service-roles.yaml
+      relativeToChangelogFile: true

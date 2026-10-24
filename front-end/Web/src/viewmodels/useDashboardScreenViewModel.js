@@ -40,7 +40,6 @@ const ALL_TABS = [
         // Sub-secciones de reportes
         children: [
             { key: "historicos", label: "Históricos", icon: "clock",          adminOnly: false },
-            { key: "sanciones",  label: "Sanciones",  icon: "alert-triangle", adminOnly: false },
         ]
     },
     { 
