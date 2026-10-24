@@ -35,3 +35,9 @@ databaseChangeLog:
   - include:
       file: 09-indexes/002-partial-unique-indexes.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 02-types/004-rename-capture-method-iot-to-fingerprint.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 02-types/005-migrate-capture-method-iot-rows-to-fingerprint.yaml
+      relativeToChangelogFile: true

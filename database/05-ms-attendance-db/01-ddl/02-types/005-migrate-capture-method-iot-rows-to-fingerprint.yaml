@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: att-012-migrate-capture-method-iot-rows-to-fingerprint
+      author: Andres Gutierrez
+      splitStatements: false
+      comment: >
+        En bases donde attendance_record.capture_method es VARCHAR (no el enum), el RENAME VALUE
+        de att-011 no toca los datos; este UPDATE migra las filas. Con el enum es un no-op.
+      changes:
+        - sql:
+            sql: UPDATE attendance.attendance_record SET capture_method = 'FINGERPRINT' WHERE capture_method::text = 'IOT'
+      rollback:
+        - sql:
+            sql: UPDATE attendance.attendance_record SET capture_method = 'IOT' WHERE capture_method::text = 'FINGERPRINT'

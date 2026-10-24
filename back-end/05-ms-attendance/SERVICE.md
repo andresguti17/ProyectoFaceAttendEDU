@@ -2,7 +2,7 @@
 
 ## 1. Responsabilidad
 
-Registro de asistencia con multiples fuentes (reconocimiento facial, manual, IoT, importacion), justificaciones de inasistencia/tardanza y gestion de documentos de soporte.
+Registro de asistencia con multiples fuentes (reconocimiento facial, manual, huella, importacion), justificaciones de inasistencia/tardanza y gestion de documentos de soporte.
 
 ## 2. Tablas
 
@@ -28,7 +28,7 @@ Registro de asistencia con multiples fuentes (reconocimiento facial, manual, IoT
 | Lenguaje | **Java 21** | Consistencia con el proyecto |
 | Framework | **Spring Boot 4.1.1** | Ecosistema unificado |
 | Arquitectura | **Hexagonal** | Misma estructura |
-| API alternativa | **Spring WebFlux** (opcional) | Endpoint reactivo para registro IoT en tiempo real |
+| API alternativa | **Spring WebFlux** (opcional) | Endpoint reactivo para registro en tiempo real |
 
 ### 3.2 Dependencias Principales
 
@@ -42,7 +42,7 @@ spring-boot-starter-actuator
 spring-boot-starter-kafka
 spring-boot-starter-liquibase
 
-<!-- Reactivo (opcional, para IoT) -->
+<!-- Reactivo (opcional) -->
 spring-boot-starter-webflux
 
 <!-- Persistencia -->
@@ -67,7 +67,7 @@ mapstruct-processor
 | **MapStruct** | Mapeo DTO <-> Entity | Type-safe |
 | **Lombok** | Boilerplate reduction | Reduce codigo |
 | **Apache Tika** | Deteccion de tipos MIME | Validar tipos de archivos adjuntos |
-| **Spring WebFlux** | Endpoint reactivo | Para dispositivos IoT que envian asistencia |
+| **Spring WebFlux** | Endpoint reactivo | Para registro de asistencia en tiempo real |
 | **MinIO Client** | Almacenamiento S3-compatible | Almacenar documentos de soporte |
 | **AWS SDK S3** | Almacenamiento en nube | Alternativa a MinIO |
 | **Testcontainers** | Tests de integracion | PostgreSQL real |
@@ -91,7 +91,7 @@ mapstruct-processor
 
 | Metodo | Endpoint | Descripcion |
 |--------|----------|-------------|
-| POST | `/api/v1/attendance` | Registrar asistencia (FACIAL/MANUAL/IOT/IMPORT) |
+| POST | `/api/v1/attendance` | Registrar asistencia (FACIAL/MANUAL/FINGERPRINT/IMPORT) |
 | GET | `/api/v1/attendance/{id}` | Obtener registro |
 | PUT | `/api/v1/attendance/{id}` | Actualizar registro |
 | GET | `/api/v1/class-sessions/{sessionId}/attendance` | Asistencia de una sesion |
@@ -148,8 +148,8 @@ mapstruct-processor
 |--------|-------------|-------|
 | **FACIAL** | Reconocimiento facial automatico | Biometric verifica → Attendance registra |
 | **MANUAL** | Instructor registra manualmente | Instructor selecciona → Attendance registra |
-| **IOT** | Dispositivo IoT (lector huella, QR) | Dispositivo envia → Attendance registra |
-| **IMPORT** | Importacion masiva CSV/Excel | Archivo procesado → Attendance registra |
+| **FINGERPRINT** | Lector de huella dactilar del kiosco | Kiosco identifica → Attendance registra |
+| **IMPORT** | Carga masiva por API (`/attendance-records/bulk`); no es un metodo del kiosco | Archivo procesado → Attendance registra |
 
 ### Estados de asistencia
 
@@ -236,7 +236,7 @@ faceattend:
 
 ## 10. Stack Actual
 
-Attendance esta implementado en **Java 21 + Spring Boot** con arquitectura hexagonal. El servicio maneja registro de asistencia multi-fuente (FACIAL, MANUAL, IOT, IMPORT), justificaciones y documentos de soporte.
+Attendance esta implementado en **Java 21 + Spring Boot** con arquitectura hexagonal. El servicio maneja registro de asistencia multi-fuente (FACIAL, MANUAL, FINGERPRINT, IMPORT), justificaciones y documentos de soporte.
 
 ### Justificacion
 

@@ -332,6 +332,14 @@ async function main() {
     await run({ id: "NEG-B18", role: "DOC", method: "POST", path: "/schools", body: { code: `QB18${rid}`, name: "QA B18" }, expect: [403] });
     await run({ id: "NEG-B18b", role: "DOC", method: "POST", path: "/roles", body: { roleName: `QA-B18-${rid}` }, expect: [403], revert: async (res) => api("DELETE", `/roles/${res.json?.roleId ?? res.json?.role_id}`, { token: sup }) });
     await run({ id: "NEG-B18c", role: "DOC", method: "POST", path: "/courses", body: () => ({ programId: Number(T.ict.programId), code: `QB18${rid}`, name: "QA", creditHours: 1 }), expect: [403] });
+    // captureMethod: IOT fue renombrado a FINGERPRINT; el valor viejo debe rechazarse.
+    const captureBody = (captureMethod) => () => ({ classSessionId: Number(T.sena.sessionId), academicActorId: Number(T.sena.actorId), attendanceStatus: "Present", captureMethod });
+    await run({ id: "NEG-E07", role: "DOC", method: "POST", path: () => T.sena.sessionId && "/attendance-records", body: captureBody("IOT"), kind: "invalid", expect: [400], accept: [422] });
+    await run({
+        id: "NEG-E07b", role: "DOC", method: "POST", path: () => T.sena.sessionId && "/attendance-records", body: captureBody("FINGERPRINT"), kind: "allowed", expect: [201], accept: [400, 409],
+        note: "FINGERPRINT es válido; 400/409 = sesión cerrada o registro duplicado (DUDA de datos, no de contrato)",
+        revert: async (res) => api("DELETE", `/attendance-records/${res.json?.attendanceRecordId}`, { token: sup }),
+    });
     await run({ id: "NEG-B19", role: "DOC", method: "POST", path: "/environments", body: () => ({ schoolId: Number(ict), code: `QB19${rid}`, name: "QA", capacity: 10 }), expect: [403], revert: async (res) => api("DELETE", `/environments/${res.json?.environmentId}`, { token: sup }) });
     await run({ id: "NEG-B20", role: "DOC", method: "PUT", path: "/configurations/academic/999999999", body: { configurationValue: "1" }, expect: [403], accept: [404] });
 

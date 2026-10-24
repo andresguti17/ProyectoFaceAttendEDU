@@ -917,7 +917,7 @@ async function seedAttendance() {
   }
 
   // attendance_status is the native enum ('Present','Absent','Late','Justified') and
-  // capture_method is ('FACIAL','MANUAL','IOT','IMPORT'); casing must match exactly.
+  // capture_method is ('FACIAL','MANUAL','FINGERPRINT','IMPORT'); casing must match exactly.
   const tickBulk = progress(ids.sessionCtx.length, 200, "roll calls");
   await pooled(ids.sessionCtx, CONCURRENCY, async (job) => {
     const roster = ids.rosterByCohort.get(job.cohortCode) ?? [];
@@ -932,7 +932,7 @@ async function seedAttendance() {
         // ausencia la registra el docente (MANUAL) o llega por importación.
         const captureMethod = attendanceStatus === "Absent"
           ? (m < 7 ? "MANUAL" : "IMPORT")
-          : (m < 6 ? "FACIAL" : m < 8 ? "MANUAL" : m < 9 ? "IOT" : "IMPORT");
+          : (m < 6 ? "FACIAL" : m < 8 ? "MANUAL" : m < 9 ? "FINGERPRINT" : "IMPORT");
         const rec = { classSessionId: job.id, academicActorId, attendanceStatus, captureMethod };
         // El score solo existe si hubo comparación biométrica real.
         if (captureMethod === "FACIAL") rec.matchScore = +(((i * 37 + sIdx * 11) % 24 + 76) / 100).toFixed(4);

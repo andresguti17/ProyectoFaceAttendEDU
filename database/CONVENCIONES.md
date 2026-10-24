@@ -143,7 +143,7 @@ Las columnas que usan ENUMs referencian el tipo completo:
     defaultValue: "Present"
 ```
 
-**ENUMs del modelo (DBML v4):** `user_session_status` (Active/Closed), `authentication_type` (Local/Windows/External), `enrollment_status` (Active/Withdrawn/Completed), `class_session_status` (Open/Closed/Cancelled), `attendance_status` (Present/Absent/Late/Justified), `capture_method` (FACIAL/MANUAL/IOT/IMPORT), `review_status` (Pending/Approved/Rejected), `biometric_type` (FACIAL/FINGERPRINT), `update_status` (Pending/In_Review/Approved/Rejected).
+**ENUMs del modelo (DBML v4):** `user_session_status` (Active/Closed), `authentication_type` (Local/Windows/External), `enrollment_status` (Active/Withdrawn/Completed), `class_session_status` (Open/Closed/Cancelled), `attendance_status` (Present/Absent/Late/Justified), `capture_method` (FACIAL/MANUAL/FINGERPRINT/IMPORT), `review_status` (Pending/Approved/Rejected), `biometric_type` (FACIAL/FINGERPRINT), `update_status` (Pending/In_Review/Approved/Rejected).
 
 ---
 

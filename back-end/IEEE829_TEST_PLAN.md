@@ -75,7 +75,7 @@
 |---|---|---|---|
 | email | Formato email | `user@test.com` | `invalid-email` |
 | attendanceStatus | Enum | `Present`, `Absent`, `Late`, `Justified` | `InvalidStatus` |
-| captureMethod | Enum | `FACIAL`, `MANUAL`, `IOT`, `IMPORT` | `UNKNOWN` |
+| captureMethod | Enum | `FACIAL`, `MANUAL`, `FINGERPRINT`, `IMPORT` | `UNKNOWN` |
 | matchScore | 0-1 | `0.85` | `1.5`, `-0.1` |
 | code | No vacío | `SCH001` | `""` |
 | name | No vacío | `School Name` | `""` |
