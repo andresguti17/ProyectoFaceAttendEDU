@@ -6,7 +6,8 @@
 # to start) and /v3/api-docs is saved with sorted keys and without "servers",
 # so the file only changes when an endpoint or a DTO changes.
 # Biometric (FastAPI): app.openapi(), see biometric.py next to this script.
-# The Node services have no OpenAPI generator yet (docs/openapi/README.md).
+# The four Node services (03, 07, 08, 09) have no generator: no @fastify/swagger and no
+# route schemas, see "Known gap" in docs/openapi/README.md.
 #
 # Needs: docker, JDK 21 + Maven, python3. CI runs it and fails on any diff:
 #   tools/openapi/generate.sh && git diff --exit-code docs/openapi

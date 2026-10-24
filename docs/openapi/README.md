@@ -27,9 +27,29 @@ cd back-end/06-ms-biometric && poetry run python ../../tools/openapi/biometric.p
 
 Commit the changed JSON together with the code change.
 
-## Known gap: Node services
+## Known gap: Node services (no generated contract)
 
-academic (03), configuration (07), notification (08) and quality (09) are Fastify
-services without `@fastify/swagger`, so there is nothing to generate for them yet.
-Their routes are described in fae-docs (`07-api/endpoint-matrix.md`). Adding
-`@fastify/swagger` with route schemas is the next step to bring them under this check.
+Four of the nine services have no file here and are not covered by the CI drift check:
+
+| Service | Framework | Generated contract |
+|---|---|---|
+| `03-ms-academic` | Fastify 4 + TypeScript | none |
+| `07-ms-configuration` | Fastify 4 + TypeScript | none |
+| `08-ms-notification` | Fastify 4 + TypeScript | none |
+| `09-ms-quality` | Fastify 4 + TypeScript | none |
+
+Why there is nothing to generate:
+
+- No OpenAPI generator is installed. `@fastify/swagger` is not a dependency of any
+  package in this repository.
+- The routes declare no Fastify `schema`. Request bodies are validated inside each
+  handler with zod (`safeParse`), so even with `@fastify/swagger` installed the
+  generated document would list paths without parameters, bodies or responses.
+
+Until that changes, the source of truth for these routes is the code
+(`back-end/<service>/src/infrastructure/http/`) and the endpoint matrix in fae-docs
+(`07-api/endpoint-matrix.md`), which is maintained by hand.
+
+Closing the gap takes two steps per service: add `@fastify/swagger` and give each
+route a JSON schema (for example generated from the existing zod schemas). Then add
+the service to `tools/openapi/` and to the CI drift check like the others.
