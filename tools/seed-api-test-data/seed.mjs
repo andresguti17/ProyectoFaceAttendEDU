@@ -200,10 +200,14 @@ const STUDENT_USERNAME = process.env.STUDENT_USERNAME ?? "valentina.rios";
 const STUDENT_PASSWORD = process.env.STUDENT_PASSWORD ?? "Estudiante2026*";
 const TEACHER_PASSWORD = process.env.TEACHER_PASSWORD ?? "Docente2026*";
 const SCHOOL_ADMIN_PASSWORD = process.env.SCHOOL_ADMIN_PASSWORD ?? "Rector2026*";
-// Bootstrap admin from DB seeds (01-bootstrap-admin-user + 005 role assignment).
-// The seed needs its session token: protected endpoints require Bearer + permissions.
-const BOOTSTRAP_USERNAME = process.env.BOOTSTRAP_USERNAME ?? "admin.faceattend";
-const BOOTSTRAP_PASSWORD = process.env.BOOTSTRAP_PASSWORD ?? "Admin123!ChangeMe";
+// The seed needs a session token: protected endpoints require Bearer + permissions.
+// It signs in as the admin created with database/scripts/bootstrap-admin.sh; there is no built-in account.
+const BOOTSTRAP_USERNAME = process.env.BOOTSTRAP_USERNAME;
+const BOOTSTRAP_PASSWORD = process.env.BOOTSTRAP_PASSWORD;
+if (!BOOTSTRAP_USERNAME || !BOOTSTRAP_PASSWORD) {
+  console.error("BOOTSTRAP_USERNAME and BOOTSTRAP_PASSWORD are required (see database/SEEDS.md)");
+  process.exit(1);
+}
 let TOKEN = null;
 
 // ---------------------------------------------------------------------------

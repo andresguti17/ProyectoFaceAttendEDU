@@ -8,6 +8,8 @@ export default class AuthResponse extends BaseModel {
     this.tokenType = data.token_type || 'Bearer';
     this.expiresIn = data.expires_in || null;
     this.user = data.user || null;
+    // La cuenta aún usa su contraseña inicial: hay que cambiarla antes de entrar.
+    this.mustChangePassword = data.must_change_password === true;
   }
 
   get isExpired() {
@@ -28,6 +30,7 @@ export default class AuthResponse extends BaseModel {
       token_type: this.tokenType,
       expires_in: this.expiresIn,
       user: this.user,
+      must_change_password: this.mustChangePassword,
     };
   }
 }

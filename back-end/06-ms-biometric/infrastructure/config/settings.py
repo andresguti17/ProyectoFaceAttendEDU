@@ -19,6 +19,7 @@ import os
 import secrets
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import quote_plus
 
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -53,12 +54,12 @@ def _load_root_env() -> None:
 
 _load_root_env()
 
-_MONGO_USER = os.getenv("MONGO_USER", "mongoadmin")
-_MONGO_PASSWORD = os.getenv("MONGO_PASSWORD", "mongopass")
-DEFAULT_MONGODB_URL = (
-    f"mongodb://{_MONGO_USER}:{_MONGO_PASSWORD}"
-    "@localhost:27017/faceattend_biometric?authSource=admin"
-)
+# Local runs take the credentials from the root .env; there is no built-in
+# user or password, so a missing value fails against the authenticated server.
+_MONGO_USER = os.getenv("MONGO_USER")
+_MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
+_MONGO_AUTH = f"{quote_plus(_MONGO_USER)}:{quote_plus(_MONGO_PASSWORD)}@" if _MONGO_USER and _MONGO_PASSWORD else ""
+DEFAULT_MONGODB_URL = f"mongodb://{_MONGO_AUTH}localhost:27017/faceattend_biometric?authSource=admin"
 DEFAULT_MONGO_DB_NAME = "faceattend_biometric"
 SECONDS_PER_DAY = 86_400
 

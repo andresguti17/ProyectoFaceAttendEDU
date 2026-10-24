@@ -115,13 +115,14 @@ invisibles para el resto de la LAN:
 |---|---|---|---|
 | **8000** | `kong-gateway` (proxy) | `0.0.0.0` | el navegador y un celular en la LAN consumen la API |
 | **8090** | `frontend-web` | `0.0.0.0` | el navegador (y un celular) cargan el SPA |
-| 8001 | `kong-gateway` (admin) | `BIND_IP` | administración local |
-| 5432 / 27017 / 6379 / 9092 | postgres / mongodb / redis / kafka | `BIND_IP` | bases y broker: nunca exponerlos |
+| 8001 | `kong-gateway` (admin) | `127.0.0.1` fijo | administración local (por túnel SSH en producción) |
+| 5432 / 27017 / 6379 / 9092 | postgres / mongodb / redis / kafka | `127.0.0.1` fijo | bases y broker: nunca exponerlos |
 | 8081–8089 | los 9 microservicios (`ms-biometric` 8086 incluye biometría web) | `BIND_IP` | solo los consume Kong (y el IDE/curl locales) |
 
-Cambiar el perímetro sin tocar los compose: `BIND_IP=0.0.0.0` en `.env` (útil
-para depurar desde otro equipo o probar desde el celular) y volver a
-`127.0.0.1` después. Verificar con:
+Los puertos de datos y el admin de Kong quedan en `127.0.0.1` sin importar
+`BIND_IP`. `BIND_IP` solo mueve los puertos 8081–8089 de los microservicios
+(útil para depurar desde otro equipo en desarrollo); en producción debe quedar en
+`127.0.0.1`. Verificar con:
 
 ```bash
 docker ps --format "{{.Names}} | {{.Ports}}"
@@ -172,11 +173,12 @@ arrancar — no lo hace Compose, lo hace cada servicio:
 Las rutas parten del **directorio de trabajo**: el del servicio
 (`back-end/0X-…`) o la raíz del repo. En Docker el archivo no existe dentro de
 la imagen y compose ya inyecta el entorno, así que todo queda en **no-op**.
-Los defaults dev (`postgres`, `mongopass`) siguen siendo el último recurso: sin
-`.env`, todo arranca igual que siempre.
+Las contraseñas **no tienen valor por defecto**: compose falla con un mensaje
+claro si falta `POSTGRES_PASSWORD`, `MONGO_USER` o `MONGO_PASSWORD`. Genere cada
+secreto con `openssl rand -base64 32` y guárdelo solo en `.env` (no versionado).
 
 Variables principales (ver `.env.example`): `POSTGRES_*`, `FACEATTEND_LIQUIBASE_IMAGE`,
-`MONGO_*`, `REDIS_PORT`, `KAFKA_PORT`, `KONG_PROXY_PORT`, `KONG_ADMIN_PORT`,
+`LIQUIBASE_CONTEXTS`, `MONGO_*`, `REDIS_PORT`, `KAFKA_PORT`, `KONG_PROXY_PORT`, `KONG_ADMIN_PORT`,
 `FRONTEND_PORT`, `EXPO_PUBLIC_API_URL`, `BIND_IP`, `SEED_*`.
 
 ---

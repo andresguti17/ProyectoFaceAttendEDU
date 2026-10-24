@@ -19,6 +19,7 @@ import SelectableButton from '../../components/common/SelectableButton';
 import CustomLogo from '../../components/common/logo';
 import RegisterModal from '../../components/auth/RegisterModal';
 import TerminosModal from '../../components/common/TerminosModal';
+import PasswordUpdateModal from '../../components/common/PasswordUpdateModal';
 import ScrollView from '../../components/common/ScrollView';
 import CustomAlert from '../../components/common/CustomAlert';
 import {useCustomAlert} from '../../components/common/useCustomAlert';
@@ -130,6 +131,7 @@ export default function LoginScreen({ onLogin, navigation }) {
         email, password, terms, isLoading, error, errorTimestamp,
         setEmail, setPassword, setTerms, submit,
         codeStep, code, maskedEmail, setCode, submitCode, cancelCode,
+        mustChangePassword, onForcedPasswordChanged,
     } = useLoginViewModel({ onLogin });
 
     // Inyección de lógica corregida
@@ -330,6 +332,9 @@ export default function LoginScreen({ onLogin, navigation }) {
                                     isVisible={isTerminosModalVisible}
                                     onClose={() => setIsTerminosModalVisible(false)}
                                 />
+                                {mustChangePassword && (
+                                    <PasswordUpdateModal forced onChanged={onForcedPasswordChanged} />
+                                )}
                             </View>
                         </TouchableWithoutFeedback>
                     </ScrollView>

@@ -4,7 +4,7 @@
 
 These records are created automatically when running Liquibase migrations (`docker compose up`). They are **seed** data for catalog tables required at startup.
 
-All seeds run with `context: seed`, allowing structure-only execution.
+Catalog seeds run with `context: seed`. Every Liquibase invocation passes `--contexts` (`LIQUIBASE_CONTEXTS`, default `seed`; production always `seed`), so changesets tagged `demo` never reach production.
 
 Note: `identity.city` has no seeds — cities come from external API `countriesnow.space` (`front-end/Mobile/src/api/apiCountry.js:1`).
 
@@ -23,7 +23,19 @@ RBAC roles. Assigned via `user_role`.
 
 **File:** `02-ms-authorization-db/02-dml/001-seed-role-table.yaml` (legado de 4 roles) + `004-unify-mobile-roles.yaml` (unificación a 3 roles Mobile; renombra `SUPER_ADMIN`→`Administrador`, `INSTRUCTOR`→`Instructor`, `STUDENT`→`Aprendiz`, fusiona `SCHOOL_ADMIN` en `Administrador` y carga la matriz `role_permission`) + `007-split-super-admin-role.yaml` (rol explícito `Super Administrador`, con los 12 permisos, y reasignación del admin bootstrap desde `Administrador`)
 
-> Bootstrap: `01-ms-identity-db/02-dml/001-bootstrap-admin-user.yaml` crea `person` + `app_user` (`admin.faceattend` / `Admin123!ChangeMe`, **cambiar en producción**), `002-bootstrap-demo-users.yaml` crea `instructor.faceattend` / `Instructor123!ChangeMe` y `aprendiz.faceattend` / `Aprendiz123!ChangeMe`, y `005/006-bootstrap-*-role-assignment.yaml` les asignan `Administrador`, `Instructor` y `Aprendiz` (`007` posteriormente pasa `admin.faceattend` a `Super Administrador`). Sin estos usuarios iniciales ningún endpoint protegido sería alcanzable.
+> **No account ships with the migrations.** The old seeds `001/002-bootstrap-*` (which created `admin.faceattend`, `instructor.faceattend` and `aprendiz.faceattend` with passwords published in the repository) were removed, and `01-ms-identity-db/02-dml/004-disable-seeded-default-accounts.yaml` disables those accounts on every database that already had them. `005/006-bootstrap-*-role-assignment.yaml` now run only in the `demo` context, which production never uses.
+>
+> **First administrator.** Create it explicitly, with credentials that never touch the repository:
+>
+> ```bash
+> BOOTSTRAP_ADMIN_USERNAME=admin.sede BOOTSTRAP_ADMIN_EMAIL=admin@sede.edu.co > BOOTSTRAP_ADMIN_PASSWORD='<12+ characters>' ./database/scripts/bootstrap-admin.sh
+> # Neon / any remote database:
+> PSQL="psql $DATABASE_URL" BOOTSTRAP_ADMIN_USERNAME=... ./database/scripts/bootstrap-admin.sh
+> # Restore the old admin.faceattend after 004 disabled it (new password, reactivated):
+> BOOTSTRAP_ADMIN_USERNAME=admin.faceattend BOOTSTRAP_ADMIN_PASSWORD='<new>' ./database/scripts/bootstrap-admin.sh --reset
+> ```
+>
+> The account gets the `Super Administrador` role and must change its password on first sign-in (web, mobile and the gateway enforce it). The script never runs automatically.
 
 ---
 

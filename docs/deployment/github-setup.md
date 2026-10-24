@@ -32,7 +32,7 @@ Los secrets van al environment `production` (no a nivel de repo) para que solo j
 | Nombre | Tipo | Valor |
 |---|---|---|
 | `NEON_JDBC_URL` | secret | `jdbc:postgresql://<host>/faceattend_db?sslmode=require&channel_binding=require` |
-| `NEON_USER` | secret | usuario de Neon (`faceattend_db_owner`) |
+| `NEON_USER` | secret | usuario de Neon (del panel de Neon) |
 | `NEON_PASSWORD` | secret | contraseña de Neon **rotada** (ver §4) |
 
 ### EC2 (backend)
