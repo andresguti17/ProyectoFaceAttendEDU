@@ -316,6 +316,13 @@ export function AuthProvider({ children }) {
 
             setIsLoadingAuth(false);
             setIsLoadingTimeoutFlag(false); // Marcar que ya terminamos de cargar
+        }).catch(() => {
+            // Lectura de almacenamiento/token fallida: arrancar sin sesión en vez de
+            // quedarse cargando para siempre.
+            setUser(null);
+            setSessionExpiredByTimeout(false);
+            setIsLoadingAuth(false);
+            setIsLoadingTimeoutFlag(false);
         });
     }, []);
 
