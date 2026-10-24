@@ -16,7 +16,7 @@ services:
     plugins:
       - name: cors
         config:
-          origins: ["*"]
+          origins: ["__CORS_ORIGINS__"]
           methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
           headers: [Authorization, Content-Type]
           credentials: true
@@ -39,7 +39,7 @@ services:
     plugins:
       - name: cors
         config:
-          origins: ["*"]
+          origins: ["__CORS_ORIGINS__"]
           methods: [POST, OPTIONS]
           headers: [Content-Type]
       - name: rate-limiting
@@ -278,13 +278,10 @@ plugins:
           return verify_live()
   - name: cors
     config:
-      # "*" + credentials true: Kong refleja el Origin real de cada petición
-      # (el navegador prohíbe "*" literal junto con credenciales), igual que
-      # ya hacía identity-service. Antes solo :3000/:5173/:8090 pasaban, así
-      # que abrir el frontend desde otra IP de la LAN (u otro puerto) dejaba
-      # bloqueadas por CORS las 6 rutas sin cors propio (academic, scheduling,
-      # attendance, authorization, biometric, configuration, notification).
-      origins: ["*"]
+      # Solo los orígenes de KONG_CORS_ORIGINS (el compose los inserta en
+      # lugar de __CORS_ORIGINS__ al arrancar). Un Origin ajeno no recibe
+      # Access-Control-Allow-Origin. Las apps móviles nativas no envían Origin.
+      origins: ["__CORS_ORIGINS__"]
       methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
       headers: [Authorization, Content-Type, X-Requested-With]
       credentials: true

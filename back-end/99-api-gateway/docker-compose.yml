@@ -12,9 +12,24 @@ services:
   kong:
     image: kong:3.6
     container_name: faceattend-kong
+    # Kong cannot read env vars in declarative config: render the CORS allow-list
+    # (KONG_CORS_ORIGINS, comma-separated origins) into a copy, then start Kong.
+    # Each origin is validated so nothing else can be injected into the YAML.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        out=""
+        for o in $$(printf '%s' "$${KONG_CORS_ORIGINS:?KONG_CORS_ORIGINS is required}" | tr ',' ' '); do
+          printf '%s' "$$o" | grep -Eq '^https?://[A-Za-z0-9.-]+(:[0-9]+)?$$' || { echo "invalid CORS origin: $$o" >&2; exit 1; }
+          out="$${out:+$$out, }\"$$o\""
+        done
+        sed "s#\"__CORS_ORIGINS__\"#$$out#g" /kong/kong.yml > /tmp/kong.yml
+        exec /docker-entrypoint.sh kong docker-start
     environment:
       KONG_DATABASE: 'off'
-      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_DECLARATIVE_CONFIG: /tmp/kong.yml
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
@@ -28,6 +43,14 @@ services:
       KONG_DNS_VALID_TTL: '5'
       KONG_DNS_STALE_TTL: '0'
       KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
+      # Real client IP behind Caddy (and the Docker NAT in dev): identity limits
+      # failed logins per IP using the X-Real-IP that Kong sets from this.
+      KONG_TRUSTED_IPS: "172.16.0.0/12,10.0.0.0/8,192.168.0.0/16"
+      KONG_REAL_IP_HEADER: X-Forwarded-For
+      KONG_REAL_IP_RECURSIVE: "on"
+      # Browser origins allowed by CORS. Production must list its real web
+      # domains (docker-compose.neon-overrides.yml makes it mandatory there).
+      KONG_CORS_ORIGINS: ${KONG_CORS_ORIGINS:-http://localhost:8090,http://127.0.0.1:8090,http://localhost:8081,http://localhost:19006}
     ports:
       - '0.0.0.0:${KONG_PROXY_PORT:-8000}:8000'
       - '127.0.0.1:${KONG_ADMIN_PORT:-8001}:8001'
