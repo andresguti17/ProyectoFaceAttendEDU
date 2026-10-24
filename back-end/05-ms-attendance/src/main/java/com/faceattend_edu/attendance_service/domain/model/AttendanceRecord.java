@@ -29,7 +29,7 @@ public class AttendanceRecord {
     private long rowVersion;
 
     private static final Set<String> ALLOWED_STATUS = Set.of("Present","Absent","Late","Justified");
-    private static final Set<String> ALLOWED_METHOD = Set.of("FACIAL","MANUAL","IOT","IMPORT");
+    private static final Set<String> ALLOWED_METHOD = Set.of("FACIAL","MANUAL","FINGERPRINT","IMPORT");
 
     public void validate() {
         if (classSessionId == null) throw new IllegalArgumentException("classSessionId is required");

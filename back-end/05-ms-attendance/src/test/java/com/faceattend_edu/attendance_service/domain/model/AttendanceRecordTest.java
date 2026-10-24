@@ -30,7 +30,7 @@ class AttendanceRecordTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"FACIAL", "MANUAL", "IOT", "IMPORT"})
+    @ValueSource(strings = {"FACIAL", "MANUAL", "FINGERPRINT", "IMPORT"})
     void acceptsEveryCaptureMethod(String method) {
         assertDoesNotThrow(record("Present", method)::validate);
     }
@@ -43,6 +43,11 @@ class AttendanceRecordTest {
     @Test
     void rejectsACaptureMethodOutsideTheEnum() {
         assertThrows(IllegalArgumentException.class, record("Present", "TELEPATHY")::validate);
+    }
+
+    @Test
+    void rejectsTheLegacyIotCaptureMethod() {
+        assertThrows(IllegalArgumentException.class, record("Present", "IOT")::validate);
     }
 
     @Test
