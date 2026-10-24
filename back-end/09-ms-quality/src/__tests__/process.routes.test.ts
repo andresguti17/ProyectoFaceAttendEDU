@@ -251,4 +251,51 @@ describe('registerProcessRoutes', () => {
       expect(res.json().ready).toBe(true);
     });
   });
+
+  describe('instrument, projects and assessment CRUD', () => {
+    const create = (payload: unknown) => app.inject({ method: 'POST', url: '/api/v1/quality/assessments', payload: payload as any });
+
+    it('publishes the ISO 29110 Basic profile', async () => {
+      const res = (await app.inject({ method: 'GET', url: '/api/v1/quality/process/profile' })).json();
+      expect(res.processes.map((p: any) => p.id)).toEqual(expect.arrayContaining(['PM', 'SI']));
+      expect(res.totalObjectives).toBeGreaterThan(0);
+    });
+
+    it('validates, lists, reads, updates and deletes projects', async () => {
+      expect((await app.inject({ method: 'POST', url: '/api/v1/quality/projects', payload: {} })).statusCode).toBe(400);
+      const list = (await app.inject({ method: 'GET', url: '/api/v1/quality/projects?limit=0&offset=-3' })).json();
+      expect(list).toMatchObject({ total: 1, limit: 20, offset: 0 });
+      expect((await app.inject({ method: 'GET', url: `/api/v1/quality/projects/${projectId}` })).json().name).toBe('FaceAttend Edu');
+      expect((await app.inject({ method: 'GET', url: '/api/v1/quality/projects/abc' })).statusCode).toBe(404);
+      expect((await app.inject({ method: 'PUT', url: '/api/v1/quality/projects/abc', payload: {} })).statusCode).toBe(404);
+      expect((await app.inject({ method: 'PUT', url: `/api/v1/quality/projects/${projectId}`, payload: { name: '' } })).statusCode).toBe(400);
+      expect((await app.inject({ method: 'PUT', url: '/api/v1/quality/projects/999', payload: { name: 'x' } })).statusCode).toBe(404);
+      expect((await app.inject({ method: 'PUT', url: `/api/v1/quality/projects/${projectId}`, payload: { name: 'Renombrado' } })).json().name).toBe('Renombrado');
+      expect((await app.inject({ method: 'DELETE', url: `/api/v1/quality/projects/${projectId}` })).statusCode).toBe(204);
+      expect((await app.inject({ method: 'DELETE', url: `/api/v1/quality/projects/${projectId}` })).statusCode).toBe(404);
+    });
+
+    it('lists, filters and reads assessments', async () => {
+      expect((await create({ projectId })).statusCode).toBe(400);
+      await create({ projectId, processId: 'PM', assessor: 'a', ratings: fullRatings('PM', 'F') });
+      await create({ projectId, processId: 'SI', assessor: 'a', ratings: fullRatings('SI', 'L') });
+      const filtered = (await app.inject({ method: 'GET', url: `/api/v1/quality/assessments?projectId=${projectId}&processId=SI` })).json();
+      expect(filtered.data.map((a: any) => a.processId)).toEqual(['SI']);
+      expect((await app.inject({ method: 'GET', url: '/api/v1/quality/assessments?limit=1' })).json()).toMatchObject({ total: 2, limit: 1 });
+      expect((await app.inject({ method: 'GET', url: '/api/v1/quality/assessments/1' })).json().processId).toBe('PM');
+      expect((await app.inject({ method: 'GET', url: '/api/v1/quality/assessments/99' })).statusCode).toBe(404);
+    });
+
+    it('rejects bad assessment updates and deletes an assessment', async () => {
+      const id = (await create({ projectId, processId: 'PM', assessor: 'a', ratings: fullRatings('PM', 'F') })).json().assessmentId;
+      expect((await app.inject({ method: 'PUT', url: '/api/v1/quality/assessments/abc', payload: {} })).statusCode).toBe(404);
+      expect((await app.inject({ method: 'PUT', url: `/api/v1/quality/assessments/${id}`, payload: { status: 'Nope' } })).statusCode).toBe(400);
+      expect((await app.inject({ method: 'PUT', url: '/api/v1/quality/assessments/999', payload: { assessor: 'b' } })).statusCode).toBe(404);
+      const wrong = await app.inject({ method: 'PUT', url: `/api/v1/quality/assessments/${id}`, payload: { ratings: { 'SI.O1': 'F' } } });
+      expect(wrong.json().message).toBe('Ratings must belong to process PM');
+      expect((await app.inject({ method: 'DELETE', url: `/api/v1/quality/assessments/${id}` })).statusCode).toBe(204);
+      expect((await app.inject({ method: 'DELETE', url: `/api/v1/quality/assessments/${id}` })).statusCode).toBe(404);
+      expect((await app.inject({ method: 'DELETE', url: '/api/v1/quality/assessments/abc' })).statusCode).toBe(404);
+    });
+  });
 });
