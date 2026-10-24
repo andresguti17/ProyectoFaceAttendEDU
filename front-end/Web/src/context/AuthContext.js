@@ -6,7 +6,7 @@
 //  Incluye gestión automática de timeout de sesión.
 //
 //  login() abre la sesión real contra ms-identity (POST /auth/login),
-//  guarda el token en localStorage con la forma compartida con Mobile
+//  guarda el token en sessionStorage con la forma compartida con Mobile
 //  { token, savedAt, expiresAt, email } y carga roles + perfil.
 //
 //  Uso:
@@ -42,7 +42,7 @@ const INTENDED_ROUTE_KEY = "@faceattend:intended_route";
 async function sessionGet() {
     if (Platform.OS === "web") {
         try {
-            return localStorage.getItem(SESSION_KEY);
+            return sessionStorage.getItem(SESSION_KEY);
         } catch {
             return null;
         }
@@ -54,7 +54,7 @@ async function sessionGet() {
 async function sessionSet(value) {
     if (Platform.OS === "web") {
         try {
-            localStorage.setItem(SESSION_KEY, value);
+            sessionStorage.setItem(SESSION_KEY, value);
         } catch {
             /* silent */
         }
@@ -67,7 +67,7 @@ async function sessionSet(value) {
 async function sessionRemove() {
     if (Platform.OS === "web") {
         try {
-            localStorage.removeItem(SESSION_KEY);
+            sessionStorage.removeItem(SESSION_KEY);
         } catch {
             /* silent */
         }

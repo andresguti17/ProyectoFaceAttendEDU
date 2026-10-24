@@ -136,19 +136,8 @@ services:
         paths: [/api/v1/alert-types, /api/v1/alerts]
         strip_path: false
     # Sin plugins propios: el enforcement lo hace el MS.
-  # ── ISO/IEC 9001 Quality Health Endpoints ────────────────────
-  - name: quality-health
-    url: http://ms-academic:8083
-    routes:
-      - name: quality-health-route
-        paths: [/health/quality]
-        strip_path: false
-    plugins:
-      - name: cors
-        config:
-          origins: ["*"]
-          methods: [GET]
-          headers: [Content-Type]
+  # /health/quality (informe ISO 9001 de cada servicio) ya no se publica en Internet:
+  # solo se consulta dentro de la red Docker o por el puerto local de cada servicio.
   # ── Quality Service (ISO 25010/29110) ──────────────────────
   - name: quality-service
     url: http://ms-quality:8089
