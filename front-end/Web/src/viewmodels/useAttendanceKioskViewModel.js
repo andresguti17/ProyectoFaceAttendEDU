@@ -70,9 +70,7 @@ export function useAttendanceKioskViewModel() {
     const [connectionStatus, setConnectionStatus] = useState("closed");
     const [registeredActorIds, setRegisteredActorIds] = useState(new Set());
     // academicActorId -> "FACIAL"|"FINGERPRINT" (el modo con el que registró
-    // asistencia), para el panel de lista de estudiantes del kiosco. Nunca
-    // "IOT": ese es solo el valor que viaja al backend (ver onIdentified),
-    // aquí se guarda el modo real para mostrarlo al profesor.
+    // asistencia), para el panel de lista de estudiantes del kiosco.
     const [registeredMethods, setRegisteredMethods] = useState(new Map());
     // Roster del cohorte de la clase activa: [{academicActorId, personId,
     // name}], para el panel de lista de estudiantes junto a la cámara.
@@ -290,11 +288,8 @@ export function useAttendanceKioskViewModel() {
                         ])
                 );
                 setRecordIdByActor(new Map(recordIdByActorRef.current));
-                // "IOT" es el valor que el kiosco manda al backend para huella
-                // (ver onIdentified) — al releer un registro existente, se
-                // muestra de vuelta como "FINGERPRINT" para el profesor.
                 registeredMethodsRef.current = new Map(
-                    records.map((r) => [r.academicActorId, r.captureMethod === "IOT" ? "FINGERPRINT" : r.captureMethod])
+                    records.map((r) => [r.academicActorId, r.captureMethod])
                 );
                 setRegisteredMethods(new Map(registeredMethodsRef.current));
                 setRoster(nextRoster);
@@ -415,12 +410,7 @@ export function useAttendanceKioskViewModel() {
                     classSessionId: currentSession.classSessionId,
                     academicActorId,
                     attendanceStatus: late ? "Late" : "Present",
-                    // 05-ms-attendance's AttendanceRecord.ALLOWED_METHOD solo
-                    // admite FACIAL/MANUAL/IOT/IMPORT — nunca FINGERPRINT.
-                    // Decisión de producto (ver ledger): un identify por huella
-                    // se manda como "IOT" (lector USB biométrico), nunca
-                    // "MANUAL" (implicaría que un humano lo tecleó).
-                    captureMethod: biometricType === "FINGERPRINT" ? "IOT" : biometricType,
+                    captureMethod: biometricType,
                     // El score de huella es un conteo crudo de keypoints SIFT
                     // (puede ser >1), no una similitud coseno 0..1 como el
                     // facial — enviarlo violaría el CHECK/DECIMAL(5,4) de
