@@ -34,7 +34,8 @@ Tunables (`.env` or environment):
 |---|---|---|
 | `SEED_CONCURRENCY` | `8` | parallel request pool (a full run is ~13k requests, ≈3-6 min) |
 | `SEED_VERBOSE` | `0` | `1` logs every successful request; failures always log |
-| `TEACHER_PASSWORD` | `Docente2026*` | password shared by the 80 seeded teacher logins |
+| `TEACHER_PASSWORD` | required | password shared by the 80 seeded teacher logins |
+| `SEED_PASSWORD`, `INSTRUCTOR_PASSWORD`, `STUDENT_PASSWORD`, `SCHOOL_ADMIN_PASSWORD` | required | passwords of the named logins; the seed exits listing any that are missing (copy `.env.example`) |
 
 ## Date window (important)
 

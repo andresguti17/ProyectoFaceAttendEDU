@@ -122,7 +122,7 @@ function track(page) {
     page.on("requestfailed", done);
     page.on("response", (response) => {
         const status = response.status();
-        if (status >= 400 && !/favicon|hot-update|\.map$/.test(response.url())) {
+        if (status >= 400 && !/(?:favicon|hot-update|\.map$)/.test(response.url())) {
             state.bad.push({ status, method: response.request().method(), url: response.url().replace(/^https?:\/\/[^/]+/, "") });
         }
     });
@@ -246,7 +246,7 @@ async function visit(page, tracker, role, route, viewport) {
 
 // ── Principal ────────────────────────────────────────────────
 
-(async () => {
+void (async () => {
     const started = Date.now();
     let browser;
     try {

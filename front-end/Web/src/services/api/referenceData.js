@@ -176,7 +176,7 @@ export const rolesForUser = (userId) =>
  * Devuelve Map<userId, RoleResponse[]>; un usuario sin roles no aparece en el mapa.
  */
 export const rolesForUsers = (userIds) =>
-    memo(`rolesBatch:${[...userIds].sort().join(",")}`, async () => {
+    memo(`rolesBatch:${[...userIds].sort((a, b) => String(a).localeCompare(String(b))).join(",")}`, async () => {
         const BATCH = 200;
         const batches = [];
         for (let i = 0; i < userIds.length; i += BATCH) batches.push(userIds.slice(i, i + BATCH));

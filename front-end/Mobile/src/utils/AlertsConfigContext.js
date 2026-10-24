@@ -16,7 +16,7 @@ export const AlertsConfigProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        loadAlertsConfig();
+        void loadAlertsConfig();
     }, []);
 
     const loadAlertsConfig = async () => {
@@ -45,7 +45,7 @@ export const AlertsConfigProvider = ({ children }) => {
     const toggleAlertType = (type) => {
         const key = `enable${type.charAt(0).toUpperCase()}${type.slice(1)}`;
         const newConfig = { ...alertsConfig, [key]: !alertsConfig[key] };
-        saveAlertsConfig(newConfig);
+        void saveAlertsConfig(newConfig);
     };
 
     const isAlertEnabled = useCallback((type) => {

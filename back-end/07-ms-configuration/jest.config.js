@@ -7,5 +7,5 @@ module.exports = {
   collectCoverageFrom: ["src/**/*.ts", "!src/**/__tests__/**", "!src/**/*.test.ts"],
   coverageReporters: ["text-summary", "json-summary", "lcov"],
   // Measured line coverage, rounded down; raise it as tests grow (goal: 70%, tdd-guide).
-  coverageThreshold: { global: { lines: 20 } },
+  coverageThreshold: { global: { lines: 76 } },
 };

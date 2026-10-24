@@ -1,4 +1,4 @@
-import { request, GET } from './apiClient';
+import { request, GET, POST, DELETE } from './apiClient';
 
 // Typed access to the real microservices through the Kong gateway
 // (API_BASE_URL / AUTHZ_BASE_URL / ... all alias the gateway :8000;
@@ -74,4 +74,12 @@ export async function backendGet(base, path, params = null, { useCache = false }
 
 export function clearBackendCache() {
   cache.clear();
+}
+
+export function backendPost(base, path, data) {
+  return request({ method: POST, url: `${base}${path}`, data, requiresAuth: true });
+}
+
+export function backendDelete(base, path) {
+  return request({ method: DELETE, url: `${base}${path}`, requiresAuth: true });
 }

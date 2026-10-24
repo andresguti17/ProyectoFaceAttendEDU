@@ -259,7 +259,7 @@ export function useReportsViewModel(
 
     useEffect(() => {
         let cancelled = false;
-        (async () => {
+        void (async () => {
             setSeriesLoading(true);
             try {
                 const days = periodDays(period);

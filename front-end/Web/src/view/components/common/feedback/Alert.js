@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 /**
@@ -58,6 +59,7 @@ export function Alert({
   style,
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   const config = {
     info: {
@@ -102,11 +104,11 @@ export function Alert({
       <View style={styles.content}>
         {title && (
           <Text style={[styles.title, { color: alertConfig.color }]}>
-            {title}
+            {t(title)}
           </Text>
         )}
         <Text style={[styles.message, { color: alertConfig.color }]}>
-          {message}
+          {t(message)}
         </Text>
       </View>
 

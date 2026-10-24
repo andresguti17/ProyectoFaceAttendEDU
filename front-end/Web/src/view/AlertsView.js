@@ -15,46 +15,32 @@ import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useAlertsViewModel } from "../viewmodels/useAlertsViewModel";
+import { formatDateTime } from "../core/utils/locale";
 
 const SEVERITY_VARIANT = { INFO: "info", WARNING: "warning", CRITICAL: "danger" };
 
-// Descripción humana + destino contextual por tipo de alerta.
-// Sin mensaje en la entidad, el código solo no dice nada al usuario.
-function describeAlert(code, t) {
-    switch (String(code ?? "").trim().toUpperCase()) {
-        case "JUSTIFICATION_RESULT":
-            return {
-                text: t("Se resolvió tu justificación. Revisa su estado."),
-                target: "Justifications",
-            };
-        case "JUSTIFICATION_PENDING":
-            return {
-                text: t("Hay justificaciones pendientes de revisión."),
-                target: "Justifications",
-            };
-        case "ATTENDANCE_ABSENTEEISM":
-            return {
-                text: t("Tienes inasistencias recurrentes. Revísalas en tu historial."),
-                target: "History",
-            };
-        case "ATTENDANCE_TARDINESS":
-            return {
-                text: t("Tienes tardanzas repetidas. Revísalas en tu historial."),
-                target: "History",
-            };
-        case "ATTENDANCE_LOW":
-            return {
-                text: t("Tu asistencia está por debajo del mínimo. Urgente."),
-                target: "History",
-            };
-        case "BIOMETRIC_UPDATE":
-            return {
-                text: t("Hay una solicitud biométrica relacionada contigo."),
-                target: "Biometrics",
-            };
-        default:
-            return { text: "", target: null };
-    }
+// Destino contextual por tipo de alerta. El texto sale de alerts.types.<CODE>.*:
+// la entidad no trae mensaje y el nombre del catálogo viene en inglés.
+const ALERT_TARGETS = {
+    JUSTIFICATION_RESULT: "Justifications",
+    JUSTIFICATION_APPROVED: "Justifications",
+    JUSTIFICATION_REJECTED: "Justifications",
+    JUSTIFICATION_PENDING: "Justifications",
+    ATTENDANCE_ABSENTEEISM: "History",
+    ATTENDANCE_TARDINESS: "History",
+    ATTENDANCE_LOW: "History",
+    BIOMETRIC_UPDATE: "Biometrics",
+};
+
+function describeAlert(type, id, t) {
+    const code = String(type?.code ?? type?.Code ?? "").trim().toUpperCase();
+    const known = code in ALERT_TARGETS;
+    const fallbackTitle = type?.name ?? type?.Name ?? `${t("Alerta")} #${id}`;
+    return {
+        title: known ? t(`alerts.types.${code}.title`) : fallbackTitle,
+        text: known ? t(`alerts.types.${code}.body`) : "",
+        target: ALERT_TARGETS[code] ?? null,
+    };
 }
 
 export default function AlertsView() {
@@ -119,8 +105,9 @@ export default function AlertsView() {
                             const typeId = alert.alertTypeId ?? alert.alert_type_id;
                             const type = vm.types.get(Number(typeId));
                             const resolved = !!(alert.resolvedAt ?? alert.resolved_at);
-                            const raisedAt = String(alert.raisedAt ?? alert.raised_at ?? "").replace("T", " ").slice(0, 16);
-                            const info = describeAlert(type?.code ?? type?.Code, t);
+                            const raisedAt = formatDateTime(alert.raisedAt ?? alert.raised_at);
+                            const severity = type?.severity ?? type?.Severity;
+                            const info = describeAlert(type, id, t);
                             const canOpen = info.target != null && (
                                 info.target === "Biometrics"
                                     ? (permissions.canEnrollOthersFace ?? permissions.canRegisterFace)
@@ -137,10 +124,10 @@ export default function AlertsView() {
                                                     color={resolved ? c.status.success : c.status.warning}
                                                 />
                                                 <Text style={{ fontWeight: "700", color: c.text.primary, flex: 1 }} numberOfLines={2}>
-                                                    {type?.name ?? type?.Name ?? `${t("Alerta")} #${id}`}
+                                                    {info.title}
                                                 </Text>
-                                                <Badge variant={resolved ? "success" : SEVERITY_VARIANT[type?.severity ?? type?.Severity] || "warning"} size="sm">
-                                                    {resolved ? t("Resuelta") : (type?.severity ?? "") || t("Pendiente")}
+                                                <Badge variant={resolved ? "success" : SEVERITY_VARIANT[severity] || "warning"} size="sm">
+                                                    {resolved ? t("Resuelta") : SEVERITY_VARIANT[severity] ? t(`alerts.severity.${severity}`) : t("Pendiente")}
                                                 </Badge>
                                             </View>
                                             <Text style={{ color: c.text.secondary, fontSize: 12 }}>

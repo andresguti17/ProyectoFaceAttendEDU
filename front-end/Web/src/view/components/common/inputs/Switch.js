@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, Switch as RNSwitch, StyleSheet, Platform } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 /**
@@ -74,6 +75,7 @@ export function Switch({
   ...props
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const c = theme.colors;
 
   // Tamaños (solo afectan labels, el switch usa tamaño nativo)
@@ -184,7 +186,7 @@ export function Switch({
             },
           ]}
         >
-          {errorMessage}
+          {t(errorMessage)}
         </Text>
       )}
     </View>

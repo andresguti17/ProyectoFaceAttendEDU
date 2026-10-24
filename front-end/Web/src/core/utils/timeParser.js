@@ -155,7 +155,7 @@ export function cleanTimeInput(input) {
 
 /**
  * Obtiene el placeholder sugerido según el contexto
- * @param {number} lastValidSeconds - Últimos segundos válidos
+ * @param {number|null} lastValidSeconds - Últimos segundos válidos
  * @returns {string} - Placeholder sugerido
  */
 export function getTimePlaceholder(lastValidSeconds = 5) {

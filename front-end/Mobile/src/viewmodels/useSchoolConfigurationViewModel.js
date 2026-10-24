@@ -123,7 +123,7 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
     };
 
     useEffect(() => {
-        loadSchoolInfo();
+        void loadSchoolInfo();
     }, []);
 
     const [validationErrors, setValidationErrors] = useState({});
@@ -308,7 +308,7 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
     const [citySearch, setCitySearch] = useState('');
 
     useEffect(() => {
-        loadAllCountries();
+        void loadAllCountries();
     }, []);
 
     const filteredCountries = countryOptions.filter((c) =>
@@ -340,7 +340,7 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
                     country: colombia.name,
                     dialCode: colombia.dialCode,
                 }));
-                loadCities(colombia.name);
+                void loadCities(colombia.name);
             }
         } catch (error) {
             Alert.alert(t('common.error'), t('schoolConfig.errors.countriesFailed'));
@@ -375,7 +375,7 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
         setCountrySearch('');
         setHasChanges(true);
         setCountryModalVisible(false);
-        loadCities(option.name);
+        void loadCities(option.name);
     };
 
     const handleCityChange = (cityName) => {

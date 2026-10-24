@@ -1367,5 +1367,16 @@
     "revokeConfirm": "Vos modèles de visage et d'empreinte seront supprimés. Continuer ?",
     "revokeButton": "Révoquer et supprimer mes données biométriques",
     "revoked": "Autorisation révoquée et données biométriques supprimées."
+  },
+  "push": {
+    "permission": {
+      "title": "Notifications d’alertes",
+      "body": "FaceAttend EDU vous préviendra sur cet appareil lorsque vous aurez une nouvelle alerte, comme le résultat d’un justificatif. Le système va ensuite vous demander l’autorisation."
+    },
+    "denied": {
+      "title": "Notifications désactivées",
+      "body": "Vous ne recevrez pas de notifications d’alertes sur cet appareil. Pour les activer, ouvrez les réglages du système, allez dans FaceAttend EDU > Notifications et autorisez-les. Vos alertes restent disponibles dans Actualités.",
+      "open_settings": "Ouvrir les réglages"
+    }
   }
 }

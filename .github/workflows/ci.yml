@@ -113,7 +113,7 @@ jobs:
           cache-dependency-path: back-end/${{ matrix.service }}/package-lock.json
       - name: npm ci
         working-directory: back-end/${{ matrix.service }}
-        run: npm ci
+        run: npm ci --ignore-scripts
       # coverageThreshold in jest.config.js fails the job under the service's floor.
       - name: npm test (with coverage gate)
         working-directory: back-end/${{ matrix.service }}
@@ -210,7 +210,7 @@ jobs:
           cache-dependency-path: front-end/Mobile/package-lock.json
       - name: npm ci
         working-directory: front-end/Mobile
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: npm test
         working-directory: front-end/Mobile
         run: npm test
@@ -231,7 +231,7 @@ jobs:
           cache-dependency-path: front-end/Web/package-lock.json
       - name: npm ci
         working-directory: front-end/Web
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: npm test
         working-directory: front-end/Web
         run: npm test

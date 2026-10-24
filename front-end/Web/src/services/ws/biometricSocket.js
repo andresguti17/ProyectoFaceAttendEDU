@@ -177,7 +177,7 @@ export function connectBiometricSocket({ token, baseUrl } = {}) {
     // Deferred by one microtask so a caller that calls onStatusChange(...) right
     // after connectBiometricSocket(...) returns can still observe this initial
     // status (synchronous delivery would fire before any listener exists).
-    Promise.resolve().then(() => notifyStatus("connecting"));
+    void Promise.resolve().then(() => notifyStatus("connecting"));
 
     function send(type, payload, direction) {
         const clientMessageId = generateClientMessageId();

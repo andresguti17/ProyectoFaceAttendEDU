@@ -7,7 +7,8 @@
       "policy": "appVersion"
     },
     "updates": {
-      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 8000,
       "url": "https://u.expo.dev/5d37baea-16b3-4637-b372-c04352046deb"
     },
     "orientation": "portrait",
@@ -49,7 +50,13 @@
           "cameraPermission": "FaceAttend EDU needs camera access to capture your face for attendance verification."
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "alerts"
+        }
+      ]
     ],
     "extra": {
       "eas": {
