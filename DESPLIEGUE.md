@@ -509,7 +509,7 @@ La app envía **JSON con imágenes en base64** (`data:image/jpeg;base64,…`), *
 | 7 | `POST /api/v1/attendance-records` | `{classSessionId, academicActorId, attendanceStatus, captureMethod, matchScore?}` | 201 / 409 si ya existe | `attendance.attendance_record` (único por sesión + actor) |
 | 8 | `GET /api/v1/attendance-records?classSessionId=&academicActorId=&attendanceStatus=&limit=&offset=` | — | listado | lo que muestra la web |
 
-Valores válidos: `attendanceStatus ∈ {Present, Absent, Late, Justified}`; `captureMethod ∈ {FACIAL, MANUAL, IOT, IMPORT}`. Límite de imagen: `BIOMETRIC_MAX_IMAGE_BYTES` = 3 MiB (≈4 MiB en base64). Un estudiante solo puede inscribir su propio `person_id`; reemplazar una plantilla exige un caso de actualización biométrica *Approved*; un rostro ya inscrito en otra persona devuelve 409.
+Valores válidos: `attendanceStatus ∈ {Present, Absent, Late, Justified}`; `captureMethod ∈ {FACIAL, MANUAL, FINGERPRINT, IMPORT}`. Límite de imagen: `BIOMETRIC_MAX_IMAGE_BYTES` = 3 MiB (≈4 MiB en base64). Un estudiante solo puede inscribir su propio `person_id`; reemplazar una plantilla exige un caso de actualización biométrica *Approved*; un rostro ya inscrito en otra persona devuelve 409.
 
 ### 19.3 Prueba real realizada
 En un entorno local con el mismo código (no contra producción), 2026-10-19: inscripción con imagen de 640 px/JPEG q60 → **201**; el vector quedó en MongoDB; `summary` → `has_face: true`; `identify-image` con otras dos capturas (800 px/q80 y 480 px/q50) devolvió la misma persona con puntajes **0.998 y 0.999** (umbral 0.85); un `POST /attendance-records` con `captureMethod=FACIAL` devolvió 201 y el `GET` lo listó. Límite: se usó una foto fija, no la cámara ni los gestos de vivacidad reales.
