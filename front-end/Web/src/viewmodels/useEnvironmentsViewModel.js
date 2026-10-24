@@ -82,7 +82,7 @@ function convertTo24Hour(time12h) {
     const isAM = timeUpper.includes('AM');
     
     // Extraer HH:MM
-    const timePart = timeUpper.replace(/\s*(AM|PM)\s*$/i, '').trim();
+    const timePart = timeUpper.replace(/(AM|PM)\s*$/i, '').trim();
     const [hoursStr, minutesStr] = timePart.split(':');
     let hours = parseInt(hoursStr, 10);
     const minutes = minutesStr || '00';

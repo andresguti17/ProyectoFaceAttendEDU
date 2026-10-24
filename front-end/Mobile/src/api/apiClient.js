@@ -39,10 +39,17 @@ export function apiUrl(path) {
   return buildUrl(path);
 }
 
+// Un solo recorrido: la regex de barras finales retrocede de forma cuadrática con rachas largas de "/".
+function trimTrailingSlashes(value) {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === '/') end -= 1;
+  return value.slice(0, end);
+}
+
 function buildUrl(path) {
   if (path.startsWith('http')) return path;
   const canonical = canonicalizePath(path);
-  const base = BASE_URL.replace(/\/+$/, '');
+  const base = trimTrailingSlashes(BASE_URL);
   return `${base}/${canonical.replace(/^\//, '')}`;
 }
 

@@ -17,7 +17,7 @@ import { useAuth } from "../context/AuthContext";
 import { useRolePermissions } from "./useRolePermissions";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { academicApi } from "../services/api";
-import { isValidPhone, normalizePhone } from "../core/utils/validation";
+import { isValidEmail, isValidPhone, normalizePhone } from "../core/utils/validation";
 import { getActiveSchool } from "../services/api/referenceData";
 
 export function useSchoolInfoViewModel() {
@@ -112,7 +112,7 @@ export function useSchoolInfoViewModel() {
             setFeedback({ type: "error", message: t("El nombre de la sede es obligatorio.") });
             return;
         }
-        if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+        if (form.email && !isValidEmail(form.email)) {
             setFeedback({ type: "error", message: t("El correo electrónico no es válido.") });
             return;
         }

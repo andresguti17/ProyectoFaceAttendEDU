@@ -19,7 +19,8 @@ import {
  */
 export function isValidEmail(email) {
   if (!email) return false;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Las etiquetas del dominio excluyen el punto: sin retroceso cuadrático (ReDoS).
+  const emailRegex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
   return emailRegex.test(email);
 }
 

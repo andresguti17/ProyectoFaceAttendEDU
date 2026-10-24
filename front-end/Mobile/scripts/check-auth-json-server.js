@@ -6,7 +6,10 @@
 const bcrypt = require('bcryptjs');
 const { assertSafeTarget, safeLogText } = require('./authCheckGuards');
 
-const BASE = (process.argv[4] || process.env.JSON_SERVER_URL || 'http://127.0.0.1:3000').replace(/\/+$/, '');
+const RAW_BASE = process.argv[4] || process.env.JSON_SERVER_URL || 'http://127.0.0.1:3000';
+let baseEnd = RAW_BASE.length;
+while (baseEnd > 0 && RAW_BASE[baseEnd - 1] === '/') baseEnd -= 1;
+const BASE = RAW_BASE.slice(0, baseEnd);
 assertSafeTarget(BASE);
 const EMAIL = (process.argv[2] || 'ricardo.gomez@nuevaesperanza.edu.co').toLowerCase().trim();
 const PASSWORD = process.argv[3] || null;
