@@ -46,9 +46,18 @@ export const ROLE_USERS = {
 
 // ── HTTP ─────────────────────────────────────────────────────
 
+/** Las rutas absolutas solo se aceptan si apuntan al mismo origen que la API bajo prueba. */
+function resolveRoute(route) {
+    if (!route.startsWith("http")) return `${API}${route}`;
+    if (new URL(route).origin !== new URL(API).origin) {
+        throw new Error(`Ruta fuera del origen de la API de QA: ${route}`);
+    }
+    return route;
+}
+
 /** Petición a la API. Nunca lanza: devuelve { status, text, json, ms, error }. */
 export async function api(method, route, { token, body, headers = {}, rawBody, timeout = 20000 } = {}) {
-    const url = route.startsWith("http") ? route : `${API}${route}`;
+    const url = resolveRoute(route);
     const init = { method, headers: { ...headers }, signal: AbortSignal.timeout(timeout) };
     if (token) init.headers.Authorization = `Bearer ${token}`;
     if (rawBody !== undefined) {

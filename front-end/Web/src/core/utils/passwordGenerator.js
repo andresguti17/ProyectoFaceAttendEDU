@@ -12,18 +12,19 @@ const DIGITS = "23456789";
 const SYMBOLS = "!@#$%&*?";
 const ALL = UPPER + LOWER + DIGITS + SYMBOLS;
 
-// Índice aleatorio en [0, max): criptográfico si el entorno lo ofrece.
+// Índice aleatorio en [0, max): siempre criptográfico. Sin Web Crypto no se
+// genera nada: una contraseña con Math.random() sería predecible.
 function randomIndex(max) {
     const webCrypto = globalThis.crypto;
-    if (webCrypto?.getRandomValues) {
-        const limit = Math.floor(0x100000000 / max) * max;
-        const buffer = new Uint32Array(1);
-        do {
-            webCrypto.getRandomValues(buffer);
-        } while (buffer[0] >= limit);
-        return buffer[0] % max;
+    if (!webCrypto?.getRandomValues) {
+        throw new Error("Web Crypto no está disponible para generar contraseñas.");
     }
-    return Math.floor(Math.random() * max);
+    const limit = Math.floor(0x100000000 / max) * max;
+    const buffer = new Uint32Array(1);
+    do {
+        webCrypto.getRandomValues(buffer);
+    } while (buffer[0] >= limit);
+    return buffer[0] % max;
 }
 
 const pick = (chars) => chars[randomIndex(chars.length)];

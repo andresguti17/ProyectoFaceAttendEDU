@@ -12,7 +12,7 @@ WORKDIR /app
 ARG EXPO_PUBLIC_API_URL=
 ENV EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL}
 COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
+RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY . ./
 # El SDK DigitalPersona (huella) se copia a public/vendor y Expo lo incluye en dist/.
 RUN node scripts/copy-digitalpersona.mjs && npx expo export --platform web
