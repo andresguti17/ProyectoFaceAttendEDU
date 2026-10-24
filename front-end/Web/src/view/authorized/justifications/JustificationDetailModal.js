@@ -64,6 +64,7 @@ export function JustificationDetailModal({
     onNotesChange,
     onClose,
     onDecide,
+    onOpenDocument,
 }) {
     const { theme } = useTheme();
     const c = theme.colors;
@@ -209,6 +210,16 @@ export function JustificationDetailModal({
                             <Text style={{ color: c.text.secondary, fontSize: 12 }}>
                                 {doc.mimeType} · {bytesLabel(doc.sizeBytes)}
                             </Text>
+                            {onOpenDocument ? (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onPress={() => onOpenDocument(doc)}
+                                    accessibilityLabel={`${t("Ver documento")} ${doc.fileName}`}
+                                >
+                                    {t("Ver documento")}
+                                </Button>
+                            ) : null}
                         </View>
                     ))
                 )}

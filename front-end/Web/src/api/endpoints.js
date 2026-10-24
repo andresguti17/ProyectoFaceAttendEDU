@@ -106,6 +106,7 @@ export const endpoints = {
         justificationTypeById: (id) => `${API_V1}/justification-types/${id}`,
         supportingDocuments: `${API_V1}/supporting-documents`,
         supportingDocumentById: (id) => `${API_V1}/supporting-documents/${id}`,
+        supportingDocumentContent: (id) => `${API_V1}/supporting-documents/${id}/content`,
         sessionAttendance: (id) => `${API_V1}/class-sessions/${id}/attendance`,
         actorAttendance: (actorId) => `${API_V1}/academic-actors/${actorId}/attendance`,
         attendanceJustification: (id) => `${API_V1}/attendance/${id}/justification`,

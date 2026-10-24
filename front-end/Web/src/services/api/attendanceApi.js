@@ -33,4 +33,13 @@ export const attendanceApi = {
         request(endpoints.attendance.justificationTypeById(id), { method: "DELETE" }),
     justificationDocuments: (id) => request(endpoints.attendance.justificationDocuments(id), { method: "GET" }),
     createSupportingDocument: (b) => request(endpoints.attendance.supportingDocuments, { method: "POST", body: b }),
+    // Sube el archivo real (multipart) a MinIO a través de attendance.
+    uploadJustificationDocument: (id, file, fileName) => {
+        const form = new FormData();
+        form.append("file", file, fileName);
+        return request(endpoints.attendance.justificationDocuments(id), { method: "POST", body: form, timeoutMs: 60000 });
+    },
+    // El archivo guardado, como Blob, para abrirlo en el navegador.
+    supportingDocumentContent: (id) =>
+        request(endpoints.attendance.supportingDocumentContent(id), { method: "GET", responseType: "blob" }),
 };

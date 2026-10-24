@@ -123,6 +123,7 @@ export default function JustificationsView() {
                 onNotesChange={vm.setNotes}
                 onClose={vm.closeDetail}
                 onDecide={vm.askDecision}
+                onOpenDocument={vm.openDocument}
             />
 
             <ConfirmModal

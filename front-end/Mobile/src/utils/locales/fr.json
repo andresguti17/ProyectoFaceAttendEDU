@@ -379,7 +379,10 @@
     "statusRejected": "Refusée",
     "rejectionReason": "Motif du refus",
     "reviewerNotes": "Commentaire du réviseur",
-    "noReviewerNotes": "Le réviseur n’a laissé aucun commentaire."
+    "noReviewerNotes": "Le réviseur n’a laissé aucun commentaire.",
+    "openDocument": "Ouvrir",
+    "documentUnavailable": "Impossible d'ouvrir le justificatif. S'il a été enregistré avant l'envoi de fichiers, il n'a pas de contenu.",
+    "noDocumentViewer": "Cet appareil n'a aucune application pour ouvrir le justificatif."
   },
   "justify": {
     "title": "Configuration des justifications",
@@ -415,7 +418,8 @@
     "confirmMessage": "Voulez-vous vraiment envoyer cette justification ?",
     "confirmTitle": "Confirmer l'envoi",
     "submitError": "Impossible d'envoyer la justification",
-    "noRecordForDate": "Aucune présence enregistrée pour cette date"
+    "noRecordForDate": "Aucune présence enregistrée pour cette date",
+    "uploadError": "La justification a été enregistrée, mais le justificatif n'a pas pu être envoyé. Réessayez plus tard."
   },
   "menuJustify": {
     "backToDashboard": "Retour au tableau de bord"

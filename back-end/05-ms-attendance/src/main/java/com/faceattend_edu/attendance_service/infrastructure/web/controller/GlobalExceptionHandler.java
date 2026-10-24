@@ -15,6 +15,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import com.faceattend_edu.attendance_service.infrastructure.storage.MinioDocumentStorageAdapter;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -93,6 +97,31 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, "ISO-8.2-VAL-002",
             "Invalid value for parameter '" + ex.getName() + "'", "8.2", "WARNING");
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleTooLarge(MaxUploadSizeExceededException ex) {
+        return buildErrorResponse(HttpStatus.PAYLOAD_TOO_LARGE, "ISO-8.2-VAL-003",
+            "file must be at most 5 MB", "8.2", "WARNING");
+    }
+
+    @ExceptionHandler({MultipartException.class, org.springframework.web.multipart.support.MissingServletRequestPartException.class})
+    public ResponseEntity<Map<String, Object>> handleMultipart(Exception ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "ISO-8.2-VAL-002",
+            "A multipart request with a 'file' part is required", "8.2", "WARNING");
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<Map<String, Object>> handleMediaType(HttpMediaTypeNotSupportedException ex) {
+        return buildErrorResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "ISO-8.2-VAL-002",
+            "Unsupported content type", "8.2", "WARNING");
+    }
+
+    @ExceptionHandler(MinioDocumentStorageAdapter.StorageUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> handleStorage(MinioDocumentStorageAdapter.StorageUnavailableException ex) {
+        errorLog.error("Document storage failure: {}", ex.getMessage(), ex);
+        return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE, "ISO-10.2-NC-004",
+            "Document storage is unavailable, try again later", "10.2", "ERROR");
     }
 
     @ExceptionHandler(Exception.class)

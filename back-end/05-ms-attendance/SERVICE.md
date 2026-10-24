@@ -118,10 +118,15 @@ mapstruct-processor
 
 | Metodo | Endpoint | Descripcion |
 |--------|----------|-------------|
-| POST | `/api/v1/justifications/{justId}/documents` | Subir documento |
-| GET | `/api/v1/justifications/{justId}/documents` | Listar documentos |
-| GET | `/api/v1/documents/{id}/download` | Descargar documento |
-| DELETE | `/api/v1/documents/{id}` | Eliminar documento |
+| POST | `/api/v1/justifications/{justId}/documents` | Subir el archivo (`multipart/form-data`, parte `file`): PDF, JPG o PNG de hasta 5 MB. Permiso `attendance.justification:request` y alcance de la justificación |
+| GET | `/api/v1/justifications/{justId}/documents` | Listar documentos (metadatos) |
+| GET | `/api/v1/supporting-documents/{id}/content` | Archivo guardado (`inline`, `nosniff`, `no-store`). 404 si la fila es anterior a la subida real |
+| DELETE | `/api/v1/supporting-documents/{id}` | Eliminar el registro y su objeto en MinIO |
+| POST | `/api/v1/supporting-documents` | (Heredado) solo metadatos; se mantiene para APK antiguos |
+
+- El tipo se determina por los primeros bytes del archivo (no por el nombre ni el `Content-Type` del cliente).
+- La clave del objeto la genera el servidor: `justification-documents/{yyyy}/{MM}/{uuid}.{ext}` (ADR-009).
+- Si falla el guardado de la fila, el objeto se borra (sin huérfanos). Errores: 400 tipo/tamaño, 413 más de 5 MB, 503 almacenamiento caído.
 
 ---
 
@@ -202,20 +207,18 @@ spring:
       hibernate.default_schema: attendance
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 5MB
+      max-request-size: 6MB
   kafka:
     bootstrap-servers: localhost:9092
     group-id: attendance-service
 
-# Almacenamiento de documentos
-storage:
-  type: local  # local | s3 | minio
-  local:
-    path: ./uploads/justifications
-  minio:
+# Almacenamiento de documentos (MinIO, ADR-009). Credenciales solo por entorno:
+# FACEATTEND_STORAGE_ACCESS_KEY / FACEATTEND_STORAGE_SECRET_KEY.
+faceattend:
+  storage:
     endpoint: http://localhost:9000
-    bucket: faceattend-documents
+    bucket: justification-documents
 ```
 
 ---
@@ -227,7 +230,7 @@ storage:
 | 8085 | REST API |
 | 9092 | Kafka (externo) |
 | 5432 | PostgreSQL (externo) |
-| 9000 | MinIO (externo, opcional) |
+| 9000 | MinIO (solo red interna `faceattend-data`; sin puerto publicado). Cifrado SSE-S3 con `MINIO_KMS_SECRET_KEY` |
 
 ---
 

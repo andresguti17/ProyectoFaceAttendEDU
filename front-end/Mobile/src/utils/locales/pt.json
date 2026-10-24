@@ -379,7 +379,10 @@
     "statusRejected": "Rejeitada",
     "rejectionReason": "Motivo da rejeição",
     "reviewerNotes": "Comentário do revisor",
-    "noReviewerNotes": "O revisor não deixou comentário."
+    "noReviewerNotes": "O revisor não deixou comentário.",
+    "openDocument": "Abrir",
+    "documentUnavailable": "Não foi possível abrir o comprovante. Se foi registrado antes do envio de arquivos, não tem conteúdo.",
+    "noDocumentViewer": "Este dispositivo não tem um aplicativo para abrir o comprovante."
   },
   "justify": {
     "title": "Configuração de Justificativas",
@@ -415,7 +418,8 @@
     "confirmMessage": "Tem certeza de que deseja enviar esta justificativa?",
     "confirmTitle": "Confirmar envio",
     "submitError": "Não foi possível enviar a justificativa",
-    "noRecordForDate": "Nenhum registro de presença para essa data"
+    "noRecordForDate": "Nenhum registro de presença para essa data",
+    "uploadError": "A justificativa foi registrada, mas o comprovante não pôde ser enviado. Tente novamente mais tarde."
   },
   "menuJustify": {
     "backToDashboard": "Voltar ao Dashboard"

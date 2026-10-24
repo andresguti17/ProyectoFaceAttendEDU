@@ -7,6 +7,7 @@ import com.faceattend_edu.attendance_service.domain.port.in.GetJustificationUseC
 import com.faceattend_edu.attendance_service.domain.port.in.CreateSupportingDocumentUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.DeleteSupportingDocumentUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.GetSupportingDocumentUseCase;
+import com.faceattend_edu.attendance_service.domain.port.in.GetSupportingDocumentContentUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.ListSupportingDocumentsUseCase;
 import com.faceattend_edu.attendance_service.infrastructure.web.mapper.SupportingDocumentWebMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +33,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -58,6 +61,8 @@ class SupportingDocumentControllerTest {
     private GetJustificationUseCase justificationUseCase;
     @MockitoBean
     private GetAttendanceRecordUseCase recordUseCase;
+    @MockitoBean
+    private GetSupportingDocumentContentUseCase contentUseCase;
 
     private SupportingDocument document(Long id, Long justificationId, String fileName) {
         SupportingDocument d = new SupportingDocument();
@@ -226,6 +231,36 @@ class SupportingDocumentControllerTest {
             mockMvc.perform(delete(BASE + "/9"))
                     .andExpect(status().isNoContent());
             verify(deleteUseCase).delete(9L);
+        }
+    }
+
+    @Nested
+    @DisplayName("TC-05-D05: Open the stored supporting document")
+    class ContentTests {
+
+        @Test
+        @DisplayName("Given a stored document when GET content then the bytes come back inline with safe headers")
+        void givenStoredDocument_whenGetContent_thenReturnsBytes() throws Exception {
+            SupportingDocument doc = document(7L, 3L, "incapacidad médica.pdf");
+            byte[] pdf = "%PDF-1.7 test".getBytes();
+            when(getUseCase.getById(7L)).thenReturn(doc);
+            when(contentUseCase.getContent(7L)).thenReturn(new GetSupportingDocumentContentUseCase.DocumentContent(doc, pdf));
+
+            mockMvc.perform(get(BASE + "/7/content"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Content-Type", "application/pdf"))
+                    .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                    .andExpect(header().string("Content-Disposition", containsString("inline")))
+                    .andExpect(content().bytes(pdf));
+        }
+
+        @Test
+        @DisplayName("Given a legacy row without stored object when GET content then 404")
+        void givenLegacyRow_whenGetContent_thenReturns404() throws Exception {
+            when(getUseCase.getById(8L)).thenReturn(document(8L, 3L, "old.pdf"));
+            when(contentUseCase.getContent(8L)).thenThrow(new EntityNotFoundException("SupportingDocument content", 8L));
+
+            mockMvc.perform(get(BASE + "/8/content")).andExpect(status().isNotFound());
         }
     }
 }

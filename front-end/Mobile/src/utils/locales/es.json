@@ -379,7 +379,10 @@
     "statusRejected": "Rechazada",
     "rejectionReason": "Motivo del rechazo",
     "reviewerNotes": "Comentario del revisor",
-    "noReviewerNotes": "El revisor no dejó comentario."
+    "noReviewerNotes": "El revisor no dejó comentario.",
+    "openDocument": "Abrir",
+    "documentUnavailable": "No se pudo abrir el soporte. Si se registró antes de la subida de archivos, no tiene contenido.",
+    "noDocumentViewer": "Este dispositivo no tiene una aplicación para abrir el soporte."
   },
   "justify": {
     "title": "Configuración de Justificaciones",
@@ -415,7 +418,8 @@
     "dateLabel": "Fecha",
     "submitError": "No se pudo enviar la justificación",
     "noRecordForDate": "No hay registro de asistencia para esa fecha",
-    "timeLabel": "Hora"
+    "timeLabel": "Hora",
+    "uploadError": "La justificación quedó registrada, pero el soporte no se pudo subir. Inténtalo de nuevo más tarde."
   },
   "menuJustify": {
     "backToDashboard": "Volver al Dashboard"

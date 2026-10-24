@@ -379,7 +379,10 @@
     "statusRejected": "Rejected",
     "rejectionReason": "Reason for rejection",
     "reviewerNotes": "Reviewer comment",
-    "noReviewerNotes": "The reviewer left no comment."
+    "noReviewerNotes": "The reviewer left no comment.",
+    "openDocument": "Open",
+    "documentUnavailable": "The document could not be opened. If it was filed before file uploads existed, it has no content.",
+    "noDocumentViewer": "This device has no app to open the document."
   },
   "justify": {
     "title": "Justification Configuration",
@@ -415,7 +418,8 @@
     "confirmMessage": "Are you sure you want to submit this justification?",
     "confirmTitle": "Confirm submission",
     "submitError": "Could not submit the justification",
-    "noRecordForDate": "No attendance record for that date"
+    "noRecordForDate": "No attendance record for that date",
+    "uploadError": "The justification was filed, but the document could not be uploaded. Try again later."
   },
   "menuJustify": {
     "backToDashboard": "Back to Dashboard"
