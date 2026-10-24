@@ -143,7 +143,7 @@ export default function EditCourseModal({ course, onClose, onSubmit }) {
                     marginBottom: 14,
                 }}>
                     <Feather name="alert-circle" size={14} color={c.status.error} />
-                    <Text style={{ fontSize: 13, color: c.status.error, flex: 1 }}>{error}</Text>
+                    <Text style={{ fontSize: 13, color: c.status.error, flex: 1 }}>{t(error)}</Text>
                 </View>
             )}
 

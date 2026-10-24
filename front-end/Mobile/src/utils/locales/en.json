@@ -1367,5 +1367,16 @@
     "revokeConfirm": "Your face and fingerprint templates will be deleted. Continue?",
     "revokeButton": "Revoke and delete my biometric data",
     "revoked": "Authorization revoked and biometric data deleted."
+  },
+  "push": {
+    "permission": {
+      "title": "Alert notifications",
+      "body": "FaceAttend EDU will notify you on this device when you get a new alert, such as the result of a justification. The system will ask for permission next."
+    },
+    "denied": {
+      "title": "Notifications are off",
+      "body": "You will not get alert notifications on this device. To turn them on, open the system settings, go to FaceAttend EDU > Notifications and allow them. Your alerts are still available in News.",
+      "open_settings": "Open settings"
+    }
   }
 }

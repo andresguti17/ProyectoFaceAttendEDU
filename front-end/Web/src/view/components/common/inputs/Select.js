@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, Modal, FlatList, TextInput as RNTextInput, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 import { Button } from "../buttons";
 
@@ -100,6 +101,7 @@ export function Select({
   buttonStyle,
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -208,7 +210,7 @@ export function Select({
 
       {error && errorMessage && (
         <Text style={[styles.message, { color: theme.colors.status.error }]}>
-          {errorMessage}
+          {t(errorMessage)}
         </Text>
       )}
 

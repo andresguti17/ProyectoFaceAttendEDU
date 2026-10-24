@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Radio } from "./Radio";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 /**
@@ -97,6 +98,7 @@ export function RadioGroup({
   ...props
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const c = theme.colors;
 
   const isHorizontal = layout === "horizontal";
@@ -165,7 +167,7 @@ export function RadioGroup({
             },
           ]}
         >
-          {errorMessage}
+          {t(errorMessage)}
         </Text>
       )}
     </View>

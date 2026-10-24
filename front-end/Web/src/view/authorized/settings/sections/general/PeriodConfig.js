@@ -99,7 +99,7 @@ export function PeriodConfig({
                             {currentPeriod.fromDates ? t("Período vigente") : t("Período del calendario")}
                         </Text>
                         <Text style={{ fontSize: 15, fontWeight: "700", color: c.text.primary }}>
-                            {currentPeriod.label}
+                            {t(currentPeriod.label)}
                         </Text>
                         <Text style={{ fontSize: 12, color: c.text.secondary }}>
                             {formatPeriodDateRange({ startDate: currentPeriod.startIso, endDate: currentPeriod.endIso })}
@@ -204,7 +204,7 @@ export function PeriodConfig({
                     {automaticPeriod && (
                         <View>
                             <Text style={{ fontSize: 15, fontWeight: "600", color: c.brand.primary, marginBottom: 8 }}>
-                                {getFullPeriodLabel(automaticPeriod)}
+                                {getFullPeriodLabel({ ...automaticPeriod, label: t(automaticPeriod.label) })}
                             </Text>
                             <Text style={{ fontSize: 14, color: c.text.primary, lineHeight: 20 }}>
                                 {t("Este cálculo se basa en dividir el año calendario según el tipo de período seleccionado.")}

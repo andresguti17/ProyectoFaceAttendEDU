@@ -29,3 +29,15 @@ export const alert = notificationSchema.table('alert', {
   resolvedAt: timestamp('resolved_at', { withTimezone: true }),
   ...audit,
 });
+
+// No audit columns: a device token is either active or revoked (revoked_at).
+export const deviceToken = notificationSchema.table('device_token', {
+  deviceTokenId: bigserial('device_token_id', { mode: 'number' }).primaryKey(),
+  academicActorId: bigint('academic_actor_id', { mode: 'number' }).notNull(),
+  token: varchar('token', { length: 255 }).notNull().unique('uq_device_token_token'),
+  platform: varchar('platform', { length: 10 }).notNull(),
+  locale: varchar('locale', { length: 5 }).notNull().default('es'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+});

@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 import { Button } from "../buttons/Button";
 
@@ -53,6 +54,7 @@ export function EmptyState({
   style,
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <View style={[styles.container, style]}>
@@ -66,12 +68,12 @@ export function EmptyState({
       </View>
 
       <Text style={[styles.title, { color: theme.colors.text.primary }]}>
-        {title}
+        {t(title)}
       </Text>
 
       {message && (
         <Text style={[styles.message, { color: theme.colors.text.secondary }]}>
-          {message}
+          {t(message)}
         </Text>
       )}
 

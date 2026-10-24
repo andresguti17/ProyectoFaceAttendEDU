@@ -111,7 +111,7 @@ export default function PeriodModal({ visible, period, onClose, onSubmit }) {
                         marginBottom: 14,
                     }}
                 >
-                    <Text style={{ fontSize: 13, color: c.status.danger }}>{error}</Text>
+                    <Text style={{ fontSize: 13, color: c.status.danger }}>{t(error)}</Text>
                 </View>
             )}
             <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 8 }}>

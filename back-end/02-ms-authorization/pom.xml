@@ -28,7 +28,7 @@
 	</scm>
 	<properties>
 		<!-- measured line coverage, rounded down; raise it as tests grow (goal: 0.70, tdd-guide) -->
-		<jacoco.line.minimum>0.44</jacoco.line.minimum>
+		<jacoco.line.minimum>0.93</jacoco.line.minimum>
 		<java.version>21</java.version>
 	</properties>
 	<dependencies>

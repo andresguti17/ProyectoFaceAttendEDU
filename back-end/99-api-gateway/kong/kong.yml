@@ -133,7 +133,7 @@ services:
     url: http://ms-notification:8088
     routes:
       - name: notification-route
-        paths: [/api/v1/alert-types, /api/v1/alerts]
+        paths: [/api/v1/alert-types, /api/v1/alerts, /api/v1/device-tokens]
         strip_path: false
     # Sin plugins propios: el enforcement lo hace el MS.
   # /health/quality (informe ISO 9001 de cada servicio) ya no se publica en Internet:

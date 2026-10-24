@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from "react";
 import { View, Text, TextInput as RNTextInput, StyleSheet, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 /**
@@ -51,6 +52,7 @@ export function TextInput({
   ...props
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const shakeAnimation = useRef(new Animated.Value(0)).current;
   const [isFocused, setIsFocused] = React.useState(false);
 
@@ -201,7 +203,7 @@ export function TextInput({
       {/* Mensaje de error (normal) */}
       {error && errorMessage && (
         <Text style={[styles.message, { color: theme.colors.status.error }]}>
-          {errorMessage}
+          {t(errorMessage)}
         </Text>
       )}
 

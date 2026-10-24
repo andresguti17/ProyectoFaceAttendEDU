@@ -3,7 +3,12 @@ import { z } from 'zod';
 import { ALERT_TYPE_CHANNELS } from '../../domain/entities/AlertType';
 import type { IAlertRepository } from '../../domain/ports/out/IAlertRepository';
 import type { IAlertTypeRepository } from '../../domain/ports/out/IAlertTypeRepository';
-import { actorAllowed, resolveActorScope, ScopeError } from './actorScope';
+import { actorAllowed, resolveActorScope, resolveOwnActorIds, ScopeError } from './actorScope';
+import {
+  DEVICE_LOCALES,
+  DEVICE_PLATFORMS,
+  type IDeviceTokenRepository,
+} from '../../domain/ports/out/IDeviceTokenRepository';
 import { notifyWebhook, webhookConfigFromEnv, WEBHOOK_NOT_CONFIGURED, type WebhookPayload } from '../webhook/notifier';
 import { sendEmail, SMTP_NOT_CONFIGURED, type SmtpConfig } from '../email/sender';
 import { render, subjectFor, SUPPORTED_TEMPLATES } from '../email/render';
@@ -55,9 +60,10 @@ function resolvedFilterFrom(query: any): boolean | undefined {
   return undefined;
 }
 
-async function scopeOf(req: any, reply: any): Promise<Set<number> | null | undefined> {
+/** Runs a scope resolver; on a ScopeError answers it and resolves `undefined`. */
+async function resolveOrReply<T>(reply: any, resolve: () => Promise<T>): Promise<T | undefined> {
   try {
-    return await resolveActorScope(req);
+    return await resolve();
   } catch (err) {
     if (err instanceof ScopeError) {
       reply.code(err.statusCode).send({ error: err.statusCode === 403 ? 'Forbidden' : 'ServiceUnavailable', message: err.message, timestamp: new Date().toISOString() });
@@ -65,6 +71,10 @@ async function scopeOf(req: any, reply: any): Promise<Set<number> | null | undef
     }
     throw err;
   }
+}
+
+function scopeOf(req: any, reply: any): Promise<Set<number> | null | undefined> {
+  return resolveOrReply(reply, () => resolveActorScope(req));
 }
 
 const createAlertBody = z.object({
@@ -222,6 +232,50 @@ export async function registerNotificationRoutes(
 
   registerAlertTypeRoutes('/api/v1/alert-types');
   registerAlertTypeRoutes('/alert-types');
+}
+
+const registerDeviceTokenBody = z.object({
+  // Expo push token as returned by expo-notifications getExpoPushTokenAsync().
+  token: z.string().max(255).regex(/^Expo(nent)?PushToken\[[^\]]+\]$/, 'not an Expo push token'),
+  platform: z.enum(DEVICE_PLATFORMS),
+  locale: z.enum(DEVICE_LOCALES),
+});
+
+/**
+ * Mobile push registration. Any signed-in user may register or revoke its own
+ * devices: the actor always comes from the session (same lookup as the alert
+ * scope), never from the body.
+ */
+export function registerDeviceTokenRoutes(app: FastifyInstance, tokens: IDeviceTokenRepository): void {
+  function register(base: string) {
+    app.post(base, async (req, reply) => {
+      const parsed = registerDeviceTokenBody.safeParse((req as any).body);
+      if (!parsed.success) return send400(reply, 'Invalid device token payload', parsed.error.flatten());
+      const own = await resolveOrReply(reply, () => resolveOwnActorIds(req));
+      if (own === undefined) return reply;
+      if (own.length === 0) {
+        return reply.code(403).send({ error: 'Forbidden', message: 'No academic actor for this user', timestamp: new Date().toISOString() });
+      }
+      // shortcut: a person with several actors gets pushes only for the lowest id; a token per actor needs a (token, actor) key.
+      const actorId = Math.min(...own);
+      const id = await tokens.upsert(actorId, parsed.data.token, parsed.data.platform, parsed.data.locale);
+      return reply.code(201).send({ device_token_id: id });
+    });
+
+    app.delete(`${base}/:token`, async (req, reply) => {
+      const token = String((req.params as any).token ?? '');
+      if (!token || token.length > 255) return send400(reply, 'invalid token');
+      const own = await resolveOrReply(reply, () => resolveOwnActorIds(req));
+      if (own === undefined) return reply;
+      // 204 even when the token is unknown or someone else's: idempotent, and it
+      // does not reveal whether another user's token exists.
+      await tokens.revokeOwned(token, own);
+      return reply.code(204).send();
+    });
+  }
+
+  register('/api/v1/device-tokens');
+  register('/device-tokens');
 }
 
 const sendEmailBody = z.object({
