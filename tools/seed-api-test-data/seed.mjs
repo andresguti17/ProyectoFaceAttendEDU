@@ -12,6 +12,7 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolveSeedCredentials } from "./credentials.mjs";
 
 // The local .env mirrors .env.example; older Nodes or a missing file just
 // fall back to the defaults below.
@@ -185,21 +186,27 @@ const STAFF = [
   { documentNumber: "79981245", name: "Carlos", lastName: "Restrepo Álvarez", email: "carlos.restrepo@example.com", documentType: "CC", key: "instructor", address: "Calle 53 # 40-22, Laureles", birthDate: "1979-12-03", bloodType: "O+" },
 ];
 // Demo logins (local testing only, never reuse in production):
-//   Administrador: Carolina Mendoza Ruiz / username carolina.mendoza / password Admin2026*
-//   Docente:       Carlos Restrepo Álvarez / username carlos.restrepo / password Docente2026*
-//   Estudiante:    Valentina Ríos Herrera  / username valentina.rios  / password Estudiante2026*
-// The 80 seeded teachers all log in as username (see TEACHERS) / password
-// TEACHER_PASSWORD (default Docente2026*). Override any of them via
-// SEED_USERNAME / SEED_PASSWORD, INSTRUCTOR_USERNAME / INSTRUCTOR_PASSWORD,
-// STUDENT_USERNAME / STUDENT_PASSWORD, TEACHER_PASSWORD.
-const SEED_USERNAME = process.env.SEED_USERNAME ?? "carolina.mendoza";
-const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "Admin2026*";
-const INSTRUCTOR_USERNAME = process.env.INSTRUCTOR_USERNAME ?? "carlos.restrepo";
-const INSTRUCTOR_PASSWORD = process.env.INSTRUCTOR_PASSWORD ?? "Docente2026*";
-const STUDENT_USERNAME = process.env.STUDENT_USERNAME ?? "valentina.rios";
-const STUDENT_PASSWORD = process.env.STUDENT_PASSWORD ?? "Estudiante2026*";
-const TEACHER_PASSWORD = process.env.TEACHER_PASSWORD ?? "Docente2026*";
-const SCHOOL_ADMIN_PASSWORD = process.env.SCHOOL_ADMIN_PASSWORD ?? "Rector2026*";
+//   Administrador: Carolina Mendoza Ruiz / username carolina.mendoza
+//   Docente:       Carlos Restrepo Álvarez / username carlos.restrepo
+//   Estudiante:    Valentina Ríos Herrera  / username valentina.rios
+// The 80 seeded teachers log in as username (see TEACHERS) / TEACHER_PASSWORD.
+// Passwords are required environment variables (see credentials.mjs and .env.example);
+// usernames can be overridden via SEED_USERNAME, INSTRUCTOR_USERNAME, STUDENT_USERNAME.
+let credentials;
+try {
+  credentials = resolveSeedCredentials(process.env);
+} catch (error) {
+  console.error(error.message);
+  process.exit(1);
+}
+const SEED_USERNAME = credentials.adminUsername;
+const SEED_PASSWORD = credentials.adminPassword;
+const INSTRUCTOR_USERNAME = credentials.instructorUsername;
+const INSTRUCTOR_PASSWORD = credentials.instructorPassword;
+const STUDENT_USERNAME = credentials.studentUsername;
+const STUDENT_PASSWORD = credentials.studentPassword;
+const TEACHER_PASSWORD = credentials.teacherPassword;
+const SCHOOL_ADMIN_PASSWORD = credentials.schoolAdminPassword;
 // The seed needs a session token: protected endpoints require Bearer + permissions.
 // It signs in as the admin created with database/scripts/bootstrap-admin.sh; there is no built-in account.
 const BOOTSTRAP_USERNAME = process.env.BOOTSTRAP_USERNAME;
