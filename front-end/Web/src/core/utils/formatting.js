@@ -15,7 +15,7 @@ import { getLocale } from "./locale";
  * formatNumber(1234567, 0) // "1,234,567"
  */
 export function formatNumber(num, decimals = 0) {
-  if (num === null || num === undefined || isNaN(num)) return "0";
+  if (num == null || Number.isNaN(Number(num))) return "0";
   
   return Number(num).toLocaleString(getLocale(), {
     minimumFractionDigits: decimals,
@@ -33,7 +33,7 @@ export function formatNumber(num, decimals = 0) {
  * formatPercentage(0.5, 0) // "50%"
  */
 export function formatPercentage(value, decimals = 2) {
-  if (value === null || value === undefined || isNaN(value)) return "0%";
+  if (value == null || Number.isNaN(Number(value))) return "0%";
   return `${(value * 100).toFixed(decimals)}%`;
 }
 
@@ -47,7 +47,7 @@ export function formatPercentage(value, decimals = 2) {
  * formatCurrency(1234.56, "EUR") // "€1,234.56"
  */
 export function formatCurrency(amount, currency = "USD") {
-  if (amount === null || amount === undefined || isNaN(amount)) return "$0.00";
+  if (amount == null || Number.isNaN(Number(amount))) return "$0.00";
   
   return new Intl.NumberFormat(getLocale(), {
     style: "currency",
@@ -223,7 +223,7 @@ export function formatFileSize(bytes) {
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  return `${Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
 /**

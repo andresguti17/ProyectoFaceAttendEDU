@@ -64,7 +64,7 @@ export function TeacherSettings({ section, onSave, onDiscard, onDiscardColors, o
                 atRiskAlert: cfg.atRiskAlert,
                 dailySummary: cfg.dailySummary,
                 twoFactor: cfg.twoFactor,
-                sessionTime: parseInt(cfg.sessionTime),
+                sessionTime: Number.parseInt(cfg.sessionTime),
             });
             return success;
         },

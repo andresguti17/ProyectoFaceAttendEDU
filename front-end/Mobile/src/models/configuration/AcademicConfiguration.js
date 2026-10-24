@@ -12,7 +12,7 @@ export default class AcademicConfiguration extends BaseModel {
 
   get numericValue() {
     const num = Number(this.configurationValue);
-    return isNaN(num) ? this.configurationValue : num;
+    return Number.isNaN(Number(num)) ? this.configurationValue : num;
   }
 
   static fromApi(data) {

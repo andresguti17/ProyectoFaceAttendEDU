@@ -47,7 +47,7 @@ function getDaysInMonth(month, year) {
 function validateDateComponent(value, type, month = null, year = null) {
     if (!value) return value;
     
-    const num = parseInt(value, 10);
+    const num = Number.parseInt(value, 10);
     
     if (type === 'day') {
         const maxDays = getDaysInMonth(month, year);
@@ -100,7 +100,7 @@ function formatDateValue(value, format) {
         
         // Validar día
         if (day) {
-            day = validateDateComponent(day, 'day', parseInt(month, 10), parseInt(year, 10));
+            day = validateDateComponent(day, 'day', Number.parseInt(month, 10), Number.parseInt(year, 10));
         }
         
         if (numbers.length <= 4) {
@@ -123,7 +123,7 @@ function formatDateValue(value, format) {
         
         // Validar día
         if (day) {
-            day = validateDateComponent(day, 'day', parseInt(month, 10), parseInt(year, 10));
+            day = validateDateComponent(day, 'day', Number.parseInt(month, 10), Number.parseInt(year, 10));
         }
         
         if (numbers.length <= 2) {
@@ -146,7 +146,7 @@ function formatDateValue(value, format) {
         
         // Validar día
         if (day) {
-            day = validateDateComponent(day, 'day', parseInt(month, 10), parseInt(year, 10));
+            day = validateDateComponent(day, 'day', Number.parseInt(month, 10), Number.parseInt(year, 10));
         }
         
         if (numbers.length <= 2) {
@@ -227,7 +227,7 @@ function isValidDate(dateStr) {
     if (!dateStr || dateStr.length !== 10) return false;
     
     const date = new Date(dateStr);
-    return date instanceof Date && !isNaN(date);
+    return date instanceof Date && !Number.isNaN(Number(date));
 }
 
 /**

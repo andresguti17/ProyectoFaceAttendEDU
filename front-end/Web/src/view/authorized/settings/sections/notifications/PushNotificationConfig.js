@@ -96,24 +96,24 @@ export function PushNotificationToggle({
         
         if (lowerText.endsWith("min")) {
             // Formato en minutos: "0.5min", "1min", "15min"
-            const minValue = parseFloat(lowerText.replace("min", ""));
-            if (isNaN(minValue)) {
+            const minValue = Number.parseFloat(lowerText.replace("min", ""));
+            if (Number.isNaN(Number(minValue))) {
                 setError(t("Debe ser un número válido"));
                 return;
             }
             seconds = minValue * 60;
         } else if (lowerText.endsWith("s")) {
             // Formato en segundos: "30s", "900s"
-            const secValue = parseFloat(lowerText.replace("s", ""));
-            if (isNaN(secValue)) {
+            const secValue = Number.parseFloat(lowerText.replace("s", ""));
+            if (Number.isNaN(Number(secValue))) {
                 setError(t("Debe ser un número válido"));
                 return;
             }
             seconds = secValue;
         } else {
             // Solo número sin unidad - asumir segundos
-            const num = parseFloat(cleanText);
-            if (isNaN(num)) {
+            const num = Number.parseFloat(cleanText);
+            if (Number.isNaN(Number(num))) {
                 setError(t("Debe ser un número válido"));
                 return;
             }
@@ -173,8 +173,8 @@ export function PushNotificationToggle({
 
         // Si es solo número sin unidad, agregar 's' visualmente
         if (!lowerText.endsWith("s") && !lowerText.endsWith("min")) {
-            const num = parseFloat(trimmed);
-            if (!isNaN(num)) {
+            const num = Number.parseFloat(trimmed);
+            if (!Number.isNaN(Number(num))) {
                 displayValue = `${num}s`; // Agregar 's' solo para números sin unidad
                 seconds = num;
             }
@@ -183,13 +183,13 @@ export function PushNotificationToggle({
             displayValue = trimmed; // Mantener formato original ("3min", "30s", etc.)
             
             if (lowerText.endsWith("min")) {
-                const minValue = parseFloat(lowerText.replace("min", ""));
-                if (!isNaN(minValue)) {
+                const minValue = Number.parseFloat(lowerText.replace("min", ""));
+                if (!Number.isNaN(Number(minValue))) {
                     seconds = minValue * 60; // Conversión interna a segundos
                 }
             } else if (lowerText.endsWith("s")) {
-                const secValue = parseFloat(lowerText.replace("s", ""));
-                if (!isNaN(secValue)) {
+                const secValue = Number.parseFloat(lowerText.replace("s", ""));
+                if (!Number.isNaN(Number(secValue))) {
                     seconds = secValue;
                 }
             }
@@ -222,16 +222,16 @@ export function PushNotificationToggle({
         const isMinuteFormat = lowerText.endsWith("min");
         
         if (lowerText.endsWith("min")) {
-            const minValue = parseFloat(lowerText.replace("min", ""));
-            if (isNaN(minValue)) return null;
+            const minValue = Number.parseFloat(lowerText.replace("min", ""));
+            if (Number.isNaN(Number(minValue))) return null;
             seconds = minValue * 60;
         } else if (lowerText.endsWith("s")) {
-            const secValue = parseFloat(lowerText.replace("s", ""));
-            if (isNaN(secValue)) return null;
+            const secValue = Number.parseFloat(lowerText.replace("s", ""));
+            if (Number.isNaN(Number(secValue))) return null;
             seconds = secValue;
         } else {
-            const num = parseFloat(inputValue);
-            if (isNaN(num)) return null;
+            const num = Number.parseFloat(inputValue);
+            if (Number.isNaN(Number(num))) return null;
             seconds = num;
         }
 
@@ -408,9 +408,9 @@ export function PushNotificationLimit({ limit, limitByType, onLimitChange, onLim
             return;
         }
 
-        const number = parseInt(cleanText, 10);
+        const number = Number.parseInt(cleanText, 10);
         
-        if (isNaN(number) || number < 1) {
+        if (Number.isNaN(Number(number)) || number < 1) {
             setTotalError(t("Mínimo 1 notificación"));
             return;
         }
@@ -433,9 +433,9 @@ export function PushNotificationLimit({ limit, limitByType, onLimitChange, onLim
             return;
         }
 
-        const number = parseInt(cleanText, 10);
+        const number = Number.parseInt(cleanText, 10);
         
-        if (isNaN(number) || number < 1) {
+        if (Number.isNaN(Number(number)) || number < 1) {
             setTypeError(t("Mínimo 1 notificación"));
             return;
         }

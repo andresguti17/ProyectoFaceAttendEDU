@@ -78,7 +78,7 @@ export function maxLength(value, max) {
  * isNumber("hello") // false
  */
 export function isNumber(value) {
-  return !isNaN(parseFloat(value)) && isFinite(value);
+  return !Number.isNaN(Number(Number.parseFloat(value))) && Number.isFinite(Number(value));
 }
 
 /**
@@ -92,7 +92,7 @@ export function isNumber(value) {
  * isInRange(15, 1, 10) // false
  */
 export function isInRange(value, min, max) {
-  const num = parseFloat(value);
+  const num = Number.parseFloat(value);
   return isNumber(num) && num >= min && num <= max;
 }
 
@@ -145,7 +145,7 @@ export function normalizePhone(text) {
 export function isValidDate(dateString) {
   if (!dateString) return false;
   const date = new Date(dateString);
-  return date instanceof Date && !isNaN(date);
+  return date instanceof Date && !Number.isNaN(Number(date));
 }
 
 /**

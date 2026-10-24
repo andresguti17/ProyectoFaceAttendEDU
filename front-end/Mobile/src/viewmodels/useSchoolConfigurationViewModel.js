@@ -143,7 +143,7 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
             fieldName === 'maxLatenesses' ||
             fieldName === 'minimumGrade'
         ) {
-            if (isNaN(value) || Number(value) < 0) {
+            if (Number.isNaN(Number(value)) || Number(value) < 0) {
                 errors[fieldName] = t('schoolConfig.validation.mustBeNumber');
             } else {
                 delete errors[fieldName];

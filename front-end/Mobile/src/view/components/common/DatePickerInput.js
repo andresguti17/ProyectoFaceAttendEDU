@@ -13,7 +13,7 @@ export const DatePickerInput = ({ value, onChange, placeholder, hint }) => {
         if (value && value.length === 10) {
             const [day, month, year] = value.split('/');
             const d = new Date(Number(year), Number(month) - 1, Number(day));
-            if (!isNaN(d.getTime())) return d;
+            if (!Number.isNaN(Number(d.getTime()))) return d;
         }
         return new Date();
     };

@@ -168,7 +168,7 @@ function buildQualityReport(serviceName: string) {
       success_count: metrics.successCount,
       error_count: metrics.errorCount,
       error_rate_pct: `${errorRate.toFixed(2)}%`,
-      avg_response_time_ms: parseFloat(avgResponseTime.toFixed(2)),
+      avg_response_time_ms: Number.parseFloat(avgResponseTime.toFixed(2)),
       availability_status: errorRate < 1.0 ? 'HEALTHY' : 'DEGRADED',
     },
     crud_operations: {

@@ -70,7 +70,7 @@ export function useDateFormat() {
         (date) => {
             if (!date) return "";
             const d = new Date(date);
-            if (isNaN(d.getTime())) return "";
+            if (Number.isNaN(Number(d.getTime()))) return "";
             
             const year = d.getFullYear();
             const month = String(d.getMonth() + 1).padStart(2, '0');

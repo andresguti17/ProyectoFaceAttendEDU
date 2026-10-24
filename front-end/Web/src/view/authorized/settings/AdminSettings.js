@@ -121,7 +121,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                 periodStartDate: cfg.periodStartDate || null,
                 periodEndDate: cfg.periodEndDate || null,
                 confidenceThreshold: cfg.confidence,
-                sessionTime: parseInt(cfg.sessionTime),
+                sessionTime: Number.parseInt(cfg.sessionTime),
             };
             const success = updateInstitutionConfig(merged);
             if (!success) return false;

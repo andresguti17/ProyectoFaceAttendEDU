@@ -84,7 +84,7 @@ function rowToStudent(headers, cells) {
         if (!key) return;
         const val = (cells[i] ?? "").trim();
         if (key === "attendance") {
-            obj.attendance = Math.min(100, Math.max(0, parseInt(val, 10) || 100));
+            obj.attendance = Math.min(100, Math.max(0, Number.parseInt(val, 10) || 100));
         } else if (key === "hasFacial") {
             obj.hasFacial = val === "true" || val === "1" || val === "sí" || val === "si" || val === "yes";
         } else if (key === "hasFingerprint") {

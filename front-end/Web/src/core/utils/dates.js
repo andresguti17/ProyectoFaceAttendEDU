@@ -18,7 +18,7 @@ export function formatDate(date, format = "DD/MM/YYYY") {
   if (!date) return "";
   
   const d = new Date(date);
-  if (isNaN(d.getTime())) return "";
+  if (Number.isNaN(Number(d.getTime()))) return "";
   
   const day = String(d.getDate()).padStart(2, "0");
   const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -47,7 +47,7 @@ export function formatTime(date) {
   if (!date) return "";
   
   const d = new Date(date);
-  if (isNaN(d.getTime())) return "";
+  if (Number.isNaN(Number(d.getTime()))) return "";
   
   const hours = String(d.getHours()).padStart(2, "0");
   const minutes = String(d.getMinutes()).padStart(2, "0");
@@ -80,7 +80,7 @@ export function getRelativeTime(date) {
   if (!date) return "";
   
   const d = new Date(date);
-  if (isNaN(d.getTime())) return "";
+  if (Number.isNaN(Number(d.getTime()))) return "";
   
   const now = new Date();
   const diffMs = now - d;
@@ -296,17 +296,17 @@ export function parseDate(dateString) {
   
   // Intenta parsear directamente
   let date = new Date(dateString);
-  if (!isNaN(date.getTime())) return date;
+  if (!Number.isNaN(Number(date.getTime()))) return date;
   
   // Intenta formato DD/MM/YYYY
   const parts = dateString.split(/[\/\-\.]/);
   if (parts.length === 3) {
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const year = parseInt(parts[2], 10);
+    const day = Number.parseInt(parts[0], 10);
+    const month = Number.parseInt(parts[1], 10) - 1;
+    const year = Number.parseInt(parts[2], 10);
     
     date = new Date(year, month, day);
-    if (!isNaN(date.getTime())) return date;
+    if (!Number.isNaN(Number(date.getTime()))) return date;
   }
   
   return null;
