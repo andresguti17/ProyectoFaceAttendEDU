@@ -190,8 +190,8 @@ export function registerIEEE829TestLogEndpoints(app: FastifyInstance): void {
   // GET /api/v1/quality/test-log — Retrieve test log entries
   app.get('/api/v1/quality/test-log', async (request: FastifyRequest, reply: FastifyReply) => {
     const query = request.query as { limit?: string; offset?: string; status?: string };
-    const limit = Math.min(parseInt(query.limit || '50', 10), 100);
-    const offset = parseInt(query.offset || '0', 10);
+    const limit = Math.min(Number.parseInt(query.limit || '50', 10), 100);
+    const offset = Number.parseInt(query.offset || '0', 10);
     const statusFilter = query.status;
 
     let entries = [...testLogStore];

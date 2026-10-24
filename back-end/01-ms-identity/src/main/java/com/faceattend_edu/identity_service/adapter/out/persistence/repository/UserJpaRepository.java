@@ -45,9 +45,10 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
     @Query("""
             select u from UserJpaEntity u
                 join u.person p
-                where lower(p.email) = lower(:email)
+                where (p.emailHash = :emailHash
+                       or (p.emailHash is null and lower(p.email) = lower(:email)))
                   and u.deletedAt is null
                   and p.deletedAt is null
             """)
-    List<UserJpaEntity> findByPersonEmail(@Param("email") String email);
+    List<UserJpaEntity> findByPersonEmail(@Param("emailHash") String emailHash, @Param("email") String email);
 }

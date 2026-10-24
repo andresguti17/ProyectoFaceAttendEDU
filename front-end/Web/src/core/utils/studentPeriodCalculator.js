@@ -117,7 +117,7 @@ export function calculateStudentCurrentPeriod(
     const current = currentDate instanceof Date ? currentDate : new Date();
     
     // Validar fechas
-    if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    if (!startDate || !endDate || Number.isNaN(Number(startDate.getTime())) || Number.isNaN(Number(endDate.getTime()))) {
         return {
             periodNumber: null,
             totalPeriods: null,
@@ -179,9 +179,7 @@ export function calculateStudentCurrentPeriod(
     
     // Generar label formateado
     const ordinal = getOrdinal(currentPeriodNumber, isLastPeriod);
-    const label = isLastPeriod 
-        ? `${ordinal} ${periodName}` 
-        : `${ordinal} ${periodName}`;
+    const label = `${ordinal} ${periodName}`;
     
     // Label corto (solo el ordinal con abreviatura)
     const shortLabel = isLastPeriod

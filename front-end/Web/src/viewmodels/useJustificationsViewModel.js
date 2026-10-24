@@ -220,7 +220,7 @@ export function useJustificationsViewModel() {
             };
         }
 
-        (async () => {
+        void (async () => {
             let withRecords = [];
 
             if (reviewerActorIds) {
@@ -409,22 +409,23 @@ export function useJustificationsViewModel() {
                 });
 
                 if (file) {
-                    // ADR-009 (MinIO): el backend solo guarda la referencia del
-                    // archivo; aún no existe endpoint de subida de bytes.
-                    const extension = String(file.name || "soporte").split(".").pop()?.toLowerCase() || "bin";
-                    const now = new Date();
-                    const folder = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}`;
-                    const uid =
-                        typeof crypto !== "undefined" && crypto.randomUUID
-                            ? crypto.randomUUID()
-                            : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-                    await attendanceApi.createSupportingDocument({
-                        justificationId: created.justificationId,
-                        fileName: file.name,
-                        storageUri: `justification-documents/${folder}/${uid}.${extension}`,
-                        mimeType: file.type || "application/octet-stream",
-                        sizeBytes: file.size || 1,
-                    });
+                    // ADR-009: los bytes viajan en multipart y attendance los guarda en MinIO.
+                    try {
+                        const blob = file.file ?? (await (await fetch(file.uri)).blob());
+                        await attendanceApi.uploadJustificationDocument(created.justificationId, blob, file.name);
+                    } catch (uploadError) {
+                        setFeedback({
+                            type: "error",
+                            message: `${t("La justificación quedó registrada, pero el soporte no se pudo subir:")} ${
+                                uploadError?.message || t("error desconocido")
+                            }`,
+                        });
+                        setSubmitOpen(false);
+                        setSubmitTarget(null);
+                        setListTab("mine");
+                        await refresh();
+                        return false;
+                    }
                 }
 
                 setFeedback({
@@ -455,6 +456,35 @@ export function useJustificationsViewModel() {
     );
 
     // ── Acciones: revisor ────────────────────────────────────
+    // Abre el soporte guardado en MinIO en una pestaña nueva. La pestaña se abre
+    // antes de la descarga (gesto del usuario) para que el navegador no la bloquee.
+    const openDocument = useCallback(
+        async (doc) => {
+            const win = typeof window !== "undefined" ? window.open("", "_blank") : null;
+            try {
+                const blob = await attendanceApi.supportingDocumentContent(doc.supportingDocumentId);
+                const url = URL.createObjectURL(blob);
+                if (win) {
+                    win.opener = null;
+                    win.location.href = url;
+                } else {
+                    window.location.assign(url);
+                }
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+            } catch (e) {
+                if (win) win.close();
+                setFeedback({
+                    type: "error",
+                    message:
+                        e?.status === 404
+                            ? t("Este soporte se registró antes de la subida real de archivos y no tiene contenido.")
+                            : e?.message || t("No se pudo abrir el documento."),
+                });
+            }
+        },
+        [t]
+    );
+
     const openDetail = useCallback(
         async (row) => {
             setDetail(row);
@@ -572,6 +602,7 @@ export function useJustificationsViewModel() {
         documents,
         documentsLoading,
         openDetail,
+        openDocument,
         closeDetail,
         decision,
         notes,

@@ -20,7 +20,7 @@ export default function BottomBar({ onPressSettings, onPressProfile, onPressSear
       setUserRole(role);
       if (role) await loadThemeForRole(role);
     };
-    loadUserRole();
+    void loadUserRole();
   }, []);
 
   const defaultscreens = {

@@ -22,9 +22,9 @@ export function parseTimeToSeconds(input) {
     // Verificar si termina en "min"
     if (trimmed.endsWith("min")) {
         const numStr = trimmed.slice(0, -3).trim();
-        const num = parseFloat(numStr);
+        const num = Number.parseFloat(numStr);
         
-        if (isNaN(num)) {
+        if (Number.isNaN(Number(num))) {
             return { seconds: 0, isValid: false, error: "Formato inválido" };
         }
         
@@ -35,9 +35,9 @@ export function parseTimeToSeconds(input) {
     // Verificar si termina en "s"
     if (trimmed.endsWith("s")) {
         const numStr = trimmed.slice(0, -1).trim();
-        const num = parseFloat(numStr);
+        const num = Number.parseFloat(numStr);
         
-        if (isNaN(num)) {
+        if (Number.isNaN(Number(num))) {
             return { seconds: 0, isValid: false, error: "Formato inválido" };
         }
         
@@ -45,8 +45,8 @@ export function parseTimeToSeconds(input) {
     }
     
     // Solo número (asumir segundos)
-    const num = parseFloat(trimmed);
-    if (isNaN(num)) {
+    const num = Number.parseFloat(trimmed);
+    if (Number.isNaN(Number(num))) {
         return { seconds: 0, isValid: false, error: "Formato inválido" };
     }
     
@@ -155,7 +155,7 @@ export function cleanTimeInput(input) {
 
 /**
  * Obtiene el placeholder sugerido según el contexto
- * @param {number} lastValidSeconds - Últimos segundos válidos
+ * @param {number|null} lastValidSeconds - Últimos segundos válidos
  * @returns {string} - Placeholder sugerido
  */
 export function getTimePlaceholder(lastValidSeconds = 5) {

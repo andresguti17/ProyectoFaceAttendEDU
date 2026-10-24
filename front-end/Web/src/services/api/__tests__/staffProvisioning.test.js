@@ -1,23 +1,11 @@
 jest.mock("../authApi", () => ({
     authApi: {
-        createPerson: jest.fn(),
-        createUser: jest.fn(),
-        deletePerson: jest.fn(),
+        provisionUser: jest.fn(),
     },
 }));
 jest.mock("../academicApi", () => ({
     academicApi: {
-        createActor: jest.fn(),
-        deleteActor: jest.fn(),
-        createEnrollment: jest.fn(),
-        deleteEnrollment: jest.fn(),
         listSchools: jest.fn(),
-    },
-}));
-jest.mock("../authorizationApi", () => ({
-    authorizationApi: {
-        listRoles: jest.fn(),
-        assignRole: jest.fn(),
     },
 }));
 jest.mock("../referenceData", () => ({
@@ -31,7 +19,6 @@ jest.mock("../referenceData", () => ({
 
 import { authApi } from "../authApi";
 import { academicApi } from "../academicApi";
-import { authorizationApi } from "../authorizationApi";
 import { listBlocks, listCohorts, listCourses, listPrograms, personMap } from "../referenceData";
 import { assertPersonUnique, cohortsForCourseCode, credentialsNotice, findExistingStudents, importStudents, markExistingStudents, provisionStaff, provisionStudent } from "../staffProvisioning";
 
@@ -41,74 +28,84 @@ const base = {
     email: "Ana@universidad.edu",
     documentNumber: "1234567890",
     password: "Secret123",
+    consent: { privacyAccepted: true, biometricAccepted: false },
 };
+
+function oneCohortCourse() {
+    listCourses.mockResolvedValue([{ courseId: 12, programId: 4, code: "MAT" }]);
+    listBlocks.mockResolvedValue([{ scheduleBlockId: 501, courseId: 12, cohortId: 50 }]);
+    listCohorts.mockResolvedValue([
+        { cohortId: 50, programId: 4, code: "F1", status: true },
+        { cohortId: 51, programId: 4, code: "F2", status: false },
+    ]);
+    listPrograms.mockResolvedValue([{ programId: 4, schoolId: 2 }]);
+}
 
 beforeEach(() => {
     jest.clearAllMocks();
     personMap.mockResolvedValue(new Map());
-    authApi.createPerson.mockResolvedValue({ personId: "person-1" });
-    authApi.createUser.mockResolvedValue({ userId: "user-1" });
-    authorizationApi.listRoles.mockResolvedValue([
-        { roleId: 1, roleName: "Administrador" },
-        { roleId: 2, roleName: "Instructor" },
-    ]);
+    authApi.provisionUser.mockResolvedValue({ personId: "person-1", userId: "user-1", username: "ana", academicActorId: 601 });
 });
 
-test("admin: creates person, user, role and the ADMIN school actor", async () => {
-    academicApi.listSchools.mockResolvedValue([{ schoolId: 2, name: "Sede" }]);
+test("the real authApi has no person delete: compensation lives on the server", () => {
+    const { authApi: real } = jest.requireActual("../authApi");
+    expect(real.deletePerson).toBeUndefined();
+    expect(typeof real.provisionUser).toBe("function");
+});
+
+test("admin: one server call with person, role and the ADMIN school actor", async () => {
     const result = await provisionStaff({ ...base, role: "admin", schoolId: "2" });
 
     expect(result).toEqual({ personId: "person-1", userId: "user-1", username: "ana", credentialsEmail: null });
-    expect(authApi.createPerson).toHaveBeenCalledWith({
-        documentNumber: "1234567890",
-        name: "Ana",
-        lastName: "García López",
-        email: "ana@universidad.edu",
-        status: true,
-    });
-    expect(authApi.createUser).toHaveBeenCalledWith({
-        personId: "person-1",
+    expect(authApi.provisionUser).toHaveBeenCalledTimes(1);
+    expect(authApi.provisionUser).toHaveBeenCalledWith({
+        person: {
+            documentNumber: "1234567890",
+            name: "Ana",
+            lastName: "García López",
+            email: "ana@universidad.edu",
+            status: true,
+        },
         username: "ana",
         password: "Secret123",
-        authenticationType: "Local",
         sendCredentials: false,
+        roleName: "Administrador",
+        academicActor: { actorTypeId: 3, schoolId: 2, actorCode: "ADMIN001" },
+        consent: { policyVersion: "2026-10", biometricAccepted: false },
     });
-    expect(authorizationApi.assignRole).toHaveBeenCalledWith("user-1", 1);
-    expect(academicApi.createActor).toHaveBeenCalledWith(
-        expect.objectContaining({ personId: "person-1", actorTypeId: 3, schoolId: 2 })
-    );
 });
 
 test("admin without school falls back to the only school", async () => {
     academicApi.listSchools.mockResolvedValue([{ schoolId: 2, name: "Sede" }]);
     await provisionStaff({ ...base, role: "admin", schoolId: null });
 
-    expect(academicApi.createActor).toHaveBeenCalledWith(
-        expect.objectContaining({ schoolId: 2 })
+    expect(authApi.provisionUser).toHaveBeenCalledWith(
+        expect.objectContaining({ academicActor: expect.objectContaining({ schoolId: 2 }) })
     );
 });
 
-test("admin without school fails when several schools exist", async () => {
+test("admin without school fails before creating anything when several schools exist", async () => {
     academicApi.listSchools.mockResolvedValue([{ schoolId: 2 }, { schoolId: 3 }]);
 
-    await expect(provisionStaff({ ...base, role: "admin", schoolId: null })).rejects.toThrow(
-        "No school available"
-    );
-    expect(authApi.deletePerson).toHaveBeenCalledWith("person-1");
+    await expect(provisionStaff({ ...base, role: "admin", schoolId: null })).rejects.toThrow("No school available");
+    expect(authApi.provisionUser).not.toHaveBeenCalled();
 });
 
-test("teacher: also creates the instructor actor in the given school", async () => {
+test("teacher: instructor role and actor in the given school", async () => {
     await provisionStaff({ ...base, role: "teacher", schoolId: 5 });
 
-    expect(academicApi.createActor).toHaveBeenCalledWith(
+    expect(authApi.provisionUser).toHaveBeenCalledWith(
         expect.objectContaining({
-            personId: "person-1",
-            actorTypeId: 2,
-            schoolId: 5,
-            actorCode: "ADMIN001",
+            roleName: "Instructor",
+            academicActor: { actorTypeId: 2, schoolId: 5, actorCode: "ADMIN001" },
         })
     );
-    expect(authorizationApi.assignRole).toHaveBeenCalledWith("user-1", 2);
+});
+
+test("a server failure is reported as is (the server already undid every step)", async () => {
+    authApi.provisionUser.mockRejectedValueOnce(Object.assign(new Error("Could not assign the role"), { status: 503 }));
+
+    await expect(provisionStaff({ ...base, role: "teacher", schoolId: 5 })).rejects.toThrow("Could not assign the role");
 });
 
 test("duplicate document reports the field before posting", async () => {
@@ -116,10 +113,8 @@ test("duplicate document reports the field before posting", async () => {
         new Map([["p-9", { personId: "p-9", documentNumber: "1234567890", email: "other@uni.edu" }]])
     );
 
-    await expect(
-        provisionStaff({ ...base, role: "admin", schoolId: "2" })
-    ).rejects.toThrow("número de documento");
-    expect(authApi.createPerson).not.toHaveBeenCalled();
+    await expect(provisionStaff({ ...base, role: "admin", schoolId: "2" })).rejects.toThrow("número de documento");
+    expect(authApi.provisionUser).not.toHaveBeenCalled();
 });
 
 test("duplicate email reports the field before posting", async () => {
@@ -127,10 +122,8 @@ test("duplicate email reports the field before posting", async () => {
         new Map([["p-9", { personId: "p-9", documentNumber: "999", email: "ana@universidad.edu" }]])
     );
 
-    await expect(
-        provisionStaff({ ...base, role: "admin", schoolId: "2" })
-    ).rejects.toThrow("correo electrónico");
-    expect(authApi.createPerson).not.toHaveBeenCalled();
+    await expect(provisionStaff({ ...base, role: "admin", schoolId: "2" })).rejects.toThrow("correo electrónico");
+    expect(authApi.provisionUser).not.toHaveBeenCalled();
 });
 
 test("assertPersonUnique passes through when the roster is unavailable", async () => {
@@ -141,49 +134,19 @@ test("assertPersonUnique passes through when the roster is unavailable", async (
     ).resolves.toBeUndefined();
 });
 
-test("compensates actor and person when user creation fails", async () => {
-    academicApi.listSchools.mockResolvedValue([{ schoolId: 2, name: "Sede" }]);
-    academicApi.createActor.mockResolvedValue({ academicActorId: 77 });
-    authApi.createUser.mockRejectedValueOnce(new Error("duplicate"));
+test("student: resolves the single cohort and asks the server to enroll", async () => {
+    oneCohortCourse();
+    authApi.provisionUser.mockResolvedValue({ personId: "person-1", userId: "user-1", academicActorId: 601, enrollmentId: 701 });
 
-    await expect(
-        provisionStaff({ ...base, role: "admin", schoolId: "2" })
-    ).rejects.toThrow("duplicate");
-    expect(academicApi.deleteActor).toHaveBeenCalledWith(77);
-    expect(authApi.deletePerson).toHaveBeenCalledWith("person-1");
-});
+    const result = await provisionStudent({ ...base, courseCode: "MAT" });
 
-test("student: resolves the single cohort and enrolls", async () => {
-    listCourses.mockResolvedValue([{ courseId: 12, programId: 4, code: "MAT" }]);
-    listBlocks.mockResolvedValue([{ scheduleBlockId: 501, courseId: 12, cohortId: 50 }]);
-    listCohorts.mockResolvedValue([
-        { cohortId: 50, programId: 4, code: "F1", status: true },
-        { cohortId: 51, programId: 4, code: "F2", status: false },
-    ]);
-    listPrograms.mockResolvedValue([{ programId: 4, schoolId: 2 }]);
-    authorizationApi.listRoles.mockResolvedValue([{ roleId: 5, roleName: "Aprendiz" }]);
-    academicApi.createActor.mockResolvedValue({ academicActorId: 601 });
-    academicApi.createEnrollment.mockResolvedValue({ enrollmentId: 701 });
-
-    const result = await provisionStudent({
-        ...base,
-        courseCode: "MAT",
-    });
-
-    expect(result).toEqual({
-        personId: "person-1",
-        userId: "user-1",
-        actorId: 601,
-        cohortId: 50,
-        credentialsEmail: null,
-    });
-    expect(academicApi.createActor).toHaveBeenCalledWith(
-        expect.objectContaining({ actorTypeId: 1, schoolId: 2, actorCode: "ADMIN001" })
+    expect(result).toEqual({ personId: "person-1", userId: "user-1", actorId: 601, cohortId: 50, credentialsEmail: null });
+    expect(authApi.provisionUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+            roleName: "Aprendiz",
+            academicActor: { actorTypeId: 1, schoolId: 2, actorCode: "ADMIN001", cohortId: 50 },
+        })
     );
-    expect(academicApi.createEnrollment).toHaveBeenCalledWith(
-        expect.objectContaining({ academicActorId: 601, cohortId: 50, enrollmentStatus: "Active" })
-    );
-    expect(authorizationApi.assignRole).toHaveBeenCalledWith("user-1", 5);
 });
 
 test("student: requires cohort choice when several are active", async () => {
@@ -198,26 +161,19 @@ test("student: requires cohort choice when several are active", async () => {
     ]);
     listPrograms.mockResolvedValue([{ programId: 4, schoolId: 2 }]);
 
-    await expect(provisionStudent({ ...base, courseCode: "MAT" })).rejects.toThrow(
-        "Select the student cohort"
-    );
-    expect(authApi.createPerson).not.toHaveBeenCalled();
+    await expect(provisionStudent({ ...base, courseCode: "MAT" })).rejects.toThrow("Select the student cohort");
+    expect(authApi.provisionUser).not.toHaveBeenCalled();
 });
 
-test("student: compensates enrollment, actor and person on user failure", async () => {
-    listCourses.mockResolvedValue([{ courseId: 12, programId: 4, code: "MAT" }]);
-    listBlocks.mockResolvedValue([{ scheduleBlockId: 501, courseId: 12, cohortId: 50 }]);
-    listCohorts.mockResolvedValue([{ cohortId: 50, programId: 4, code: "F1", status: true }]);
-    listPrograms.mockResolvedValue([{ programId: 4, schoolId: 2 }]);
-    authorizationApi.listRoles.mockResolvedValue([{ roleId: 5, roleName: "Aprendiz" }]);
-    academicApi.createActor.mockResolvedValue({ academicActorId: 601 });
-    academicApi.createEnrollment.mockResolvedValue({ enrollmentId: 701 });
-    authApi.createUser.mockRejectedValueOnce(new Error("duplicate"));
+test("no account is created without the privacy notice (Ley 1581)", async () => {
+    await expect(provisionStaff({ ...base, consent: null, role: "teacher", schoolId: 5 })).rejects.toThrow("aviso de privacidad");
+    await expect(importStudents([{ name: "A", code: "1", email: "a@b.c", course: "MAT" }])).rejects.toThrow("aviso de privacidad");
+    expect(authApi.provisionUser).not.toHaveBeenCalled();
+});
 
-    await expect(provisionStudent({ ...base, courseCode: "MAT" })).rejects.toThrow("duplicate");
-    expect(academicApi.deleteEnrollment).toHaveBeenCalledWith(701);
-    expect(academicApi.deleteActor).toHaveBeenCalledWith(601);
-    expect(authApi.deletePerson).toHaveBeenCalledWith("person-1");
+test("cohortsForCourseCode returns nothing for an unknown course", async () => {
+    listCourses.mockResolvedValue([]);
+    await expect(cohortsForCourseCode("XYZ")).resolves.toEqual([]);
 });
 
 describe("markExistingStudents", () => {
@@ -233,10 +189,10 @@ describe("markExistingStudents", () => {
             { name: "C", code: "C3", email: "c@nuevo.com", documentNumber: "123" },
         ];
         const out = markExistingStudents(rows, roster.values());
-        expect(out[0].existing).toBe(true);  // correo ya registrado
-        expect(out[1].existing).toBe(true);  // code como documento efectivo
-        expect(out[2].existing).toBeUndefined(); // fila nueva intacta
-        expect(out).toHaveLength(3);          // nunca descarta filas
+        expect(out[0].existing).toBe(true);
+        expect(out[1].existing).toBe(true);
+        expect(out[2].existing).toBeUndefined();
+        expect(out).toHaveLength(3);
     });
 
     test("padrón vacío no marca nada", () => {
@@ -247,9 +203,7 @@ describe("markExistingStudents", () => {
 
 describe("findExistingStudents", () => {
     test("consulta el padrón y marca los duplicados", async () => {
-        personMap.mockResolvedValue(
-            new Map([["p-1", { personId: "p-1", documentNumber: "1", email: "a@b.com" }]])
-        );
+        personMap.mockResolvedValue(new Map([["p-1", { personId: "p-1", documentNumber: "1", email: "a@b.com" }]]));
         const out = await findExistingStudents([{ name: "A", code: "2", email: "a@b.com" }]);
         expect(out[0].existing).toBe(true);
     });
@@ -262,13 +216,12 @@ describe("findExistingStudents", () => {
 });
 
 describe("credentials email", () => {
-    test("staff: forwards sendCredentials to the user creation and returns the email status", async () => {
-        academicApi.listSchools.mockResolvedValue([{ schoolId: 2 }]);
-        authApi.createUser.mockResolvedValue({ userId: "user-1", username: "ana", credentialsEmail: "SENT" });
+    test("staff: forwards sendCredentials and returns the email status", async () => {
+        authApi.provisionUser.mockResolvedValue({ userId: "user-1", username: "ana", credentialsEmail: "SENT" });
 
         const result = await provisionStaff({ ...base, role: "admin", schoolId: "2", sendCredentials: true });
 
-        expect(authApi.createUser).toHaveBeenCalledWith(expect.objectContaining({ sendCredentials: true }));
+        expect(authApi.provisionUser).toHaveBeenCalledWith(expect.objectContaining({ sendCredentials: true }));
         expect(result.credentialsEmail).toBe("SENT");
     });
 
@@ -290,13 +243,7 @@ describe("credentials email", () => {
         ];
 
         beforeEach(() => {
-            listCourses.mockResolvedValue([{ courseId: 12, programId: 4, code: "MAT" }]);
-            listBlocks.mockResolvedValue([{ scheduleBlockId: 501, courseId: 12, cohortId: 50 }]);
-            listCohorts.mockResolvedValue([{ cohortId: 50, programId: 4, code: "F1", status: true }]);
-            listPrograms.mockResolvedValue([{ programId: 4, schoolId: 2 }]);
-            authorizationApi.listRoles.mockResolvedValue([{ roleId: 5, roleName: "Aprendiz" }]);
-            academicApi.createActor.mockResolvedValue({ academicActorId: 601 });
-            academicApi.createEnrollment.mockResolvedValue({ enrollmentId: 701 });
+            oneCohortCourse();
             jest.useFakeTimers();
         });
 
@@ -305,35 +252,45 @@ describe("credentials email", () => {
         });
 
         async function run(options) {
-            const promise = importStudents(rows, options);
+            const promise = importStudents(rows, { privacyAccepted: true, ...options });
             await jest.runAllTimersAsync();
             return promise;
         }
 
         test("sends a different random password per student and tallies who got the email", async () => {
-            authApi.createUser
+            authApi.provisionUser
                 .mockResolvedValueOnce({ userId: "u1", credentialsEmail: "SENT" })
                 .mockResolvedValueOnce({ userId: "u2", credentialsEmail: "FAILED" });
 
             const result = await run();
 
-            const passwords = authApi.createUser.mock.calls.map(([body]) => body.password);
+            const passwords = authApi.provisionUser.mock.calls.map(([body]) => body.password);
             expect(passwords[0]).not.toBe(passwords[1]);
             expect(passwords.every((p) => p !== "Estudiante123!" && p.length >= 8)).toBe(true);
-            expect(authApi.createUser).toHaveBeenCalledWith(expect.objectContaining({ sendCredentials: true }));
             expect(result.success).toBe(2);
             expect(result.credentials).toEqual({ sent: 1, notSent: ["Beto Dos"] });
         });
 
         test("without sendCredentials keeps the shared fallback password and no email", async () => {
-            authApi.createUser.mockResolvedValue({ userId: "u1" });
+            authApi.provisionUser.mockResolvedValue({ userId: "u1" });
 
             const result = await run({ sendCredentials: false });
 
-            expect(authApi.createUser).toHaveBeenCalledWith(
+            expect(authApi.provisionUser).toHaveBeenCalledWith(
                 expect.objectContaining({ password: "Estudiante123!", sendCredentials: false })
             );
             expect(result.credentials).toEqual({ sent: 0, notSent: [] });
+        });
+
+        test("a failed row is reported and the import continues", async () => {
+            authApi.provisionUser
+                .mockRejectedValueOnce(new Error("Could not enroll the apprentice"))
+                .mockResolvedValueOnce({ userId: "u2", credentialsEmail: "SENT" });
+
+            const result = await run();
+
+            expect(result.success).toBe(1);
+            expect(result.errors).toEqual([{ student: "Ana Uno", reason: "Could not enroll the apprentice" }]);
         });
     });
 });

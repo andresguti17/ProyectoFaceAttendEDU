@@ -27,6 +27,7 @@ from domain.entities.match_log import BiometricMatchLog
 from domain.entities.update_case import BiometricUpdateCase
 from domain.value_objects.biometric_type import BiometricType
 from domain.value_objects.update_case_status import UpdateCaseStatus
+from infrastructure.security.biometric_cipher import BiometricCipher, get_cipher
 
 
 def alive_filter() -> dict[str, Any]:
@@ -41,10 +42,13 @@ def alive_filter() -> dict[str, Any]:
 # -- Templates -----------------------------------------------------------
 def embedding_to_document(entity: FacialEmbedding | FingerprintEmbedding) -> dict[str, Any]:
     """Serialise a template entity. ``finger_number`` is written for fingerprints only."""
+    # Ley 1581: the biometric vector and the raw sample are encrypted at rest; `_id` binds them to this document.
+    aad = str(entity.embedding_id)
+    values = [float(value) for value in entity.encoding]
     document: dict[str, Any] = {
         "_id": entity.embedding_id,
         "person_id": entity.person_id,
-        "encoding": [float(value) for value in entity.encoding],
+        "encoding": get_cipher().encrypt_floats(values, aad) if values else [],
         "model_version": entity.model_version,
         "template_version": int(entity.template_version),
         "enrolled_at": entity.enrolled_at,
@@ -57,7 +61,10 @@ def embedding_to_document(entity: FacialEmbedding | FingerprintEmbedding) -> dic
         document["finger_number"] = int(finger)
     raw_sample_b64 = getattr(entity, "raw_sample_b64", None)
     if raw_sample_b64 is not None:
-        document["raw_sample_b64"] = raw_sample_b64
+        document["raw_sample_b64"] = (
+            raw_sample_b64 if BiometricCipher.is_encrypted(raw_sample_b64)
+            else get_cipher().encrypt_text(raw_sample_b64, aad)
+        )
     sample_format = getattr(entity, "sample_format", None)
     if sample_format is not None:
         document["sample_format"] = int(sample_format)
@@ -70,10 +77,15 @@ def document_to_embedding(
     document: dict[str, Any], biometric_type: BiometricType
 ) -> FacialEmbedding | FingerprintEmbedding:
     """Rebuild the right entity class for the collection the document came from."""
+    aad = str(document["_id"])
+    stored_encoding = document.get("encoding") or []
     shared: dict[str, Any] = {
-        "embedding_id": str(document["_id"]),
+        "embedding_id": aad,
         "person_id": str(document["person_id"]),
-        "encoding": [float(value) for value in document.get("encoding") or []],
+        # Legacy documents (before encryption) still hold a plain list.
+        "encoding": get_cipher().decrypt_floats(stored_encoding, aad)
+        if BiometricCipher.is_encrypted(stored_encoding)
+        else [float(value) for value in stored_encoding],
         "model_version": str(document.get("model_version") or ""),
         "template_version": int(document.get("template_version") or 1),
         "is_active": bool(document.get("is_active", True)),
@@ -83,9 +95,12 @@ def document_to_embedding(
         "deleted_at": document.get("deleted_at"),
     }
     if biometric_type is BiometricType.FINGERPRINT:
+        raw_sample = document.get("raw_sample_b64")
+        if BiometricCipher.is_encrypted(raw_sample):
+            raw_sample = get_cipher().decrypt_text(raw_sample, aad)
         return FingerprintEmbedding(
             finger_number=int(document["finger_number"]),
-            raw_sample_b64=document.get("raw_sample_b64"),
+            raw_sample_b64=raw_sample,
             sample_format=document.get("sample_format"),
             **shared,
         )

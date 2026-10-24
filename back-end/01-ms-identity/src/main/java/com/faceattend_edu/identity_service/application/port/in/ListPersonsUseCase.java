@@ -9,4 +9,8 @@ public interface ListPersonsUseCase {
     List<Person> listPersons(int pageIndex, int limit);
 
     long countPersons();
+
+    List<Person> listPersons(int pageIndex, int limit, java.util.Set<java.util.UUID> personIds);
+
+    long countPersons(java.util.Set<java.util.UUID> personIds);
 }

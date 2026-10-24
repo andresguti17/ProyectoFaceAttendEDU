@@ -6,7 +6,7 @@
 export const WHITE = '#FFFFFF';
 export const INK = '#121212';
 
-const hexToRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const hexToRgb = (hex) => [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
 
 const toChannel = (n) => Math.round(Math.min(255, Math.max(0, n))).toString(16).padStart(2, '0');
 

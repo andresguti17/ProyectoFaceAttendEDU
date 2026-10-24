@@ -98,7 +98,7 @@ export default function ManageEnviromentScreen({navigation, userRole}) {
             showError(t('manageAmbientes.validation'), t('manageAmbientes.locationRequired'));
             return;
         }
-        if (!form.capacidad || isNaN(form.capacidad) || Number(form.capacidad) <= 0) {
+        if (!form.capacidad || Number.isNaN(Number(form.capacidad)) || Number(form.capacidad) <= 0) {
             showError(t('manageAmbientes.validation'), t('manageAmbientes.capacityInvalid'));
             return;
         }

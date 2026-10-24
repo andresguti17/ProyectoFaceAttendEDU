@@ -10,6 +10,7 @@
 //                  email, phone, username, password
 // ============================================================
 
+import { PRIVACY_POLICY_VERSION } from "../config/privacy";
 import { isValidEmail, isValidPhone, checkPassword } from "./validation";
 
 export const DOCUMENT_TYPES = ["CC", "TI", "CE", "PP"];
@@ -18,6 +19,8 @@ export const EMPTY_FORM = {
     code: "", name: "", cityName: "", address: "", phone: "", email: "",
     documentType: "", documentNumber: "", adminName: "", adminLastName: "",
     adminEmail: "", adminPhone: "", username: "", password: "", confirmPassword: "",
+    // Ley 1581: aviso de privacidad (obligatorio) y autorización biométrica (facultativa).
+    privacyAccepted: false, biometricAccepted: false,
 };
 
 const CODE_RE = /^[A-Z0-9][A-Z0-9-]*$/;
@@ -102,6 +105,8 @@ export function validateAdminStep(values, t = (s) => s) {
 
     if (blank(values.confirmPassword)) e.confirmPassword = t("Confirma la contraseña");
     else if (values.confirmPassword !== values.password) e.confirmPassword = t("Las contraseñas no coinciden");
+
+    if (values.privacyAccepted !== true) e.privacyAccepted = t("Debes aceptar el aviso de privacidad");
     return e;
 }
 
@@ -128,6 +133,8 @@ export function buildOnboardingPayload(values) {
             phone: optional(values.adminPhone),
             username: trimmed(values.username),
             password: values.password,
+            privacyPolicyVersion: PRIVACY_POLICY_VERSION,
+            biometricAccepted: values.biometricAccepted === true,
         },
     };
 }

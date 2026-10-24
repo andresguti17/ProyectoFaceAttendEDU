@@ -156,6 +156,8 @@ export function validateUserForm(form) {
     if (!form.email.trim()) return "El correo es requerido";
     if (!isValidEmail(form.email.trim())) return "El formato del correo electrónico no es válido";
     if (!form.role) return "El rol es requerido";
+    // Ley 1581: la cuenta solo se crea con la aceptación del aviso de privacidad.
+    if (form.privacyAccepted !== true) return "Confirma que la persona aceptó el aviso de privacidad";
 
     // Todos los roles se crean en el backend (POST /persons exige
     // documentNumber, POST /users exige password de 8-100 chars).
@@ -163,7 +165,7 @@ export function validateUserForm(form) {
     if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
     // Campos opcionales de persona (PersonDto): formato fecha si se informa.
     if (String(form.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form.birthDate).trim())) {
-        return "La fecha de nacimiento debe tener formato AAAA-MM-DD";
+        return "La fecha de nacimiento está incompleta o no es válida";
     }
 
     // Validación adicional para estudiantes
@@ -521,6 +523,7 @@ export function useUsersViewModel(
                         cohortId: String(form.cohortId ?? "").trim() || null,
                         details: form,
                         sendCredentials: form.sendCredentials !== false,
+                        consent: { privacyAccepted: form.privacyAccepted === true, biometricAccepted: form.biometricAccepted === true },
                     });
                 } catch (e) {
                     return e?.message || "No se pudo registrar el estudiante en el backend";
@@ -555,6 +558,7 @@ export function useUsersViewModel(
                     schoolId: String(form.schoolId ?? "").trim() || user?.schoolId,
                     details: form,
                     sendCredentials: form.sendCredentials !== false,
+                    consent: { privacyAccepted: form.privacyAccepted === true, biometricAccepted: form.biometricAccepted === true },
                 });
             } catch (e) {
                 return e?.message || "No se pudo registrar el usuario en el backend";
@@ -572,14 +576,14 @@ export function useUsersViewModel(
     );
 
     const importUsers = useCallback(
-        async (drafts, userType = USER_TYPES.STUDENT) => {
+        async (drafts, options = {}, userType = USER_TYPES.STUDENT) => {
             // Delegar al método correspondiente según el tipo
             if (userType === USER_TYPES.STUDENT) {
                 // Alta real en el backend por fila (persona + actor + matrícula +
                 // usuario + rol). Antes esto solo guardaba filas falsas en
                 // AsyncStorage (appData.importStudents): "importación exitosa"
                 // sin crear nada en el backend.
-                const result = await bulkImportStudents(drafts);
+                const result = await bulkImportStudents(drafts, { privacyAccepted: options?.privacyAccepted === true });
                 // Refleja en la UI lo que sí se creó de verdad (sin esto los
                 // estudiantes importados no aparecían hasta recargar la página).
                 // Con try/catch: si la recarga falla (p. ej. 429 del rate-limit

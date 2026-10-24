@@ -34,6 +34,7 @@ jest.mock("../../../../core/utils/i18n/hooks/useTranslation", () => ({
 jest.mock("../../../../context/AppDataContext", () => ({ useAppData: () => ({ courses: [] }) }));
 jest.mock("../../../../core/config/institutionConfig", () => ({
     getInstitutionConfig: () => ({ minAttendance: 75 }),
+    onInstitutionConfigChange: () => () => {},
 }));
 jest.mock("../../../../services/api/biometricCaptureApi", () => ({
     biometricCaptureApi: { summary: jest.fn() },

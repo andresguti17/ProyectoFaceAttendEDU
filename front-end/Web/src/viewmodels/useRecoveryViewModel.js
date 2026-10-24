@@ -8,6 +8,7 @@
 
 import { useState, useCallback } from "react";
 import { authApi } from "../services/api/authApi";
+import { isValidEmail } from "../core/utils/validation";
 
 export const RECOVERY_STEPS = {
     EMAIL: "email",
@@ -17,7 +18,7 @@ export const RECOVERY_STEPS = {
 };
 
 function isEmail(value) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value ?? "").trim());
+    return isValidEmail(String(value ?? "").trim());
 }
 
 export function useRecoveryViewModel() {

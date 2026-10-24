@@ -34,10 +34,22 @@ async function buildHeaders(requiresAuth) {
   return headers;
 }
 
+/** URL completa (base del gateway + ruta), p. ej. para descargas con FileSystem. */
+export function apiUrl(path) {
+  return buildUrl(path);
+}
+
+// Un solo recorrido: la regex de barras finales retrocede de forma cuadrática con rachas largas de "/".
+function trimTrailingSlashes(value) {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === '/') end -= 1;
+  return value.slice(0, end);
+}
+
 function buildUrl(path) {
   if (path.startsWith('http')) return path;
   const canonical = canonicalizePath(path);
-  const base = BASE_URL.replace(/\/+$/, '');
+  const base = trimTrailingSlashes(BASE_URL);
   return `${base}/${canonical.replace(/^\//, '')}`;
 }
 
@@ -270,7 +282,13 @@ async function performRequest({ method, url, data = null, params = null, require
   };
 
   if (data && method !== 'GET') {
-    options.body = JSON.stringify(data);
+    // FormData (archivos): viaja tal cual y fetch pone el Content-Type multipart con su boundary.
+    if (typeof FormData !== 'undefined' && data instanceof FormData) {
+      delete options.headers['Content-Type'];
+      options.body = data;
+    } else {
+      options.body = JSON.stringify(data);
+    }
   }
 
   const controller = new AbortController();

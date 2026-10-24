@@ -6,7 +6,8 @@ services:
       - --searchPath=/liquibase/project
       - --url=jdbc:postgresql://${LIQUIBASE_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-faceattend_db}
       - --username=${POSTGRES_USER:-postgres}
-      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - --contexts=${LIQUIBASE_CONTEXTS:-seed}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
     volumes:

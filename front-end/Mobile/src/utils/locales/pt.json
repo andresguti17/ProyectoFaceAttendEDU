@@ -379,7 +379,10 @@
     "statusRejected": "Rejeitada",
     "rejectionReason": "Motivo da rejeição",
     "reviewerNotes": "Comentário do revisor",
-    "noReviewerNotes": "O revisor não deixou comentário."
+    "noReviewerNotes": "O revisor não deixou comentário.",
+    "openDocument": "Abrir",
+    "documentUnavailable": "Não foi possível abrir o comprovante. Se foi registrado antes do envio de arquivos, não tem conteúdo.",
+    "noDocumentViewer": "Este dispositivo não tem um aplicativo para abrir o comprovante."
   },
   "justify": {
     "title": "Configuração de Justificativas",
@@ -415,7 +418,8 @@
     "confirmMessage": "Tem certeza de que deseja enviar esta justificativa?",
     "confirmTitle": "Confirmar envio",
     "submitError": "Não foi possível enviar a justificativa",
-    "noRecordForDate": "Nenhum registro de presença para essa data"
+    "noRecordForDate": "Nenhum registro de presença para essa data",
+    "uploadError": "A justificativa foi registrada, mas o comprovante não pôde ser enviado. Tente novamente mais tarde."
   },
   "menuJustify": {
     "backToDashboard": "Voltar ao Dashboard"
@@ -1347,5 +1351,32 @@
   "errors": {
     "missingPerson": "Falta o registro de pessoa do usuário.",
     "missingSchool": "Falta a escola selecionada."
+  },
+  "privacyConsent": {
+    "title": "Proteção de dados pessoais",
+    "saveError": "Não foi possível registrar a autorização. Tente novamente.",
+    "requiredForAccount": "Confirme que a pessoa aceitou o aviso de privacidade (Lei 1581).",
+    "holderAccepted": "A pessoa aceitou o aviso de privacidade *",
+    "holderBiometric": "Autoriza o tratamento dos seus dados biométricos (facultativo)",
+    "biometricTitle": "Dados biométricos",
+    "biometricAuthorized": "Você autorizou o uso do seu rosto e da sua digital para registrar a presença.",
+    "biometricNotAuthorized": "Você não autorizou o tratamento dos seus dados biométricos.",
+    "biometricNotice": "Seu rosto é um dado sensível. Autorizar o tratamento é facultativo: caso contrário, sua presença é registrada por outros meios. Guardamos um modelo criptografado, não a foto, apenas para a presença, e você pode revogar a autorização no seu perfil.",
+    "authorizeButton": "Autorizo o tratamento dos meus dados biométricos",
+    "revokeTitle": "Revogar autorização biométrica",
+    "revokeConfirm": "Seus modelos de rosto e digital serão excluídos. Continuar?",
+    "revokeButton": "Revogar e excluir meus dados biométricos",
+    "revoked": "Autorização revogada e dados biométricos excluídos."
+  },
+  "push": {
+    "permission": {
+      "title": "Notificações de alertas",
+      "body": "O FaceAttend EDU vai avisar você neste dispositivo quando houver um novo alerta, como o resultado de uma justificativa. Em seguida, o sistema pedirá permissão."
+    },
+    "denied": {
+      "title": "Notificações desativadas",
+      "body": "Você não receberá avisos de alertas neste dispositivo. Para ativá-los, abra os ajustes do sistema, vá em FaceAttend EDU > Notificações e permita-as. Enquanto isso, seus alertas continuam em Novidades.",
+      "open_settings": "Abrir ajustes"
+    }
   }
 }

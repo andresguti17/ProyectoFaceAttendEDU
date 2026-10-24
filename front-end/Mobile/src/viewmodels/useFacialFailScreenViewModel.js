@@ -43,7 +43,7 @@ export function useFacialFailViewModel() {
                 console.error('Error cargando rol:', error);
             }
         };
-        init();
+        void init();
     }, [loadThemeForRole]);
 
     // Navegación

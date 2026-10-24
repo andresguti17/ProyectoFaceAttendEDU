@@ -13,6 +13,7 @@ import { useRolePermissions } from "../../viewmodels/useRolePermissions";
 // ── Importación de Layout Component ───────────────────────────
 import AuthenticatedLayout from "./AuthenticatedLayout";
 import ForcePasswordChange from "./ForcePasswordChange";
+import PrivacyConsentGate from "./PrivacyConsentGate";
 
 /**
  * AuthMiddleware - Higher Order Component para autenticación
@@ -70,6 +71,18 @@ export default function AuthMiddleware(ScreenComponent) {
                 <SafeAreaProvider>
                     <SafeAreaView style={{ flex: 1, backgroundColor: c.background.app }}>
                         <ForcePasswordChange />
+                    </SafeAreaView>
+                </SafeAreaProvider>
+            );
+        }
+
+        // 5. Aviso de privacidad (Ley 1581) sin aceptar en su versión vigente:
+        // se pide después del cambio de contraseña (el gateway no deja escribir antes).
+        if (user.consentRequired) {
+            return (
+                <SafeAreaProvider>
+                    <SafeAreaView style={{ flex: 1, backgroundColor: c.background.app }}>
+                        <PrivacyConsentGate />
                     </SafeAreaView>
                 </SafeAreaProvider>
             );

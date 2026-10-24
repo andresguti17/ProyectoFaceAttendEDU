@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
 import { provisionStudent, credentialsNotice } from "../services/api/staffProvisioning";
+import { isValidEmail } from "../core/utils/validation";
 
 // ── Tipos de formulario ───────────────────────────────────
 
@@ -31,12 +32,13 @@ export function validateStudentForm(form) {
     if (!form.code.trim()) return "Completa todos los campos";
     if (!form.email.trim()) return "Completa todos los campos";
     if (!form.role) return "Completa todos los campos";
+    if (form.privacyAccepted !== true) return "Confirma que la persona aceptó el aviso de privacidad";
     // Todos los roles se crean en el backend (POST /persons exige
     // documentNumber, POST /users exige password de 8-100 chars).
     if (!String(form.documentNumber ?? "").trim()) return "Completa todos los campos";
     if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
     if (String(form.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form.birthDate).trim())) {
-        return "La fecha de nacimiento debe tener formato AAAA-MM-DD";
+        return "La fecha de nacimiento está incompleta o no es válida";
     }
     // El programa/ficha solo aplica a estudiantes (el formulario de
     // docente/administrador ni siquiera lo muestra).
@@ -66,7 +68,7 @@ export function validateStudentFormDetailed(form) {
     
     if (!form.email.trim()) {
         errors.push({ field: 'email', message: 'El correo electrónico es requerido' });
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    } else if (!isValidEmail(form.email.trim())) {
         errors.push({ field: 'email', message: 'El formato del correo electrónico no es válido' });
     }
     
@@ -132,6 +134,7 @@ export function useStudentsViewModel() {
                     cohortId: String(form.cohortId ?? "").trim() || null,
                     details: form,
                     sendCredentials: form.sendCredentials !== false,
+                    consent: { privacyAccepted: form.privacyAccepted === true, biometricAccepted: form.biometricAccepted === true },
                 });
             } catch (e) {
                 return e?.message || "No se pudo registrar el estudiante en el backend";

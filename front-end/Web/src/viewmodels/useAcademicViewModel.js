@@ -15,18 +15,9 @@ import { academicApi } from "../services/api";
 import { createProgram } from "../services/api/courseCreation";
 import { createPeriod } from "../services/api/fichaCreation";
 import { resetReferenceData } from "../services/api/referenceData";
+import { alignSettingsWithPeriods, todayLocalIso } from "../services/api/periodSync";
+import { getConfiguredAcademicPeriodType, validatePeriodDates } from "../core/constants/academicPeriods";
 import { getActiveSchool, listCohorts, listCourses, listPrograms, optional } from "../services/api/referenceData";
-
-// Suma un mes calendario a una fecha ISO (AAAA-MM-DD), respetando el último
-// día del mes destino (31 de enero → 28/29 de febrero). Se usa para exigir una
-// duración mínima de un mes en el período académico.
-function addOneMonth(isoDate) {
-    const [y, m, d] = isoDate.split("-").map(Number);
-    // m (0-based) ya apunta al mes siguiente al original.
-    const daysInTarget = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
-    const day = Math.min(d, daysInTarget);
-    return new Date(Date.UTC(y, m, day)).toISOString().slice(0, 10);
-}
 
 export function useAcademicViewModel() {
     const { user } = useAuth();
@@ -58,8 +49,10 @@ export function useAcademicViewModel() {
             setPeriods(periodList);
             setCohorts(cohortList);
             setCourses(courseList);
+            return periodList;
         } catch (e) {
             setError(e?.message || t("No se pudo cargar la sección académica."));
+            return [];
         } finally {
             setIsLoading(false);
         }
@@ -128,11 +121,11 @@ export function useAcademicViewModel() {
             return e?.message || "No se pudo actualizar el período";
         }
         resetReferenceData();
-        setPeriods((prev) =>
-            prev.map((p) => (p.academicPeriodId === id ? { ...p, isActive: next } : p))
-        );
+        const updated = periods.map((p) => (p.academicPeriodId === id ? { ...p, isActive: next } : p));
+        setPeriods(updated);
+        await alignSettingsWithPeriods(schoolId, updated).catch(() => {});
         return null;
-    }, []);
+    }, [periods, schoolId]);
 
     const removePeriod = useCallback(async (period) => {
         const id = period?.academicPeriodId;
@@ -210,21 +203,17 @@ export function useAcademicViewModel() {
             const from = String(startsOn ?? "").trim();
             const to = String(endsOn ?? "").trim();
             if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
-                return "Las fechas deben tener formato AAAA-MM-DD";
+                return "Las fechas están incompletas o no son válidas";
             }
             if (from >= to) return "El inicio debe ser anterior al fin";
 
-            // Reglas razonables de negocio:
-            // 1) Un período nuevo no puede iniciar en el pasado.
-            // 2) Duración mínima de un mes calendario.
-            // 3) No solaparse con otro período activo de la misma sede.
-            const todayIso = new Date().toISOString().slice(0, 10);
-            if (academicPeriodId == null && from < todayIso) {
+            // Reglas: un período nuevo no inicia en el pasado y su duración sigue el tipo de
+            // período de Configuración (mínimo 4 semanas, máximo según anual/semestral/…).
+            if (academicPeriodId == null && from < todayLocalIso()) {
                 return "El período nuevo no puede iniciar en el pasado";
             }
-            if (to < addOneMonth(from)) {
-                return "El período debe durar al menos un mes";
-            }
+            const rangeError = validatePeriodDates(from, to, getConfiguredAcademicPeriodType());
+            if (rangeError) return rangeError;
             const overlaps = (periods ?? []).some(
                 (p) =>
                     p?.academicPeriodId !== academicPeriodId &&
@@ -254,7 +243,9 @@ export function useAcademicViewModel() {
             } catch (e) {
                 return e?.message || "No se pudo guardar el período";
             }
-            await load();
+            const fresh = await load();
+            // Si es el período vigente, Configuración toma sus fechas.
+            await alignSettingsWithPeriods(schoolId, fresh ?? []).catch(() => {});
             return null;
         },
         [schoolId, periods, load]

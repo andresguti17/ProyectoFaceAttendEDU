@@ -173,6 +173,13 @@ class MongoEmbeddingRepository(BiometricRepositoryPort):
         ).to_list(length=None)
         return [self._entity(document) for document in documents]
 
+    async def purge(self, person_id: str) -> int:
+        if not person_id:
+            raise ValueError("person_id is required to purge templates")
+        result = await self._collection.delete_many(self._scope(person_id))
+        logger.info("Purged %d %s template(s) of person %s", result.deleted_count, self._type.value.lower(), person_id)
+        return int(result.deleted_count)
+
     async def deactivate(self, person_id: str, finger_number: int | None = None) -> int:
         if not person_id:
             # Never allow a store-wide soft delete through a missing argument.

@@ -22,6 +22,8 @@ const validForm = {
     username: "ana.perez",
     password: "Str0ng!Passw0rd#",
     confirmPassword: "Str0ng!Passw0rd#",
+    privacyAccepted: true,
+    biometricAccepted: false,
 };
 
 describe("input normalizers", () => {
@@ -89,6 +91,12 @@ describe("buildOnboardingPayload", () => {
         expect(payload.admin.lastName).toBe("Pérez");
         expect(payload.admin.documentType).toBe("CC");
         expect(payload.admin.password).toBe("Str0ng!Passw0rd#");
+        expect(payload.admin.privacyPolicyVersion).toBe("2026-10");
+        expect(payload.admin.biometricAccepted).toBe(false);
+    });
+
+    it("requires the privacy notice before the administrator step is valid (Ley 1581)", () => {
+        expect(validateAdminStep({ ...validForm, privacyAccepted: false }).privacyAccepted).toBeDefined();
     });
 
     it("omits empty optional fields and never sends the confirmation", () => {

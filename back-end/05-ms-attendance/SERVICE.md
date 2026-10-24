@@ -2,7 +2,7 @@
 
 ## 1. Responsabilidad
 
-Registro de asistencia con multiples fuentes (reconocimiento facial, manual, IoT, importacion), justificaciones de inasistencia/tardanza y gestion de documentos de soporte.
+Registro de asistencia con multiples fuentes (reconocimiento facial, manual, huella, importacion), justificaciones de inasistencia/tardanza y gestion de documentos de soporte.
 
 ## 2. Tablas
 
@@ -28,7 +28,7 @@ Registro de asistencia con multiples fuentes (reconocimiento facial, manual, IoT
 | Lenguaje | **Java 21** | Consistencia con el proyecto |
 | Framework | **Spring Boot 4.1.1** | Ecosistema unificado |
 | Arquitectura | **Hexagonal** | Misma estructura |
-| API alternativa | **Spring WebFlux** (opcional) | Endpoint reactivo para registro IoT en tiempo real |
+| API alternativa | **Spring WebFlux** (opcional) | Endpoint reactivo para registro en tiempo real |
 
 ### 3.2 Dependencias Principales
 
@@ -42,7 +42,7 @@ spring-boot-starter-actuator
 spring-boot-starter-kafka
 spring-boot-starter-liquibase
 
-<!-- Reactivo (opcional, para IoT) -->
+<!-- Reactivo (opcional) -->
 spring-boot-starter-webflux
 
 <!-- Persistencia -->
@@ -67,7 +67,7 @@ mapstruct-processor
 | **MapStruct** | Mapeo DTO <-> Entity | Type-safe |
 | **Lombok** | Boilerplate reduction | Reduce codigo |
 | **Apache Tika** | Deteccion de tipos MIME | Validar tipos de archivos adjuntos |
-| **Spring WebFlux** | Endpoint reactivo | Para dispositivos IoT que envian asistencia |
+| **Spring WebFlux** | Endpoint reactivo | Para registro de asistencia en tiempo real |
 | **MinIO Client** | Almacenamiento S3-compatible | Almacenar documentos de soporte |
 | **AWS SDK S3** | Almacenamiento en nube | Alternativa a MinIO |
 | **Testcontainers** | Tests de integracion | PostgreSQL real |
@@ -91,7 +91,7 @@ mapstruct-processor
 
 | Metodo | Endpoint | Descripcion |
 |--------|----------|-------------|
-| POST | `/api/v1/attendance` | Registrar asistencia (FACIAL/MANUAL/IOT/IMPORT) |
+| POST | `/api/v1/attendance` | Registrar asistencia (FACIAL/MANUAL/FINGERPRINT/IMPORT) |
 | GET | `/api/v1/attendance/{id}` | Obtener registro |
 | PUT | `/api/v1/attendance/{id}` | Actualizar registro |
 | GET | `/api/v1/class-sessions/{sessionId}/attendance` | Asistencia de una sesion |
@@ -118,10 +118,15 @@ mapstruct-processor
 
 | Metodo | Endpoint | Descripcion |
 |--------|----------|-------------|
-| POST | `/api/v1/justifications/{justId}/documents` | Subir documento |
-| GET | `/api/v1/justifications/{justId}/documents` | Listar documentos |
-| GET | `/api/v1/documents/{id}/download` | Descargar documento |
-| DELETE | `/api/v1/documents/{id}` | Eliminar documento |
+| POST | `/api/v1/justifications/{justId}/documents` | Subir el archivo (`multipart/form-data`, parte `file`): PDF, JPG o PNG de hasta 5 MB. Permiso `attendance.justification:request` y alcance de la justificación |
+| GET | `/api/v1/justifications/{justId}/documents` | Listar documentos (metadatos) |
+| GET | `/api/v1/supporting-documents/{id}/content` | Archivo guardado (`inline`, `nosniff`, `no-store`). 404 si la fila es anterior a la subida real |
+| DELETE | `/api/v1/supporting-documents/{id}` | Eliminar el registro y su objeto en MinIO |
+| POST | `/api/v1/supporting-documents` | (Heredado) solo metadatos; se mantiene para APK antiguos |
+
+- El tipo se determina por los primeros bytes del archivo (no por el nombre ni el `Content-Type` del cliente).
+- La clave del objeto la genera el servidor: `justification-documents/{yyyy}/{MM}/{uuid}.{ext}` (ADR-009).
+- Si falla el guardado de la fila, el objeto se borra (sin huérfanos). Errores: 400 tipo/tamaño, 413 más de 5 MB, 503 almacenamiento caído.
 
 ---
 
@@ -143,8 +148,8 @@ mapstruct-processor
 |--------|-------------|-------|
 | **FACIAL** | Reconocimiento facial automatico | Biometric verifica → Attendance registra |
 | **MANUAL** | Instructor registra manualmente | Instructor selecciona → Attendance registra |
-| **IOT** | Dispositivo IoT (lector huella, QR) | Dispositivo envia → Attendance registra |
-| **IMPORT** | Importacion masiva CSV/Excel | Archivo procesado → Attendance registra |
+| **FINGERPRINT** | Lector de huella dactilar del kiosco | Kiosco identifica → Attendance registra |
+| **IMPORT** | Carga masiva por API (`/attendance-records/bulk`); no es un metodo del kiosco | Archivo procesado → Attendance registra |
 
 ### Estados de asistencia
 
@@ -202,20 +207,18 @@ spring:
       hibernate.default_schema: attendance
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 5MB
+      max-request-size: 6MB
   kafka:
     bootstrap-servers: localhost:9092
     group-id: attendance-service
 
-# Almacenamiento de documentos
-storage:
-  type: local  # local | s3 | minio
-  local:
-    path: ./uploads/justifications
-  minio:
+# Almacenamiento de documentos (MinIO, ADR-009). Credenciales solo por entorno:
+# FACEATTEND_STORAGE_ACCESS_KEY / FACEATTEND_STORAGE_SECRET_KEY.
+faceattend:
+  storage:
     endpoint: http://localhost:9000
-    bucket: faceattend-documents
+    bucket: justification-documents
 ```
 
 ---
@@ -227,13 +230,13 @@ storage:
 | 8085 | REST API |
 | 9092 | Kafka (externo) |
 | 5432 | PostgreSQL (externo) |
-| 9000 | MinIO (externo, opcional) |
+| 9000 | MinIO (solo red interna `faceattend-data`; sin puerto publicado). Cifrado SSE-S3 con `MINIO_KMS_SECRET_KEY` |
 
 ---
 
 ## 10. Stack Actual
 
-Attendance esta implementado en **Java 21 + Spring Boot** con arquitectura hexagonal. El servicio maneja registro de asistencia multi-fuente (FACIAL, MANUAL, IOT, IMPORT), justificaciones y documentos de soporte.
+Attendance esta implementado en **Java 21 + Spring Boot** con arquitectura hexagonal. El servicio maneja registro de asistencia multi-fuente (FACIAL, MANUAL, FINGERPRINT, IMPORT), justificaciones y documentos de soporte.
 
 ### Justificacion
 

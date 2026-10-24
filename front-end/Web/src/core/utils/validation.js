@@ -19,7 +19,8 @@ import {
  */
 export function isValidEmail(email) {
   if (!email) return false;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Las etiquetas del dominio excluyen el punto: sin retroceso cuadrático (ReDoS).
+  const emailRegex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
   return emailRegex.test(email);
 }
 
@@ -77,7 +78,7 @@ export function maxLength(value, max) {
  * isNumber("hello") // false
  */
 export function isNumber(value) {
-  return !isNaN(parseFloat(value)) && isFinite(value);
+  return !Number.isNaN(Number(Number.parseFloat(value))) && Number.isFinite(Number(value));
 }
 
 /**
@@ -91,7 +92,7 @@ export function isNumber(value) {
  * isInRange(15, 1, 10) // false
  */
 export function isInRange(value, min, max) {
-  const num = parseFloat(value);
+  const num = Number.parseFloat(value);
   return isNumber(num) && num >= min && num <= max;
 }
 
@@ -123,7 +124,13 @@ export function isValidUrl(url) {
 export function isValidPhone(phone) {
   if (!phone) return false;
   const phoneRegex = /^\+?[\d\s\-()]+$/;
-  return phoneRegex.test(phone) && phone.replace(/\D/g, "").length >= 10;
+  const digits = phone.replace(/\D/g, "").length;
+  return phoneRegex.test(phone) && digits >= 10 && digits <= 15;
+}
+
+/** Teléfono: solo dígitos (máx. 15, el límite E.164). */
+export function normalizePhone(text) {
+  return String(text ?? "").replace(/\D/g, "").slice(0, 15);
 }
 
 /**
@@ -138,7 +145,7 @@ export function isValidPhone(phone) {
 export function isValidDate(dateString) {
   if (!dateString) return false;
   const date = new Date(dateString);
-  return date instanceof Date && !isNaN(date);
+  return date instanceof Date && !Number.isNaN(Number(date));
 }
 
 /**

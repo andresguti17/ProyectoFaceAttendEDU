@@ -16,7 +16,7 @@ services:
     plugins:
       - name: cors
         config:
-          origins: ["*"]
+          origins: ["__CORS_ORIGINS__"]
           methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
           headers: [Authorization, Content-Type]
           credentials: true
@@ -39,7 +39,7 @@ services:
     plugins:
       - name: cors
         config:
-          origins: ["*"]
+          origins: ["__CORS_ORIGINS__"]
           methods: [POST, OPTIONS]
           headers: [Content-Type]
       - name: rate-limiting
@@ -133,22 +133,11 @@ services:
     url: http://ms-notification:8088
     routes:
       - name: notification-route
-        paths: [/api/v1/alert-types, /api/v1/alerts]
+        paths: [/api/v1/alert-types, /api/v1/alerts, /api/v1/device-tokens]
         strip_path: false
     # Sin plugins propios: el enforcement lo hace el MS.
-  # ── ISO/IEC 9001 Quality Health Endpoints ────────────────────
-  - name: quality-health
-    url: http://ms-academic:8083
-    routes:
-      - name: quality-health-route
-        paths: [/health/quality]
-        strip_path: false
-    plugins:
-      - name: cors
-        config:
-          origins: ["*"]
-          methods: [GET]
-          headers: [Content-Type]
+  # /health/quality (informe ISO 9001 de cada servicio) ya no se publica en Internet:
+  # solo se consulta dentro de la red Docker o por el puerto local de cada servicio.
   # ── Quality Service (ISO 25010/29110) ──────────────────────
   - name: quality-service
     url: http://ms-quality:8089
@@ -231,31 +220,29 @@ plugins:
             return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Missing or invalid bearer token", path = path })
           end
 
-          local httpc = require("resty.http").new()
-          httpc:set_timeouts(2000, 2000, 3000)
-          -- Caché positiva de sesión (TTL 10s): sin ella cada request
-          -- autenticado costaba una introspección a identity, y bajo fan-out
-          -- del frontend los timeouts se volvían 503 "Cannot verify session".
-          -- Solo se cachean sesiones ACTIVAS; cualquier fallo se revalida en
-          -- vivo (fail-secure). Ventana de revocación/logout: 10 segundos.
-          local valid = nil
-          local cache_ok, cached = pcall(function()
-            return kong.cache:get("faceattend:session:" .. token, { ttl = 10 }, function()
-              local inner = require("resty.http").new()
-              inner:set_timeouts(2000, 2000, 3000)
-              local r = inner:request_uri("http://ms-identity:8081/api/v1/sessions/" .. token, {
-                method = "GET",
-                headers = { Authorization = "Bearer " .. token },
-              })
-              if not r then return nil end
-              if r.status ~= 200 or not r.body or not r.body:find('"sessionStatus"%s*:%s*"Active"') then return nil end
-              return true
-            end)
-          end)
-          if cache_ok and cached then
-            return
-          elseif not cache_ok then
-            -- Sin caché disponible: verificación directa (comportamiento anterior).
+          -- Cuenta con la contraseña inicial (mustChangePassword): solo puede
+          -- leer (la web carga roles y perfil al entrar) y cambiar la clave.
+          -- El cambio de clave invalida la entrada cacheada de la sesión.
+          local function enforce_password_change(must_change)
+            if path == "/api/v1/auth/change-password" then
+              pcall(function() kong.cache:invalidate("faceattend:session:" .. token) end)
+              return
+            end
+            if must_change and method ~= "GET" then
+              return kong.response.exit(403, { status = 403, error = "Forbidden", code = "PASSWORD_CHANGE_REQUIRED", message = "Change your initial password to continue", path = path })
+            end
+          end
+
+          -- "active" / "must_change"; nil cuando la sesión no está activa.
+          local function session_state(res)
+            if not res or res.status ~= 200 or not res.body or not res.body:find('"sessionStatus"%s*:%s*"Active"') then return nil end
+            if res.body:find('"mustChangePassword"%s*:%s*true') then return "must_change" end
+            return "active"
+          end
+
+          local function verify_live()
+            local httpc = require("resty.http").new()
+            httpc:set_timeouts(2000, 2000, 3000)
             local res = httpc:request_uri("http://ms-identity:8081/api/v1/sessions/" .. token, {
               method = "GET",
               headers = { Authorization = "Bearer " .. token },
@@ -263,30 +250,38 @@ plugins:
             if not res then
               return kong.response.exit(503, { status = 503, error = "Service Unavailable", message = "Cannot verify session", path = path })
             end
-            if res.status ~= 200 or not res.body or not res.body:find('"sessionStatus"%s*:%s*"Active"') then
+            local state = session_state(res)
+            if not state then
               return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Invalid or expired session", path = path })
             end
-            return
+            return enforce_password_change(state == "must_change")
           end
-          local res = httpc:request_uri("http://ms-identity:8081/api/v1/sessions/" .. token, {
-            method = "GET",
-            headers = { Authorization = "Bearer " .. token },
-          })
-          if not res then
-            return kong.response.exit(503, { status = 503, error = "Service Unavailable", message = "Cannot verify session", path = path })
+
+          -- Caché positiva de sesión (TTL 10s): sin ella cada request
+          -- autenticado costaba una introspección a identity, y bajo fan-out
+          -- del frontend los timeouts se volvían 503 "Cannot verify session".
+          -- Solo se cachean sesiones ACTIVAS; cualquier fallo se revalida en
+          -- vivo (fail-secure). Ventana de revocación/logout: 10 segundos.
+          local cache_ok, cached = pcall(function()
+            return kong.cache:get("faceattend:session:" .. token, { ttl = 10 }, function()
+              local inner = require("resty.http").new()
+              inner:set_timeouts(2000, 2000, 3000)
+              return session_state(inner:request_uri("http://ms-identity:8081/api/v1/sessions/" .. token, {
+                method = "GET",
+                headers = { Authorization = "Bearer " .. token },
+              }))
+            end)
+          end)
+          if cache_ok and cached then
+            return enforce_password_change(cached == "must_change")
           end
-          if res.status ~= 200 or not res.body or not res.body:find('"sessionStatus"%s*:%s*"Active"') then
-            return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Invalid or expired session", path = path })
-          end
+          return verify_live()
   - name: cors
     config:
-      # "*" + credentials true: Kong refleja el Origin real de cada petición
-      # (el navegador prohíbe "*" literal junto con credenciales), igual que
-      # ya hacía identity-service. Antes solo :3000/:5173/:8090 pasaban, así
-      # que abrir el frontend desde otra IP de la LAN (u otro puerto) dejaba
-      # bloqueadas por CORS las 6 rutas sin cors propio (academic, scheduling,
-      # attendance, authorization, biometric, configuration, notification).
-      origins: ["*"]
+      # Solo los orígenes de KONG_CORS_ORIGINS (el compose los inserta en
+      # lugar de __CORS_ORIGINS__ al arrancar). Un Origin ajeno no recibe
+      # Access-Control-Allow-Origin. Las apps móviles nativas no envían Origin.
+      origins: ["__CORS_ORIGINS__"]
       methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
       headers: [Authorization, Content-Type, X-Requested-With]
       credentials: true

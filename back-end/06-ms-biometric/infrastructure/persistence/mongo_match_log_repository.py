@@ -32,6 +32,13 @@ class MongoMatchLogRepository(MatchLogRepositoryPort):
     def _collection(self) -> AsyncIOMotorCollection:
         return self._client.db[self.collection_name]
 
+    async def anonymize(self, person_id: str) -> int:
+        if not person_id:
+            raise ValueError("person_id is required to anonymize match logs")
+        first = await self._collection.update_many({"person_id": person_id}, {"$set": {"person_id": None}})
+        second = await self._collection.update_many({"matched_person_id": person_id}, {"$set": {"matched_person_id": None}})
+        return int(first.modified_count) + int(second.modified_count)
+
     async def record(self, entry: BiometricMatchLog) -> None:
         await self._collection.insert_one(match_log_to_document(entry))
         logger.debug(

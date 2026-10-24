@@ -4,8 +4,13 @@
 // - Con password: ejecuta además la verificación bcrypt.
 // Nunca imprime la contraseña ni tokens completos.
 const bcrypt = require('bcryptjs');
+const { assertSafeTarget, safeLogText } = require('./authCheckGuards');
 
-const BASE = (process.argv[4] || process.env.JSON_SERVER_URL || 'http://127.0.0.1:3000').replace(/\/+$/, '');
+const RAW_BASE = process.argv[4] || process.env.JSON_SERVER_URL || 'http://127.0.0.1:3000';
+let baseEnd = RAW_BASE.length;
+while (baseEnd > 0 && RAW_BASE[baseEnd - 1] === '/') baseEnd -= 1;
+const BASE = RAW_BASE.slice(0, baseEnd);
+assertSafeTarget(BASE);
 const EMAIL = (process.argv[2] || 'ricardo.gomez@nuevaesperanza.edu.co').toLowerCase().trim();
 const PASSWORD = process.argv[3] || null;
 
@@ -48,11 +53,11 @@ async function post(path, body) {
   return { status: res.status, ok: res.ok, body: json, raw: text.slice(0, 120) };
 }
 
-(async () => {
+void (async () => {
   const results = [];
   const step = (name, ok, detail = '') => {
     results.push({ name, ok, detail });
-    console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` (${detail})` : ''}`);
+    console.log(safeLogText(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` (${detail})` : ''}`));
   };
 
   try {
@@ -113,7 +118,7 @@ async function post(path, body) {
 
     console.log('RESULTADO: flujo legacy OK, login funcional');
   } catch (e) {
-    console.log(`RESULTADO: FALLO (${e.message})`);
+    console.log(safeLogText(`RESULTADO: FALLO (${e.message})`));
     process.exitCode = 1;
   }
 })();

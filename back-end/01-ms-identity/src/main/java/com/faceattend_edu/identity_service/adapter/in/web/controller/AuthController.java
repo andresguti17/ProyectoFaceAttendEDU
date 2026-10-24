@@ -44,10 +44,10 @@ public class AuthController {
     private final UserWebMapper userWebMapper;
 
     @PostMapping("/login")
-    public ResponseEntity<UserSessionDto> login(@Valid @RequestBody AuthRequest authRequest) {
+    public ResponseEntity<UserSessionDto> login(@Valid @RequestBody AuthRequest authRequest, HttpServletRequest http) {
         try {
             return ResponseEntity.ok(sessionWebMapper.toDto(
-                    authenticateUserUseCase.authenticate(authRequest.getIdentifier(), authRequest.getPassword())));
+                    authenticateUserUseCase.authenticate(authRequest.getIdentifier(), authRequest.getPassword(), loginIp(http))));
         } catch (TwoFactorRequiredException challenge) {
             // 200 without a session: the client asks for the e-mailed code and calls /login/verify.
             UserSessionDto pending = new UserSessionDto();
@@ -113,6 +113,16 @@ public class AuthController {
             return forwarded.split(",")[0].trim();
         }
         return request.getRemoteAddr();
+    }
+
+    /**
+     * Client address for the per-IP login limit. Kong sets X-Real-IP from the real client
+     * (trusted_ips + real_ip_header behind Caddy); X-Forwarded-For is not used here because
+     * its first hop is whatever the client sent.
+     */
+    private static String loginIp(HttpServletRequest request) {
+        String realIp = request.getHeader("X-Real-IP");
+        return realIp != null && !realIp.isBlank() ? realIp.trim() : request.getRemoteAddr();
     }
 
     @PostMapping("/logout")

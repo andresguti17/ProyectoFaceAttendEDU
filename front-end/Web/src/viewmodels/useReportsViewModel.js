@@ -186,7 +186,7 @@ export function useReportsViewModel(
     filterType = null,
     fichaId = null,
     userId = null,
-    attendanceThreshold = 75
+    attendanceThreshold = getAttendanceThresholds().minAttendance
 ) {
     // ── Estado local ──────────────────────────────────────────
     const [period, setPeriod] = useState("semester");
@@ -259,7 +259,7 @@ export function useReportsViewModel(
 
     useEffect(() => {
         let cancelled = false;
-        (async () => {
+        void (async () => {
             setSeriesLoading(true);
             try {
                 const days = periodDays(period);
@@ -484,11 +484,11 @@ export function useReportsViewModel(
     }, [students, filterType, fichaId, fichaFilter, userId, attendanceThreshold, search, statusFilter, sortBy, getCourseName]);
 
     /**
-     * Estudiantes en riesgo (asistencia < 75%)
+     * Estudiantes en riesgo (asistencia bajo el mínimo configurado)
      */
     const atRiskStudents = useMemo(
-        () => filteredStudents.filter((s) => s.attendance < 75),
-        [filteredStudents]
+        () => filteredStudents.filter((s) => s.attendance < attendanceThreshold),
+        [filteredStudents, attendanceThreshold]
     );
 
     // ── Reportes por sede (solo super admin) ──────────────────
@@ -521,7 +521,7 @@ export function useReportsViewModel(
                 { schoolId: s.schoolId ?? null, total: 0, active: 0, atRisk: 0, attendanceSum: 0 };
             entry.total += 1;
             if (s.status === "active") entry.active += 1;
-            if (s.attendance < 75) entry.atRisk += 1;
+            if (s.attendance < getAttendanceThresholds().minAttendance) entry.atRisk += 1;
             entry.attendanceSum += s.attendance || 0;
             bySchool.set(key, entry);
         }
@@ -568,7 +568,7 @@ export function useReportsViewModel(
             activeStudents.reduce((sum, s) => sum + s.attendance, 0) /
                 (activeStudents.length || 1)
         );
-        const atRiskCount = students.filter((s) => s.attendance < 75).length;
+        const atRiskCount = students.filter((s) => s.attendance < getAttendanceThresholds().minAttendance).length;
         const programCount = appData.programs.length;
 
         // Factor de escala según período para simular variación

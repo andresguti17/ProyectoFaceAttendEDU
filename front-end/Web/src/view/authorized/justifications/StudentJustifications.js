@@ -10,6 +10,7 @@ import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Badge, Button, Card, EmptyState } from "../../components/common";
 import { useTheme } from "../../components/hooks/useTheme";
+import { useDateFormat } from "../../components/hooks/useDateFormat";
 import { useResponsive } from "../../components/hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { REVIEW_STATUS_LABELS } from "../../../viewmodels/useJustificationsViewModel";
@@ -47,6 +48,7 @@ export function StudentJustifications({ vm }) {
     const c = theme.colors;
     const { isSmall } = useResponsive();
     const { t } = useTranslation();
+    const { formatDate, formatDateTime } = useDateFormat();
 
     const showEligible = vm.listTab === "eligible";
 
@@ -94,7 +96,7 @@ export function StudentJustifications({ vm }) {
                                                 <Text
                                                     style={{ fontWeight: "700", color: c.text.primary, flex: 1 }}
                                                 >
-                                                    {record.date || "—"}
+                                                    {record.date ? formatDate(record.date) : "—"}
                                                 </Text>
                                                 <View style={{ flexShrink: 0 }}>
                                                     <Badge variant={meta.variant} size="sm" icon={meta.icon}>
@@ -150,7 +152,7 @@ export function StudentJustifications({ vm }) {
                                             <Text
                                                 style={{ fontWeight: "700", color: c.text.primary, flex: 1 }}
                                             >
-                                                {item.date || "—"}
+                                                {item.date ? formatDate(item.date) : "—"}
                                             </Text>
                                             <View style={{ flexShrink: 0 }}>
                                                 <Badge variant={meta.variant} size="sm" icon={meta.icon}>
@@ -170,7 +172,7 @@ export function StudentJustifications({ vm }) {
                                         </Text>
 
                                         <Text style={{ color: c.text.secondary, fontSize: 11 }}>
-                                            {`${t("Enviada el")} ${String(item.submittedAt || "").replace("T", " ").slice(0, 16)}`}
+                                            {`${t("Enviada el")} ${item.submittedAt ? formatDateTime(item.submittedAt) : "—"}`}
                                         </Text>
 
                                         {item.reviewStatus !== "Pending" && item.resolutionNotes ? (

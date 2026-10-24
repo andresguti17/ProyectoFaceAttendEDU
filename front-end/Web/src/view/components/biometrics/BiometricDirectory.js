@@ -100,7 +100,7 @@ export default function BiometricDirectory({ vm }) {
                 onClose={() => setPending(null)}
                 onConfirm={() => {
                     const op = pending === "face" ? vm.revokeFace() : vm.removeAll();
-                    Promise.resolve(op).finally(() => setPending(null));
+                    void Promise.resolve(op).finally(() => setPending(null));
                 }}
                 loading={vm.busy}
                 variant="danger"

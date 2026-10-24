@@ -456,7 +456,7 @@ Table attendance_record {
   academic_actor_id bigint [not null]
   attendance_status varchar [not null, note: 'ENUM: Present / Absent / Late / Justified']
   captured_at datetime [null]
-  capture_method varchar [not null, note: 'ENUM: FACIAL / MANUAL / IOT / IMPORT']
+  capture_method varchar [not null, note: 'ENUM: FACIAL / MANUAL / FINGERPRINT / IMPORT']
   match_score decimal(5,4) [null, note: 'Score del reconocimiento facial o dactilar']
 
   created_at datetime [not null]

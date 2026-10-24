@@ -134,7 +134,7 @@ export default function EnvironmentFormModal({
             if (numericValue === "") {
                 setForm((prev) => ({ ...prev, [key]: "" }));
             } else {
-                const numValue = parseInt(numericValue, 10);
+                const numValue = Number.parseInt(numericValue, 10);
                 const cappedValue = Math.min(numValue, MAX_CAPACITY);
                 setForm((prev) => ({ ...prev, [key]: String(cappedValue) }));
             }

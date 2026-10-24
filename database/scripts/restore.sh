@@ -10,9 +10,9 @@
 set -euo pipefail
 
 DIR="${1:?Uso: restore.sh <carpeta-de-backup>}"
-[ -d "$DIR" ] || { echo "No existe: $DIR" >&2; exit 1; }
+[[ -d "$DIR" ]] || { echo "No existe: $DIR" >&2; exit 1; }
 
-if [ "${FORCE:-0}" != "1" ]; then
+if [[ "${FORCE:-0}" != "1" ]]; then
   read -r -p "Esto sobrescribe faceattend_db y MongoDB con el backup de $DIR. ¿Continuar? [y/N] " ans
   [[ "$ans" =~ ^[Yy]$ ]] || { echo "Cancelado."; exit 1; }
 fi
@@ -24,7 +24,7 @@ docker exec faceattend-postgres rm /tmp/faceattend_db.dump
 
 docker cp "$DIR/mongo.archive.gz" faceattend-mongo:/tmp/mongo.archive
 docker exec faceattend-mongo mongorestore --drop --gzip --archive=/tmp/mongo.archive \
-  --username "${MONGO_USER:-mongoadmin}" --password "${MONGO_PASSWORD:-mongopass}" --authenticationDatabase admin
+  --username "${MONGO_USER:?MONGO_USER is required}" --password "${MONGO_PASSWORD:?MONGO_PASSWORD is required}" --authenticationDatabase admin
 docker exec faceattend-mongo rm /tmp/mongo.archive
 
 echo "Restored from $DIR"

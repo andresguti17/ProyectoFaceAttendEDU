@@ -62,7 +62,7 @@ export function StudentSettings({ section, onSave, onDiscard, onDiscardColors, o
                 pushNotifications: cfg.pushNotifications,
                 pushDuration: cfg.pushDuration,
                 twoFactor: cfg.twoFactor,
-                sessionTime: parseInt(cfg.sessionTime),
+                sessionTime: Number.parseInt(cfg.sessionTime),
             });
             return success;
         },

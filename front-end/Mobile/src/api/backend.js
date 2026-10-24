@@ -1,11 +1,11 @@
-import { request, GET } from './apiClient';
+import { request, GET, POST, DELETE } from './apiClient';
 
 // Typed access to the real microservices through the Kong gateway
 // (API_BASE_URL / AUTHZ_BASE_URL / ... all alias the gateway :8000;
 // Kong routes by path, so the service base only matters for overrides).
 function toSnakeKey(key) {
   return String(key)
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
+    .replace(/([A-Z])(?=[A-Z][a-z])/g, '$1_')
     .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
     .toLowerCase();
 }
@@ -74,4 +74,12 @@ export async function backendGet(base, path, params = null, { useCache = false }
 
 export function clearBackendCache() {
   cache.clear();
+}
+
+export function backendPost(base, path, data) {
+  return request({ method: POST, url: `${base}${path}`, data, requiresAuth: true });
+}
+
+export function backendDelete(base, path) {
+  return request({ method: DELETE, url: `${base}${path}`, requiresAuth: true });
 }

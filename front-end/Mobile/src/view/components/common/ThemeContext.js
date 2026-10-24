@@ -81,7 +81,7 @@ export function ThemeProvider({children}) {
                 setPaletteMode(resolvePaletteMode(undefined));
             }
         };
-        restore();
+        void restore();
     }, []);
 
     // ── loadThemeForRole ──────────────────────────────────────

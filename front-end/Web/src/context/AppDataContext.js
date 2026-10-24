@@ -333,7 +333,7 @@ export function AppDataProvider({ children }) {
                             }
                   );
 
-        Promise.allSettled([
+        void Promise.allSettled([
             canListUsers ? loadUsers() : Promise.resolve([]),
             loadEnvironments(),
             loadFichas(),

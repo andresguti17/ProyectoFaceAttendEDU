@@ -379,7 +379,10 @@
     "statusRejected": "Refusée",
     "rejectionReason": "Motif du refus",
     "reviewerNotes": "Commentaire du réviseur",
-    "noReviewerNotes": "Le réviseur n’a laissé aucun commentaire."
+    "noReviewerNotes": "Le réviseur n’a laissé aucun commentaire.",
+    "openDocument": "Ouvrir",
+    "documentUnavailable": "Impossible d'ouvrir le justificatif. S'il a été enregistré avant l'envoi de fichiers, il n'a pas de contenu.",
+    "noDocumentViewer": "Cet appareil n'a aucune application pour ouvrir le justificatif."
   },
   "justify": {
     "title": "Configuration des justifications",
@@ -415,7 +418,8 @@
     "confirmMessage": "Voulez-vous vraiment envoyer cette justification ?",
     "confirmTitle": "Confirmer l'envoi",
     "submitError": "Impossible d'envoyer la justification",
-    "noRecordForDate": "Aucune présence enregistrée pour cette date"
+    "noRecordForDate": "Aucune présence enregistrée pour cette date",
+    "uploadError": "La justification a été enregistrée, mais le justificatif n'a pas pu être envoyé. Réessayez plus tard."
   },
   "menuJustify": {
     "backToDashboard": "Retour au tableau de bord"
@@ -1347,5 +1351,32 @@
   "errors": {
     "missingPerson": "Le profil de la personne de l'utilisateur est manquant.",
     "missingSchool": "L'établissement sélectionné est manquant."
+  },
+  "privacyConsent": {
+    "title": "Protection des données personnelles",
+    "saveError": "L'autorisation n'a pas pu être enregistrée. Réessayez.",
+    "requiredForAccount": "Confirmez que la personne a accepté l'avis de confidentialité (loi 1581).",
+    "holderAccepted": "La personne a accepté l'avis de confidentialité *",
+    "holderBiometric": "Autorise le traitement de ses données biométriques (facultatif)",
+    "biometricTitle": "Données biométriques",
+    "biometricAuthorized": "Vous avez autorisé l'utilisation de votre visage et de votre empreinte pour la présence.",
+    "biometricNotAuthorized": "Vous n'avez pas autorisé le traitement de vos données biométriques.",
+    "biometricNotice": "Votre visage est une donnée sensible. L'autoriser est facultatif : sinon votre présence est relevée autrement. Nous gardons un modèle chiffré, pas la photo, uniquement pour la présence, et vous pouvez révoquer l'autorisation depuis votre profil.",
+    "authorizeButton": "J'autorise le traitement de mes données biométriques",
+    "revokeTitle": "Révoquer l'autorisation biométrique",
+    "revokeConfirm": "Vos modèles de visage et d'empreinte seront supprimés. Continuer ?",
+    "revokeButton": "Révoquer et supprimer mes données biométriques",
+    "revoked": "Autorisation révoquée et données biométriques supprimées."
+  },
+  "push": {
+    "permission": {
+      "title": "Notifications d’alertes",
+      "body": "FaceAttend EDU vous préviendra sur cet appareil lorsque vous aurez une nouvelle alerte, comme le résultat d’un justificatif. Le système va ensuite vous demander l’autorisation."
+    },
+    "denied": {
+      "title": "Notifications désactivées",
+      "body": "Vous ne recevrez pas de notifications d’alertes sur cet appareil. Pour les activer, ouvrez les réglages du système, allez dans FaceAttend EDU > Notifications et autorisez-les. Vos alertes restent disponibles dans Actualités.",
+      "open_settings": "Ouvrir les réglages"
+    }
   }
 }

@@ -44,6 +44,8 @@ from infrastructure.web.schemas.responses import template_response
 # Templates are sensitive: only roles that capture attendance (admin, instructor).
 logger = logging.getLogger(__name__)
 
+from infrastructure.web.security import bearer_or_none, ensure_biometric_consent
+
 router = APIRouter(
     prefix="/api/v1/biometric/fingerprint",
     tags=["fingerprint"],
@@ -100,7 +102,10 @@ class IdentifyFingerprintSampleRequest(BaseModel):
 async def enroll_fingerprint(
     req: EnrollFingerprintRequest,
     repository: BiometricRepositoryPort = Depends(get_fingerprint_repository),
+    request: Request = None,
 ):
+    if request is not None:
+        await ensure_biometric_consent(req.person_id, bearer_or_none(request))
     template = FingerprintEmbedding(
         person_id=req.person_id,
         finger_number=req.finger_number,
@@ -258,6 +263,7 @@ async def enroll_fingerprint_sample(
     fp_threshold: int = Depends(get_fingerprint_match_threshold),
     settings: Settings = Depends(get_settings),
 ):
+    await ensure_biometric_consent(req.person_id, bearer_or_none(request))
     if not fingerprint_quality_ok(req.quality):
         logger.warning(
             "enroll-sample refused: quality %s below the minimum %s", req.quality, MIN_FINGERPRINT_QUALITY

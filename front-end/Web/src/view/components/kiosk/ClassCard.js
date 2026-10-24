@@ -16,7 +16,8 @@ import { Button } from "../common/buttons/Button";
 import { Badge } from "../common/badges/Badge";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
-import { classTimeInfo, shortTime, splitMinutes, toMinutes } from "../../../viewmodels/classCards";
+import { formatClockTime } from "../../../core/constants/dateFormats";
+import { classTimeInfo, splitMinutes, toMinutes } from "../../../viewmodels/classCards";
 
 const STATUS_BADGE = {
     pending: { variant: "default", label: "Sin iniciar" },
@@ -155,7 +156,7 @@ export default function ClassCard({ block, details, loading = false, onStart, no
                     c={c}
                     icon="clock"
                     label={t("Horario")}
-                    value={`${shortTime(block.startsAt)} – ${shortTime(block.endsAt)}`}
+                    value={`${formatClockTime(block.startsAt)} – ${formatClockTime(block.endsAt)}`}
                     hint={waiting ? "" : scheduleHint}
                 />
                 <InfoCell

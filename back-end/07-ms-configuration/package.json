@@ -9,6 +9,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@faceattend/auth": "file:../shared/auth-node",
     "fastify": "^4.26.0",
     "kafkajs": "^2.2.4",
     "pg": "^8.11.0",

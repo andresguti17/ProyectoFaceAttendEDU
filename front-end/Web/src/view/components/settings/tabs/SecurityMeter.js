@@ -11,8 +11,8 @@ export function SecurityMeter({ twoFactor, sessionTime }) {
 
     const score = [
         twoFactor,
-        parseInt(sessionTime) <= 60,
-        parseInt(sessionTime) > 0,
+        Number.parseInt(sessionTime) <= 60,
+        Number.parseInt(sessionTime) > 0,
         true, // base
     ].filter(Boolean).length;
 
@@ -55,7 +55,7 @@ export function SecurityMeter({ twoFactor, sessionTime }) {
             <View style={{ gap: 6 }}>
                 {[
                     { label: t("Autenticación de dos factores"), ok: twoFactor },
-                    { label: t("Sesión corta (≤60 min)"), ok: parseInt(sessionTime) <= 60 },
+                    { label: t("Sesión corta (≤60 min)"), ok: Number.parseInt(sessionTime) <= 60 },
                 ].map(item => (
                     <View key={item.label} style={{
                         flexDirection: "row",

@@ -26,8 +26,8 @@ export function InstitutionInfo({
 
     return (
         <View style={{ gap: 12 }}>
-            <View style={{ flexDirection: isSmall ? "column" : "row", gap: 12 }}>
-                <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: isSmall ? "column" : "row", flexWrap: "wrap", gap: 12 }}>
+                <View style={{ flex: 1, minWidth: 220 }}>
                     <Text style={labelStyle}>{t("Nombre de la institución")}</Text>
                     <TextInput
                         value={institutionName}
@@ -38,7 +38,7 @@ export function InstitutionInfo({
                         placeholderTextColor={c.text.disabled}
                     />
                 </View>
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, minWidth: 220 }}>
                     <Text style={labelStyle}>{t("Identificador único (slug)")}</Text>
                     <TextInput
                         value={institutionSlug}
@@ -51,7 +51,7 @@ export function InstitutionInfo({
                         placeholderTextColor={c.text.disabled}
                     />
                 </View>
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, minWidth: 220 }}>
                     <Text style={labelStyle}>{t("Tipo de período académico")}</Text>
                     <AcademicPeriodSelector
                         value={academicPeriodType}

@@ -82,9 +82,9 @@ function convertTo24Hour(time12h) {
     const isAM = timeUpper.includes('AM');
     
     // Extraer HH:MM
-    const timePart = timeUpper.replace(/\s*(AM|PM)\s*$/i, '').trim();
+    const timePart = timeUpper.replace(/(AM|PM)\s*$/i, '').trim();
     const [hoursStr, minutesStr] = timePart.split(':');
-    let hours = parseInt(hoursStr, 10);
+    let hours = Number.parseInt(hoursStr, 10);
     const minutes = minutesStr || '00';
     
     // Conversión AM/PM a 24h
@@ -382,7 +382,7 @@ export function useEnvironmentsViewModel() {
 
             // Aplicar valores por defecto si están vacíos
             const description = form.description.trim() || "Sin descripción";
-            const capacity = form.capacity ? parseInt(form.capacity, 10) : 30;
+            const capacity = form.capacity ? Number.parseInt(form.capacity, 10) : 30;
 
             // Alta real en el backend; el espejo usa el ID devuelto para
             // que ediciones y borrados posteriores también lleguen al backend.
@@ -411,7 +411,7 @@ export function useEnvironmentsViewModel() {
 
             // Aplicar valores por defecto si están vacíos
             const description = form.description.trim() || "Sin descripción";
-            const capacity = form.capacity ? parseInt(form.capacity, 10) : 30;
+            const capacity = form.capacity ? Number.parseInt(form.capacity, 10) : 30;
 
             const patch = {
                 number: form.number.trim(),

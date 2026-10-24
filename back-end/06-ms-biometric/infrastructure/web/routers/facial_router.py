@@ -49,7 +49,13 @@ from infrastructure.web.liveness import (
     verify_liveness_challenge,
 )
 from infrastructure.web.match_audit import record_match
-from infrastructure.web.security import STAFF_PERMISSION, ensure_can_enroll, require_permission
+from infrastructure.web.security import (
+    STAFF_PERMISSION,
+    bearer_or_none,
+    ensure_biometric_consent,
+    ensure_can_enroll,
+    require_permission,
+)
 from infrastructure.web.schemas.responses import template_response
 
 logger = logging.getLogger(__name__)
@@ -163,7 +169,11 @@ async def _closest_other_face(
 async def enroll_facial(
     req: EnrollFacialRequest,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
+    request: Request = None,
 ):
+    # REST only: the WebSocket channel checks the authorization itself before calling this.
+    if request is not None:
+        await ensure_biometric_consent(req.person_id, bearer_or_none(request))
     template = FacialEmbedding(
         person_id=req.person_id,
         encoding=req.encoding,
@@ -419,6 +429,7 @@ async def enroll_facial_image(
     # Before consuming the challenge, so a refused caller does not burn it.
     active = await repository.find_active(req.person_id)
     await ensure_can_enroll(request, req.person_id, getattr(active, "enrolled_at", None), active is not None)
+    await ensure_biometric_consent(req.person_id, bearer_or_none(request))
     try:
         consume_liveness_challenge(secret, req.challenge_token)
         image = decode_image(req.image_base64, settings.max_image_bytes, settings.max_image_pixels)

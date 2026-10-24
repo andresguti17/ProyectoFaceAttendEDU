@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -59,9 +60,13 @@ public class JustificationController {
     }
 
     @PatchMapping("/{id}/review")
-    public ResponseEntity<JustificationResponse> review(@PathVariable Long id, @Valid @RequestBody ReviewJustificationRequest req){
+    public ResponseEntity<JustificationResponse> review(@PathVariable Long id, @Valid @RequestBody ReviewJustificationRequest req,
+                                                        @RequestAttribute(name = "X-User-Id", required = false) Object caller){
         if (ActorScope.restricted()) requireRecord(getUseCase.getById(id).getAttendanceRecordId());
-        Justification reviewed = reviewUseCase.review(id, req.getReviewStatus(), req.getReviewedBy(), req.getResolutionNotes());
+        // The reviewer is whoever holds the session (set by AuthTokenFilter); the body's
+        // reviewedBy is ignored so nobody can sign a decision in someone else's name.
+        UUID reviewer = caller == null ? null : UUID.fromString(String.valueOf(caller));
+        Justification reviewed = reviewUseCase.review(id, req.getReviewStatus(), reviewer, req.getResolutionNotes());
         return ResponseEntity.ok(mapper.toResponse(reviewed));
     }
 

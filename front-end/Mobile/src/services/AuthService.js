@@ -152,6 +152,7 @@ async function completeLogin(session, identity) {
   // 4. Build AuthResponse keeping the app-level shape.
   return AuthResponse.fromApi({
     token: String(sessionId),
+    must_change_password: session?.mustChangePassword === true,
     user: {
       user_id: userId,
       person_id: person?.person_id || null,

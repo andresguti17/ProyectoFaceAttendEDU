@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../view/components/hooks/useTheme";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+import { getLocale } from "../core/utils/locale";
 import { useAuth } from "../context/AuthContext";
 import { useAppData } from "../context/AppDataContext";
 import { useDateFormat } from "../view/components/hooks/useDateFormat";
@@ -19,8 +20,8 @@ import { getInstitutionConfig } from "../core/config/institutionConfig";
  * @returns {string} - Número formateado
  */
 function formatNumber(value) {
-    if (typeof value !== 'number' || isNaN(value)) return "0";
-    return Math.round(value).toLocaleString();
+    if (typeof value !== 'number' || Number.isNaN(Number(value))) return "0";
+    return Math.round(value).toLocaleString(getLocale());
 }
 
 /**
@@ -31,7 +32,7 @@ function formatNumber(value) {
  * @returns {string} - Porcentaje formateado
  */
 function formatPercentage(value, decimals = 1) {
-    if (typeof value !== 'number' || isNaN(value)) return "0.0";
+    if (typeof value !== 'number' || Number.isNaN(Number(value))) return "0.0";
     
     const maxDecimals = Math.min(Math.max(decimals, 0), 2);
     
@@ -165,13 +166,15 @@ export function useDashboardViewModel() {
         };
     }, [userRole, user, ownStudent]);
 
+    // El locale entra como dependencia para recalcular al cambiar de idioma.
+    const locale = getLocale();
     const todayLabel = useMemo(() => {
         const d = formatDate(new Date());
         const today = new Date();
-        const weekday = today.toLocaleDateString("es-CO", { weekday: "long" });
+        const weekday = today.toLocaleDateString(locale, { weekday: "long" });
         const fullLabel = `${weekday}, ${d}`;
         return fullLabel.charAt(0).toUpperCase() + fullLabel.slice(1);
-    }, [formatDate]);
+    }, [formatDate, locale]);
 
     // ── ADMIN: Métricas globales del sistema (detalladas) ─────
 
@@ -364,8 +367,8 @@ export function useDashboardViewModel() {
                 value: `${formatPercentage(globalAvgAttendance)}%`,
                 subtitle: t("Promedio general"),
                 change: globalAvgAttendance >= thresholds.warning ? 
-                    parseFloat(Math.min(2.5, (globalAvgAttendance - thresholds.warning + 2) * 0.5).toFixed(1)) : 
-                    parseFloat(Math.max(-2.5, (globalAvgAttendance - thresholds.warning) * 0.3).toFixed(1)),
+                    Number.parseFloat(Math.min(2.5, (globalAvgAttendance - thresholds.warning + 2) * 0.5).toFixed(1)) : 
+                    Number.parseFloat(Math.max(-2.5, (globalAvgAttendance - thresholds.warning) * 0.3).toFixed(1)),
                 color: globalAvgAttendance >= thresholds.warning ? c.status.success : c.status.warning,
                 icon: "trending-up",
             },
@@ -562,7 +565,16 @@ export function useDashboardViewModel() {
             : 0;
         const pendingToday = Math.max(0, classesToday - attendedToday);
 
-        const currentClass = ownCourses[0] || null;
+        // Clase de hoy según el horario de su ficha; sin clase hoy, el primer curso inscrito.
+        const todayClass = series.meta.currentClass || null;
+        const fallbackCourse = ownCourses[0] || null;
+        const currentClass = todayClass
+            ? {
+                  code: todayClass.environmentCode || todayClass.courseCode,
+                  name: todayClass.environmentName || todayClass.courseName,
+                  professor: todayClass.instructorName,
+              }
+            : fallbackCourse;
 
         return [
             {

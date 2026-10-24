@@ -12,7 +12,7 @@
 include:
   - ./database/docker-compose.yml
   - ./back-end/docker-compose.yml
-  # frontend-web (:8090 → nginx :80) y kong-gateway (:8000) se sirven desde aquí.
+  # frontend-web (:8090 → nginx :8080, sin root) y kong-gateway (:8000) se sirven desde aquí.
   # Solo frontend + gateway (tras primer build del backend):
   #   docker compose up frontend-web kong-gateway
 
@@ -52,28 +52,43 @@ services:
       configuration-liquibase:
         condition: service_completed_successfully
 
+  db-service-logins:
+    depends_on:
+      notification-liquibase:
+        condition: service_completed_successfully
+
   ms-identity:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       identity-liquibase:
         condition: service_completed_successfully
 
   ms-authorization:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       authorization-liquibase:
         condition: service_completed_successfully
 
   ms-academic:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       academic-liquibase:
         condition: service_completed_successfully
 
   ms-scheduling:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       scheduling-liquibase:
         condition: service_completed_successfully
 
   ms-attendance:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       attendance-liquibase:
         condition: service_completed_successfully
 
@@ -84,11 +99,15 @@ services:
 
   ms-configuration:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       configuration-liquibase:
         condition: service_completed_successfully
 
   ms-notification:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       notification-liquibase:
         condition: service_completed_successfully
 
@@ -96,6 +115,8 @@ services:
   # database is migrated (postgres is healthy through the liquibase chain).
   ms-quality:
     depends_on:
+      db-service-logins:
+        condition: service_completed_successfully
       notification-liquibase:
         condition: service_completed_successfully
 
@@ -123,14 +144,14 @@ services:
         condition: service_healthy
     ports:
       # 0.0.0.0: browsers (and phones on the LAN) must reach the SPA.
-      - "0.0.0.0:${FRONTEND_PORT:-8090}:80"
+      - "0.0.0.0:${FRONTEND_PORT:-8090}:8080"
     networks:
       - faceattend-edge
     restart: unless-stopped
     healthcheck:
       # nginx binds IPv4 only; `localhost` also resolves to ::1 in the
       # container and would be refused, marking it unhealthy.
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 5

@@ -1,6 +1,7 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
 import com.faceattend_edu.identity_service.domain.exception.AccountLockedException;
+import com.faceattend_edu.identity_service.domain.exception.TooManyLoginAttemptsException;
 import com.faceattend_edu.identity_service.domain.exception.DomainException;
 import com.faceattend_edu.identity_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.identity_service.domain.exception.EmailDeliveryException;
@@ -85,12 +86,26 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", ex.getMessage(), req);
     }
 
+    @ExceptionHandler(com.faceattend_edu.identity_service.domain.exception.ForbiddenException.class)
+    public ResponseEntity<Map<String, Object>> handleForbidden(
+            com.faceattend_edu.identity_service.domain.exception.ForbiddenException ex, HttpServletRequest req) {
+        return build(HttpStatus.FORBIDDEN, "FORBIDDEN", ex.getMessage(), req);
+    }
+
     @ExceptionHandler(AccountLockedException.class)
     public ResponseEntity<Map<String, Object>> handleLocked(AccountLockedException ex, HttpServletRequest req) {
         long seconds = Math.max(1, ex.getRetryAfter().toSeconds());
         return ResponseEntity.status(HttpStatus.LOCKED)
                 .header("Retry-After", String.valueOf(seconds))
                 .body(envelope(HttpStatus.LOCKED, "ACCOUNT_LOCKED", ex.getMessage(), req));
+    }
+
+    @ExceptionHandler(TooManyLoginAttemptsException.class)
+    public ResponseEntity<Map<String, Object>> handleTooManyAttempts(TooManyLoginAttemptsException ex, HttpServletRequest req) {
+        long seconds = Math.max(1, ex.getRetryAfter().toSeconds());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(seconds))
+                .body(envelope(HttpStatus.TOO_MANY_REQUESTS, "TOO_MANY_ATTEMPTS", ex.getMessage(), req));
     }
 
     @ExceptionHandler(DuplicateEntityException.class)
@@ -107,6 +122,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleEmailDelivery(EmailDeliveryException ex, HttpServletRequest req) {
         log.warn("Verification code not delivered: {}", ex.getMessage());
         return build(HttpStatus.SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE", ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(com.faceattend_edu.identity_service.domain.exception.DownstreamRejectedException.class)
+    public ResponseEntity<Map<String, Object>> handleDownstreamRejected(
+            com.faceattend_edu.identity_service.domain.exception.DownstreamRejectedException ex, HttpServletRequest req) {
+        HttpStatus status = HttpStatus.valueOf(ex.getStatus());
+        return build(status, status.name(), ex.getMessage(), req);
     }
 
     @ExceptionHandler(OnboardingUnavailableException.class)

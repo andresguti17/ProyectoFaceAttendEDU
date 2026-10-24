@@ -4,6 +4,7 @@ import { BaseModal } from "./BaseModal";
 import { Button } from "../buttons/Button";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 
 /**
  * Modal de confirmación (Sí/No, Aceptar/Cancelar)
@@ -30,6 +31,7 @@ export function ConfirmModal({
   loading = false,
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   const icons = {
     default: "info",
@@ -54,27 +56,27 @@ export function ConfirmModal({
       visible={visible}
       onClose={onClose}
       closeOnBackdrop={true}
-      title={title}
+      title={t(title)}
       icon={icons[variant]}
       iconColor={colors[variant]}
       size="sm"
       footer={
         <>
           <Button variant="outline" onPress={onClose} disabled={loading}>
-            {cancelText}
+            {t(cancelText)}
           </Button>
           <Button
             variant={buttonVariants[variant]}
             onPress={onConfirm}
             loading={loading}
           >
-            {confirmText}
+            {t(confirmText)}
           </Button>
         </>
       }
     >
       <Text style={[styles.message, { color: theme.colors.text.primary }]}>
-        {message}
+        {t(message)}
       </Text>
     </BaseModal>
   );

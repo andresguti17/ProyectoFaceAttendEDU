@@ -2,7 +2,8 @@ databaseChangeLog:
   - changeSet:
       id: auth-006-bootstrap-demo-role-assignments
       author: FaceAttendEDU
-      context: seed
+      # Only for the removed bootstrap accounts; never run in production.
+      context: demo
       changes:
         - sql:
             splitStatements: true

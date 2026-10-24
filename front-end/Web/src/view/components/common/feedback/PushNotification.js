@@ -21,6 +21,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from "re
 import { Feather } from "@expo/vector-icons";
 import tinycolor from "tinycolor2";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { getContrastTextColor } from "../../../../core/utils/colorHelpers";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 import { getInstitutionConfig } from "../../../../core/config/institutionConfig";
@@ -201,7 +202,7 @@ export function PushNotificationProvider({
         processedNotifications.forEach((notification) => {
           if (notification.duration > 0) {
             setTimeout(() => {
-              dismiss(notification.id, 'timeout');
+              void dismiss(notification.id, 'timeout');
             }, notification.duration);
           }
         });
@@ -220,7 +221,7 @@ export function PushNotificationProvider({
    * @param {string} config.title - Título de la notificación
    * @param {string} config.message - Mensaje de la notificación
    * @param {('info'|'success'|'warning'|'error'|'custom')} config.type - Tipo de notificación
-   * @param {number} config.duration - Duración en ms (si no se especifica, usa institutionConfig.pushDuration)
+   * @param {number} [config.duration] - Duración en ms (si no se especifica, usa institutionConfig.pushDuration)
    * @param {string} config.icon - Icono personalizado (Feather icon name)
    * @param {object} config.navigation - Objeto de navegación { screen, params }
    * @param {object} config.action - Acción personalizada { label, onPress }
@@ -232,8 +233,8 @@ export function PushNotificationProvider({
    * @param {boolean} config.allowDuplicates - Permitir notificaciones duplicadas (default: false)
    * 
    * ===== NUEVAS PROPIEDADES PARA NOTIFICACIONES "ÚNICAS" =====
-   * @param {number} config.maxNotifications - Sobrescribir límite total de notificaciones
-   * @param {number} config.maxNotificationsByType - Sobrescribir límite por tipo
+   * @param {number} [config.maxNotifications] - Sobrescribir límite total de notificaciones
+   * @param {number} [config.maxNotificationsByType] - Sobrescribir límite por tipo
    * @param {boolean} config.isActiveSource - Si la fuente está "activa" (cambia comportamiento)
    * @param {boolean} config.isResolved - Si la fuente está "resuelta" (puede cambiar duración, etc.)
    * @param {function} config.onSourceResolved - Callback cuando la fuente se resuelve
@@ -327,7 +328,7 @@ export function PushNotificationProvider({
         // Auto-dismiss si tiene duración
         if (notification.duration > 0) {
           setTimeout(() => {
-            dismiss(notification.id, 'timeout');
+            void dismiss(notification.id, 'timeout');
           }, notification.duration);
         }
 
@@ -620,6 +621,7 @@ const calculateColorsForTime = (seconds, themeColors) => {
 
 function PushNotificationItem({ notification, onDismiss, onNavigate }) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const c = theme.colors;
   const [animation] = useState(new Animated.Value(0));
   const [progressAnim] = useState(new Animated.Value(1));
@@ -820,7 +822,7 @@ function PushNotificationItem({ notification, onDismiss, onNavigate }) {
               style={[styles.title, { color: config.textColor }]}
               numberOfLines={1}
             >
-              {notification.title}
+              {t(notification.title)}
             </Text>
             
             {/* Mini contador (solo si showTimer es true) */}
@@ -873,7 +875,7 @@ function PushNotificationItem({ notification, onDismiss, onNavigate }) {
             style={[styles.message, { color: config.textColor }]}
             numberOfLines={2}
           >
-            {notification.message}
+            {t(notification.message)}
           </Text>
 
           {/* NO ACTION BUTTONS - Solo auto-dismiss */}

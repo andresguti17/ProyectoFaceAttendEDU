@@ -2,6 +2,7 @@ import React from "react";
 import { View, TouchableOpacity, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { SIDEBAR_CONSTANTS } from "./constants";
 
 /**
@@ -57,6 +58,7 @@ export default function SidebarHeader({
     style,
 }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const c = theme.colors;
 
     return (
@@ -99,8 +101,8 @@ export default function SidebarHeader({
                 <TouchableOpacity
                     onPress={onToggle}
                     accessibilityRole="button"
-                    accessibilityLabel={collapsed ? "Expandir sidebar" : "Colapsar sidebar"}
-                    accessibilityHint="Cambiar tamaño del sidebar"
+                    accessibilityLabel={t(collapsed ? "Expandir sidebar" : "Colapsar sidebar")}
+                    accessibilityHint={t("Cambiar tamaño del sidebar")}
                     style={{
                         padding: 8,
                         borderRadius: 4,
@@ -119,8 +121,8 @@ export default function SidebarHeader({
                 <TouchableOpacity
                     onPress={onClose}
                     accessibilityRole="button"
-                    accessibilityLabel="Cerrar sidebar"
-                    accessibilityHint="Cerrar el panel lateral"
+                    accessibilityLabel={t("Cerrar sidebar")}
+                    accessibilityHint={t("Cerrar el panel lateral")}
                     style={{
                         padding: 8,
                         borderRadius: 4,

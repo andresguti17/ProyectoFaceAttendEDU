@@ -10,6 +10,7 @@ import { Feather } from "@expo/vector-icons";
 import { Badge, Avatar, Button, ProgressBar, useAttendanceColor } from "../common";
 import { getAttendanceThresholds } from "../../../models/data/userDerivedData";
 import { useTheme }       from "../hooks/useTheme";
+import { useDateFormat } from "../hooks/useDateFormat";
 import { useResponsive }  from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../context/AppDataContext";
@@ -30,6 +31,7 @@ export default function StudentDetailModal({
     onBiometricsEnrolled,
 }) {
     const { theme } = useTheme();
+    const { formatDate } = useDateFormat();
     const { isSmall } = useResponsive();
     const { t }     = useTranslation();
     const c         = theme.colors;
@@ -163,7 +165,7 @@ export default function StudentDetailModal({
                                         icon: "credit-card",
                                     },
                                     { label: t("Teléfono"), value: student.phone || student.telefono, icon: "phone" },
-                                    { label: t("Nacimiento"), value: student.birthDate, icon: "calendar" },
+                                    { label: t("Nacimiento"), value: student.birthDate ? formatDate(student.birthDate) : "", icon: "calendar" },
                                     { label: t("Sangre"), value: student.bloodType, icon: "droplet" },
                                     { label: t("Dirección"), value: student.address, icon: "map-pin" },
                                     { label: t("Usuario"), value: student.username, icon: "at-sign" },

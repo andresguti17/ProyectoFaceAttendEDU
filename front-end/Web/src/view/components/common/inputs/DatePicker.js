@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Platform, StyleSheet } from "react-native
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 import { formatDate as formatDateWithConfig, formatTime as formatTimeWithConfig, formatDateTime as formatDateTimeWithConfig } from "../../../../core/constants/dateFormats";
 
@@ -71,6 +72,7 @@ export function DatePicker({
   buttonStyle,
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [showPicker, setShowPicker] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -151,7 +153,7 @@ export function DatePicker({
         ]}
         accessibilityRole="button"
         accessibilityLabel={label || "Seleccionar fecha"}
-        accessibilityHint="Abre el selector de fecha"
+        accessibilityHint={t("Abre el selector de fecha")}
       >
         <Feather
           name="calendar"
@@ -180,7 +182,7 @@ export function DatePicker({
 
       {error && errorMessage && (
         <Text style={[styles.message, { color: theme.colors.status.error }]}>
-          {errorMessage}
+          {t(errorMessage)}
         </Text>
       )}
 

@@ -20,7 +20,7 @@ import { Button, InfoModal } from "../../../../components/common";
 import { PeriodExpirationAlert } from "../../../../components/settings/PeriodExpirationAlert";
 import { useTranslation } from "../../../../../core/utils/i18n/hooks/useTranslation";
 import { DateRangePicker } from "../../../../components/settings/tabs";
-import { getFullPeriodLabel } from "../../../../../core/constants/academicPeriods";
+import { getFullPeriodLabel, formatPeriodDateRange } from "../../../../../core/constants/academicPeriods";
 import { useSettingsSectionStyles } from "../../modals/useSettingsSectionStyles";
 
 export function PeriodConfig({
@@ -29,6 +29,8 @@ export function PeriodConfig({
     isAutomaticPeriod, onModeChange,
     academicPeriodType,
     automaticPeriod,
+    currentPeriod,
+    hasSchool,
     periodExpiration,
     showExpirationAlert,
     onDismissExpiration,
@@ -38,6 +40,12 @@ export function PeriodConfig({
 
     const [showInfoModal, setShowInfoModal] = React.useState(false);
     const suggestDatesRef = React.useRef(null);
+
+    const statusMeta = currentPeriod && {
+        current: { color: c.status.success, bg: c.status.successLight, text: `${t("En curso")} · ${currentPeriod.daysRemaining} ${t("días restantes")}` },
+        upcoming: { color: c.status.info ?? c.brand.primary, bg: c.status.infoLight, text: t("Próximo a iniciar") },
+        ended: { color: c.status.danger, bg: c.status.dangerLight, text: t("Finalizado") },
+    }[currentPeriod.status];
 
     return (
         <View style={{ gap: 12 }}>
@@ -70,6 +78,48 @@ export function PeriodConfig({
                     </Text>
                 </TouchableOpacity>
             </View>
+
+            {/* Período vigente según lo que se está editando */}
+            {currentPeriod && statusMeta && (
+                <View
+                    style={{
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: 12,
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: c.border.light,
+                        backgroundColor: c.background.surface,
+                    }}
+                >
+                    <View style={{ flex: 1, minWidth: 200, gap: 2 }}>
+                        <Text style={{ fontSize: 11, fontWeight: "600", color: c.text.secondary, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                            {currentPeriod.fromDates ? t("Período vigente") : t("Período del calendario")}
+                        </Text>
+                        <Text style={{ fontSize: 15, fontWeight: "700", color: c.text.primary }}>
+                            {t(currentPeriod.label)}
+                        </Text>
+                        <Text style={{ fontSize: 12, color: c.text.secondary }}>
+                            {formatPeriodDateRange({ startDate: currentPeriod.startIso, endDate: currentPeriod.endIso })}
+                        </Text>
+                    </View>
+                    <View style={{ backgroundColor: statusMeta.bg, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6 }}>
+                        <Text style={{ fontSize: 12, fontWeight: "600", color: statusMeta.color }}>{statusMeta.text}</Text>
+                    </View>
+                    {!currentPeriod.fromDates && (
+                        <Text style={{ width: "100%", fontSize: 11, color: c.text.secondary }}>
+                            {t("Aún no hay fechas fijas: se usa la división del calendario. Pulsa «Sugerir fechas» y guarda para fijarlas.")}
+                        </Text>
+                    )}
+                    {hasSchool && (
+                        <Text style={{ width: "100%", fontSize: 11, color: c.text.secondary }}>
+                            {t("Al guardar, este período también queda como período activo en Académico.")}
+                        </Text>
+                    )}
+                </View>
+            )}
 
             {/* Botones de modo */}
             <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
@@ -154,7 +204,7 @@ export function PeriodConfig({
                     {automaticPeriod && (
                         <View>
                             <Text style={{ fontSize: 15, fontWeight: "600", color: c.brand.primary, marginBottom: 8 }}>
-                                {getFullPeriodLabel(automaticPeriod)}
+                                {getFullPeriodLabel({ ...automaticPeriod, label: t(automaticPeriod.label) })}
                             </Text>
                             <Text style={{ fontSize: 14, color: c.text.primary, lineHeight: 20 }}>
                                 {t("Este cálculo se basa en dividir el año calendario según el tipo de período seleccionado.")}
