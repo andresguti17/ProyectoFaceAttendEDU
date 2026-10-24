@@ -23,4 +23,14 @@ public class ListPersonsUseCaseImpl implements ListPersonsUseCase {
     public long countPersons() {
         return listPersonsPort.countPersons();
     }
+
+    @Override
+    public List<Person> listPersons(int pageIndex, int limit, java.util.Set<java.util.UUID> personIds) {
+        return personIds.isEmpty() ? List.of() : listPersonsPort.listPersons(pageIndex, limit, personIds);
+    }
+
+    @Override
+    public long countPersons(java.util.Set<java.util.UUID> personIds) {
+        return personIds.isEmpty() ? 0 : listPersonsPort.countPersons(personIds);
+    }
 }

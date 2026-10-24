@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   # Reutilizable desde deploy-production.yml: el despliegue solo corre si CI está verde.
   workflow_call:
 
@@ -13,6 +13,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # back-end/shared: the session guard every Java and Node service runs.
+  shared-auth:
+    name: shared / auth
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: back-end/shared/auth-java/pom.xml
+      - name: mvn test (auth-java)
+        working-directory: back-end/shared/auth-java
+        run: mvn -B test
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: node --test (auth-node)
+        working-directory: back-end/shared/auth-node
+        run: npm test
+
   java-services:
     name: java / ${{ matrix.service }}
     runs-on: ubuntu-latest
@@ -31,10 +53,45 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
-          cache-dependency-path: back-end/${{ matrix.service }}/pom.xml
-      - name: mvn test
+          cache-dependency-path: |
+            back-end/${{ matrix.service }}/pom.xml
+            back-end/shared/auth-java/pom.xml
+      - name: install shared auth library
+        run: mvn -B -q -f back-end/shared/auth-java/pom.xml install -DskipTests
+      # JaCoCo runs in the test phase: the build fails under jacoco.line.minimum (pom.xml).
+      - name: mvn test (with coverage gate)
         working-directory: back-end/${{ matrix.service }}
         run: mvn -B test
+      - name: coverage summary
+        if: always()
+        run: python3 .github/scripts/coverage-summary.py jacoco back-end/${{ matrix.service }}/target/site/jacoco/jacoco.csv ${{ matrix.service }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ matrix.service }}
+          path: back-end/${{ matrix.service }}/target/site/jacoco
+          if-no-files-found: ignore
+
+  # docs/openapi must match the code: regenerate the Java contracts and fail on any diff.
+  openapi:
+    name: openapi / drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: back-end/*/pom.xml
+      - name: regenerate Java contracts
+        run: bash tools/openapi/generate.sh
+      - name: contracts match the committed ones
+        run: |
+          if ! git diff --exit-code -- docs/openapi; then
+            echo "::error::docs/openapi is out of date: run tools/openapi/generate.sh and commit the result"
+            exit 1
+          fi
 
   node-services:
     name: node / ${{ matrix.service }}
@@ -57,9 +114,19 @@ jobs:
       - name: npm ci
         working-directory: back-end/${{ matrix.service }}
         run: npm ci
-      - name: npm test
+      # coverageThreshold in jest.config.js fails the job under the service's floor.
+      - name: npm test (with coverage gate)
         working-directory: back-end/${{ matrix.service }}
-        run: npm test
+        run: npm test -- --coverage
+      - name: coverage summary
+        if: always()
+        run: python3 .github/scripts/coverage-summary.py jest back-end/${{ matrix.service }}/coverage/coverage-summary.json ${{ matrix.service }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ matrix.service }}
+          path: back-end/${{ matrix.service }}/coverage
+          if-no-files-found: ignore
       - name: npm run build
         working-directory: back-end/${{ matrix.service }}
         run: npm run build
@@ -103,9 +170,29 @@ jobs:
       - name: poetry install
         working-directory: back-end/${{ matrix.service }}
         run: poetry config virtualenvs.in-project true && poetry install --no-root
-      - name: pytest
+      # pytest-cov is installed here, not locked: fail_under lives in pyproject.toml.
+      - name: pytest (with coverage gate)
         working-directory: back-end/${{ matrix.service }}
-        run: poetry run pytest
+        run: |
+          poetry run pip install --quiet "pytest-cov==5.0.*"
+          poetry run pytest --cov=. --cov-report=term --cov-report=json --cov-report=html
+      - name: coverage summary
+        if: always()
+        run: python3 .github/scripts/coverage-summary.py pytest back-end/${{ matrix.service }}/coverage.json ${{ matrix.service }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ matrix.service }}
+          path: back-end/${{ matrix.service }}/htmlcov
+          if-no-files-found: ignore
+      - name: OpenAPI contract matches the committed one
+        working-directory: back-end/${{ matrix.service }}
+        run: |
+          poetry run python ../../tools/openapi/biometric.py
+          if ! git diff --exit-code -- ../../docs/openapi/06-ms-biometric.json; then
+            echo "::error::docs/openapi/06-ms-biometric.json is out of date: regenerate it (docs/openapi/README.md)"
+            exit 1
+          fi
       - name: bandit (informational)
         working-directory: back-end/${{ matrix.service }}
         run: poetry run pip install --quiet bandit && poetry run bandit -r . -x ./tests,./.venv

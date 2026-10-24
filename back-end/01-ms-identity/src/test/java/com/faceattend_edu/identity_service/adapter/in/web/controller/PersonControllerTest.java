@@ -91,6 +91,25 @@ class PersonControllerTest {
                 .andExpect(status().isConflict());
     }
 
+    @Test
+    void scopedListingIsOnePageFromTheDatabaseWithTheScopeTotal() throws Exception {
+        UUID mine = UUID.randomUUID();
+        UUID other = UUID.randomUUID();
+        java.util.Set<UUID> scope = java.util.Set.of(mine, other);
+        when(listPersonsUseCase.listPersons(1, 1, scope)).thenReturn(java.util.List.of(storedPerson(other)));
+        when(listPersonsUseCase.countPersons(scope)).thenReturn(2L);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .get("/api/v1/persons").param("page", "2").param("limit", "1")
+                        .requestAttr(AuthTokenFilter.PERSON_SCOPE_ATTRIBUTE, scope))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.meta.page").value(2))
+                .andExpect(jsonPath("$.meta.total").value(2))
+                .andExpect(jsonPath("$.meta.totalPages").value(2));
+        verifyNoInteractions(getPersonUseCase);
+    }
+
     private Person storedPerson(UUID id) {
         Person current = new Person();
         current.setPersonId(id);
