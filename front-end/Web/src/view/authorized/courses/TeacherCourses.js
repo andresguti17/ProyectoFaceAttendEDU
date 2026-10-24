@@ -56,6 +56,9 @@ function useTeacherCourseMeta() {
                     ])
                 ),
             });
+        }).catch((error) => {
+            // optional() ya absorbe los fallos de red; esto cubre errores al armar el estado.
+            if (!cancelled) console.error("No se pudo cargar el detalle de cursos del docente", error);
         });
         return () => {
             cancelled = true;

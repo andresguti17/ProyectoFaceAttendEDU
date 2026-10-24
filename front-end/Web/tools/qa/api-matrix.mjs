@@ -623,4 +623,7 @@ function documentIds() {
         console.log(`  FAIL ${r.id} [${r.severity || "-"}] ${r.request} ${r.note}`);
     }
     process.exit(totals.FAIL > 0 ? 1 : 0);
-})();
+})().catch((error) => {
+    console.error(error);
+    process.exit(1);
+});
