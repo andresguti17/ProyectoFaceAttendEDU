@@ -378,7 +378,7 @@ function CapturePanel({ kioskVm }) {
             }
         }
 
-        loop();
+        void loop();
 
         return () => {
             cancelled = true;

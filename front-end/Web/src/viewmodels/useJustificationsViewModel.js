@@ -220,7 +220,7 @@ export function useJustificationsViewModel() {
             };
         }
 
-        (async () => {
+        void (async () => {
             let withRecords = [];
 
             if (reviewerActorIds) {

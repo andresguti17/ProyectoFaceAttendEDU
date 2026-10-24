@@ -434,7 +434,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
         });
         
         const fichaOptions = Array.from(fichasSet)
-            .sort()
+            .sort((a, b) => String(a).localeCompare(String(b)))
             .map(ficha => {
                 const course = (appData.courses || []).find(c => c.code === ficha || c.id === ficha);
                 return {

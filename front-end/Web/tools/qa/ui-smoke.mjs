@@ -246,7 +246,7 @@ async function visit(page, tracker, role, route, viewport) {
 
 // ── Principal ────────────────────────────────────────────────
 
-(async () => {
+void (async () => {
     const started = Date.now();
     let browser;
     try {
