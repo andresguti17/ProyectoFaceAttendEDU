@@ -2,6 +2,8 @@
  * Funciones de formateo reutilizables para datos y texto
  */
 
+import { getLocale } from "./locale";
+
 /**
  * Formatea número con separadores de miles
  * @param {number|null|undefined} num - Número a formatear
@@ -15,7 +17,7 @@
 export function formatNumber(num, decimals = 0) {
   if (num === null || num === undefined || isNaN(num)) return "0";
   
-  return Number(num).toLocaleString("en-US", {
+  return Number(num).toLocaleString(getLocale(), {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
@@ -47,7 +49,7 @@ export function formatPercentage(value, decimals = 2) {
 export function formatCurrency(amount, currency = "USD") {
   if (amount === null || amount === undefined || isNaN(amount)) return "$0.00";
   
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(getLocale(), {
     style: "currency",
     currency,
   }).format(amount);

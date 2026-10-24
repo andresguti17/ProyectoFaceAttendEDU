@@ -1,0 +1,21 @@
+{
+  "alerts.types.JUSTIFICATION_RESULT.title": "Resultado de tu justificación",
+  "alerts.types.JUSTIFICATION_RESULT.body": "Se resolvió tu justificación. Revisa su estado.",
+  "alerts.types.JUSTIFICATION_APPROVED.title": "Tu justificación fue aprobada",
+  "alerts.types.JUSTIFICATION_APPROVED.body": "El registro de asistencia quedó como Justificada.",
+  "alerts.types.JUSTIFICATION_REJECTED.title": "Tu justificación fue rechazada",
+  "alerts.types.JUSTIFICATION_REJECTED.body": "El registro de asistencia conserva su estado original.",
+  "alerts.types.JUSTIFICATION_PENDING.title": "Justificación pendiente de revisión",
+  "alerts.types.JUSTIFICATION_PENDING.body": "Hay justificaciones pendientes de revisión.",
+  "alerts.types.ATTENDANCE_ABSENTEEISM.title": "Inasistencia recurrente",
+  "alerts.types.ATTENDANCE_ABSENTEEISM.body": "Tienes inasistencias recurrentes. Revísalas en tu historial.",
+  "alerts.types.ATTENDANCE_TARDINESS.title": "Retardos repetidos",
+  "alerts.types.ATTENDANCE_TARDINESS.body": "Tienes tardanzas repetidas. Revísalas en tu historial.",
+  "alerts.types.ATTENDANCE_LOW.title": "Asistencia baja",
+  "alerts.types.ATTENDANCE_LOW.body": "Tu asistencia está por debajo del mínimo. Urgente.",
+  "alerts.types.BIOMETRIC_UPDATE.title": "Solicitud de actualización biométrica",
+  "alerts.types.BIOMETRIC_UPDATE.body": "Hay una solicitud biométrica relacionada contigo.",
+  "alerts.severity.INFO": "Información",
+  "alerts.severity.WARNING": "Advertencia",
+  "alerts.severity.CRITICAL": "Crítica"
+}

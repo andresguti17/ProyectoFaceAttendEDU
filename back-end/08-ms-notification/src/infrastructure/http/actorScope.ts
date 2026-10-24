@@ -78,6 +78,42 @@ function store(userId: string, now: number, value: Set<number>): Set<number> {
 }
 
 /**
+ * academic_actor_id of the caller's own actors (identity user -> personId ->
+ * academic actors of that person). Empty when the user has no person.
+ */
+async function ownActorIds(userId: string, token: string): Promise<number[]> {
+  const identityUrl = process.env.IDENTITY_URL || 'http://localhost:8081';
+  const academicUrl = process.env.ACADEMIC_URL || 'http://localhost:8083';
+  const user = await getJsonStrict(`${identityUrl}/api/v1/users/${encodeURIComponent(userId)}`, token);
+  const personId = user?.personId;
+  if (typeof personId !== 'string' || !personId) return [];
+
+  // ?personId= filters in academic: the caller's own actor without walking
+  // the capped listing.
+  const ownActors = await getJsonStrict(
+    `${academicUrl}/api/v1/academic-actors?personId=${encodeURIComponent(personId)}`,
+    token,
+  );
+  const own: number[] = [];
+  if (Array.isArray(ownActors)) {
+    for (const a of ownActors as ActorRow[]) {
+      if (typeof a?.personId === 'string' && a.personId.toLowerCase() === personId.toLowerCase()) {
+        own.push(a.academicActorId);
+      }
+    }
+  }
+  return own;
+}
+
+/** The caller's own academic actors, whatever its role (no scope widening, no cache). */
+export async function resolveOwnActorIds(req: FastifyRequest): Promise<number[]> {
+  const userId = (req as any).userId as string | undefined;
+  const token = (req as any).authToken as string | undefined;
+  if (!userId || !token) throw new ScopeError(403, 'No authenticated user');
+  return ownActorIds(userId, token);
+}
+
+/**
  * Resolves the academic-actor scope of an authenticated request (the auth
  * guard has already validated the session and set `userId` / `authToken`).
  * `null` = unrestricted (Super Administrador); otherwise the set of
@@ -90,7 +126,6 @@ export async function resolveActorScope(req: FastifyRequest): Promise<Set<number
   if (!userId || !token) throw new ScopeError(403, 'No authenticated user');
 
   const authorizationUrl = process.env.AUTHORIZATION_URL || 'http://localhost:8082';
-  const identityUrl = process.env.IDENTITY_URL || 'http://localhost:8081';
   const academicUrl = process.env.ACADEMIC_URL || 'http://localhost:8083';
   const schedulingUrl = process.env.SCHEDULING_URL || 'http://localhost:8084';
 
@@ -112,28 +147,8 @@ export async function resolveActorScope(req: FastifyRequest): Promise<Set<number
   const cached = cache.get(userId);
   if (cached && cached.expiresAt > now) return cached.value;
 
-  const user = await getJsonStrict(`${identityUrl}/api/v1/users/${encodeURIComponent(userId)}`, token);
-  const personId = user?.personId;
-  if (typeof personId !== 'string' || !personId) {
-    return store(userId, now, new Set());
-  }
-
-  // ?personId= filters in academic: the caller's own actor without walking
-  // the capped listing.
-  const ownActors = await getJsonStrict(
-    `${academicUrl}/api/v1/academic-actors?personId=${encodeURIComponent(personId)}`,
-    token,
-  );
-  const scope = new Set<number>();
-  const own: number[] = [];
-  if (Array.isArray(ownActors)) {
-    for (const a of ownActors as ActorRow[]) {
-      if (typeof a?.personId === 'string' && a.personId.toLowerCase() === personId.toLowerCase()) {
-        scope.add(a.academicActorId);
-        own.push(a.academicActorId);
-      }
-    }
-  }
+  const own = await ownActorIds(userId, token);
+  const scope = new Set<number>(own);
 
   if (isSchoolAdmin) {
     // School admin: the school is deduced from the full listing, walked page

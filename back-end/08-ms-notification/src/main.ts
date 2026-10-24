@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import { randomUUID } from 'node:crypto';
-import { registerNotificationRoutes, registerEmailRoute } from './infrastructure/http/routes';
+import { registerNotificationRoutes, registerEmailRoute, registerDeviceTokenRoutes } from './infrastructure/http/routes';
+import { pushConfigFromEnv, withAlertPush } from './infrastructure/push/expoPush';
 import { registerQualityMiddleware, registerQualityHealthEndpoint } from './infrastructure/http/qualityMiddleware';
 import {
   connectDatabase,
@@ -98,8 +99,18 @@ async function start() {
   registerQualityMiddleware(app);
   registerQualityHealthEndpoint(app);
 
-  const repositories = createNotificationRepositories();
+  // Every alert created through `repositories.alerts` is also pushed to the actor's devices.
+  const persistence = createNotificationRepositories();
+  const repositories = {
+    ...persistence,
+    alerts: withAlertPush(persistence.alerts, persistence.alertTypes, {
+      tokens: persistence.deviceTokens,
+      config: pushConfigFromEnv(),
+      logger: app.log,
+    }),
+  };
   await registerNotificationRoutes(app, repositories);
+  registerDeviceTokenRoutes(app, repositories.deviceTokens);
   registerEmailRoute(app, smtpConfigFromEnv());
 
   // Kafka is optional: only start the justification-reviewed consumer when a

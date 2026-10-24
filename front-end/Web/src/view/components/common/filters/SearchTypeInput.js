@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 import { AnimatedDropdown } from "../animation";
 
@@ -29,6 +30,7 @@ export function SearchTypeInput({
     style,
 }) {
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const c = theme.colors;
     
     const [isInputFocused, setIsInputFocused] = useState(false);
@@ -39,15 +41,15 @@ export function SearchTypeInput({
     const searchTypeItems = [
         { 
             value: "student", 
-            label: "Buscar por Estudiante...", 
+            label: t("Buscar por Estudiante..."), 
             icon: "user",
-            placeholder: "Buscar por nombre de estudiante..."
+            placeholder: t("Buscar por nombre de estudiante...")
         },
         { 
             value: "teacher", 
-            label: "Buscar por Docente...", 
+            label: t("Buscar por Docente..."), 
             icon: "user-check",
-            placeholder: "Buscar por docente..."
+            placeholder: t("Buscar por docente...")
         },
     ];
 
@@ -78,7 +80,7 @@ export function SearchTypeInput({
 
     // Obtener el placeholder según el tipo de búsqueda
     const currentOption = searchTypeItems.find(item => item.value === value.searchType);
-    const placeholder = currentOption?.placeholder || "Buscar...";
+    const placeholder = currentOption?.placeholder || t("Buscar...");
     const icon = currentOption?.icon || "user";
 
     // Render custom para el trigger con input integrado

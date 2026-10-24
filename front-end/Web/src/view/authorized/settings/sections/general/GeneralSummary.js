@@ -60,7 +60,7 @@ export function GeneralSummary({
                 label={t("Período actual")}
                 value={
                     currentPeriod
-                        ? `${currentPeriod.label} (${formatPeriodDateRange({ startDate: currentPeriod.startIso, endDate: currentPeriod.endIso })}) · ${
+                        ? `${t(currentPeriod.label)} (${formatPeriodDateRange({ startDate: currentPeriod.startIso, endDate: currentPeriod.endIso })}) · ${
                               currentPeriod.fromDates ? (isAutomaticPeriod ? t("Auto") : t("Manual")) : t("Calendario")
                           }`
                         : t("Sin definir")

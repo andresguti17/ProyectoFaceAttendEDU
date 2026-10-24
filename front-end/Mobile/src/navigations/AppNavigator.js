@@ -1,4 +1,6 @@
 import React, {useEffect, useState, useRef} from 'react';
+import {Linking} from 'react-native';
+import * as Notifications from 'expo-notifications';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -33,12 +35,17 @@ import SchoolsScreen from "../view/screens/SchoolsScreen";
 import RegisterFace from "../view/screens/RegisterFace";
 import MyCoursesScreen from "../view/screens/MyCoursesScreen";
 import BiometricCasesScreen from "../view/screens/BiometricCasesScreen";
+import CustomAlert from '../view/components/common/CustomAlert';
+import {useCustomAlert} from '../view/components/common/useCustomAlert';
+import {PUSH_STORAGE_KEY, registerForPush, routeForNotification, unregisterPush} from '../services/PushService';
 
 const Stack = createStackNavigator();
 
 // Claves locales de sesión; el mismo conjunto borra checkAuth, handleLogout
 // y la purga por sesión caducada (handleSessionExpired).
-const SESSION_KEYS = ['userRole', 'userEmail', 'userProfile', 'appLanguage', 'alertsConfig'];
+const SESSION_KEYS = ['userRole', 'userEmail', 'userProfile', 'appLanguage', 'alertsConfig', PUSH_STORAGE_KEY];
+// Por dispositivo (sobrevive al logout): el aviso de permiso denegado sale una sola vez.
+const PUSH_DENIED_NOTICE_KEY = 'pushDeniedNoticeShown';
 
 async function clearLocalSession() {
     await removeToken();
@@ -70,7 +77,67 @@ export default function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(null);
     const [userRole, setUserRole] = useState(null);
     const navigationRef = useRef(null);
+    const [navReady, setNavReady] = useState(false);
     const { loadUserData } = useUser();
+    const {alertConfig, showAlert, hideAlert} = useCustomAlert();
+    // Lo que sigue al cerrar el aviso actual, también con el botón atrás de Android.
+    const onAlertClosedRef = useRef(null);
+    const lastOpenedPushRef = useRef(null);
+
+    const closeAlert = () => {
+        hideAlert();
+        const next = onAlertClosedRef.current;
+        onAlertClosedRef.current = null;
+        next?.();
+    };
+
+    // Explica el permiso antes del diálogo del sistema y continúa al cerrarse.
+    const explainPushPermission = () => new Promise((resolve) => {
+        onAlertClosedRef.current = resolve;
+        showAlert({
+            title: i18n.t('push.permission.title'),
+            message: i18n.t('push.permission.body'),
+            buttons: [{text: i18n.t('common.accept'), onPress: closeAlert}],
+        });
+    });
+
+    const startPush = async () => {
+        const {status} = await registerForPush({beforeRequest: explainPushPermission});
+        if (status !== 'denied' || (await AsyncStorage.getItem(PUSH_DENIED_NOTICE_KEY))) return;
+        await AsyncStorage.setItem(PUSH_DENIED_NOTICE_KEY, '1');
+        showAlert({
+            title: i18n.t('push.denied.title'),
+            message: i18n.t('push.denied.body'),
+            type: 'warning',
+            buttons: [
+                {text: i18n.t('common.close'), style: 'cancel', onPress: closeAlert},
+                {
+                    text: i18n.t('push.denied.open_settings'),
+                    onPress: () => {
+                        closeAlert();
+                        Linking.openSettings().catch(() => {});
+                    },
+                },
+            ],
+        });
+    };
+
+    // Toque en una push: con la app viva (listener) o al abrirla desde la push,
+    // también si se tocó con la sesión cerrada (se atiende tras el login).
+    useEffect(() => {
+        if (!isAuthenticated || !navReady) return undefined;
+        const open = async (response) => {
+            const id = response?.notification?.request?.identifier;
+            if (!response || id === lastOpenedPushRef.current) return;
+            lastOpenedPushRef.current = id;
+            Notifications.clearLastNotificationResponseAsync().catch(() => {});
+            const target = await routeForNotification(response, userRole);
+            navigationRef.current?.navigate(target.name, target.params);
+        };
+        Notifications.getLastNotificationResponseAsync().then(open).catch(() => {});
+        const subscription = Notifications.addNotificationResponseReceivedListener((response) => { void open(response); });
+        return () => subscription.remove();
+    }, [isAuthenticated, navReady, userRole]);
 
     useEffect(() => {
         void checkAuth();
@@ -124,6 +191,7 @@ export default function App() {
             setIsAuthenticated(true);
             setUserRole(role);
             await loadUserData();
+            void startPush();
         } catch (e) {
             console.error('Error guardando sesión:', e);
         }
@@ -135,6 +203,8 @@ export default function App() {
                 const { getToken } = require('../storage/TokenStorage');
                 const { AuthService } = require('../services/AuthService');
                 const sessionId = await getToken();
+                // Antes del logout: el DELETE del token necesita la sesión viva.
+                await unregisterPush();
                 await AuthService.logout(sessionId);
             } catch {}
             await clearLocalSession();
@@ -164,7 +234,8 @@ export default function App() {
     const isApprentice = userRole === 'Aprendiz';
 
     return (
-        <NavigationContainer ref={navigationRef}>
+        <>
+        <NavigationContainer ref={navigationRef} onReady={() => setNavReady(true)}>
             <Stack.Navigator
                 screenOptions={{
                     headerShown: false,
@@ -267,5 +338,14 @@ export default function App() {
                 )}
             </Stack.Navigator>
         </NavigationContainer>
+        <CustomAlert
+            visible={alertConfig.visible}
+            title={alertConfig.title}
+            message={alertConfig.message}
+            buttons={alertConfig.buttons}
+            type={alertConfig.type}
+            onClose={closeAlert}
+        />
+        </>
     );
 }

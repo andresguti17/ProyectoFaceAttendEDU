@@ -590,7 +590,7 @@ export default function UserHistoryModal({
                                     items={dropdownItems}
                                     value={selectedPeriod?.id}
                                     onSelect={handlePeriodSelect}
-                                    placeholder="Selecciona período"
+                                    placeholder={t("Selecciona período")}
                                     triggerHeight={32}
                                     maxVisible={6}
                                 />

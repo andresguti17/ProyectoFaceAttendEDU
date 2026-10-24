@@ -83,7 +83,7 @@ export default function ProgramModal({ visible, program, onClose, onSubmit }) {
                         marginBottom: 14,
                     }}
                 >
-                    <Text style={{ fontSize: 13, color: c.status.danger }}>{error}</Text>
+                    <Text style={{ fontSize: 13, color: c.status.danger }}>{t(error)}</Text>
                 </View>
             )}
             <View style={{ gap: 0 }}>
