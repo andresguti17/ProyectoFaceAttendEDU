@@ -98,7 +98,7 @@ export function useHistoryViewModel() {
     // Catálogos que alimentan los filtros y el cruce de datos: una sola carga.
     useEffect(() => {
         let alive = true;
-        (async () => {
+        void (async () => {
             const [sessions, blocks, cohorts, environments, actors, persons] = await Promise.all([
                 optional(schedulingApi.listSessions(), []),
                 optional(listBlocks(), []),

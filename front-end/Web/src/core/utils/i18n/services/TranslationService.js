@@ -30,6 +30,7 @@ class TranslationService {
     activeTexts = new Set();
     
     // Estado del servicio
+    /** @type {boolean|null} */
     serviceAvailable = null; // null = no verificado, true = disponible, false = caído
     healthCheckInterval = null;
     healthCheckIntervalMs = 10000; // 10 segundos

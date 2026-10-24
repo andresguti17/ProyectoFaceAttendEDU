@@ -32,7 +32,7 @@ export function useAddJustificationViewModel() {
     // El backend acota registros y justificaciones a los actores del usuario.
     useEffect(() => {
         let active = true;
-        (async () => {
+        void (async () => {
             try {
                 const user = await getCurrentUser();
                 const actors = await ActorService.getByPerson(user?.personId);

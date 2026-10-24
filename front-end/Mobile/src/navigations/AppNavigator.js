@@ -73,7 +73,7 @@ export default function App() {
     const { loadUserData } = useUser();
 
     useEffect(() => {
-        checkAuth();
+        void checkAuth();
     }, []);
 
     const checkAuth = async () => {

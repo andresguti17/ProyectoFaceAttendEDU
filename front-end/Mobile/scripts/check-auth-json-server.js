@@ -48,7 +48,7 @@ async function post(path, body) {
   return { status: res.status, ok: res.ok, body: json, raw: text.slice(0, 120) };
 }
 
-(async () => {
+void (async () => {
   const results = [];
   const step = (name, ok, detail = '') => {
     results.push({ name, ok, detail });

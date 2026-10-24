@@ -4,7 +4,7 @@
 
 /**
  * Formatea número con separadores de miles
- * @param {number} num - Número a formatear
+ * @param {number|null|undefined} num - Número a formatear
  * @param {number} [decimals=0] - Cantidad de decimales
  * @returns {string} Número formateado con separadores
  * @example
@@ -23,7 +23,7 @@ export function formatNumber(num, decimals = 0) {
 
 /**
  * Formatea valor como porcentaje
- * @param {number} value - Valor decimal (0.8523 = 85.23%)
+ * @param {number|null|undefined} value - Valor decimal (0.8523 = 85.23%)
  * @param {number} [decimals=2] - Cantidad de decimales
  * @returns {string} Porcentaje formateado con símbolo %
  * @example
@@ -37,7 +37,7 @@ export function formatPercentage(value, decimals = 2) {
 
 /**
  * Formatea cantidad monetaria
- * @param {number} amount - Cantidad a formatear
+ * @param {number|null|undefined} amount - Cantidad a formatear
  * @param {string} [currency="USD"] - Código de moneda ISO 4217
  * @returns {string} Cantidad formateada con símbolo de moneda
  * @example

@@ -54,7 +54,7 @@ export function PreparedScreen({ component: Component, ...props }) {
         const preparationId = ++preparationIdRef.current;
 
         // Función async para preparar
-        (async () => {
+        void (async () => {
             // Obtener textos registrados durante el render
             const texts = translationTracker.getTexts();
 

@@ -72,7 +72,7 @@ export function useAutomaticPeriodAdvance(enabled = true, checkIntervalMinutes =
         };
 
         // Ejecutar al montar
-        checkAndAdvance();
+        void checkAndAdvance();
 
         // Configurar intervalo de verificación
         const intervalMs = checkIntervalMinutes * 60 * 1000;

@@ -201,7 +201,7 @@ export function PushNotificationProvider({
         processedNotifications.forEach((notification) => {
           if (notification.duration > 0) {
             setTimeout(() => {
-              dismiss(notification.id, 'timeout');
+              void dismiss(notification.id, 'timeout');
             }, notification.duration);
           }
         });
@@ -220,7 +220,7 @@ export function PushNotificationProvider({
    * @param {string} config.title - Título de la notificación
    * @param {string} config.message - Mensaje de la notificación
    * @param {('info'|'success'|'warning'|'error'|'custom')} config.type - Tipo de notificación
-   * @param {number} config.duration - Duración en ms (si no se especifica, usa institutionConfig.pushDuration)
+   * @param {number} [config.duration] - Duración en ms (si no se especifica, usa institutionConfig.pushDuration)
    * @param {string} config.icon - Icono personalizado (Feather icon name)
    * @param {object} config.navigation - Objeto de navegación { screen, params }
    * @param {object} config.action - Acción personalizada { label, onPress }
@@ -232,8 +232,8 @@ export function PushNotificationProvider({
    * @param {boolean} config.allowDuplicates - Permitir notificaciones duplicadas (default: false)
    * 
    * ===== NUEVAS PROPIEDADES PARA NOTIFICACIONES "ÚNICAS" =====
-   * @param {number} config.maxNotifications - Sobrescribir límite total de notificaciones
-   * @param {number} config.maxNotificationsByType - Sobrescribir límite por tipo
+   * @param {number} [config.maxNotifications] - Sobrescribir límite total de notificaciones
+   * @param {number} [config.maxNotificationsByType] - Sobrescribir límite por tipo
    * @param {boolean} config.isActiveSource - Si la fuente está "activa" (cambia comportamiento)
    * @param {boolean} config.isResolved - Si la fuente está "resuelta" (puede cambiar duración, etc.)
    * @param {function} config.onSourceResolved - Callback cuando la fuente se resuelve
@@ -327,7 +327,7 @@ export function PushNotificationProvider({
         // Auto-dismiss si tiene duración
         if (notification.duration > 0) {
           setTimeout(() => {
-            dismiss(notification.id, 'timeout');
+            void dismiss(notification.id, 'timeout');
           }, notification.duration);
         }
 
