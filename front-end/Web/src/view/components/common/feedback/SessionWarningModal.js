@@ -39,17 +39,12 @@ export default function SessionWarningModal({
     };
 
     // Determinar urgencia para colores dinámicos
-    const isUrgent = timeRemaining <= 60; // Menos de 1 minuto
     const isCritical = timeRemaining <= 30; // Menos de 30 segundos
     
     // Colores dinámicos basados en tiempo restante
-    const timeColor = isCritical ? c.status.error : 
-                     isUrgent ? c.status.warning : 
-                     c.status.warning;
+    const timeColor = isCritical ? c.status.error : c.status.warning;
     
-    const timeBgColor = isCritical ? c.status.errorLight : 
-                       isUrgent ? c.status.warningLight : 
-                       c.status.warningLight;
+    const timeBgColor = isCritical ? c.status.errorLight : c.status.warningLight;
 
     return (
         <BaseModal
