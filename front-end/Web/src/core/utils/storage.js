@@ -24,7 +24,7 @@ export function saveToLocalStorage(key, value) {
         
         // En mobile, esto sería asíncrono pero lo hacemos síncrono para compatibilidad
         // Nota: Idealmente toda la API debería ser async, pero por ahora mantenemos sync
-        import("@react-native-async-storage/async-storage").then(({ default: AsyncStorage }) => {
+        void import("@react-native-async-storage/async-storage").then(({ default: AsyncStorage }) => {
             AsyncStorage.setItem(key, serialized);
         });
         return true;
@@ -70,7 +70,7 @@ export function removeFromLocalStorage(key) {
             return true;
         }
         
-        import("@react-native-async-storage/async-storage").then(({ default: AsyncStorage }) => {
+        void import("@react-native-async-storage/async-storage").then(({ default: AsyncStorage }) => {
             AsyncStorage.removeItem(key);
         });
         return true;
@@ -91,7 +91,7 @@ export function clearLocalStorage() {
             return true;
         }
         
-        import("@react-native-async-storage/async-storage").then(({ default: AsyncStorage }) => {
+        void import("@react-native-async-storage/async-storage").then(({ default: AsyncStorage }) => {
             AsyncStorage.clear();
         });
         return true;

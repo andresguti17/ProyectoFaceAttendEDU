@@ -140,7 +140,7 @@ export default function App() {
     }, [isAuthenticated, navReady, userRole]);
 
     useEffect(() => {
-        checkAuth();
+        void checkAuth();
     }, []);
 
     const checkAuth = async () => {

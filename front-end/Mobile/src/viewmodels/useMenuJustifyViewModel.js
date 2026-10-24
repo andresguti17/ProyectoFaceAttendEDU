@@ -42,7 +42,7 @@ export function useMenuJustifyViewModel() {
                     setUserRole(null);
                 }
             };
-            loadData();
+            void loadData();
         }, [])
     );
 

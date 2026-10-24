@@ -6,7 +6,7 @@ import { PRIVACY_POLICY_VERSION } from './consentService';
 // Tipos de actor académico sembrados en 03 (001-seed-academic-actor-type-table).
 const ACTOR_TYPE_BY_ROLE = { Aprendiz: 1, Instructor: 2 };
 
-const list = (data) => (Array.isArray(data) ? data : data ? [data] : []).map(toSnakeDeep);
+const list = (data) => (Array.isArray(data) ? data : data ? [data] : []).map((item) => toSnakeDeep(item));
 
 /** Roles del catálogo de authorization: [{ role_id, role_name }]. */
 export async function listRoles() {

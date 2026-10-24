@@ -63,7 +63,7 @@ export function ThemeProvider({ children }) {
 
     // Cargar preferencias guardadas una sola vez al montar
     useEffect(() => {
-        (async () => {
+        void (async () => {
             const [storedMode, storedVisionMode, storedCustomColors, storedAccent] = await Promise.all([
                 loadThemeMode(),
                 loadVisionMode(),

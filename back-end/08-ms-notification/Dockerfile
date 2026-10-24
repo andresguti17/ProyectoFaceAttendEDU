@@ -3,16 +3,16 @@ FROM node:20-slim AS builder
 COPY shared/auth-node /shared/auth-node
 WORKDIR /app
 COPY 08-ms-notification/package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 COPY 08-ms-notification/ .
 RUN npm run build
 
 FROM node:20-slim
-RUN apt-get update && apt-get install -y wget curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends wget curl && rm -rf /var/lib/apt/lists/*
 COPY shared/auth-node /shared/auth-node
 WORKDIR /app
 COPY 08-ms-notification/package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY --from=builder /app/dist ./dist
 RUN chown -R node:node /app
 USER node

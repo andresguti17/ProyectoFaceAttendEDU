@@ -37,7 +37,7 @@ export function LanguageProvider({ children }) {
 
     useEffect(() => {
         let cancelled = false;
-        (async () => {
+        void (async () => {
             const saved = await LanguageStorage.load();
             if (cancelled) return;
             // Idioma guardado de una versión anterior (p. ej. "de") → por defecto.
