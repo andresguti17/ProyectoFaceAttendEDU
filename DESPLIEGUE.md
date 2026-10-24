@@ -69,6 +69,7 @@ Variables obligatorias (genere cada secreto con `openssl rand -base64 32`):
 | `ONBOARDING_SERVICE_USER_ID` | cuenta de servicio del alta pública de sedes (ver §7) |
 | `KONG_CORS_ORIGINS` | orígenes web permitidos por CORS, separados por coma (p. ej. el dominio de Vercel); sin valor por defecto en producción |
 | `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_KMS_SECRET_KEY` | almacenamiento de soportes de justificación; la clave KMS (`nombre:$(openssl rand -base64 32)`) cifra cada archivo y debe respaldarse aparte: sin ella los soportes no se pueden leer |
+| `PII_ENCRYPTION_KEY`, `PII_HASH_KEY`, `BIOMETRIC_ENCRYPTION_KEY` | cifrado en reposo de los datos personales y de las plantillas biométricas (Ley 1581; `openssl rand -base64 32` cada una); respaldarlas aparte de los datos: sin ellas la información no se puede leer, y cambiarlas exige volver a cifrar |
 | `IDENTITY_DB_PASSWORD` … `NOTIFICATION_DB_PASSWORD` (8) | un usuario de Neon por servicio (`<servicio>_app`), limitado a su esquema; también como secrets del environment `production` para `deploy-database.yml`, que los crea con `database/scripts/create-service-logins.sh` |
 
 Las migraciones (`deploy-database.yml`) leen `NEON_JDBC_URL`, `NEON_USER` y `NEON_PASSWORD` de los secrets del environment `production` y siempre se ejecutan con `--contexts=seed` (catálogos); los changesets `demo` nunca llegan a producción.
@@ -91,6 +92,13 @@ cd <DEPLOY_DIR>
 git fetch --prune origin && git checkout --detach <sha>
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --remove-orphans
 docker ps --format "{{.Names}} | {{.Ports}}"   # ningún puerto salvo 80/443 en 0.0.0.0
+```
+
+**Primera vez con el cifrado de datos (Ley 1581):** identity cifra sola las personas existentes al arrancar y cada 5 minutos. Las plantillas biométricas ya guardadas se cifran una vez, a mano, después del despliegue:
+
+```bash
+docker exec faceattend-ms-biometric python scripts/encrypt_existing_biometrics.py --dry-run   # solo cuenta
+docker exec faceattend-ms-biometric python scripts/encrypt_existing_biometrics.py
 ```
 
 ---

@@ -151,6 +151,8 @@ export function useManageUsersViewModel(enabled = true) {
       password: form.password,
       roleName: form.role,
       schoolId: await SchoolService.getCurrentSchoolId(),
+      privacyAccepted: form.privacyAccepted === true,
+      biometricAccepted: form.biometricAccepted === true,
     });
     await fetchUsers();
   }, [fetchUsers]);

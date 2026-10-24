@@ -79,8 +79,12 @@ public class UserController {
                 Boolean.TRUE.equals(request.getSendCredentials()),
                 request.getRoleName().trim(),
                 actor == null ? null
-                        : new ProvisionUserUseCase.Actor(actor.getActorTypeId(), actor.getSchoolId(), actor.getActorCode(), actor.getCohortId()));
-        ProvisionUserUseCase.Result result = provisionUserUseCase.provision(command, header.substring(7).trim());
+                        : new ProvisionUserUseCase.Actor(actor.getActorTypeId(), actor.getSchoolId(), actor.getActorCode(), actor.getCohortId()),
+                new ProvisionUserUseCase.Consent(request.getConsent().getPolicyVersion(),
+                        Boolean.TRUE.equals(request.getConsent().getBiometricAccepted())));
+        Object caller = http.getAttribute("X-User-Id");
+        ProvisionUserUseCase.Result result = provisionUserUseCase.provision(command, header.substring(7).trim(),
+                caller == null ? null : UUID.fromString(String.valueOf(caller)));
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/api/v1/users/{id}").buildAndExpand(result.userId()).toUri();
         return ResponseEntity.created(location).body(result);

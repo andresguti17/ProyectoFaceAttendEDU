@@ -47,6 +47,7 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
 
     const emptyForm = (role) => ({
         name: '', lastName: '', documentNumber: '', email: '', telefono: '', username: '', password: '', role,
+        privacyAccepted: false, biometricAccepted: false,
     });
     const [tab, setTab] = useState('students');
     const [modalVisible, setModalVisible] = useState(false);
@@ -114,6 +115,10 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
             }
             if (!areAllRequirementsMet(validatePasswordRequirements(form.password))) {
                 showError(t('manageUsers.validation'), t('profile.passwordModal.errorPolicy'));
+                return;
+            }
+            if (!form.privacyAccepted) {
+                showError(t('manageUsers.validation'), t('privacyConsent.requiredForAccount'));
                 return;
             }
         }
@@ -244,6 +249,29 @@ export default function ManageUsersScreen({navigation, userRole, onLogout}) {
                     );
                 })}
             </View>
+
+            {modalMode === 'add' && (
+                <View style={{marginTop: 12, gap: 10}}>
+                    {[
+                        {key: 'privacyAccepted', label: t('privacyConsent.holderAccepted')},
+                        {key: 'biometricAccepted', label: t('privacyConsent.holderBiometric')},
+                    ].map((option) => (
+                        <TouchableOpacity
+                            key={option.key}
+                            onPress={() => setForm((f) => ({...f, [option.key]: !f[option.key]}))}
+                            accessibilityRole="checkbox"
+                            accessibilityState={{checked: form[option.key] === true}}
+                            style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
+                        >
+                            <View style={{
+                                width: 22, height: 22, borderRadius: 4, borderWidth: 2, borderColor: colors.primary,
+                                backgroundColor: form[option.key] ? colors.primary : 'transparent',
+                            }}/>
+                            <Text style={{flex: 1, color: colors.text}}>{option.label}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            )}
 
             <View style={styles.manageUsersModalActions}>
                 <TouchableOpacity

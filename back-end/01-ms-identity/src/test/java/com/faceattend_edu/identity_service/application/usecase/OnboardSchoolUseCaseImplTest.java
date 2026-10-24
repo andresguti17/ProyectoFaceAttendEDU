@@ -44,7 +44,7 @@ class OnboardSchoolUseCaseImplTest {
     private static final OnboardSchoolUseCase.School SCHOOL =
             new OnboardSchoolUseCase.School("CIES-009", "Colegio Nuevo", "Bogotá", "Calle 1", "3000000000", "sede@colegio.edu");
     private static final OnboardSchoolUseCase.Admin ADMIN =
-            new OnboardSchoolUseCase.Admin("CC", "123456", "Ana", "Pérez", "ana@colegio.edu", "3111111111", "ana.perez", "Secret123!");
+            new OnboardSchoolUseCase.Admin("CC", "123456", "Ana", "Pérez", "ana@colegio.edu", "3111111111", "ana.perez", "Secret123!", "2026-10", false);
 
     @Mock CreateUserSessionUseCase createUserSessionUseCase;
     @Mock CloseUserSessionUseCase closeUserSessionUseCase;
@@ -53,6 +53,7 @@ class OnboardSchoolUseCaseImplTest {
     @Mock ChangeUserStatusUseCase changeUserStatusUseCase;
     @Mock LoadUserByUsernamePort loadUserByUsernamePort;
     @Mock SchoolProvisioningPort provisioning;
+    @Mock com.faceattend_edu.identity_service.application.port.in.ManageConsentUseCase consentUseCase;
 
     private OnboardingProperties properties;
     private OnboardSchoolUseCaseImpl useCase;
@@ -68,7 +69,8 @@ class OnboardSchoolUseCaseImplTest {
         properties = new OnboardingProperties();
         properties.setServiceUserId(serviceUserId.toString());
         useCase = new OnboardSchoolUseCaseImpl(properties, createUserSessionUseCase, closeUserSessionUseCase,
-                createPersonUseCase, createUserUseCase, changeUserStatusUseCase, loadUserByUsernamePort, provisioning);
+                createPersonUseCase, createUserUseCase, changeUserStatusUseCase, loadUserByUsernamePort, provisioning, consentUseCase);
+        org.mockito.Mockito.lenient().when(consentUseCase.currentPolicyVersion()).thenReturn("2026-10");
 
         session = new UserSession();
         session.setSessionId(UUID.randomUUID());

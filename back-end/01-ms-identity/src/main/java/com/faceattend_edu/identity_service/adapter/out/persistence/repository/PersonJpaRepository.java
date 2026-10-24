@@ -19,4 +19,8 @@ public interface PersonJpaRepository extends JpaRepository<PersonJpaEntity, UUID
 
     @Query("select count(p) from PersonJpaEntity p where p.deletedAt is null")
     long countActive();
+
+    /** Persons not yet encrypted/indexed (written before column encryption). */
+    @Query("select p.personId from PersonJpaEntity p where p.documentHash is null")
+    java.util.List<java.util.UUID> findIdsWithoutBlindIndex(Pageable pageable);
 }

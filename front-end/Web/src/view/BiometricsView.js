@@ -17,6 +17,7 @@ import { View, ScrollView, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { PageHeader, Card, Alert, Button, Badge } from "./components/common";
 import { FaceModule, FingerprintModule, BiometricDirectory, PersonAutocomplete } from "./components/biometrics";
+import BiometricConsentPrompt from "./components/privacy/BiometricConsentPrompt";
 import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
@@ -195,7 +196,14 @@ export default function BiometricsView({ section: sectionParam, onSectionChange 
                                     </View>
                                 )}
 
-                                {section === "fingerprint" ? (
+                                {/* Ley 1581: registrar exige la autorización biométrica de la persona elegida. */}
+                                {section !== "face-login" && vm.person && vm.biometricAuthorized === false ? (
+                                    <BiometricConsentPrompt
+                                        personName={vm.person.name}
+                                        onAuthorize={vm.authorizeBiometrics}
+                                        busy={vm.busy}
+                                    />
+                                ) : section === "fingerprint" ? (
                                     <FingerprintModule vm={vm} />
                                 ) : (
                                     <FaceModule vm={vm} mode={section === "face-register" ? "register" : "login"} />

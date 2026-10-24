@@ -74,6 +74,16 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("BIOMETRIC_MONGODB_URL", "MONGODB_URL"),
     )
     mongo_db_name: str = DEFAULT_MONGO_DB_NAME
+
+    # ── Ley 1581 ───────────────────────────────────────────────────────
+    # AES-256-GCM key for face encodings and fingerprint samples at rest
+    # (base64 of 32 bytes). Required whenever MongoDB is enabled.
+    biometric_encryption_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("BIOMETRIC_ENCRYPTION_KEY"),
+    )
+    # Enrollment requires the holder's biometric authorization, read from identity.
+    consent_check_enabled: bool = True
     server_selection_timeout_ms: int = 3_000
 
     # ── Authentication (session validated against identity, RBAC by authorization) ──

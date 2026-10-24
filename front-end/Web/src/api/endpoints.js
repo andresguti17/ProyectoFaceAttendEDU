@@ -28,6 +28,8 @@ export const endpoints = {
         persons: `${API_V1}/persons`,
         personById: (id) => `${API_V1}/persons/${id}`,
         personStatus: (id) => `${API_V1}/persons/${id}/status`,
+        personConsent: (id) => `${API_V1}/persons/${id}/consent`,
+        personConsentBiometric: (id) => `${API_V1}/persons/${id}/consent/biometric`,
         users: `${API_V1}/users`,
         usersProvision: `${API_V1}/users/provision`,
         userById: (id) => `${API_V1}/users/${id}`,
@@ -115,6 +117,7 @@ export const endpoints = {
     },
     biometric: {
         health: `${API_V1}/biometric/health`,
+        personData: (personId) => `${API_V1}/biometric/persons/${personId}`,
         facialEnroll: `${API_V1}/biometric/facial/enroll`,
         facialVerify: `${API_V1}/biometric/facial/verify`,
         facialIdentify: `${API_V1}/biometric/facial/identify`,

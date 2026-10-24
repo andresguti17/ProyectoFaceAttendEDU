@@ -64,7 +64,10 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, Updat
         }
 
         // Ambiguous emails resolve to null: the 401 must not reveal whether the address exists.
-        List<UserJpaEntity> matches = repository.findByPersonEmail(value);
+        List<UserJpaEntity> matches = repository.findByPersonEmail(
+                com.faceattend_edu.identity_service.adapter.out.persistence.crypto.PiiCipher.current()
+                        .hash(com.faceattend_edu.identity_service.adapter.out.persistence.entity.PersonJpaEntity.normalizeEmail(value)),
+                value);
         return matches.size() == 1 ? mapper.toDomain(matches.get(0)) : null;
     }
 

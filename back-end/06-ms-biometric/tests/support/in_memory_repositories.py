@@ -121,6 +121,14 @@ class InMemoryBiometricRepository(BiometricRepositoryPort):
                 count += 1
         return count
 
+    async def purge(self, person_id: str) -> int:
+        if not person_id:
+            raise ValueError("person_id is required to purge templates")
+        keys = [key for key, template in self._documents.items() if template.person_id == person_id]
+        for key in keys:
+            del self._documents[key]
+        return len(keys)
+
     # -- test introspection ---------------------------------------------
     def stored(self) -> list[BiometricTemplate]:
         """Everything held, including superseded and soft-deleted documents."""
@@ -185,3 +193,15 @@ class InMemoryMatchLogRepository(MatchLogRepositoryPort):
 
     async def record(self, entry: BiometricMatchLog) -> None:
         self.entries.append(entry)
+
+    async def anonymize(self, person_id: str) -> int:
+        count = 0
+        for index, entry in enumerate(self.entries):
+            if person_id in (entry.person_id, entry.matched_person_id):
+                self.entries[index] = replace(
+                    entry,
+                    person_id=None if entry.person_id == person_id else entry.person_id,
+                    matched_person_id=None if entry.matched_person_id == person_id else entry.matched_person_id,
+                )
+                count += 1
+        return count

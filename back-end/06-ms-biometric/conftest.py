@@ -22,3 +22,8 @@ os.environ.setdefault("BIOMETRIC_AUTH_ENABLED", "false")
 # minimum-step-time checks are off by default; the tests of those checks enable them.
 os.environ.setdefault("BIOMETRIC_LIVENESS_IDENTITY_CHECK", "false")
 os.environ.setdefault("BIOMETRIC_LIVENESS_MIN_STEP_SECONDS", "0")
+
+# Ley 1581: the biometric-authorization check calls identity, so it is off by default
+# here; tests/unit/web/test_ley1581.py turns it on. The encryption key is a test-only value.
+os.environ.setdefault("BIOMETRIC_CONSENT_CHECK_ENABLED", "false")
+os.environ.setdefault("BIOMETRIC_ENCRYPTION_KEY", "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=")

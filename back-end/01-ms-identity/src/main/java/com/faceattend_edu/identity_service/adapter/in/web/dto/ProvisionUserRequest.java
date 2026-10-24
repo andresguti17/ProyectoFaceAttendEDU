@@ -28,6 +28,18 @@ public class ProvisionUserRequest {
     @NotBlank
     private String roleName;
 
+    /** The holder's acceptance of the privacy notice (Ley 1581), confirmed by the administrator. */
+    @Valid
+    @NotNull
+    private ConsentDto consent;
+
+    @Data
+    public static class ConsentDto {
+        @NotBlank
+        private String policyVersion;
+        private Boolean biometricAccepted;
+    }
+
     /** Optional: the account's academic actor in a school (and enrollment for apprentices). */
     @Valid
     private AcademicActor academicActor;

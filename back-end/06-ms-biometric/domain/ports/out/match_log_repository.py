@@ -15,3 +15,7 @@ class MatchLogRepositoryPort(ABC):
     @abstractmethod
     async def record(self, entry: BiometricMatchLog) -> None:
         """Append one match attempt. Implementations must not raise for a missing document."""
+
+    @abstractmethod
+    async def anonymize(self, person_id: str) -> int:
+        """Remove the person's id from their match logs (kept only as anonymous counts)."""

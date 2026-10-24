@@ -154,6 +154,7 @@ async function parseBody(res) {
 /** FastAPI responde { detail: string | [{loc, msg}] }; el resto del stack, { message }. */
 function readDetail(detail) {
     if (typeof detail === "string") return detail;
+    if (detail && typeof detail === "object" && typeof detail.message === "string") return detail.message;
     if (Array.isArray(detail)) {
         return detail.map((d) => `${(d?.loc ?? []).join(".") || "campo"}: ${d?.msg ?? ""}`).join("; ");
     }

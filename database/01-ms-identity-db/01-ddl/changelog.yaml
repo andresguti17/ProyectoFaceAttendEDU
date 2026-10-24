@@ -38,3 +38,9 @@ databaseChangeLog:
   - include:
       file: 03-tables/010-add-two-factor-to-app-user.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 03-tables/011-create-data-processing-consent-table.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/012-encrypt-person-pii.yaml
+      relativeToChangelogFile: true

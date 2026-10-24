@@ -1,6 +1,7 @@
 import { request, GET, POST, PUT, DELETE } from '../api/apiClient';
 import { toSnakeDeep } from '../api/backend';
 import i18n from '../utils/i18n';
+import { PRIVACY_POLICY_VERSION } from './consentService';
 
 // Tipos de actor académico sembrados en 03 (001-seed-academic-actor-type-table).
 const ACTOR_TYPE_BY_ROLE = { Aprendiz: 1, Instructor: 2 };
@@ -24,7 +25,9 @@ async function roleIdOf(roleName) {
  * con sede, a academic el actor. Si un paso falla, el servidor deshace los
  * anteriores (no quedan cuentas a medias) y la app solo muestra el motivo.
  */
-export async function createAccount({ name, lastName, documentNumber, email, phone, username, password, roleName, schoolId }) {
+export async function createAccount({ name, lastName, documentNumber, email, phone, username, password, roleName, schoolId, privacyAccepted = false, biometricAccepted = false }) {
+  // Ley 1581: sin la aceptación del aviso de privacidad no se crea la cuenta.
+  if (!privacyAccepted) throw new Error(i18n.t('privacyConsent.requiredForAccount'));
   const actorTypeId = ACTOR_TYPE_BY_ROLE[roleName];
   const result = toSnakeDeep(await request({
     method: POST,
@@ -35,6 +38,7 @@ export async function createAccount({ name, lastName, documentNumber, email, pho
       username,
       password,
       roleName,
+      consent: { policyVersion: PRIVACY_POLICY_VERSION, biometricAccepted: biometricAccepted === true },
       ...(actorTypeId && schoolId
         ? { academicActor: { actorTypeId, schoolId: Number(schoolId), actorCode: documentNumber } }
         : {}),

@@ -2,6 +2,7 @@ package com.faceattend_edu.identity_service.application.usecase;
 
 import com.faceattend_edu.identity_service.application.port.in.CreatePersonUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase;
+import com.faceattend_edu.identity_service.application.port.in.ManageConsentUseCase;
 import com.faceattend_edu.identity_service.application.port.in.NotifyUserCredentialsUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ProvisionUserUseCase;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByUsernamePort;
@@ -36,10 +37,16 @@ public class ProvisionUserUseCaseImpl implements ProvisionUserUseCase {
     private final LoadUserByUsernamePort loadUserByUsernamePort;
     private final UserProvisioningPort provisioning;
     private final RemoveIdentityPort removeIdentityPort;
+    private final ManageConsentUseCase consentUseCase;
 
     @Override
-    public Result provision(Command command, String token) {
+    public Result provision(Command command, String token, UUID callerUserId) {
         validate(command);
+        if (command.consent() == null) throw new ValidationException("consent is required (Ley 1581)");
+        if (!consentUseCase.currentPolicyVersion().equals(command.consent().policyVersion())) {
+            throw new ValidationException("consent.policyVersion must be the privacy notice in force ("
+                    + consentUseCase.currentPolicyVersion() + ")");
+        }
         if (loadUserByUsernamePort.loadUserByUsername(command.username()) != null) {
             throw new DuplicateEntityException("User", command.username());
         }
@@ -56,6 +63,8 @@ public class ProvisionUserUseCaseImpl implements ProvisionUserUseCase {
             user.setUsername(command.username());
             User created = createUserUseCase.createUser(user, command.password());
             userId = created.getUserId();
+            consentUseCase.recordAssisted(personId, command.consent().policyVersion(),
+                    command.consent().biometricAccepted(), callerUserId);
 
             Actor actor = command.actor();
             if (actor != null) {

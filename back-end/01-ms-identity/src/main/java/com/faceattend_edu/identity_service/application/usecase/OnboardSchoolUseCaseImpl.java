@@ -5,6 +5,8 @@ import com.faceattend_edu.identity_service.application.port.in.CloseUserSessionU
 import com.faceattend_edu.identity_service.application.port.in.CreatePersonUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CreateUserSessionUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CreateUserUseCase;
+import com.faceattend_edu.identity_service.application.port.in.ManageConsentUseCase;
+import com.faceattend_edu.identity_service.domain.exception.ValidationException;
 import com.faceattend_edu.identity_service.application.port.in.OnboardSchoolUseCase;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByUsernamePort;
 import com.faceattend_edu.identity_service.application.port.out.SchoolProvisioningPort;
@@ -45,11 +47,17 @@ public class OnboardSchoolUseCaseImpl implements OnboardSchoolUseCase {
     private final ChangeUserStatusUseCase changeUserStatusUseCase;
     private final LoadUserByUsernamePort loadUserByUsernamePort;
     private final SchoolProvisioningPort provisioning;
+    private final ManageConsentUseCase consentUseCase;
 
     @Override
     public Result onboard(School school, Admin admin) {
         if (!properties.enabled()) {
             throw new OnboardingUnavailableException("School registration is not enabled");
+        }
+        // Ley 1581: the administrator accepts the privacy notice in force before any data is stored.
+        if (!consentUseCase.currentPolicyVersion().equals(admin.privacyPolicyVersion())) {
+            throw new ValidationException("privacyPolicyVersion must be the privacy notice in force ("
+                    + consentUseCase.currentPolicyVersion() + ")");
         }
         if (loadUserByUsernamePort.loadUserByUsername(admin.username()) != null) {
             throw new DuplicateEntityException("User", admin.username());
@@ -69,6 +77,7 @@ public class OnboardSchoolUseCaseImpl implements OnboardSchoolUseCase {
 
     private Result register(String token, School school, Admin admin) {
         Person person = createPersonUseCase.createPerson(toPerson(admin));
+        consentUseCase.recordSelf(person.getPersonId(), admin.privacyPolicyVersion(), admin.biometricAccepted());
         User user = new User();
         user.setPersonId(person);
         user.setUsername(admin.username());
