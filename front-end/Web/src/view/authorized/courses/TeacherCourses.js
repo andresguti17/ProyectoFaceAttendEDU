@@ -79,7 +79,7 @@ function TeacherCourseCard({ course, meta, onPress, onStudentsPress }) {
     const fichas = [...new Set(myBlocks.map((b) => meta.cohorts.get(Number(b.cohortId ?? b.cohort_id))).filter(Boolean))];
     const rooms = [...new Set(myBlocks.map((b) => meta.envs.get(Number(b.environmentId ?? b.environment_id))).filter(Boolean))];
     const slots = myBlocks.map((b) => {
-        const day = DAY_LABELS[Number(blockDay(b))] ?? "";
+        const day = t(DAY_LABELS[Number(blockDay(b))] ?? "");
         const from = formatClockTime(b.startsAt ?? b.starts_at ?? "");
         const to = formatClockTime(b.endsAt ?? b.ends_at ?? "");
         return `${day} ${from}–${to}`.trim();
