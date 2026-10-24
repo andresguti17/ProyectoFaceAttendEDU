@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Seed test data into FaceAttendEDU microservices for frontend-backend API testing",
   "scripts": {
-    "seed": "node seed.mjs"
+    "seed": "node seed.mjs",
+    "test": "node --test credentials.test.mjs"
   },
   "engines": {
     "node": ">=20"

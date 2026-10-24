@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: dcl-001-service-role-identity
+      author: FaceAttendEDU
+      # Re-applied on every update so tables added later are covered too (all statements are idempotent).
+      runAlways: true
+      comment: >-
+        Data isolation per service: svc_identity (NOLOGIN) may only read and write the identity
+        schema. The service logs in with its own user, member of this role, created by
+        database/scripts/create-service-logins.sh (passwords from the environment, never here).
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              DO $$
+              BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'svc_identity') THEN
+                  CREATE ROLE svc_identity NOLOGIN;
+                END IF;
+              END
+              $$;
+        - sql:
+            splitStatements: true
+            sql: |
+              REVOKE ALL ON SCHEMA "identity" FROM PUBLIC;
+              GRANT USAGE ON SCHEMA "identity" TO svc_identity;
+              GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA "identity" TO svc_identity;
+              GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA "identity" TO svc_identity;
+              GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA "identity" TO svc_identity;
+              ALTER DEFAULT PRIVILEGES IN SCHEMA "identity" GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO svc_identity;
+              ALTER DEFAULT PRIVILEGES IN SCHEMA "identity" GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO svc_identity;
+      rollback:
+        - sql:
+            sql: SELECT 1

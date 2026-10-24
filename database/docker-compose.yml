@@ -15,11 +15,11 @@ services:
     command: ["postgres", "-c", "max_connections=200"]
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: ${POSTGRES_DB:-faceattend_db}
     ports:
       # Loopback only by default: databases must not be reachable from the LAN.
-      - "${BIND_IP:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # Creates the 8 bounded-context schemas on first boot only.
@@ -46,7 +46,8 @@ services:
       - --searchPath=/liquibase/project
       - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
       - --username=${POSTGRES_USER:-postgres}
-      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - --contexts=${LIQUIBASE_CONTEXTS:-seed}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
     networks:
@@ -66,7 +67,8 @@ services:
       - --searchPath=/liquibase/project
       - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
       - --username=${POSTGRES_USER:-postgres}
-      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - --contexts=${LIQUIBASE_CONTEXTS:-seed}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
     networks:
@@ -86,7 +88,8 @@ services:
       - --searchPath=/liquibase/project
       - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
       - --username=${POSTGRES_USER:-postgres}
-      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - --contexts=${LIQUIBASE_CONTEXTS:-seed}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
     networks:
@@ -106,7 +109,8 @@ services:
       - --searchPath=/liquibase/project
       - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
       - --username=${POSTGRES_USER:-postgres}
-      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - --contexts=${LIQUIBASE_CONTEXTS:-seed}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
     networks:
@@ -126,7 +130,8 @@ services:
       - --searchPath=/liquibase/project
       - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
       - --username=${POSTGRES_USER:-postgres}
-      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - --contexts=${LIQUIBASE_CONTEXTS:-seed}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
     networks:
@@ -146,7 +151,8 @@ services:
       - --searchPath=/liquibase/project
       - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
       - --username=${POSTGRES_USER:-postgres}
-      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - --contexts=${LIQUIBASE_CONTEXTS:-seed}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
     networks:
@@ -166,7 +172,8 @@ services:
       - --searchPath=/liquibase/project
       - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
       - --username=${POSTGRES_USER:-postgres}
-      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - --contexts=${LIQUIBASE_CONTEXTS:-seed}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
     networks:
@@ -186,7 +193,8 @@ services:
       - --searchPath=/liquibase/project
       - --url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}
       - --username=${POSTGRES_USER:-postgres}
-      - --password=${POSTGRES_PASSWORD:-postgres}
+      - --password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - --contexts=${LIQUIBASE_CONTEXTS:-seed}
       - --changeLogFile=changelog/changelog-master.yaml
       - update
     networks:
@@ -194,6 +202,31 @@ services:
 
 # Tier 3 — databases and migrations only: nothing from the `edge` or `app`
 # networks can reach this one.
+  # One login per microservice, member of its schema role (03-dcl). Runs after the
+  # migrations (root compose chains it) and is safe to repeat.
+  db-service-logins:
+    image: postgres:17
+    container_name: faceattend-db-service-logins
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      PSQL: psql -h postgres -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-faceattend_db}
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?IDENTITY_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      AUTHORIZATION_DB_PASSWORD: ${AUTHORIZATION_DB_PASSWORD:?AUTHORIZATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      ACADEMIC_DB_PASSWORD: ${ACADEMIC_DB_PASSWORD:?ACADEMIC_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      SCHEDULING_DB_PASSWORD: ${SCHEDULING_DB_PASSWORD:?SCHEDULING_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      ATTENDANCE_DB_PASSWORD: ${ATTENDANCE_DB_PASSWORD:?ATTENDANCE_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      CONFIGURATION_DB_PASSWORD: ${CONFIGURATION_DB_PASSWORD:?CONFIGURATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      QUALITY_DB_PASSWORD: ${QUALITY_DB_PASSWORD:?QUALITY_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+      NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:?NOTIFICATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
+    volumes:
+      - ./scripts:/scripts:ro
+    command: ["bash", "/scripts/create-service-logins.sh"]
+    networks:
+      - faceattend-data
+
 networks:
   faceattend-data:
     driver: bridge

@@ -24,7 +24,8 @@ import Button             from "./components/common/buttons/Button";
 import TextInput          from "./components/common/inputs/TextInput";
 import Alert              from "./components/common/feedback/Alert";
 import CustomScrollBar    from "./components/common/CustomScrollBar";
-import { AnimatedDropdown } from "./components/common";
+import { AnimatedDropdown, Checkbox } from "./components/common";
+import PrivacyNotice from "./components/privacy/PrivacyNotice";
 import {
     AuthFooterLink,
     BrandPanelCircles,
@@ -157,6 +158,21 @@ export default function SignupView({ onRegisterSuccess, onGoToLogin, onGoToLandi
             <TextInput label={t("Confirmar contraseña")} placeholder={t("Repite la contraseña")}
                 type="password" secureTextEntry={!vm.showPassword}
                 leftIcon={icon("lock")} {...field("confirmPassword")} />
+            {/* Ley 1581: aviso de privacidad antes de guardar cualquier dato. */}
+            <PrivacyNotice />
+            <Checkbox
+                checked={vm.values.privacyAccepted === true}
+                onToggle={(v) => vm.setValue("privacyAccepted", v)}
+                label={t("Acepto el tratamiento de mis datos personales según el aviso de privacidad") + " *"}
+            />
+            {!!vm.errors.privacyAccepted && (
+                <Text style={{ color: c.status.danger, fontSize: 12 }}>{vm.errors.privacyAccepted}</Text>
+            )}
+            <Checkbox
+                checked={vm.values.biometricAccepted === true}
+                onToggle={(v) => vm.setValue("biometricAccepted", v)}
+                label={t("Autorizo el tratamiento de mis datos biométricos (facultativo)")}
+            />
         </View>
     );
 

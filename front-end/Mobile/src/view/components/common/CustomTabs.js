@@ -40,7 +40,7 @@ export default function CustomTabs({ onChange, userRole, onLogout }) {
       const role = await AsyncStorage.getItem('userRole');
       setCurrentUserRole(role);
     };
-    loadUserRole();
+    void loadUserRole();
   }, [userRole]);
 
   useEffect(() => {

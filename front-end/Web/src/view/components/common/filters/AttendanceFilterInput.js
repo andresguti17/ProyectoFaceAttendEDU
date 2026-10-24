@@ -83,8 +83,8 @@ export function AttendanceFilterInput({
     };
 
     const handleInputSubmit = () => {
-        const parsed = parseFloat(inputValue);
-        if (!isNaN(parsed) && parsed >= 0 && parsed <= 100) {
+        const parsed = Number.parseFloat(inputValue);
+        if (!Number.isNaN(Number(parsed)) && parsed >= 0 && parsed <= 100) {
             onChange({
                 mode: "custom",
                 comparator: value.comparator,
@@ -153,7 +153,7 @@ export function AttendanceFilterInput({
                                 // Si el número es mayor a 100, eliminar el último dígito
                                 let finalValue = numericText;
                                 if (numericText.length > 0) {
-                                    const numValue = parseInt(numericText, 10);
+                                    const numValue = Number.parseInt(numericText, 10);
                                     if (numValue > 100) {
                                         // Eliminar el último dígito
                                         finalValue = numericText.slice(0, -1);

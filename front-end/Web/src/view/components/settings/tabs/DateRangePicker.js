@@ -12,13 +12,13 @@
 //  - Cálculo automático de duración en días/semanas/meses
 // ============================================================
 
-import React, { useState, useMemo } from "react";
-import { View, Text, TextInput } from "react-native";
+import React, { useMemo } from "react";
+import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
-import { useDateFormat } from "../../hooks/useDateFormat";
-import { ACADEMIC_PERIOD_TYPES } from "../../../../core/constants/academicPeriods";
+import { DateInput } from "../../common/inputs/DateInput";
+import { ACADEMIC_PERIOD_TYPES, ACADEMIC_PERIOD_CONFIG, calendarPeriodDates } from "../../../../core/constants/academicPeriods";
 
 /**
  * Componente para seleccionar rango de fechas del período académico
@@ -41,87 +41,7 @@ export function DateRangePicker({
 }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
-    const { dateFormat } = useDateFormat(); // Volver a usar el hook
     const c = theme.colors;
-
-    // Estados para validación en tiempo real
-    const [startDateError, setStartDateError] = useState("");
-    const [endDateError, setEndDateError] = useState("");
-    
-    // Convertir fecha ISO a formato de display
-    const isoToDisplayFormat = React.useCallback((isoDate) => {
-        if (!isoDate) return "";
-        const date = new Date(isoDate);
-        if (isNaN(date)) return isoDate; // Si no es válida, devolver tal como está
-        
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-        
-        switch (dateFormat) {
-            case "DD/MM/YYYY":
-                return `${day}/${month}/${year}`;
-            case "MM/DD/YYYY":
-                return `${month}/${day}/${year}`;
-            case "YYYY-MM-DD":
-                return `${year}-${month}-${day}`;
-            default:
-                return `${day}/${month}/${year}`;
-        }
-    }, [dateFormat]);
-    
-    // Convertir formato de display a ISO
-    const displayToIsoFormat = React.useCallback((displayDate) => {
-        if (!displayDate) return "";
-        
-        let day, month, year;
-        
-        switch (dateFormat) {
-            case "DD/MM/YYYY":
-                const ddmmParts = displayDate.split("/");
-                if (ddmmParts.length !== 3) return displayDate;
-                [day, month, year] = ddmmParts;
-                break;
-            case "MM/DD/YYYY":
-                const mmddParts = displayDate.split("/");
-                if (mmddParts.length !== 3) return displayDate;
-                [month, day, year] = mmddParts;
-                break;
-            case "YYYY-MM-DD":
-                const yyyyParts = displayDate.split("-");
-                if (yyyyParts.length !== 3) return displayDate;
-                [year, month, day] = yyyyParts;
-                break;
-            default:
-                return displayDate;
-        }
-        
-        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-    }, [dateFormat]);
-    
-    // Fechas formateadas para mostrar en los inputs
-    const [displayStartDate, setDisplayStartDate] = useState("");
-    const [displayEndDate, setDisplayEndDate] = useState("");
-    
-    // Actualizar fechas formateadas cuando cambie el formato o las fechas
-    React.useEffect(() => {
-        setDisplayStartDate(isoToDisplayFormat(startDate));
-        setDisplayEndDate(isoToDisplayFormat(endDate));
-    }, [startDate, endDate, dateFormat, isoToDisplayFormat]);
-
-    // Calcular placeholders dinámicos según el formato seleccionado
-    const placeholderFormat = useMemo(() => {
-        switch (dateFormat) {
-            case "DD/MM/YYYY":
-                return "DD-MM-AAAA";
-            case "MM/DD/YYYY":
-                return "MM-DD-AAAA";
-            case "YYYY-MM-DD":
-                return "AAAA-MM-DD";
-            default:
-                return "AAAA-MM-DD";
-        }
-    }, [dateFormat]);
 
     // Configuración de duración máxima según tipo de período
     const maxDurationMonths = useMemo(() => {
@@ -141,11 +61,13 @@ export function DateRangePicker({
 
     // Validar formato de fecha YYYY-MM-DD
     const isValidDateFormat = (dateStr) => {
-        const regex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!regex.test(dateStr)) return false;
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr ?? "");
+        if (!match) return false;
 
-        const date = new Date(dateStr);
-        return date instanceof Date && !isNaN(date);
+        // Ida y vuelta por Date: rechaza días inexistentes (31/02, mes 13).
+        const [, y, m, d] = match.map(Number);
+        const date = new Date(y, m - 1, d);
+        return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
     };
 
     // Calcular diferencia en días entre dos fechas
@@ -175,7 +97,7 @@ export function DateRangePicker({
                 days: 0,
                 weeks: 0,
                 months: 0,
-                message: t("Formato de fecha inválido (usa AAAA-MM-DD)"),
+                message: t("Fecha incompleta o inválida"),
                 type: "error",
             };
         }
@@ -186,7 +108,7 @@ export function DateRangePicker({
                 days: 0,
                 weeks: 0,
                 months: 0,
-                message: t("Formato de fecha inválido (usa AAAA-MM-DD)"),
+                message: t("Fecha incompleta o inválida"),
                 type: "error",
             };
         }
@@ -228,7 +150,7 @@ export function DateRangePicker({
                 days,
                 weeks,
                 months,
-                message: t(`Un período ${periodType} no puede durar más de ${maxDurationMonths} meses`),
+                message: `${t("Un período")} ${t(ACADEMIC_PERIOD_CONFIG[periodType]?.labelKey ?? "").toLowerCase()} ${t("no puede durar más de")} ${maxDurationMonths} ${t("meses")}`,
                 type: "error",
             };
         }
@@ -255,39 +177,14 @@ export function DateRangePicker({
         };
     }, [startDate, endDate, periodType, maxDurationMonths, t]);
 
-    // Manejadores de cambio con validación
-    const handleStartDateChange = (text) => {
-        setDisplayStartDate(text);
-        const isoDate = displayToIsoFormat(text);
-        onStartDateChange(isoDate);
-        if (text && !isValidDateFormat(text)) {
-            setStartDateError(t("Formato inválido") + " (" + placeholderFormat + ")");
-        } else {
-            setStartDateError("");
-        }
-    };
-
-    const handleEndDateChange = (text) => {
-        setDisplayEndDate(text);
-        const isoDate = displayToIsoFormat(text);
-        onEndDateChange(isoDate);
-        if (text && !isValidDateFormat(text)) {
-            setEndDateError(t("Formato inválido") + " (" + placeholderFormat + ")");
-        } else {
-            setEndDateError("");
-        }
-    };
-
-    // Sugerir fechas según tipo de período
+    // Los campos usan DateInput: máscara y formato configurado (Ajustes > Formato de fecha),
+    // separadores automáticos y día/mes ajustados; aquí solo llega la fecha ISO (o "").
+    // Sugerir: el período del calendario que contiene hoy según el tipo
+    // (semestral → ene–jun / jul–dic), el mismo que usa el modo automático.
     const suggestDates = () => {
-        const today = new Date();
-        const start = new Date(today.getFullYear(), today.getMonth(), 1);
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + maxDurationMonths);
-        end.setDate(0); // Último día del mes anterior
-
-        onStartDateChange(start.toISOString().split('T')[0]);
-        onEndDateChange(end.toISOString().split('T')[0]);
+        const { startIso, endIso } = calendarPeriodDates(periodType);
+        onStartDateChange(startIso);
+        onEndDateChange(endIso);
     };
 
     // Exponer suggestDates al componente padre si se proporciona la ref
@@ -297,17 +194,6 @@ export function DateRangePicker({
         }
     }, [onSuggestDatesRef, maxDurationMonths]);
 
-    const inputStyle = {
-        height: 44,
-        borderWidth: 1.5,
-        borderColor: c.border.primary,
-        borderRadius: 14,
-        paddingHorizontal: 14,
-        fontSize: 12,
-        color: c.text.primary,
-        backgroundColor: c.background.surface,
-    };
-
     const labelStyle = {
         fontSize: 12,
         fontWeight: "600",
@@ -315,87 +201,27 @@ export function DateRangePicker({
         marginBottom: 6,
     };
 
-    const errorInputStyle = {
-        ...inputStyle,
-        borderColor: c.status.danger,
-    };
-
-    const successInputStyle = {
-        ...inputStyle,
-        borderColor: c.status.success,
-    };
-
     return (
         <View style={{ gap: 12 }}>
             {/* Campos de entrada de fecha */}
             <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-                {/* Fecha de inicio */}
-                <View style={{ width: 120 }}>
-                    <Text style={labelStyle}>{t("Fecha de inicio")}</Text>
-                    <View style={{ position: "relative" }}>
-                        <TextInput
-                            value={displayStartDate}
-                            onChangeText={handleStartDateChange}
-                            style={
-                                startDateError
-                                    ? errorInputStyle
-                                    : validation.isValid
-                                    ? successInputStyle
-                                    : inputStyle
-                            }
-                            placeholder={placeholderFormat}
-                            placeholderTextColor={c.text.disabled}
-                        />
-                        {validation.isValid && (
-                            <View
-                                style={{
-                                    position: "absolute",
-                                    right: 12,
-                                    top: 12,
-                                }}
-                            >
-                                <Feather
-                                    name="check-circle"
-                                    size={18}
-                                    color={c.status.success}
-                                />
-                            </View>
-                        )}
-                    </View>
+                <View style={{ width: 160 }}>
+                    <DateInput
+                        label={t("Fecha de inicio")}
+                        value={startDate || ""}
+                        onChangeText={onStartDateChange}
+                        error={validation.type === "error"}
+                        success={validation.isValid}
+                    />
                 </View>
-                {/* Fecha de fin */}
-                <View style={{ width: 120 }}>
-                    <Text style={labelStyle}>{t("Fecha de fin")}</Text>
-                    <View style={{ position: "relative" }}>
-                        <TextInput
-                            value={displayEndDate}
-                            onChangeText={handleEndDateChange}
-                            style={
-                                endDateError
-                                    ? errorInputStyle
-                                    : validation.isValid
-                                    ? successInputStyle
-                                    : inputStyle
-                            }
-                            placeholder={placeholderFormat}
-                            placeholderTextColor={c.text.disabled}
-                        />
-                        {validation.isValid && (
-                            <View
-                                style={{
-                                    position: "absolute",
-                                    right: 12,
-                                    top: 12,
-                                }}
-                            >
-                                <Feather
-                                    name="check-circle"
-                                    size={18}
-                                    color={c.status.success}
-                                />
-                            </View>
-                        )}
-                    </View>
+                <View style={{ width: 160 }}>
+                    <DateInput
+                        label={t("Fecha de fin")}
+                        value={endDate || ""}
+                        onChangeText={onEndDateChange}
+                        error={validation.type === "error"}
+                        success={validation.isValid}
+                    />
                 </View>
 
                 {/* Indicador de validación y estadísticas - como tercer campo */}

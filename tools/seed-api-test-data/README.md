@@ -34,7 +34,8 @@ Tunables (`.env` or environment):
 |---|---|---|
 | `SEED_CONCURRENCY` | `8` | parallel request pool (a full run is ~13k requests, ≈3-6 min) |
 | `SEED_VERBOSE` | `0` | `1` logs every successful request; failures always log |
-| `TEACHER_PASSWORD` | `Docente2026*` | password shared by the 80 seeded teacher logins |
+| `TEACHER_PASSWORD` | required | password shared by the 80 seeded teacher logins |
+| `SEED_PASSWORD`, `INSTRUCTOR_PASSWORD`, `STUDENT_PASSWORD`, `SCHOOL_ADMIN_PASSWORD` | required | passwords of the named logins; the seed exits listing any that are missing (copy `.env.example`) |
 
 ## Date window (important)
 
@@ -85,7 +86,7 @@ alerts and quality instruments created below.
 | authorization `:8082` | roles `Super Administrador`/`Administrador`/`Instructor`/`Aprendiz`, every demo login and all 80 teachers assigned (the bootstrap admin gets `Super Administrador`), 2 permissions |
 | academic `:8083` | 2 schools (`ICT-01` Bogotá, `SMP-02` Medellín; legacy `ANDES-01`/`SAM-02`/`ROS-03`/`SEED-SCH` soft-disabled), 4 programs (2 énfasis per school), period `2026-II`, 24 cohorts (grados 6°-11° A/B, ≈67 students each), 48 courses, 1680 actors (`EST-*`/`DOC-*`), 1600 enrollments (~95% Active, ~3% Withdrawn, ~2% Completed) |
 | scheduling `:8084` | 24 environments (12 per school), 288 weekly blocks (12 per cohort), ~1210 sessions (4-5 dates per block) |
-| attendance `:8085` | roll call per session via bulk (~81k records, 80% Present / 8% Late / 12% Absent; Present/Late mix FACIAL/MANUAL/IOT/IMPORT with a match score only on FACIAL, absences are MANUAL/IMPORT with no capture), 3 justification types (plus legacy ones disabled), ~300 justifications split ~45% Approved / ~20% Rejected / rest Pending |
+| attendance `:8085` | roll call per session via bulk (~81k records, 80% Present / 8% Late / 12% Absent; Present/Late mix FACIAL/MANUAL/FINGERPRINT/IMPORT with a match score only on FACIAL, absences are MANUAL/IMPORT with no capture), 3 justification types (plus legacy ones disabled), ~300 justifications split ~45% Approved / ~20% Rejected / rest Pending |
 | biometric `:8086` | facial enroll for every student and teacher (person UUID) + legacy `seed-student-01`/`est-2026-00x`, verify, identify, history |
 | configuration `:8087` | 3 attendance configs per school, 3 security configs, up to 10 pending biometric update cases |
 | notification `:8088` | reuses the Liquibase catalog types `ATTENDANCE_ABSENTEEISM`/`ATTENDANCE_TARDINESS`/`ATTENDANCE_LOW` (it no longer creates duplicates), ~467 alerts (rules: seq % 7 / % 11 / % 17), 1 in 3 resolved |

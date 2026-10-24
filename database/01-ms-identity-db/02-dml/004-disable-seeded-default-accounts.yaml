@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-004-disable-seeded-default-accounts
+      author: FaceAttendEDU
+      # No context on purpose: it must run on every database, production included.
+      comment: >-
+        The removed seeds 001/002 created admin.faceattend, instructor.faceattend and
+        aprendiz.faceattend with passwords published in the repository. Replace their
+        hashes with a random, unknowable one, deactivate them and soft-delete the demo
+        accounts. On a fresh database the rows do not exist and nothing happens.
+        Restore the administrator with database/scripts/bootstrap-admin.sh --reset.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              CREATE EXTENSION IF NOT EXISTS pgcrypto;
+              UPDATE "identity".app_user
+                 SET password_hash = crypt(encode(gen_random_bytes(32), 'hex'), gen_salt('bf', 12)),
+                     must_change_password = TRUE,
+                     status = FALSE,
+                     updated_at = NOW()
+               WHERE user_id IN ('22222222-2222-4222-8222-222222222222',
+                                 '44444444-4444-4444-8444-444444444444',
+                                 '66666666-6666-4666-8666-666666666666');
+              UPDATE "identity".app_user
+                 SET deleted_at = COALESCE(deleted_at, NOW())
+               WHERE user_id IN ('44444444-4444-4444-8444-444444444444',
+                                 '66666666-6666-4666-8666-666666666666');
+              UPDATE "identity".person
+                 SET deleted_at = COALESCE(deleted_at, NOW()), status = FALSE, updated_at = NOW()
+               WHERE person_id IN ('33333333-3333-4333-8333-333333333333',
+                                   '55555555-5555-4555-8555-555555555555');
+      rollback:
+        # Irreversible by design: the old passwords must never come back.
+        - sql:
+            sql: SELECT 1

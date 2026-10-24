@@ -15,7 +15,13 @@ jest.mock("../../common", () => {
         BaseModal: ({ children, footer }) => React.createElement(View, null, children, footer),
         Button: ({ children, onPress }) => React.createElement(Text, { onPress, testID: "button" }, children),
         Badge: passthrough,
+        Checkbox: ({ label }) => React.createElement(Text, null, label),
     };
+});
+jest.mock("../../privacy/BiometricConsentPrompt", () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+    return ({ personName }) => React.createElement(Text, null, `CONSENT:${personName}`);
 });
 jest.mock("../../biometrics", () => {
     const React = require("react");
@@ -36,6 +42,7 @@ jest.mock("../../../../core/utils/i18n/hooks/useTranslation", () => ({
 
 const mockSetPerson = jest.fn();
 let mockSummary = null;
+let mockAuthorized = true;
 jest.mock("../../../../viewmodels/useBiometricsViewModel", () => ({
     useBiometricsViewModel: () => ({
         setPerson: mockSetPerson,
@@ -43,6 +50,8 @@ jest.mock("../../../../viewmodels/useBiometricsViewModel", () => ({
         busy: false,
         health: "ok",
         status: { text: "estado", tone: "info" },
+        biometricAuthorized: mockAuthorized,
+        authorizeBiometrics: jest.fn(),
     }),
 }));
 
@@ -108,4 +117,14 @@ test("skipping with nothing captured reports no biometrics", () => {
     expect(text(tree)).toContain("Omitir por ahora");
     act(() => tree.root.findAll((n) => n.props.testID === "button")[0].props.onPress());
     expect(onFinished).toHaveBeenCalledWith({ hasFacial: false, hasFingerprint: false });
+});
+
+test("without biometric authorization the camera is not offered, the consent prompt is (Ley 1581)", () => {
+    mockAuthorized = false;
+    const tree = render({ wantFace: true, wantFingerprint: true });
+    mockAuthorized = true;
+
+    expect(text(tree)).toContain("CONSENT:Ana García");
+    expect(text(tree)).not.toContain("FACE:register");
+    expect(text(tree)).not.toContain("FINGER:true");
 });

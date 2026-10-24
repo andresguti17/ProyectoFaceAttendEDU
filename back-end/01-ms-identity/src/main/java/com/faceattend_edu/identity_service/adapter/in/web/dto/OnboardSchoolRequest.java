@@ -54,5 +54,10 @@ public class OnboardSchoolRequest {
         private String username;
         @NotBlank @Size(min = 8, max = 100)
         private String password;
+        /** Version of the privacy notice the administrator accepted (Ley 1581). */
+        @NotBlank @Size(max = 20)
+        private String privacyPolicyVersion;
+        /** Optional authorization to process their biometric data (art. 6-a). */
+        private Boolean biometricAccepted;
     }
 }

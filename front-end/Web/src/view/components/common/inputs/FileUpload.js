@@ -4,6 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
+import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 /**
@@ -72,6 +73,7 @@ export function FileUpload({
   style,
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   const handlePress = async () => {
     if (disabled) return;
@@ -83,8 +85,8 @@ export function FileUpload({
         
         if (!permissionResult.granted) {
           Alert.alert(
-            "Permiso requerido",
-            "Necesitamos permiso para acceder a tus fotos"
+            t("Permiso requerido"),
+            t("Necesitamos permiso para acceder a tus fotos")
           );
           return;
         }
@@ -107,8 +109,8 @@ export function FileUpload({
           const validFiles = newFiles.filter((file) => {
             if (file.size > maxSize) {
               Alert.alert(
-                "Archivo muy grande",
-                `${file.name} excede el tamaño máximo de ${formatSize(maxSize)}`
+                t("Archivo muy grande"),
+                t("{{name}} excede el tamaño máximo de {{size}}", { name: file.name, size: formatSize(maxSize) })
               );
               return false;
             }
@@ -131,21 +133,24 @@ export function FileUpload({
         });
 
         if (result.type === "success" || !result.canceled) {
-          const files = result.canceled ? [] : (Array.isArray(result) ? result : [result]);
-          
+          // expo-document-picker >= 48 devuelve { canceled, assets: [...] }.
+          const files = result.canceled ? [] : (result.assets ?? (Array.isArray(result) ? result : [result]));
+
           const newFiles = files.map((file) => ({
             uri: file.uri,
             name: file.name,
             size: file.size || 0,
             type: file.mimeType || "application/octet-stream",
+            // En web, el File del navegador: es lo que se sube.
+            file: file.file ?? null,
           }));
 
           // Validar tamaño
           const validFiles = newFiles.filter((file) => {
             if (file.size > maxSize) {
               Alert.alert(
-                "Archivo muy grande",
-                `${file.name} excede el tamaño máximo de ${formatSize(maxSize)}`
+                t("Archivo muy grande"),
+                t("{{name}} excede el tamaño máximo de {{size}}", { name: file.name, size: formatSize(maxSize) })
               );
               return false;
             }
@@ -162,7 +167,7 @@ export function FileUpload({
       }
     } catch (error) {
       console.error("Error selecting file:", error);
-      Alert.alert("Error", "No se pudo seleccionar el archivo");
+      Alert.alert(t("Error"), t("No se pudo seleccionar el archivo"));
     }
   };
 
@@ -224,7 +229,7 @@ export function FileUpload({
               { color: theme.colors.text.primary },
             ]}
           >
-            {value.length === 0 ? "Seleccionar archivo" : "Agregar otro archivo"}
+            {t(value.length === 0 ? "Seleccionar archivo" : "Agregar otro archivo")}
           </Text>
           <Text
             style={[
@@ -232,7 +237,7 @@ export function FileUpload({
               { color: theme.colors.text.tertiary },
             ]}
           >
-            {accept === "image/*" ? "Imágenes" : "Archivos"} hasta {formatSize(maxSize)}
+            {t(accept === "image/*" ? "Imágenes" : "Archivos")} {t("hasta")} {formatSize(maxSize)}
           </Text>
         </TouchableOpacity>
       )}
@@ -304,7 +309,7 @@ export function FileUpload({
 
       {error && errorMessage && (
         <Text style={[styles.message, { color: theme.colors.status.error }]}>
-          {errorMessage}
+          {t(errorMessage)}
         </Text>
       )}
     </View>

@@ -226,7 +226,7 @@ previewHeaderTitle: {
 previewOverlay: {
         backgroundColor: colors.cameraBackground + '52',
         paddingTop: 20,
-        paddingBottom: Platform.OS === 'ios' ? 30 : 30,
+        paddingBottom: 30,
         paddingHorizontal: 24,
         borderTopLeftRadius: 28,
         borderTopRightRadius: 28,

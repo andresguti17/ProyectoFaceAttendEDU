@@ -379,7 +379,10 @@
     "statusRejected": "Rejected",
     "rejectionReason": "Reason for rejection",
     "reviewerNotes": "Reviewer comment",
-    "noReviewerNotes": "The reviewer left no comment."
+    "noReviewerNotes": "The reviewer left no comment.",
+    "openDocument": "Open",
+    "documentUnavailable": "The document could not be opened. If it was filed before file uploads existed, it has no content.",
+    "noDocumentViewer": "This device has no app to open the document."
   },
   "justify": {
     "title": "Justification Configuration",
@@ -415,7 +418,8 @@
     "confirmMessage": "Are you sure you want to submit this justification?",
     "confirmTitle": "Confirm submission",
     "submitError": "Could not submit the justification",
-    "noRecordForDate": "No attendance record for that date"
+    "noRecordForDate": "No attendance record for that date",
+    "uploadError": "The justification was filed, but the document could not be uploaded. Try again later."
   },
   "menuJustify": {
     "backToDashboard": "Back to Dashboard"
@@ -1347,5 +1351,32 @@
   "errors": {
     "missingPerson": "The user's person record is missing.",
     "missingSchool": "The selected school is missing."
+  },
+  "privacyConsent": {
+    "title": "Personal data protection",
+    "saveError": "The authorization could not be saved. Try again.",
+    "requiredForAccount": "Confirm that the person accepted the privacy notice (Law 1581).",
+    "holderAccepted": "The person accepted the privacy notice *",
+    "holderBiometric": "Authorizes processing of their biometric data (optional)",
+    "biometricTitle": "Biometric data",
+    "biometricAuthorized": "You authorized the use of your face and fingerprint to take attendance.",
+    "biometricNotAuthorized": "You have not authorized the processing of your biometric data.",
+    "biometricNotice": "Your face is sensitive data. Authorizing its processing is optional: otherwise your attendance is taken by other means. We keep an encrypted template, not the photo, only to take attendance, and you can revoke the authorization from your profile.",
+    "authorizeButton": "I authorize the processing of my biometric data",
+    "revokeTitle": "Revoke biometric authorization",
+    "revokeConfirm": "Your face and fingerprint templates will be deleted. Continue?",
+    "revokeButton": "Revoke and delete my biometric data",
+    "revoked": "Authorization revoked and biometric data deleted."
+  },
+  "push": {
+    "permission": {
+      "title": "Alert notifications",
+      "body": "FaceAttend EDU will notify you on this device when you get a new alert, such as the result of a justification. The system will ask for permission next."
+    },
+    "denied": {
+      "title": "Notifications are off",
+      "body": "You will not get alert notifications on this device. To turn them on, open the system settings, go to FaceAttend EDU > Notifications and allow them. Your alerts are still available in News.",
+      "open_settings": "Open settings"
+    }
   }
 }

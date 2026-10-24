@@ -9,6 +9,9 @@ import com.faceattend_edu.identity_service.application.port.out.UpdateUserPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByIdentifierPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByUsernamePort;
 import com.faceattend_edu.identity_service.application.port.out.ListUsersPort;
+import com.faceattend_edu.identity_service.application.port.out.RemoveIdentityPort;
+import com.faceattend_edu.identity_service.adapter.out.persistence.repository.PersonJpaRepository;
+import org.springframework.transaction.annotation.Transactional;
 import com.faceattend_edu.identity_service.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -23,10 +26,19 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, UpdateUserPort, LoadUserByUsernamePort,
-        LoadUserByIdentifierPort, ListUsersPort {
+        LoadUserByIdentifierPort, ListUsersPort, RemoveIdentityPort {
 
     private final UserJpaRepository repository;
+    private final PersonJpaRepository personRepository;
     private final UserPersistenceMapper mapper;
+
+    /** Compensation of a failed provisioning: the rows were created moments ago and never used. */
+    @Override
+    @Transactional
+    public void removeUserAndPerson(UUID userId, UUID personId) {
+        if (userId != null) repository.deleteById(userId);
+        if (personId != null) personRepository.deleteById(personId);
+    }
 
     @Override
     public User loadUser(UUID userId) {
@@ -52,7 +64,10 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort, Updat
         }
 
         // Ambiguous emails resolve to null: the 401 must not reveal whether the address exists.
-        List<UserJpaEntity> matches = repository.findByPersonEmail(value);
+        List<UserJpaEntity> matches = repository.findByPersonEmail(
+                com.faceattend_edu.identity_service.adapter.out.persistence.crypto.PiiCipher.current()
+                        .hash(com.faceattend_edu.identity_service.adapter.out.persistence.entity.PersonJpaEntity.normalizeEmail(value)),
+                value);
         return matches.size() == 1 ? mapper.toDomain(matches.get(0)) : null;
     }
 

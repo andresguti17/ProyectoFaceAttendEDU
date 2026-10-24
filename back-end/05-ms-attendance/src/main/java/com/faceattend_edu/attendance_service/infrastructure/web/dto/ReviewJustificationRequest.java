@@ -7,6 +7,7 @@ import java.util.UUID;
 @Data
 public class ReviewJustificationRequest {
     @NotBlank private String reviewStatus;
+    /** Ignored: the reviewer is taken from the session. Kept so older clients still deserialize. */
     private UUID reviewedBy;
     private String resolutionNotes;
 }

@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, AnimatedDropdown, BaseModal, TextInput, PasswordInput, Checkbox } from "../common";
+import { DateInput } from "../common/inputs/DateInput";
 import { useTheme }               from "../hooks/useTheme";
 import { useResponsive }          from "../hooks/useResponsive";
 import { useTranslation }         from "../../../core/utils/i18n/hooks/useTranslation";
@@ -41,7 +42,7 @@ function nextTeacherCode(actors, schoolShort) {
     for (const a of actors) {
         const code = String(a?.actorCode ?? "");
         if (!code.startsWith(prefix)) continue;
-        const n = parseInt(code.slice(prefix.length), 10);
+        const n = Number.parseInt(code.slice(prefix.length), 10);
         if (!Number.isNaN(n) && n > max) max = n;
     }
     return `${prefix}${String(max + 1).padStart(3, "0")}`;
@@ -131,8 +132,8 @@ export default function RegisterStudentModal({
         studentsInFicha.forEach(s => {
             // Remover el prefijo completo (fichaCode + "00") y obtener solo el número incremental
             const numberPart = s.code.substring(prefix.length);
-            const num = parseInt(numberPart, 10);
-            if (!isNaN(num) && num > maxNumber) {
+            const num = Number.parseInt(numberPart, 10);
+            if (!Number.isNaN(Number(num)) && num > maxNumber) {
                 maxNumber = num;
             }
         });
@@ -526,6 +527,29 @@ export default function RegisterStudentModal({
                     </View>
                 )}
 
+                {/* Ley 1581: aceptación del aviso (obligatoria) y autorización biométrica (facultativa) */}
+                {form.role && (
+                    <View style={{ marginBottom: 18, gap: 8 }}>
+                        <Checkbox
+                            checked={form.privacyAccepted === true}
+                            onToggle={(v) => setField("privacyAccepted", v)}
+                            label={t("La persona aceptó el aviso de privacidad") + " *"}
+                            description={t("Tratamiento de sus datos personales para el control de asistencia (Ley 1581 de 2012).")}
+                        />
+                        <Checkbox
+                            checked={form.biometricAccepted === true}
+                            onToggle={(v) => setField("biometricAccepted", v)}
+                            label={t("Autoriza el tratamiento de sus datos biométricos (facultativo)")}
+                            description={t("Rostro y huella para tomar asistencia. Sin esta autorización no se pueden registrar.")}
+                        />
+                        {showErrors && form.privacyAccepted !== true && (
+                            <Text style={{ color: c.status.danger, fontSize: 12 }}>
+                                {t("Confirma que la persona aceptó el aviso de privacidad")}
+                            </Text>
+                        )}
+                    </View>
+                )}
+
                 {/* Enviar usuario y contraseña inicial por correo (Fase 1) */}
                 {form.role && (
                     <View style={{ marginBottom: 18 }}>
@@ -562,6 +586,7 @@ export default function RegisterStudentModal({
                             <View style={{ flex: 1 }}>
                                 <TextInput
                                     label={t("Teléfono")}
+                                    type="phone"
                                     value={form.phone}
                                     onChangeText={v => setField("phone", v)}
                                     placeholder={t("Ej: 3001234567")}
@@ -587,13 +612,12 @@ export default function RegisterStudentModal({
                                 />
                             </View>
                             <View style={{ flex: 1 }}>
-                                <TextInput
-                                    label={t("Nacimiento (AAAA-MM-DD)")}
+                                <DateInput
+                                    label={t("Nacimiento")}
                                     value={form.birthDate}
                                     onChangeText={v => setField("birthDate", v)}
-                                    placeholder={t("Ej: 2005-03-14")}
                                     error={showErrors && !!String(form.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form.birthDate).trim())}
-                                    errorMessage={t("Formato AAAA-MM-DD")}
+                                    errorMessage={t("Fecha incompleta o inválida")}
                                 />
                             </View>
                         </View>

@@ -45,6 +45,7 @@ const ADMIN = {
     username: "ana.perez",
     password: "Str0ng!Passw0rd#",
     confirmPassword: "Str0ng!Passw0rd#",
+    privacyAccepted: true,
 };
 
 async function submit(getVm) {

@@ -93,7 +93,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("givenAccountWithTwoFactor_whenLogin_thenReturn200WithChallengeAndNoSession")
         void givenAccountWithTwoFactor_whenLogin_thenReturn200WithChallengeAndNoSession() throws Exception {
-            when(authenticateUserUseCase.authenticate("carolina.mendoza", "Secret123"))
+            when(authenticateUserUseCase.authenticate(eq("carolina.mendoza"), eq("Secret123"), any()))
                     .thenThrow(new TwoFactorRequiredException("c***@example.com"));
 
             mockMvc.perform(post("/api/v1/auth/login")
@@ -193,7 +193,7 @@ class AuthControllerTest {
         @DisplayName("givenValidCredentials_whenLogin_thenReturn200SessionJson")
         void givenValidCredentials_whenLogin_thenReturn200SessionJson() throws Exception {
             // Arrange
-            when(authenticateUserUseCase.authenticate("carolina.mendoza", "Secret123"))
+            when(authenticateUserUseCase.authenticate(eq("carolina.mendoza"), eq("Secret123"), any()))
                     .thenReturn(session);
 
             // Act & Assert
@@ -238,7 +238,7 @@ class AuthControllerTest {
         @DisplayName("givenInvalidCredentials_whenLogin_thenReturn401Unauthorized")
         void givenInvalidCredentials_whenLogin_thenReturn401Unauthorized() throws Exception {
             // Arrange
-            when(authenticateUserUseCase.authenticate("carolina.mendoza", "wrong"))
+            when(authenticateUserUseCase.authenticate(eq("carolina.mendoza"), eq("wrong"), any()))
                     .thenThrow(new UnauthorizedException("Invalid credentials"));
 
             // Act & Assert
@@ -255,7 +255,7 @@ class AuthControllerTest {
         @DisplayName("givenLockedAccount_whenLogin_thenReturn423WithRetryAfterHeader")
         void givenLockedAccount_whenLogin_thenReturn423WithRetryAfterHeader() throws Exception {
             // Arrange
-            when(authenticateUserUseCase.authenticate("carolina.mendoza", "Secret123"))
+            when(authenticateUserUseCase.authenticate(eq("carolina.mendoza"), eq("Secret123"), any()))
                     .thenThrow(new AccountLockedException(Duration.ofMinutes(30)));
 
             // Act & Assert
@@ -267,6 +267,23 @@ class AuthControllerTest {
                     .andExpect(header().string("Retry-After", "1800"))
                     .andExpect(jsonPath("$.error").value("ACCOUNT_LOCKED"))
                     .andExpect(jsonPath("$.status").value(423));
+        }
+
+        @Test
+        @DisplayName("givenTooManyFailuresFromOneIp_whenLogin_thenReturn429WithRetryAfter")
+        void givenTooManyFailuresFromOneIp_whenLogin_thenReturn429WithRetryAfter() throws Exception {
+            when(authenticateUserUseCase.authenticate(eq("carolina.mendoza"), eq("Secret123"), eq("203.0.113.7")))
+                    .thenThrow(new com.faceattend_edu.identity_service.domain.exception.TooManyLoginAttemptsException(Duration.ofSeconds(42)));
+
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .header("X-Real-IP", "203.0.113.7")
+                            .header("X-Forwarded-For", "198.51.100.1")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"identifier":"carolina.mendoza","password":"Secret123"}"""))
+                    .andExpect(status().isTooManyRequests())
+                    .andExpect(header().string("Retry-After", "42"))
+                    .andExpect(jsonPath("$.error").value("TOO_MANY_ATTEMPTS"));
         }
     }
 

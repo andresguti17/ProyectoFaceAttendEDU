@@ -118,6 +118,19 @@ export const JustificationService = {
   },
 
   getDocuments: async (justificationId) => backendGet(BASE(), DOCS_ENDPOINT, { justificationId }),
+
+  // Sube el archivo real (multipart); attendance lo guarda cifrado en MinIO (ADR-009).
+  uploadDocument: async (justificationId, { uri, name, mimeType }) => {
+    const form = new FormData();
+    form.append('file', { uri, name: name || 'soporte', type: mimeType || 'application/octet-stream' });
+    const data = await request({
+      method: POST,
+      url: `${BASE()}${ENDPOINT}/${justificationId}/documents`,
+      data: form,
+      timeoutMs: 60000,
+    });
+    return toSnakeDeep(data);
+  },
 };
 
 // ---- shared enrichment (single-flight caches + bounded concurrency) ----

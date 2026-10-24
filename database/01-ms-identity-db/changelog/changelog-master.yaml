@@ -19,3 +19,7 @@ databaseChangeLog:
   - include:
       file: ../01-ddl/03-tables/008-drop-city-table.yaml
       relativeToChangelogFile: true
+  # Last: the per-service role grants cover every table created above.
+  - include:
+      file: ../03-dcl/changelog.yaml
+      relativeToChangelogFile: true

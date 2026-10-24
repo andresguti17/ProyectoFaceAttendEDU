@@ -1,7 +1,9 @@
 # FaceAttend EDU — overrides para Neon PostgreSQL
 # Usado con: docker compose -f docker-compose.prod.yml up
 # Redefine los depends_on para NO esperar a un postgres: local,
-# y ajusta las conexiones para usar Neon via variables de entorno
+# y ajusta las conexiones para usar Neon via variables de entorno.
+# Cada servicio entra con su propio usuario (<servicio>_app), que solo puede
+# tocar su esquema; los crea database/scripts/create-service-logins.sh.
 # Requiere NEON_HOST: host completo de Neon, con region (p. ej.
 # ep-xxxx-pooler.c-2.sa-east-1.aws.neon.tech). Sin la region el nombre no resuelve.
 
@@ -18,8 +20,8 @@ services:
     environment:
       # Sobrescribe SPRING_DATASOURCE_URL para usar Neon (de .env.prod)
       SPRING_DATASOURCE_URL: ${NEON_JDBC_URL}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD}
+      SPRING_DATASOURCE_USERNAME: ${IDENTITY_DB_USER:-identity_app}
+      SPRING_DATASOURCE_PASSWORD: ${IDENTITY_DB_PASSWORD:?IDENTITY_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: identity
 
   ms-authorization:
@@ -30,8 +32,8 @@ services:
         condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: ${NEON_JDBC_URL}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD}
+      SPRING_DATASOURCE_USERNAME: ${AUTHORIZATION_DB_USER:-authorization_app}
+      SPRING_DATASOURCE_PASSWORD: ${AUTHORIZATION_DB_PASSWORD:?AUTHORIZATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: authorization
 
   ms-scheduling:
@@ -40,8 +42,8 @@ services:
         condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: ${NEON_JDBC_URL}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD}
+      SPRING_DATASOURCE_USERNAME: ${SCHEDULING_DB_USER:-scheduling_app}
+      SPRING_DATASOURCE_PASSWORD: ${SCHEDULING_DB_PASSWORD:?SCHEDULING_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: scheduling
 
   ms-attendance:
@@ -50,10 +52,12 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      minio:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: ${NEON_JDBC_URL}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD}
+      SPRING_DATASOURCE_USERNAME: ${ATTENDANCE_DB_USER:-attendance_app}
+      SPRING_DATASOURCE_PASSWORD: ${ATTENDANCE_DB_PASSWORD:?ATTENDANCE_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: attendance
 
   ms-biometric:
@@ -74,21 +78,21 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=academic&sslmode=require
+      DATABASE_URL: postgresql://${ACADEMIC_DB_USER:-academic_app}:${ACADEMIC_DB_PASSWORD:?ACADEMIC_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=academic&sslmode=require
 
   ms-configuration:
     depends_on: !override
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=configuration&sslmode=require
+      DATABASE_URL: postgresql://${CONFIGURATION_DB_USER:-configuration_app}:${CONFIGURATION_DB_PASSWORD:?CONFIGURATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=configuration&sslmode=require
 
   ms-quality:
     depends_on: !override
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=quality&sslmode=require
+      DATABASE_URL: postgresql://${QUALITY_DB_USER:-quality_app}:${QUALITY_DB_PASSWORD:?QUALITY_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=quality&sslmode=require
 
   # ── Go — ms-notification ──
   ms-notification:
@@ -96,4 +100,10 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${NEON_USER}:${NEON_PASSWORD}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=notification&sslmode=require
+      DATABASE_URL: postgresql://${NOTIFICATION_DB_USER:-notification_app}:${NOTIFICATION_DB_PASSWORD:?NOTIFICATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=notification&sslmode=require
+
+  # ── Gateway ──
+  kong-gateway:
+    environment:
+      # Real web origins only (e.g. the Vercel domain). No default in production.
+      KONG_CORS_ORIGINS: ${KONG_CORS_ORIGINS:?KONG_CORS_ORIGINS is required (comma-separated https origins of the web app)}

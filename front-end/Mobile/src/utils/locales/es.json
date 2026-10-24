@@ -379,7 +379,10 @@
     "statusRejected": "Rechazada",
     "rejectionReason": "Motivo del rechazo",
     "reviewerNotes": "Comentario del revisor",
-    "noReviewerNotes": "El revisor no dejó comentario."
+    "noReviewerNotes": "El revisor no dejó comentario.",
+    "openDocument": "Abrir",
+    "documentUnavailable": "No se pudo abrir el soporte. Si se registró antes de la subida de archivos, no tiene contenido.",
+    "noDocumentViewer": "Este dispositivo no tiene una aplicación para abrir el soporte."
   },
   "justify": {
     "title": "Configuración de Justificaciones",
@@ -415,7 +418,8 @@
     "dateLabel": "Fecha",
     "submitError": "No se pudo enviar la justificación",
     "noRecordForDate": "No hay registro de asistencia para esa fecha",
-    "timeLabel": "Hora"
+    "timeLabel": "Hora",
+    "uploadError": "La justificación quedó registrada, pero el soporte no se pudo subir. Inténtalo de nuevo más tarde."
   },
   "menuJustify": {
     "backToDashboard": "Volver al Dashboard"
@@ -1347,5 +1351,32 @@
   "errors": {
     "missingPerson": "Falta el registro de la persona del usuario.",
     "missingSchool": "Falta el colegio seleccionado."
+  },
+  "privacyConsent": {
+    "title": "Protección de datos personales",
+    "saveError": "No se pudo registrar la autorización. Inténtalo de nuevo.",
+    "requiredForAccount": "Confirma que la persona aceptó el aviso de privacidad (Ley 1581).",
+    "holderAccepted": "La persona aceptó el aviso de privacidad *",
+    "holderBiometric": "Autoriza el tratamiento de sus datos biométricos (facultativo)",
+    "biometricTitle": "Datos biométricos",
+    "biometricAuthorized": "Autorizaste el uso de tu rostro y tu huella para tomar asistencia.",
+    "biometricNotAuthorized": "No has autorizado el tratamiento de tus datos biométricos.",
+    "biometricNotice": "Tu rostro es un dato sensible. Autorizar su tratamiento es facultativo: si no lo haces, tu asistencia se registra por otros medios. Guardamos una plantilla cifrada, no la foto, solo para tomar asistencia, y puedes revocar la autorización desde tu perfil.",
+    "authorizeButton": "Autorizo el tratamiento de mis datos biométricos",
+    "revokeTitle": "Revocar autorización biométrica",
+    "revokeConfirm": "Se eliminarán tus plantillas de rostro y huella. ¿Continuar?",
+    "revokeButton": "Revocar y eliminar mis datos biométricos",
+    "revoked": "Autorización revocada y datos biométricos eliminados."
+  },
+  "push": {
+    "permission": {
+      "title": "Notificaciones de alertas",
+      "body": "FaceAttend EDU te avisará en este dispositivo cuando tengas una alerta nueva, como el resultado de una justificación. A continuación el sistema te pedirá permiso."
+    },
+    "denied": {
+      "title": "Notificaciones desactivadas",
+      "body": "No recibirás avisos de alertas en este dispositivo. Para activarlos, abre los ajustes del sistema, entra en FaceAttend EDU > Notificaciones y permítelas. Mientras tanto, tus alertas siguen en Novedades.",
+      "open_settings": "Abrir ajustes"
+    }
   }
 }

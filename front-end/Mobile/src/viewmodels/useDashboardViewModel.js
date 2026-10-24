@@ -313,7 +313,7 @@ export function useDashboardViewModel({ onLogout, userRole: propUserRole } = {})
         };
 
         if (userRole) {
-            fetchDashboardData();
+            void fetchDashboardData();
         }
     }, [userRole, isAdmin, isTeacher, t, i18n.language]);
 

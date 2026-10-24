@@ -20,11 +20,13 @@ services:
     cpus: "1.0"
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-mongoadmin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-mongopass}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?MONGO_USER is required}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?MONGO_PASSWORD is required}
       MONGO_INITDB_DATABASE: ${MONGO_DB:-faceattend_biometric}
+    # Authentication is mandatory; the root user comes only from the environment.
+    command: ["mongod", "--auth"]
     ports:
-      - "${BIND_IP:-127.0.0.1}:${MONGO_PORT:-27017}:27017"
+      - "127.0.0.1:${MONGO_PORT:-27017}:27017"
     volumes:
       - mongo_data:/data/db
     networks:
@@ -36,6 +38,27 @@ services:
       retries: 10
       start_period: 20s
 
+  # MinIO — justification supporting documents (ADR-009). The official images
+  # are no longer published; this one is built from MinIO's source and pinned by
+  # digest. Objects are encrypted at rest with SSE-S3 using MINIO_KMS_SECRET_KEY
+  # (ADR-016). No port is published: only ms-attendance reaches it.
+  minio:
+    image: cgr.dev/chainguard/minio@sha256:d88920d6a50bd0b088223b688be3b76c63e6205dbe494437f67ba1240ea12880
+    container_name: faceattend-minio
+    mem_limit: 512m
+    cpus: "0.5"
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      # <key-name>:<base64 of 32 random bytes>. Losing it makes the stored files unreadable.
+      MINIO_KMS_SECRET_KEY: ${MINIO_KMS_SECRET_KEY:?MINIO_KMS_SECRET_KEY is required}
+    volumes:
+      - minio_data:/data
+    networks:
+      - faceattend-data
+
   redis:
     image: redis:7-alpine
     container_name: faceattend-redis
@@ -43,7 +66,7 @@ services:
     cpus: "0.5"
     restart: unless-stopped
     ports:
-      - "${BIND_IP:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -62,7 +85,7 @@ services:
     cpus: "1.0"
     restart: unless-stopped
     ports:
-      - "${BIND_IP:-127.0.0.1}:${KAFKA_PORT:-9092}:9092"
+      - "127.0.0.1:${KAFKA_PORT:-9092}:9092"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
@@ -96,8 +119,8 @@ services:
   # ──────────────────────────────────────────────────────────────
   ms-identity:
     build:
-      context: ./01-ms-identity
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 01-ms-identity/Dockerfile
     image: faceattend/ms-identity:latest
     container_name: faceattend-ms-identity
     mem_limit: 1g
@@ -112,8 +135,8 @@ services:
         condition: service_started
     environment:
       SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db?stringtype=unspecified}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-postgres}
+      SPRING_DATASOURCE_USERNAME: identity_app
+      SPRING_DATASOURCE_PASSWORD: ${IDENTITY_DB_PASSWORD:?IDENTITY_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: identity
       SPRING_DATA_REDIS_HOST: redis
       FACEATTEND_RECOVERY_STORE: redis
@@ -134,6 +157,9 @@ services:
       FACEATTEND_NOTIFICATION_LOGIN_URL: "${APP_LOGIN_URL:-}"
       # Alta pública de sedes (POST /api/v1/onboarding/schools): vacío = deshabilitada (503).
       FACEATTEND_ONBOARDING_SERVICE_USER_ID: "${ONBOARDING_SERVICE_USER_ID:-}"
+      # Personal data encrypted at rest (Ley 1581). Losing these keys makes the data unreadable.
+      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:?PII_ENCRYPTION_KEY is required (openssl rand -base64 32)}
+      PII_HASH_KEY: ${PII_HASH_KEY:?PII_HASH_KEY is required (openssl rand -base64 32)}
       FACEATTEND_ONBOARDING_ACADEMIC_URL: http://ms-academic:8083
       FACEATTEND_ONBOARDING_AUTHORIZATION_URL: http://ms-authorization:8082
       SERVER_PORT: 8081
@@ -152,8 +178,8 @@ services:
 
   ms-authorization:
     build:
-      context: ./02-ms-authorization
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 02-ms-authorization/Dockerfile
     image: faceattend/ms-authorization:latest
     container_name: faceattend-ms-authorization
     mem_limit: 1g
@@ -165,8 +191,8 @@ services:
         condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-postgres}
+      SPRING_DATASOURCE_USERNAME: authorization_app
+      SPRING_DATASOURCE_PASSWORD: ${AUTHORIZATION_DB_PASSWORD:?AUTHORIZATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: authorization
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_LIQUIBASE_ENABLED: "false"
@@ -191,8 +217,8 @@ services:
 
   ms-scheduling:
     build:
-      context: ./04-ms-scheduling
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 04-ms-scheduling/Dockerfile
     image: faceattend/ms-scheduling:latest
     container_name: faceattend-ms-scheduling
     mem_limit: 1g
@@ -202,8 +228,8 @@ services:
         condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db?stringtype=unspecified}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD:-postgres}
+      SPRING_DATASOURCE_USERNAME: scheduling_app
+      SPRING_DATASOURCE_PASSWORD: ${SCHEDULING_DB_PASSWORD:?SCHEDULING_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: scheduling
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_LIQUIBASE_ENABLED: "false"
@@ -229,8 +255,8 @@ services:
 
   ms-attendance:
     build:
-      context: ./05-ms-attendance
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 05-ms-attendance/Dockerfile
     image: faceattend/ms-attendance:latest
     container_name: faceattend-ms-attendance
     mem_limit: 1g
@@ -242,13 +268,14 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      minio:
+        condition: service_started
     environment:
       JAVA_OPTS: "-Xmx768m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-faceattend_db}?stringtype=unspecified
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATASOURCE_USERNAME: attendance_app
+      SPRING_DATASOURCE_PASSWORD: ${ATTENDANCE_DB_PASSWORD:?ATTENDANCE_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: attendance
-      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER:-mongoadmin}:${MONGO_PASSWORD:-mongopass}@mongodb:27017/${MONGO_DB:-faceattend_biometric}?authSource=admin
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
@@ -259,6 +286,11 @@ services:
       # Alcance por actor: matrículas (academic) y fichas que dicta el instructor (scheduling).
       FACEATTEND_AUTH_ACADEMIC_URL: http://ms-academic:8083
       FACEATTEND_AUTH_SCHEDULING_URL: http://ms-scheduling:8084
+      # Supporting documents (MinIO, ADR-009).
+      FACEATTEND_STORAGE_ENDPOINT: http://minio:9000
+      FACEATTEND_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      FACEATTEND_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      FACEATTEND_STORAGE_BUCKET: justification-documents
       SERVER_PORT: 8085
     ports:
       - "${BIND_IP:-127.0.0.1}:8085:8085"
@@ -280,8 +312,8 @@ services:
   # ──────────────────────────────────────────────────────────────
   ms-academic:
     build:
-      context: ./03-ms-academic
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 03-ms-academic/Dockerfile
     image: faceattend/ms-academic:latest
     container_name: faceattend-ms-academic
     mem_limit: 256m
@@ -292,7 +324,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      DATABASE_URL: postgres://academic_app:${ACADEMIC_DB_PASSWORD:?ACADEMIC_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@postgres:5432/${POSTGRES_DB:-faceattend_db}
       PG_SCHEMA: academic
       PORT: 8083
       # Session + RBAC guard: sessions come from identity, permissions from authorization.
@@ -315,8 +347,8 @@ services:
 
   ms-configuration:
     build:
-      context: ./07-ms-configuration
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 07-ms-configuration/Dockerfile
     image: faceattend/ms-configuration:latest
     container_name: faceattend-ms-configuration
     mem_limit: 256m
@@ -327,7 +359,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      DATABASE_URL: postgres://configuration_app:${CONFIGURATION_DB_PASSWORD:?CONFIGURATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@postgres:5432/${POSTGRES_DB:-faceattend_db}
       PG_SCHEMA: configuration
       PORT: 8087
       # Session + RBAC guard: sessions come from identity, permissions from authorization.
@@ -371,7 +403,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      MONGODB_URL: mongodb://${MONGO_USER:-mongoadmin}:${MONGO_PASSWORD:-mongopass}@mongodb:27017/${MONGO_DB:-faceattend_biometric}?authSource=admin
+      MONGODB_URL: mongodb://${MONGO_USER:?MONGO_USER is required}:${MONGO_PASSWORD:?MONGO_PASSWORD is required}@mongodb:27017/${MONGO_DB:-faceattend_biometric}?authSource=admin
       PORT: 8086
       # Session + RBAC guard: sessions come from identity, permissions from authorization.
       IDENTITY_URL: http://ms-identity:8081
@@ -386,6 +418,8 @@ services:
       # de sesión — el servicio no emite sesiones, delega en identity/authorization.
       # Sin fallback a propósito, igual que el resto de secretos del stack.
       BIOMETRIC_LIVENESS_CHALLENGE_SECRET: ${BIOMETRIC_LIVENESS_CHALLENGE_SECRET:?Set BIOMETRIC_LIVENESS_CHALLENGE_SECRET in .env (>= 32 random chars)}
+      # Face encodings and fingerprint samples encrypted at rest (Ley 1581). Losing it makes them unreadable.
+      BIOMETRIC_ENCRYPTION_KEY: ${BIOMETRIC_ENCRYPTION_KEY:?BIOMETRIC_ENCRYPTION_KEY is required (openssl rand -base64 32)}
       BIOMETRIC_LIVENESS_TTL_SECONDS: ${BIOMETRIC_LIVENESS_TTL_SECONDS:-120}
       BIOMETRIC_RATE_LIMIT_MAX_ATTEMPTS: ${BIOMETRIC_RATE_LIMIT_MAX_ATTEMPTS:-20}
       BIOMETRIC_RATE_LIMIT_WINDOW_SECONDS: ${BIOMETRIC_RATE_LIMIT_WINDOW_SECONDS:-60}
@@ -415,8 +449,8 @@ services:
   # ──────────────────────────────────────────────────────────────
   ms-notification:
     build:
-      context: ./08-ms-notification
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 08-ms-notification/Dockerfile
     image: faceattend/ms-notification:latest
     container_name: faceattend-ms-notification
     mem_limit: 128m
@@ -427,7 +461,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}?sslmode=disable
+      DATABASE_URL: postgres://notification_app:${NOTIFICATION_DB_PASSWORD:?NOTIFICATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@postgres:5432/${POSTGRES_DB:-faceattend_db}?sslmode=disable
       PG_SCHEMA: notification
       PORT: 8088
       # Session + RBAC guard: sessions come from identity, permissions from authorization.
@@ -462,6 +496,9 @@ services:
       WEBHOOK_URL: "${WEBHOOK_URL:-}"
       WEBHOOK_SECRET: "${WEBHOOK_SECRET:-}"
       WEBHOOK_TIMEOUT_SECONDS: "${WEBHOOK_TIMEOUT_SECONDS:-5}"
+      # Push móvil por Expo para toda alerta; PUSH_ENABLED=false lo apaga.
+      PUSH_ENABLED: "${PUSH_ENABLED:-true}"
+      EXPO_PUSH_ACCESS_TOKEN: "${EXPO_PUSH_ACCESS_TOKEN:-}"
     ports:
       - "${BIND_IP:-127.0.0.1}:8088:8088"
     extra_hosts:
@@ -489,8 +526,8 @@ services:
   # ──────────────────────────────────────────────────────────────
   ms-quality:
     build:
-      context: ./09-ms-quality
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: 09-ms-quality/Dockerfile
     image: faceattend/ms-quality:latest
     container_name: faceattend-ms-quality
     mem_limit: 256m
@@ -501,7 +538,7 @@ services:
       kafka:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-faceattend_db}
+      DATABASE_URL: postgres://quality_app:${QUALITY_DB_PASSWORD:?QUALITY_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@postgres:5432/${POSTGRES_DB:-faceattend_db}
       PG_SCHEMA: quality
       PORT: 8089
       # Session + RBAC guard: sessions come from identity, permissions from authorization.
@@ -554,9 +591,24 @@ services:
         condition: service_healthy
       ms-quality:
         condition: service_healthy
+    # Kong cannot read env vars in declarative config: render the CORS allow-list
+    # (KONG_CORS_ORIGINS, comma-separated origins) into a copy, then start Kong.
+    # Each origin is validated so nothing else can be injected into the YAML.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        out=""
+        for o in $$(printf '%s' "$${KONG_CORS_ORIGINS:?KONG_CORS_ORIGINS is required}" | tr ',' ' '); do
+          printf '%s' "$$o" | grep -Eq '^https?://[A-Za-z0-9.-]+(:[0-9]+)?$$' || { echo "invalid CORS origin: $$o" >&2; exit 1; }
+          out="$${out:+$$out, }\"$$o\""
+        done
+        sed "s#\"__CORS_ORIGINS__\"#$$out#g" /kong/kong.yml > /tmp/kong.yml
+        exec /docker-entrypoint.sh kong docker-start
     environment:
       KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_DECLARATIVE_CONFIG: /tmp/kong.yml
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
@@ -573,9 +625,19 @@ services:
       KONG_DNS_STALE_TTL: '0'
       # Lets the pre-function token check call identity through resty.http.
       KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
+      # Real client IP behind Caddy (and the Docker NAT in dev): identity limits
+      # failed logins per IP using the X-Real-IP that Kong sets from this.
+      KONG_TRUSTED_IPS: "172.16.0.0/12,10.0.0.0/8,192.168.0.0/16"
+      KONG_REAL_IP_HEADER: X-Forwarded-For
+      KONG_REAL_IP_RECURSIVE: "on"
+      # Browser origins allowed by CORS. Production must list its real web
+      # domains (docker-compose.neon-overrides.yml makes it mandatory there).
+      KONG_CORS_ORIGINS: ${KONG_CORS_ORIGINS:-http://localhost:8090,http://127.0.0.1:8090,http://localhost:8081,http://localhost:19006}
     ports:
-      - "0.0.0.0:${KONG_PROXY_PORT:-8000}:8000"
-      - "${BIND_IP:-127.0.0.1}:${KONG_ADMIN_PORT:-8001}:8001"
+      # Dev: 0.0.0.0 so phones on the LAN reach the API. Production sets
+      # KONG_PROXY_BIND_IP=127.0.0.1: Caddy reaches Kong over the Docker network.
+      - "${KONG_PROXY_BIND_IP:-0.0.0.0}:${KONG_PROXY_PORT:-8000}:8000"
+      - "127.0.0.1:${KONG_ADMIN_PORT:-8001}:8001"
     volumes:
       - ./99-api-gateway/kong/kong.yml:/kong/kong.yml:ro
     networks:
@@ -603,5 +665,6 @@ networks:
 
 volumes:
   mongo_data:
+  minio_data:
   redis_data:
   kafka_data:

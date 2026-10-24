@@ -1,0 +1,37 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-013-create-data-processing-consent-table
+      author: FaceAttendEDU
+      splitStatements: false
+      comment: >-
+        Proof of the data-processing authorization required by Ley 1581 de 2012 (arts. 9 and 17-b):
+        one row per acceptance, with the privacy-policy version, the date, whether the holder also
+        authorized the (optional, art. 6-a) processing of biometric data, the channel (self = the
+        holder, assisted = staff with the holder present) and the revocation of the biometric part.
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE identity.data_processing_consent (
+                consent_id UUID NOT NULL,
+                person_id UUID NOT NULL,
+                policy_version VARCHAR(20) NOT NULL,
+                accepted_at TIMESTAMP NOT NULL,
+                biometric_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+                biometric_revoked_at TIMESTAMP NULL,
+                channel VARCHAR(10) NOT NULL,
+                recorded_by UUID NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL,
+                updated_by UUID NULL,
+                deleted_by UUID NULL,
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT data_processing_consent_pkey PRIMARY KEY (consent_id),
+                CONSTRAINT fk_consent_person FOREIGN KEY (person_id) REFERENCES identity.person (person_id) ON DELETE CASCADE,
+                CONSTRAINT ck_consent_channel CHECK (channel IN ('self', 'assisted'))
+              );
+              CREATE INDEX idx_consent_person_accepted ON identity.data_processing_consent (person_id, accepted_at DESC);
+      rollback:
+        - sql:
+            sql: DROP TABLE IF EXISTS identity.data_processing_consent;

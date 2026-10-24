@@ -23,8 +23,8 @@ import LoadingView from "./src/view/LoadingView";
 
 // Wrapper interno para acceder al contexto de idioma
 function AppContent() {
-    const { isPreparingTranslations, checkAndPrepareTranslations } = useLanguageContext();
-    
+    const { t, isLoading } = useLanguageContext();
+
     // Obtener configuración dinámica para las notificaciones
     const config = getInstitutionConfig();
 
@@ -33,15 +33,9 @@ function AppContent() {
         console.log("🔗 Navigation ready with deep linking enabled");
     };
 
-    // Callback cuando cambia la pantalla/ruta
-    const onNavigationStateChange = async () => {
-        // Marcar que hubo navegación para que LanguageContext verifique
-        await checkAndPrepareTranslations();
-    };
-
-    // FLUJO ALTERNATIVO: LoadingView O AppContent, no ambos
-    if (isPreparingTranslations) {
-        return <LoadingView message="Cargando..." />;
+    // Evita un parpadeo en español mientras se lee el idioma guardado.
+    if (isLoading) {
+        return <LoadingView message={t("Cargando...")} />;
     }
 
     return (
@@ -56,29 +50,28 @@ function AppContent() {
                     <NavigationContainer
                         linking={linkingConfig}
                         onReady={onReady}
-                        onStateChange={onNavigationStateChange}
                         fallback={<></>}
                         documentTitle={{
                             formatter: (options, route) => {
                                 const routeTitles = {
-                                    'FaceAttendEDU': 'FaceAttend EDU',
-                                    'FaceAttendEDU-Login': 'Iniciar Sesión | FaceAttend EDU',
-                                    'FaceAttendEDU-Register': 'Registrarse | FaceAttend EDU',
-                                    'Dashboard': 'Dashboard | FaceAttend EDU',
-                                    'Users': 'Usuarios | FaceAttend EDU',
-                                    'Courses': 'Cursos | FaceAttend EDU',
-                                    'Environments': 'Ambientes | FaceAttend EDU',
-                                    'Reports': 'Reportes | FaceAttend EDU',
-                                    'Schools': 'Escuelas | FaceAttend EDU',
-                                    'SchoolInfo': 'Información de la sede | FaceAttend EDU',
-                                    'History': 'Historial | FaceAttend EDU',
-                                    'Justifications': 'Justificaciones | FaceAttend EDU',
-                                    'Academic': 'Sección académica | FaceAttend EDU',
-                                    'Contacts': 'Contactos | FaceAttend EDU',
-                                    'Biometrics': 'Biometría | FaceAttend EDU',
-                                    'Settings': 'Configuración | FaceAttend EDU',
+                                    'FaceAttendEDU-Login': 'Iniciar Sesión',
+                                    'FaceAttendEDU-Register': 'Registrarse',
+                                    'Dashboard': 'Dashboard',
+                                    'Users': 'Usuarios',
+                                    'Courses': 'Cursos',
+                                    'Environments': 'Ambientes',
+                                    'Reports': 'Reportes',
+                                    'Schools': 'Escuelas',
+                                    'SchoolInfo': 'Información de la sede',
+                                    'History': 'Historial',
+                                    'Justifications': 'Justificaciones',
+                                    'Academic': 'Sección académica',
+                                    'Contacts': 'Contactos',
+                                    'Biometrics': 'Biometría',
+                                    'Settings': 'Configuración',
                                 };
-                                return routeTitles[route?.name] || 'FaceAttend EDU';
+                                const title = routeTitles[route?.name];
+                                return title ? `${t(title)} | FaceAttend EDU` : 'FaceAttend EDU';
                             }
                         }}
                     >

@@ -15,6 +15,10 @@ class AuthTokenFilterTest {
     void filingJustificationsAndDocumentsRequiresRequestPermission() {
         assertEquals("attendance.justification:request", AuthTokenFilter.requiredPermission("POST", "/api/v1/justifications"));
         assertEquals("attendance.justification:request", AuthTokenFilter.requiredPermission("POST", "/api/v1/supporting-documents"));
+        // Uploading the file itself: the apprentice who filed the justification must be able to.
+        assertEquals("attendance.justification:request", AuthTokenFilter.requiredPermission("POST", "/api/v1/justifications/7/documents"));
+        // Opening it: any reader in scope (reviewer or owner).
+        assertEquals("attendance.record:read", AuthTokenFilter.requiredPermission("GET", "/api/v1/supporting-documents/3/content"));
     }
 
     @Test

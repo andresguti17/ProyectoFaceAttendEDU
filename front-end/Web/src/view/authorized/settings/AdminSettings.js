@@ -11,6 +11,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card } from "../../components/common";
 import { useAuth } from "../../../context/AuthContext";
+import { syncAcademicPeriodFromSettings } from "../../../services/api/periodSync";
 import { pushInstitutionConfig, loadBackendOverrides, parseSetting } from "../../../services/api/settingsPersistence";
 import { hasSuperAdminRole } from "../../../core/utils/backendRoles";
 import { useResponsive } from "../../components/hooks/useResponsive";
@@ -46,7 +47,11 @@ import {
 } from "./sections";
 import { FutureNotice } from "./sections/FutureNotice";
 import {
+    calendarPeriodDates,
+    describePeriod,
     getCurrentPeriod,
+    normalizeAcademicPeriodType,
+    validatePeriodDates,
 } from "../../../core/constants/academicPeriods";
 import {
     getInstitutionConfig,
@@ -107,10 +112,16 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
     } = useEditableConfig(initialConfig, {
         onSave: async (cfg) => {
             // Transformar sessionTime a número antes de guardar
+            if (validatePeriodDates(cfg.periodStartDate, cfg.periodEndDate, cfg.academicPeriodType)) {
+                return false;
+            }
             const merged = {
                 ...cfg,
+                academicPeriodType: normalizeAcademicPeriodType(cfg.academicPeriodType),
+                periodStartDate: cfg.periodStartDate || null,
+                periodEndDate: cfg.periodEndDate || null,
                 confidenceThreshold: cfg.confidence,
-                sessionTime: parseInt(cfg.sessionTime),
+                sessionTime: Number.parseInt(cfg.sessionTime),
             };
             const success = updateInstitutionConfig(merged);
             if (!success) return false;
@@ -120,6 +131,8 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                 await pushInstitutionConfig(user?.schoolId ?? null, merged, {
                     canWriteSecurity: hasSuperAdminRole(user?.roles),
                 });
+                // Académico debe reflejar el mismo período vigente que Configuración.
+                await syncAcademicPeriodFromSettings(user?.schoolId ?? null, merged);
                 return true;
             } catch {
                 return false;
@@ -164,6 +177,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                 for (const key of keys) {
                     merged[key] = parseSetting(overrides[key], initialConfig[key]);
                 }
+                merged.academicPeriodType = normalizeAcademicPeriodType(merged.academicPeriodType);
                 if (merged.sessionTime != null) merged.sessionTime = String(merged.sessionTime);
                 reset(merged);
             })
@@ -182,6 +196,33 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
     const automaticPeriod = useMemo(() => {
         return getCurrentPeriod(config.academicPeriodType);
     }, [config.academicPeriodType, dateFormat]); // Añadir dateFormat como dependencia
+
+    // Período según lo que se está editando (no lo ya guardado): tipo + fechas del borrador.
+    const draftPeriod = useMemo(
+        () => describePeriod(config.periodStartDate, config.periodEndDate, config.academicPeriodType),
+        [config.periodStartDate, config.periodEndDate, config.academicPeriodType]
+    );
+
+    // Cambiar el tipo en modo automático (o sin fechas) recalcula las fechas con la división
+    // del año del nuevo tipo; en manual se conservan y el selector avisa si ya no encajan.
+    const handlePeriodTypeChange = (value) => {
+        updateConfig("academicPeriodType", value);
+        if (config.isAutomaticPeriod || (!config.periodStartDate && !config.periodEndDate)) {
+            const { startIso, endIso } = calendarPeriodDates(value);
+            updateConfig("periodStartDate", startIso);
+            updateConfig("periodEndDate", endIso);
+        }
+    };
+
+    // Pasar a automático sin fechas las completa con el período del calendario.
+    const handlePeriodModeChange = (automatic) => {
+        updateConfig("isAutomaticPeriod", automatic);
+        if (automatic && !config.periodStartDate && !config.periodEndDate) {
+            const { startIso, endIso } = calendarPeriodDates(config.academicPeriodType);
+            updateConfig("periodStartDate", startIso);
+            updateConfig("periodEndDate", endIso);
+        }
+    };
 
     const periodExpiration = useMemo(() => {
         return checkPeriodExpiration();
@@ -205,7 +246,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         institutionSlug={config.institutionSlug}
                         onSlugChange={(value) => updateConfig("institutionSlug", value)}
                         academicPeriodType={config.academicPeriodType}
-                        onPeriodTypeChange={(value) => updateConfig("academicPeriodType", value)}
+                        onPeriodTypeChange={handlePeriodTypeChange}
                         isSmall={isSmall}
                         nameLocked={user?.schoolId != null}
                     />,
@@ -222,9 +263,11 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         periodEndDate={config.periodEndDate}
                         onEndDateChange={(value) => updateConfig("periodEndDate", value)}
                         isAutomaticPeriod={config.isAutomaticPeriod}
-                        onModeChange={(value) => updateConfig("isAutomaticPeriod", value)}
+                        onModeChange={handlePeriodModeChange}
                         academicPeriodType={config.academicPeriodType}
                         automaticPeriod={automaticPeriod}
+                        currentPeriod={draftPeriod}
+                        hasSchool={user?.schoolId != null}
                         periodExpiration={periodExpiration}
                         showExpirationAlert={showExpirationAlert}
                         onDismissExpiration={() => setShowExpirationAlert(false)}
@@ -236,6 +279,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
                         periodEndDate={config.periodEndDate}
                         isAutomaticPeriod={config.isAutomaticPeriod}
                         automaticPeriod={automaticPeriod}
+                        currentPeriod={draftPeriod}
                         currentLanguageLabel={currentLanguage?.labelES}
                         dateFormat={config.dateFormat}
                         timeFormat24h={config.timeFormat24h}

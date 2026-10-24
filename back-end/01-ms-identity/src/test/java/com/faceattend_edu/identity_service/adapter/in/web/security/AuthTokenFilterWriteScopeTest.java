@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.util.ReflectionTestUtils;
+import com.faceattend_edu.shared.auth.SessionAuthClient;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -69,7 +70,8 @@ class AuthTokenFilterWriteScopeTest {
         };
         ObjectProvider<LoadPersonPort> personProvider =
                 new StaticListableBeanFactory(Map.of("persons", persons)).getBeanProvider(LoadPersonPort.class);
-        AuthTokenFilter filter = new AuthTokenFilter(userProvider, resolverProvider, personProvider);
+        AuthTokenFilter filter = new AuthTokenFilter(userProvider, resolverProvider, personProvider,
+                "http://identity", "http://authorization");
         RestTemplate rest = mock(RestTemplate.class);
         when(rest.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(Map.class))).thenAnswer(inv -> {
             String url = inv.getArgument(0);
@@ -80,7 +82,8 @@ class AuthTokenFilterWriteScopeTest {
         });
         when(rest.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(List.class)))
                 .thenReturn(ResponseEntity.ok(List.of(Map.of("roleName", "Administrador"))));
-        ReflectionTestUtils.setField(filter, "restTemplate", rest);
+        ReflectionTestUtils.setField(filter, "sessionAuth",
+                new SessionAuthClient(rest, "http://identity", "http://authorization"));
         return filter;
     }
 

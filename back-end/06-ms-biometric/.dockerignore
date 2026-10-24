@@ -1,0 +1,8 @@
+# COPY . . in the Dockerfile must not carry local secrets, virtualenvs or caches into the image.
+.env
+.env.*
+.venv
+__pycache__
+**/__pycache__
+.pytest_cache
+.git

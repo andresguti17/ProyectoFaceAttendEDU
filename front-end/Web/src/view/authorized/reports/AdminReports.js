@@ -5,7 +5,6 @@
 //  Maneja tres vistas según el parámetro section:
 //  - section=null/"all": Lista de estudiantes en riesgo
 //  - section="historicos": Historial completo de asistencias
-//  - section="sanciones": Registro de sanciones aplicadas
 // ============================================================
 
 import React, { useState, useMemo, useRef } from "react";
@@ -21,14 +20,12 @@ import { useAttendanceColor } from "../../components/common/badges/StatusBadge";
 import { getAttendanceThresholds, getAtRiskStudents } from "../../../models/data/userDerivedData";
 import { getInstitutionConfig } from "../../../core/config/institutionConfig";
 import { useAppData } from "../../../context/AppDataContext";
-import { usePushNotification } from "../../components/common/feedback/PushNotification";
-import { HistoricosSection, SancionesSection } from "./sections";
-import { createBulkSanctions, hasActiveSanctions } from "../../../models/data/sanctionsData";
+import { HistoricosSection } from "./sections";
 import { getRelativeTime } from "../../../core/utils/dates";
 
 // ── Componente interno StudentRow (adaptado de AtRiskStudentsList) ────
 
-function StudentRow({ student, index, isLast, onPress, onNotify }) {
+function StudentRow({ student, index, isLast, onPress }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
@@ -288,30 +285,7 @@ function StudentRow({ student, index, isLast, onPress, onNotify }) {
                 })()}
             </View>
 
-            {/* Botón de notificación individual con borde */}
-            <TouchableOpacity
-                onPress={(e) => {
-                    e.stopPropagation();
-                    onNotify(student);
-                }}
-                style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    backgroundColor: c.background.surface,
-                    borderWidth: 2,
-                    borderColor: c.status.danger,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    shadowColor: c.status.danger,
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.15,
-                    shadowRadius: 4,
-                    elevation: 3,
-                }}
-            >
-                <Feather name="bell" size={18} color={c.status.danger} />
-            </TouchableOpacity>
+
             
             <Feather name="chevron-right" size={22} color={c.text.secondary} />
         </TouchableOpacity>
@@ -324,9 +298,7 @@ export function AdminReports({ section, courseFilter }) {
     const { isSmall } = useResponsive();
     const { theme } = useTheme();
     const { t } = useTranslation();
-    const permissions = useRolePermissions();
     const appData = useAppData();
-    const pushNotification = usePushNotification();
     const c = theme.colors;
 
     // Estado y animación para el botón de recargar
@@ -351,10 +323,7 @@ export function AdminReports({ section, courseFilter }) {
         const config = getInstitutionConfig();
         const atRiskStudents = getAtRiskStudents(appData.students, config.minAttendance);
         
-        // Filtrar usuarios que ya tienen sanciones activas
-        const pendingStudents = atRiskStudents.filter(student => 
-            !hasActiveSanctions(student.studentId)
-        );
+        const pendingStudents = atRiskStudents;
         
         // Formatear estudiantes para StudentRow
         const formattedStudents = pendingStudents.map(student => {
@@ -389,39 +358,6 @@ export function AdminReports({ section, courseFilter }) {
 
     // ── Handlers (ANTES de cualquier return) ──────────────
     
-    // Handler para notificar estudiantes
-    const handleNotifyAll = React.useCallback(() => {
-        const students = studentsData.students;
-        if (students.length === 0) return;
-        
-        // Crear sanciones en lote para todos los estudiantes
-        createBulkSanctions(students);
-        
-        // Mostrar notificación
-        pushNotification.success(
-            'Notificación enviada', 
-            `Se han notificado ${students.length} estudiantes en riesgo`
-        );
-        
-        // Forzar recálculo inmediato
-        setRefreshTrigger(prev => prev + 1);
-    }, [studentsData.students, pushNotification]);
-
-    // Handler para notificar un estudiante individual
-    const handleNotifyOne = React.useCallback((student) => {
-        // Crear sanción individual
-        createBulkSanctions([student]);
-        
-        // Mostrar notificación
-        pushNotification.success(
-            'Notificación enviada', 
-            `Se ha notificado a ${student.name}`
-        );
-        
-        // Forzar recálculo inmediato
-        setRefreshTrigger(prev => prev + 1);
-    }, [pushNotification]);
-
     // Handler para ver detalles de estudiante
     const handleViewStudent = React.useCallback((studentId) => {
         console.log("Ver detalles:", studentId);
@@ -462,7 +398,6 @@ export function AdminReports({ section, courseFilter }) {
 
     // ── Determinar qué sección mostrar (DESPUÉS de todos los hooks) ──
     const isHistoricos = section === "historicos";
-    const isSanciones = section === "sanciones";
 
     // ── Renderizar sección de Históricos ──────────────────
     if (isHistoricos) {
@@ -598,27 +533,6 @@ export function AdminReports({ section, courseFilter }) {
         );
     }
 
-    // ── Renderizar sección de Sanciones ───────────────────
-    if (isSanciones) {
-        return (
-            <>
-                <PageHeader
-                    title={t("Sanciones")}
-                    subtitle={t("Registro de sanciones y alertas aplicadas")}
-                />
-                <ScrollView
-                    contentContainerStyle={{
-                        padding: isSmall ? 16 : 24,
-                        gap: 16,
-                    }}
-                    showsVerticalScrollIndicator={false}
-                >
-                    <SancionesSection />
-                </ScrollView>
-            </>
-        );
-    }
-
     // ── Vista principal: Estudiantes en riesgo ────────────
 
     // Mostrar loader mientras carga
@@ -634,32 +548,22 @@ export function AdminReports({ section, courseFilter }) {
     return (
         <>
             <PageHeader
-                title={t("Reportes y Sanciones")}
-                subtitle={`${studentCount} ${studentLabel} para reportar o notificar`}
+                title={t("Reportes")}
+                subtitle={`${studentCount} ${studentLabel} ${t("en riesgo por asistencia")}`}
                 actions={
-                    studentCount > 0 ? (
-                        permissions.canNotifyAll && (
-                            <Button
-                                variant="danger"
-                                size="sm"
-                                onPress={handleNotifyAll}
-                                leftIcon={<Feather name="bell" size={16} color={c.status.errorText} />}
-                            >
-                                {t("Notificar Todos")}
-                            </Button>
-                        )
-                    ) : (
-                        <IconButton
-                            variant="secondary"
-                            onPress={handleReload}
-                            disabled={isReloading}
-                            accessibilityLabel={t("Recargar")}
-                            icon={(color) => (
-                                <Animated.View style={{ transform: [{ rotate: rotateInterpolation }] }}>
-                                    <Feather name="refresh-cw" size={18} color={color} />
-                                </Animated.View>
-                            )}
-                        />
+                    <IconButton
+                        variant="secondary"
+                        onPress={handleReload}
+                        disabled={isReloading}
+                        accessibilityLabel={t("Recargar")}
+                        icon={(color) => (
+                            <Animated.View style={{ transform: [{ rotate: rotateInterpolation }] }}>
+                                <Feather name="refresh-cw" size={18} color={color} />
+                            </Animated.View>
+                        )}
+                    />
+                }
+            />
                     )
                 }
             />
@@ -687,7 +591,6 @@ export function AdminReports({ section, courseFilter }) {
                                     index={index} 
                                     isLast={index === studentCount - 1} 
                                     onPress={handleViewStudent}
-                                    onNotify={handleNotifyOne}
                                 />
                             ))}
                             

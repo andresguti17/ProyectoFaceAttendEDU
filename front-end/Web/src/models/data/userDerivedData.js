@@ -91,10 +91,10 @@ export function getAtRiskStudents(students, minAttendanceThreshold = 80) {
                     }
                     consecutiveAbsences++;
                 }
-            } else {
-                // Fallback: estimar basándose en días desde última asistencia
-                consecutiveAbsences = daysSinceLastAttendance;
             }
+            // Sin historial no se inventan faltas consecutivas a partir de días de
+            // calendario: fines de semana y festivos sin clase marcaban como
+            // reportable a alguien que cumple la asistencia mínima configurada.
             
             // ══════════════════════════════════════════════════════
             // CÁLCULO DE ESTADÍSTICAS
@@ -114,7 +114,15 @@ export function getAtRiskStudents(students, minAttendanceThreshold = 80) {
             // DÍAS HASTA SANCIÓN (LÓGICA REAL)
             // ══════════════════════════════════════════════════════
             // Calcular cuántos días faltan para alcanzar el umbral de días totales
-            const daysRemaining = Math.max(0, daysUntilSanction - daysSinceLastAttendance);
+            // Los días corridos desde la última asistencia solo cuentan si hay una
+            // señal real de inasistencia: asistencia bajo el mínimo configurado o
+            // faltas consecutivas en el historial. Quien cumple el mínimo y no
+            // acumula faltas no corre hacia la sanción por un período sin clases.
+            const hasAbsenceSignal =
+                attendanceRate < minAttendanceThreshold || consecutiveAbsences > 0;
+            const daysRemaining = hasAbsenceSignal
+                ? Math.max(0, daysUntilSanction - daysSinceLastAttendance)
+                : daysUntilSanction;
             
             // Verificar si ha superado el umbral de días consecutivos
             const hasExceededConsecutiveDays = consecutiveAbsences >= consecutiveDaysForSanction;
@@ -132,10 +140,10 @@ export function getAtRiskStudents(students, minAttendanceThreshold = 80) {
             const criticalDaysThreshold = Math.ceil(daysUntilSanction / 2);
             
             if (
-                attendanceRate < thresholds.danger || 
+                attendanceRate < thresholds.danger ||
                 hasExceededConsecutiveDays ||
-                daysRemaining === 0 ||
-                (daysRemaining > 0 && daysRemaining <= criticalDaysThreshold)
+                (hasAbsenceSignal &&
+                    (daysRemaining === 0 || (daysRemaining > 0 && daysRemaining <= criticalDaysThreshold)))
             ) {
                 riskLevel = "high";
             } else if (attendanceRate < thresholds.warning) {

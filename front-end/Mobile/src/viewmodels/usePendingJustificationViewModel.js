@@ -1,9 +1,11 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
+import {Alert} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import {useTheme} from '../view/components/common/ThemeContext';
 import {getCurrentUserRole, getCurrentUser} from '../services/UserService';
 import {ActorService} from '../services/ActorService';
 import {normalizeBackendRole} from '../utils/getHighestRole';
+import {openSupportingDocument, DOCUMENT_ERRORS} from '../services/supportingDocumentViewer';
 import {JustificationService, getJustificationTypeMap, getAcademicActorMap, getAttendanceRecordCached, getPersonCached, mapConcurrent} from '../services/JustificationService';
 
 function unwrap(data) {
@@ -124,6 +126,23 @@ export const usePendingJustificationViewModel = () => {
                 const actor = actorMap[String(ar?.academic_actor_id)] || {};
                 const person = await getPersonCached(actor.person_id);
 
+                // Soporte guardado en MinIO (el primero, si hay varios); sin él, "sin adjunto".
+                let attachment = null;
+                try {
+                    const docs = await JustificationService.getDocuments(jd.justification_id);
+                    const doc = docs?.[0];
+                    if (doc) {
+                        attachment = {
+                            id: doc.supporting_document_id,
+                            name: doc.file_name,
+                            mime: doc.mime_type,
+                            size: doc.size_bytes ? `${Math.max(1, Math.round(doc.size_bytes / 1024))} KB` : '',
+                        };
+                    }
+                } catch {
+                    attachment = null;
+                }
+
                 const statusMap = { Pending: 'pending', Approved: 'approved', Rejected: 'rejected' };
                 const jType = typeMap[jd.justification_type_id] || {};
 
@@ -137,7 +156,7 @@ export const usePendingJustificationViewModel = () => {
                     date: jd.submitted_at ? jd.submitted_at.split('T')[0] : '',
                     time: null,
                     description: jd.reason || '',
-                    attachment: null,
+                    attachment,
                     submittedAt: jd.submitted_at || '',
                     status: statusMap[jd.review_status] || 'pending',
                 };
@@ -263,7 +282,20 @@ export const usePendingJustificationViewModel = () => {
             ? {bg: colors.categoryBackground, text: colors.categoryText}
             : {bg: colors.statusPresente, text: colors.statusTextPresente}, [colors]);
 
+    const openAttachment = useCallback(async (attachment) => {
+        if (!attachment?.id) return;
+        try {
+            await openSupportingDocument(attachment);
+        } catch (e) {
+            Alert.alert(
+                t('consultJustify.attachmentTitle'),
+                e?.code === DOCUMENT_ERRORS.NO_VIEWER ? t('consultJustify.noDocumentViewer') : t('consultJustify.documentUnavailable'),
+            );
+        }
+    }, [t]);
+
     return {
+        openAttachment,
         filtered, selectedItem, counts, activeFilter, userRole, loading, error, reload,
         loadingRole: !userRole,
         isModalVisible, openDetail, closeDetail,

@@ -33,6 +33,10 @@ spring:
     # Las migraciones viven en ../database/ (fuente canonica); el servicio no auto-migra.
     enabled: false
 faceattend:
+  # Personal data at rest (Ley 1581). Keys only from the environment: base64 of 32 random bytes.
+  pii:
+    encryption-key: ${PII_ENCRYPTION_KEY:}
+    hash-key: ${PII_HASH_KEY:}
   auth:
     identity-url: http://localhost:8081
     authorization-url: http://localhost:8082

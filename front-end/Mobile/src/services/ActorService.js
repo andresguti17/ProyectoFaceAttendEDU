@@ -31,7 +31,7 @@ export const ActorService = {
 
   // Backend: GET /api/v1/academic-actors no filtra; existe la ruta anidada
   // GET /api/v1/schools/:schoolId/actors. actorType: 'STUDENT' (1) | 'INSTRUCTOR' (2).
-  getBySchool: async (schoolId, actorType = null) => {
+  getBySchool: async (schoolId, actorType) => {
     const data = await request({ method: GET, url: `api/v1/schools/${schoolId}/actors`, requiresAuth: false });
     const typeId = actorType === 'STUDENT' ? 1 : actorType === 'INSTRUCTOR' ? 2 : null;
     return unwrap(data)

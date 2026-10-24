@@ -8,6 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {removeToken, saveToken} from "../storage/TokenStorage";
 import {getHighestRole} from "../utils/getHighestRole";
 import AuthResponse from "../models/identity/AuthResponse";
+import {ConsentService} from "../services/consentService";
 
 const MAX_FAILED_ATTEMPTS = 3;
 
@@ -24,6 +25,10 @@ export function useLoginViewModel({onLogin}) {
     const [codeStep, setCodeStep] = useState(false);
     const [code, setCode] = useState("");
     const [maskedEmail, setMaskedEmail] = useState("");
+
+    // Contraseña inicial: la app no entra hasta cambiarla (el gateway también
+    // rechaza escrituras mientras la sesión tenga mustChangePassword).
+    const [pendingLogin, setPendingLogin] = useState(null);
 
     const {t} = useTranslation();
     const {loadThemeForRole} = useTheme();
@@ -69,6 +74,16 @@ export function useLoginViewModel({onLogin}) {
         setErrorWithTimestamp(err?.message || t("httpErrors.unknown"));
     };
 
+    // Ley 1581: la casilla de términos es la aceptación del aviso; se registra en
+    // identity (versión + fecha). Un fallo no impide entrar: se reintenta en el próximo login.
+    const recordConsent = async (personId) => {
+        try {
+            await ConsentService.ensureAccepted(personId);
+        } catch (e) {
+            console.warn('No se pudo registrar la aceptación del aviso de privacidad', e?.message);
+        }
+    };
+
     // Con la sesión ya emitida (directa o tras el código): guarda el perfil, el tema y avisa a la app.
     const finishLogin = async (authResponse) => {
         if (!authResponse || !authResponse.token) {
@@ -102,9 +117,25 @@ export function useLoginViewModel({onLogin}) {
         await loadThemeForRole(role);
         await restoreLanguageForRole(role);
 
+        if (authResponse.mustChangePassword) {
+            // El aviso se registra después del cambio: hasta entonces el gateway rechaza escrituras.
+            setPendingLogin({role, token: authResponse.token, personId: userData?.person_id});
+            return;
+        }
+
+        await recordConsent(userData?.person_id);
+
         if (onLogin) {
             onLogin(role, authResponse.token);
         }
+    };
+
+    const onForcedPasswordChanged = async () => {
+        const pending = pendingLogin;
+        setPendingLogin(null);
+        if (!pending) return;
+        await recordConsent(pending.personId);
+        if (onLogin) onLogin(pending.role, pending.token);
     };
 
     const submit = async () => {
@@ -189,5 +220,6 @@ export function useLoginViewModel({onLogin}) {
         setEmail, setPassword, setTerms,
         submit, clearError, resetFailedAttempts,
         codeStep, code, maskedEmail, setCode, submitCode, cancelCode,
+        mustChangePassword: pendingLogin !== null, onForcedPasswordChanged,
     };
 }

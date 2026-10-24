@@ -22,37 +22,42 @@ const calls = () => request.mock.calls.map(([c]) => `${c.method} ${c.url}`);
 beforeEach(() => request.mockReset());
 
 describe('createAccount', () => {
-  it('creates person, user, role and academic actor in order with camelCase bodies', async () => {
-    route([
-      ['POST api/v1/persons', { personId: 'p-1' }],
-      ['POST api/v1/users', { userId: 'u-1' }],
-      ['GET api/v1/roles', ROLES],
-      ['POST api/v1/users/u-1/roles', null],
-      ['POST api/v1/academic-actors', { academicActorId: 9 }],
-    ]);
+  it('sends one provisioning call with person, role and academic actor', async () => {
+    route([['POST api/v1/users/provision', { userId: 'u-1', personId: 'p-1', academicActorId: 9 }]]);
 
     const result = await createAccount({
       name: 'Ana', lastName: 'Ruiz', documentNumber: '1001', email: '', phone: null,
       username: 'ana.ruiz', password: 'Secret1!x', roleName: 'Aprendiz', schoolId: '3',
+      privacyAccepted: true, biometricAccepted: true,
     });
 
     expect(result).toEqual({ userId: 'u-1', personId: 'p-1' });
-    expect(calls()).toEqual([
-      'POST api/v1/persons', 'POST api/v1/users', 'GET api/v1/roles', 'POST api/v1/users/u-1/roles', 'POST api/v1/academic-actors',
-    ]);
-    expect(request.mock.calls[0][0].data).toEqual({ documentNumber: '1001', name: 'Ana', lastName: 'Ruiz' });
-    expect(request.mock.calls[3][0].data).toEqual({ roleId: 3 });
-    expect(request.mock.calls[4][0].data).toEqual({ personId: 'p-1', actorTypeId: 1, schoolId: 3, actorCode: '1001' });
+    expect(calls()).toEqual(['POST api/v1/users/provision']);
+    expect(request.mock.calls[0][0].data).toEqual({
+      person: { documentNumber: '1001', name: 'Ana', lastName: 'Ruiz' },
+      username: 'ana.ruiz',
+      password: 'Secret1!x',
+      roleName: 'Aprendiz',
+      consent: { policyVersion: '2026-10', biometricAccepted: true },
+      academicActor: { actorTypeId: 1, schoolId: 3, actorCode: '1001' },
+    });
   });
 
-  it('skips the academic actor for administrators and names the failing step', async () => {
-    route([
-      ['POST api/v1/persons', { personId: 'p-2' }],
-      ['POST api/v1/users', () => { throw new Error('username taken'); }],
-    ]);
+  it('sends no academic actor for administrators and surfaces the server error (nothing left half-created)', async () => {
+    route([['POST api/v1/users/provision', () => { throw new Error('username taken'); }]]);
 
-    await expect(createAccount({ name: 'A', lastName: 'B', documentNumber: '2', username: 'x', password: 'p', roleName: 'Administrador' }))
-      .rejects.toThrow('usuario: username taken');
+    await expect(createAccount({ name: 'A', lastName: 'B', documentNumber: '2', username: 'x', password: 'p', roleName: 'Administrador', privacyAccepted: true }))
+      .rejects.toThrow('username taken');
+    expect(request.mock.calls[0][0].data.academicActor).toBeUndefined();
+    expect(calls()).toEqual(['POST api/v1/users/provision']);
+  });
+});
+
+describe('createAccount without the privacy notice', () => {
+  it('is refused before any call (Ley 1581)', async () => {
+    await expect(createAccount({ name: 'A', lastName: 'B', documentNumber: '2', username: 'x', password: 'p', roleName: 'Aprendiz' }))
+      .rejects.toThrow();
+    expect(request).not.toHaveBeenCalled();
   });
 });
 

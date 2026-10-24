@@ -310,7 +310,7 @@ export function useAttendanceViewModel() {
                 setLoading(false);
             }
         };
-        init();
+        void init();
     }, [fetchAttendance, loadThemeForRole]);
 
     const roleLower = String(userRole || '').toLowerCase();

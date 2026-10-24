@@ -32,7 +32,7 @@ export function useAddJustificationViewModel() {
     // El backend acota registros y justificaciones a los actores del usuario.
     useEffect(() => {
         let active = true;
-        (async () => {
+        void (async () => {
             try {
                 const user = await getCurrentUser();
                 const actors = await ActorService.getByPerson(user?.personId);
@@ -110,20 +110,16 @@ export function useAddJustificationViewModel() {
                 justificationTypeId: type?.justification_type_id || null,
                 reason: description.trim(),
             });
-            // El soporte es obligatorio para aprobar (RN-33): se registra como
-            // documento de la justificación recién creada, igual que en web.
+            // El soporte es obligatorio para aprobar (RN-33): el archivo real se
+            // sube a la justificación recién creada, igual que en web.
             const justificationId = created?.justificationId;
             if (justificationId) {
-                const ext = String(selectedFile.name?.split('.').pop() || 'bin').toLowerCase();
-                const now = new Date();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                await JustificationService.createDocument({
-                    justificationId,
-                    fileName: selectedFile.name,
-                    storageUri: `justification-documents/${now.getFullYear()}/${month}/${Date.now()}.${ext}`,
-                    mimeType: selectedFile.mimeType || 'application/octet-stream',
-                    sizeBytes: selectedFile.size || 1,
-                });
+                try {
+                    await JustificationService.uploadDocument(justificationId, selectedFile);
+                } catch {
+                    showError(t('common.error'), t('justify.uploadError'), handleBack);
+                    return;
+                }
             }
             showSuccess(t('common.success'), t('justify.successMessage'), handleBack);
         } catch (error) {

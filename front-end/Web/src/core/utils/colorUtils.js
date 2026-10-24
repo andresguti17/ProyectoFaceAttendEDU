@@ -126,9 +126,9 @@ function oklchToHex(L, C, H) {
 export function hexToRgb(hex) {
     const cleanHex = hex.replace('#', '');
     return {
-        r: parseInt(cleanHex.slice(0, 2), 16),
-        g: parseInt(cleanHex.slice(2, 4), 16),
-        b: parseInt(cleanHex.slice(4, 6), 16),
+        r: Number.parseInt(cleanHex.slice(0, 2), 16),
+        g: Number.parseInt(cleanHex.slice(2, 4), 16),
+        b: Number.parseInt(cleanHex.slice(4, 6), 16),
     };
 }
 
@@ -489,9 +489,7 @@ export function extractPanelValues(hex) {
 // devuelve un veredicto completo para mostrar en la UI.
 
 export function evaluateColor(hex, t) {
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const [r, g, b] = Object.values(hexToRgb(hex)).map((channel) => channel / 255);
     const lin = (v) =>
         v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
     const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);

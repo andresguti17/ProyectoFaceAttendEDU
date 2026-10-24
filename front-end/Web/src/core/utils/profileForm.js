@@ -51,7 +51,7 @@ export function validateProfile(values, original, t = (s) => s) {
     if (trimmed(values.address).length > 255) e.address = t("La dirección no puede superar 255 caracteres");
 
     const birth = trimmed(values.birthDate);
-    if (birth && !DATE_RE.test(birth)) e.birthDate = t("Formato AAAA-MM-DD");
+    if (birth && !DATE_RE.test(birth)) e.birthDate = t("Fecha incompleta o inválida");
     else if (birth && !isRealPastDate(birth)) e.birthDate = t("La fecha de nacimiento no es válida");
 
     if (trimmed(values.bloodType) && !BLOOD_TYPES.includes(trimmed(values.bloodType))) {

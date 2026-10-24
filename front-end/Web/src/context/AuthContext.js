@@ -6,7 +6,7 @@
 //  Incluye gestión automática de timeout de sesión.
 //
 //  login() abre la sesión real contra ms-identity (POST /auth/login),
-//  guarda el token en localStorage con la forma compartida con Mobile
+//  guarda el token en sessionStorage con la forma compartida con Mobile
 //  { token, savedAt, expiresAt, email } y carga roles + perfil.
 //
 //  Uso:
@@ -20,6 +20,7 @@ import { useSessionTimeout } from "../core/hooks/useSessionTimeout";
 import { clearToken, getToken, saveToken, setUnauthorizedHandler } from "../api/apiClient";
 import { roleNamesFrom, toUiRole } from "../core/utils/backendRoles";
 import { authApi } from "../services/api/authApi";
+import { consentApi } from "../services/api/consentApi";
 import { loginErrorMessage, loginCodeErrorMessage } from "../core/utils/authErrors";
 
 // ── Roles del backend → roles de la UI ────────────────────────
@@ -42,7 +43,7 @@ const INTENDED_ROUTE_KEY = "@faceattend:intended_route";
 async function sessionGet() {
     if (Platform.OS === "web") {
         try {
-            return localStorage.getItem(SESSION_KEY);
+            return sessionStorage.getItem(SESSION_KEY);
         } catch {
             return null;
         }
@@ -54,7 +55,7 @@ async function sessionGet() {
 async function sessionSet(value) {
     if (Platform.OS === "web") {
         try {
-            localStorage.setItem(SESSION_KEY, value);
+            sessionStorage.setItem(SESSION_KEY, value);
         } catch {
             /* silent */
         }
@@ -67,7 +68,7 @@ async function sessionSet(value) {
 async function sessionRemove() {
     if (Platform.OS === "web") {
         try {
-            localStorage.removeItem(SESSION_KEY);
+            sessionStorage.removeItem(SESSION_KEY);
         } catch {
             /* silent */
         }
@@ -315,6 +316,13 @@ export function AuthProvider({ children }) {
 
             setIsLoadingAuth(false);
             setIsLoadingTimeoutFlag(false); // Marcar que ya terminamos de cargar
+        }).catch(() => {
+            // Lectura de almacenamiento/token fallida: arrancar sin sesión en vez de
+            // quedarse cargando para siempre.
+            setUser(null);
+            setSessionExpiredByTimeout(false);
+            setIsLoadingAuth(false);
+            setIsLoadingTimeoutFlag(false);
         });
     }, []);
 
@@ -380,6 +388,18 @@ export function AuthProvider({ children }) {
         // aplicacion mostraba las dos instituciones mezcladas.
         const school = personId ? await authApi.schoolOf(personId) : null;
 
+        // Ley 1581: sin aceptación del aviso vigente, AuthMiddleware lo muestra antes de entrar.
+        // Si identity no responde no se bloquea el ingreso (se vuelve a pedir en el próximo login).
+        let consentRequired = false;
+        if (personId) {
+            try {
+                const consent = await consentApi.get(personId);
+                consentRequired = !(consent?.accepted && consent?.upToDate);
+            } catch {
+                consentRequired = false;
+            }
+        }
+
         const sessionUser = {
             id: userId,
             personId,
@@ -395,6 +415,7 @@ export function AuthProvider({ children }) {
             avatar: null,
             // La cuenta aún usa la contraseña inicial: AuthMiddleware fuerza el cambio.
             mustChangePassword: session?.mustChangePassword === true,
+            consentRequired,
             // Código por correo al iniciar sesión (lo activa la propia persona en Seguridad).
             twoFactorEnabled: userDto?.twoFactorEnabled === true,
         };
@@ -481,6 +502,24 @@ export function AuthProvider({ children }) {
         return null;
     }, []);
 
+    // Aceptación del aviso de privacidad por el propio titular (Ley 1581). Devuelve
+    // null si salió bien o el mensaje de error.
+    const acceptPrivacy = useCallback(async ({ biometricAccepted = false } = {}) => {
+        if (!user?.personId) return "No se encontró la persona de la sesión";
+        try {
+            await consentApi.accept(user.personId, { biometricAccepted });
+        } catch (err) {
+            return err?.message || "No se pudo registrar la aceptación";
+        }
+        setUser((prev) => {
+            if (!prev) return prev;
+            const next = { ...prev, consentRequired: false };
+            sessionSet(JSON.stringify(next));
+            return next;
+        });
+        return null;
+    }, [user]);
+
     // Actualiza campos del usuario en sesión (p. ej. el correo tras editar el
     // perfil) en el estado y en el almacenamiento de sesión.
     const updateSessionUser = useCallback((patch) => {
@@ -558,10 +597,11 @@ export function AuthProvider({ children }) {
             logout,
             register,
             changePassword,
+            acceptPrivacy,
             updateSessionUser,
             sessionTimeout,
         }),
-        [user, isLoadingAuth, sessionExpiredByTimeout, isLoadingTimeoutFlag, intendedRoute, saveIntendedRoute, clearIntendedRoute, consumeIntendedRoute, login, verifyLoginCode, logout, register, changePassword, updateSessionUser, sessionTimeout]
+        [user, isLoadingAuth, sessionExpiredByTimeout, isLoadingTimeoutFlag, intendedRoute, saveIntendedRoute, clearIntendedRoute, consumeIntendedRoute, login, verifyLoginCode, logout, register, changePassword, acceptPrivacy, updateSessionUser, sessionTimeout]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

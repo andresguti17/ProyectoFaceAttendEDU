@@ -72,7 +72,7 @@ export { DEFAULT_ACADEMIC_PERIOD };
 export function getConfiguredAcademicPeriodType() {
     try {
         const config = getInstitutionConfig();
-        return config.academicPeriodType || DEFAULT_ACADEMIC_PERIOD;
+        return normalizeAcademicPeriodType(config.academicPeriodType);
     } catch (error) {
         return DEFAULT_ACADEMIC_PERIOD;
     }
@@ -131,6 +131,101 @@ export function getAcademicPeriodWeeks(periodType = DEFAULT_ACADEMIC_PERIOD) {
 export function isValidWeekCount(weeks, periodType = DEFAULT_ACADEMIC_PERIOD) {
     const config = getAcademicPeriodConfig(periodType);
     return weeks >= config.minWeeks && weeks <= config.maxWeeks;
+}
+
+const PERIOD_TYPE_ALIASES = {
+    annual: ACADEMIC_PERIOD_TYPES.ANNUAL,
+    anual: ACADEMIC_PERIOD_TYPES.ANNUAL,
+    semestral: ACADEMIC_PERIOD_TYPES.SEMESTRAL,
+    semester: ACADEMIC_PERIOD_TYPES.SEMESTRAL,
+    quarterly: ACADEMIC_PERIOD_TYPES.QUARTERLY,
+    cuatrimestral: ACADEMIC_PERIOD_TYPES.QUARTERLY,
+    trimestral: ACADEMIC_PERIOD_TYPES.TRIMESTRAL,
+    trimester: ACADEMIC_PERIOD_TYPES.TRIMESTRAL,
+};
+
+/**
+ * Lleva cualquier forma guardada del tipo de período ("Semestral", "quarterly",
+ * etc.) al valor canónico de ACADEMIC_PERIOD_TYPES; si no se reconoce, el por defecto.
+ */
+export function normalizeAcademicPeriodType(value) {
+    const key = String(value ?? "").trim().toLowerCase();
+    return PERIOD_TYPE_ALIASES[key] ?? DEFAULT_ACADEMIC_PERIOD;
+}
+
+function parseIsoDate(value) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value ?? ""));
+    if (!m) return null;
+    const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    const date = new Date(y, mo - 1, d);
+    const ok = date.getFullYear() === y && date.getMonth() === mo - 1 && date.getDate() === d;
+    return ok ? date : null;
+}
+
+/**
+ * Valida las fechas del período contra su tipo. Ambas vacías es válido (se calcula
+ * por división del año). Devuelve null si está bien o el mensaje (español) del error.
+ */
+export function validatePeriodDates(startDate, endDate, periodType) {
+    if (!startDate && !endDate) return null;
+    if (!startDate || !endDate) return "Define la fecha de inicio y la de fin del período";
+    const start = parseIsoDate(startDate);
+    const end = parseIsoDate(endDate);
+    if (!start || !end) return "Las fechas del período no son válidas";
+    if (end <= start) return "La fecha de fin debe ser posterior a la fecha de inicio";
+    const days = Math.round((end - start) / 86400000);
+    if (days < 28) return "El período debe durar al menos 4 semanas (28 días)";
+    const months =
+        (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+    const max = getAcademicPeriodConfig(normalizeAcademicPeriodType(periodType)).durationMonths;
+    if (months > max) return `El período no puede durar más de ${max} meses para el tipo seleccionado`;
+    return null;
+}
+
+const toIso = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+/**
+ * Período del calendario (división del año según el tipo) al que pertenece la fecha:
+ * { startIso, endIso, label } con label como "Segundo Semestre 2026".
+ */
+export function calendarPeriodDates(periodType, referenceDate = new Date()) {
+    const type = normalizeAcademicPeriodType(periodType);
+    const p = calculateCurrentPeriodByYear(type, referenceDate);
+    return {
+        startIso: toIso(p.startDate),
+        endIso: toIso(p.endDate),
+        label: `${p.label} ${p.year}`,
+    };
+}
+
+/**
+ * Describe el período definido por las fechas (si son válidas para el tipo) o, si no, el
+ * del calendario. { label, startIso, endIso, daysRemaining, status, fromDates } con status
+ * "upcoming" | "current" | "ended".
+ */
+export function describePeriod(startIso, endIso, periodType, today = new Date()) {
+    const type = normalizeAcademicPeriodType(periodType);
+    const valid = !!startIso && !!endIso && !validatePeriodDates(startIso, endIso, type);
+    const todayIso = toIso(today);
+    let base;
+    if (valid) {
+        const [y, m, d] = startIso.split("-").map(Number);
+        base = {
+            startIso,
+            endIso,
+            label: calendarPeriodDates(type, new Date(y, m - 1, d)).label,
+            fromDates: true,
+        };
+    } else {
+        base = { ...calendarPeriodDates(type, today), fromDates: false };
+    }
+    const [ey, em, ed] = base.endIso.split("-").map(Number);
+    const daysRemaining = Math.ceil(
+        (new Date(ey, em - 1, ed) - new Date(today.getFullYear(), today.getMonth(), today.getDate())) / 86400000
+    );
+    const status = todayIso < base.startIso ? "upcoming" : todayIso > base.endIso ? "ended" : "current";
+    return { ...base, daysRemaining, status };
 }
 
 /**

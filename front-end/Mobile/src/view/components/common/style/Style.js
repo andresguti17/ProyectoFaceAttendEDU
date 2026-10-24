@@ -130,7 +130,6 @@ export const createCommonStyles = (colors) => StyleSheet.create(normalizeTypogra
     navButton: {
         alignItems: "center",
         justifyContent: "center",
-        padding: 10,
         borderRadius: 18,
         padding: Platform.OS === 'android' ? 0 : 10,
     },

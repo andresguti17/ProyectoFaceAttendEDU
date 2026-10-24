@@ -9,6 +9,7 @@ import com.faceattend_edu.identity_service.application.port.out.SaveUserSessionP
 import com.faceattend_edu.identity_service.application.port.out.UpdateUserPort;
 import com.faceattend_edu.identity_service.config.AuthProperties;
 import com.faceattend_edu.identity_service.domain.exception.AccountLockedException;
+import com.faceattend_edu.identity_service.domain.exception.TooManyLoginAttemptsException;
 import com.faceattend_edu.identity_service.domain.exception.TwoFactorRequiredException;
 import com.faceattend_edu.identity_service.domain.exception.UnauthorizedException;
 import com.faceattend_edu.identity_service.domain.model.User;
@@ -33,9 +34,26 @@ public class AuthenticateUserUseCaseImpl implements AuthenticateUserUseCase {
     private final DomainEventPublisher eventPublisher;
     private final TwoFactorChallenge twoFactorChallenge;
 
+    // '#' cannot appear in a username or e-mail, so IP keys never collide with identifiers.
+    private static final String IP_KEY_PREFIX = "#ip:";
+
     @Override
     @Transactional
     public UserSession authenticate(String identifier, String password) {
+        return authenticate(identifier, password, null);
+    }
+
+    @Override
+    @Transactional
+    public UserSession authenticate(String identifier, String password, String clientIp) {
+        String ipKey = clientIp == null || clientIp.isBlank() ? null : IP_KEY_PREFIX + clientIp.trim();
+        if (ipKey != null) {
+            Duration blocked = loginAttemptPort.lockRemaining(ipKey);
+            if (!blocked.isZero()) {
+                throw new TooManyLoginAttemptsException(blocked);
+            }
+        }
+
         // A locked identifier is refused before any credential check, whether or not it exists:
         // the answer must not reveal which identifiers are real accounts.
         Duration locked = loginAttemptPort.lockRemaining(identifier);
@@ -46,6 +64,9 @@ public class AuthenticateUserUseCaseImpl implements AuthenticateUserUseCase {
         User user = loadUserByIdentifierPort.loadUserByIdentifier(identifier);
 
         if (user == null || !user.isActive() || !hashPasswordPort.matches(password, user.getPasswordHash())) {
+            if (ipKey != null) {
+                loginAttemptPort.recordFailure(ipKey, authProperties.getMaxFailedLoginsPerIp(), authProperties.failedLoginIpWindow());
+            }
             boolean nowLocked = loginAttemptPort.recordFailure(
                     identifier, authProperties.getMaxLoginAttempts(), authProperties.lockoutDuration());
             if (nowLocked) {

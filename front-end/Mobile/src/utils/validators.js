@@ -1,5 +1,6 @@
 export const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Las etiquetas del dominio excluyen el punto: sin retroceso cuadrático (ReDoS).
+    const emailRegex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
     return emailRegex.test(email);
 };
 

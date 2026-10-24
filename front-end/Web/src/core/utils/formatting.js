@@ -2,9 +2,11 @@
  * Funciones de formateo reutilizables para datos y texto
  */
 
+import { getLocale } from "./locale";
+
 /**
  * Formatea número con separadores de miles
- * @param {number} num - Número a formatear
+ * @param {number|null|undefined} num - Número a formatear
  * @param {number} [decimals=0] - Cantidad de decimales
  * @returns {string} Número formateado con separadores
  * @example
@@ -13,9 +15,9 @@
  * formatNumber(1234567, 0) // "1,234,567"
  */
 export function formatNumber(num, decimals = 0) {
-  if (num === null || num === undefined || isNaN(num)) return "0";
+  if (num == null || Number.isNaN(Number(num))) return "0";
   
-  return Number(num).toLocaleString("en-US", {
+  return Number(num).toLocaleString(getLocale(), {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
@@ -23,7 +25,7 @@ export function formatNumber(num, decimals = 0) {
 
 /**
  * Formatea valor como porcentaje
- * @param {number} value - Valor decimal (0.8523 = 85.23%)
+ * @param {number|null|undefined} value - Valor decimal (0.8523 = 85.23%)
  * @param {number} [decimals=2] - Cantidad de decimales
  * @returns {string} Porcentaje formateado con símbolo %
  * @example
@@ -31,13 +33,13 @@ export function formatNumber(num, decimals = 0) {
  * formatPercentage(0.5, 0) // "50%"
  */
 export function formatPercentage(value, decimals = 2) {
-  if (value === null || value === undefined || isNaN(value)) return "0%";
+  if (value == null || Number.isNaN(Number(value))) return "0%";
   return `${(value * 100).toFixed(decimals)}%`;
 }
 
 /**
  * Formatea cantidad monetaria
- * @param {number} amount - Cantidad a formatear
+ * @param {number|null|undefined} amount - Cantidad a formatear
  * @param {string} [currency="USD"] - Código de moneda ISO 4217
  * @returns {string} Cantidad formateada con símbolo de moneda
  * @example
@@ -45,9 +47,9 @@ export function formatPercentage(value, decimals = 2) {
  * formatCurrency(1234.56, "EUR") // "€1,234.56"
  */
 export function formatCurrency(amount, currency = "USD") {
-  if (amount === null || amount === undefined || isNaN(amount)) return "$0.00";
+  if (amount == null || Number.isNaN(Number(amount))) return "$0.00";
   
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(getLocale(), {
     style: "currency",
     currency,
   }).format(amount);
@@ -125,21 +127,35 @@ export function normalizeText(text) {
  */
 export function slugify(text) {
   if (!text) return "";
-  return text
-    .toString()
-    .toLowerCase()
-    .trim()
-    // Normalizar caracteres con acentos/tildes
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    // Reemplazar espacios con guiones
-    .replace(/\s+/g, "-")
-    // Eliminar caracteres especiales excepto letras, números y guiones
-    .replace(/[^\w\-]+/g, "")
-    // Eliminar guiones múltiples
-    .replace(/\-\-+/g, "-")
-    // Eliminar guiones al inicio y final
-    .replace(/^-+|-+$/g, "");
+  return trimDashes(
+    text
+      .toString()
+      .toLowerCase()
+      .trim()
+      // Normalizar caracteres con acentos/tildes
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      // Reemplazar espacios con guiones
+      .replace(/\s+/g, "-")
+      // Eliminar caracteres especiales excepto letras, números y guiones
+      .replace(/[^\w\-]+/g, "")
+      // Eliminar guiones múltiples
+      .replace(/\-\-+/g, "-"),
+  );
+}
+
+/**
+ * Quita los guiones del inicio y del final en una sola pasada:
+ * /^-+|-+$/g retrocede de forma cuadrática con rachas largas de guiones.
+ * @param {string} text
+ * @returns {string}
+ */
+export function trimDashes(text) {
+  let start = 0;
+  let end = text.length;
+  while (start < end && text[start] === "-") start += 1;
+  while (end > start && text[end - 1] === "-") end -= 1;
+  return text.slice(start, end);
 }
 
 /**
@@ -207,7 +223,7 @@ export function formatFileSize(bytes) {
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  return `${Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
 /**

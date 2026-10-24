@@ -23,6 +23,8 @@ import { useRolePermissions } from "../viewmodels/useRolePermissions";
 import { useAutomaticPeriodAdvance } from "./components/hooks/useAutomaticPeriodAdvance";
 import { useAuth } from "../context/AuthContext";
 import { pushInstitutionConfig } from "../services/api/settingsPersistence";
+import { getInstitutionConfig } from "../core/config/institutionConfig";
+import { syncAcademicPeriodFromSettings } from "../services/api/periodSync";
 import { AdminSettings, TeacherSettings, StudentSettings } from "./authorized/settings";
 import SchoolInfoView from "./SchoolInfoView";
 import ContactsView from "./ContactsView";
@@ -39,9 +41,15 @@ export default function SettingsView({ section = "appearance" }) {
     // para todos (antes lo recalculaba cada navegador, de cualquier rol, sin guardarlo).
     const { user } = useAuth();
     const schoolId = user?.schoolId ?? null;
-    useAutomaticPeriodAdvance(user?.role === "admin" && schoolId != null, 60, (dates) =>
-        pushInstitutionConfig(schoolId, dates, { canWriteSecurity: false }).catch(() => {})
-    );
+    useAutomaticPeriodAdvance(user?.role === "admin" && schoolId != null, 60, async (dates) => {
+        try {
+            await pushInstitutionConfig(schoolId, dates, { canWriteSecurity: false });
+            // El período nuevo también debe existir y quedar activo en Académico.
+            await syncAcademicPeriodFromSettings(schoolId, { ...getInstitutionConfig(), ...dates });
+        } catch {
+            /* se reintenta en la próxima verificación */
+        }
+    });
 
     const [previewAccent, setPreviewAccent] = useState(accentColor);
     const [hasUnsavedAccent, setHasUnsavedAccent] = useState(false);

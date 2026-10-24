@@ -120,7 +120,7 @@ function SchoolCard({ school, vm, t, c }) {
                                 <Feather
                                     name={school.status ? "pause-circle" : "play-circle"}
                                     size={14}
-                                    color={school.status ? "#fff" : "#fff"}
+                                    color="#fff"
                                 />
                             }
                         >

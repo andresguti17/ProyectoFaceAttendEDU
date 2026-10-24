@@ -73,7 +73,7 @@ export function useAppearanceSettingsViewModel() {
                 console.error('Error cargando apariencia:', e);
             }
         };
-        load();
+        void load();
         return () => { active = false; };
     }, [loadThemeForRole]);
 

@@ -42,4 +42,11 @@ class AuthTokenFilterTest {
         assertEquals("identity.person:write", AuthTokenFilter.requiredPermission("GET", "/api/v1/users/" + OTHER, ME));
         assertEquals("identity.person:read", AuthTokenFilter.requiredPermission("GET", "/api/v1/users/" + ME, ME));
     }
+
+    @org.junit.jupiter.api.Test
+    void consentEndpointsOnlyNeedASessionAndTheUseCaseDecides() {
+        assertEquals("identity.person:read", AuthTokenFilter.requiredPermission("POST", "/api/v1/persons/" + OTHER + "/consent", ME));
+        assertEquals("identity.person:read", AuthTokenFilter.requiredPermission("DELETE", "/api/v1/persons/" + OTHER + "/consent/biometric", ME));
+        assertEquals("identity.person:write", AuthTokenFilter.requiredPermission("DELETE", "/api/v1/persons/" + OTHER, ME));
+    }
 }

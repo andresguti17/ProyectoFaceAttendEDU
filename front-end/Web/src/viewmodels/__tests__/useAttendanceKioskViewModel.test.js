@@ -220,15 +220,14 @@ test("startClass loads the cohort roster and seeds registeredMethods from existi
         { academicActorId: 1, personId: "person-a", name: "Ana Gómez" },
         { academicActorId: 2, personId: "person-b", name: "Beto Ruiz" },
     ]);
-    const getVm = await startedVm({ existingRecords: [{ academicActorId: 1, captureMethod: "IOT" }] });
+    const getVm = await startedVm({ existingRecords: [{ academicActorId: 1, captureMethod: "FINGERPRINT" }] });
 
     expect(cohortRoster).toHaveBeenCalledWith(10);
     expect(getVm().roster).toEqual([
         { academicActorId: 1, personId: "person-a", name: "Ana Gómez" },
         { academicActorId: 2, personId: "person-b", name: "Beto Ruiz" },
     ]);
-    // "IOT" es lo que viaja al backend para huella (ver onIdentified); al
-    // releer un registro existente se muestra de vuelta como "FINGERPRINT".
+    // Un registro histórico FINGERPRINT se muestra tal cual, sin transformación.
     expect(getVm().registeredMethods.get(1)).toBe("FINGERPRINT");
 });
 
@@ -289,10 +288,9 @@ test("a flat attendance.event frame from another kiosk (snake_case person_id, no
 
 // ── Fix coverage: final whole-branch review ─────────────────────────────
 
-test("Critical #3: a fingerprint identify maps to captureMethod IOT with matchScore null, regardless of the raw SIFT score", async () => {
-    // 05-ms-attendance's AttendanceRecord.ALLOWED_METHOD never includes
-    // FINGERPRINT, and matchScore is a DECIMAL(5,4) checked to 0..1 — the raw
-    // SIFT keypoint count (e.g. 42) the socket ack returns would violate both.
+test("Critical #3: a fingerprint identify sends captureMethod FINGERPRINT with matchScore null, regardless of the raw SIFT score", async () => {
+    // matchScore is a DECIMAL(5,4) checked to 0..1 — the raw SIFT keypoint
+    // count (e.g. 42) the socket ack returns would violate it.
     attendanceApi.createRecord.mockResolvedValue({ attendanceRecordId: 1 });
     const getVm = await startedVm();
 
@@ -304,7 +302,7 @@ test("Critical #3: a fingerprint identify maps to captureMethod IOT with matchSc
         classSessionId: 55,
         academicActorId: 1,
         attendanceStatus: "Present",
-        captureMethod: "IOT",
+        captureMethod: "FINGERPRINT",
         matchScore: null,
     });
     expect(getVm().view).toBe("SUCCESS");
@@ -544,7 +542,7 @@ test("an arrival past the school's tolerance is recorded as Late and flagged in 
         await getVm().onIdentified("person-a", { biometricType: "FINGERPRINT", score: 12 });
     });
 
-    expect(attendanceApi.createRecord).toHaveBeenCalledWith(expect.objectContaining({ attendanceStatus: "Late", captureMethod: "IOT" }));
+    expect(attendanceApi.createRecord).toHaveBeenCalledWith(expect.objectContaining({ attendanceStatus: "Late", captureMethod: "FINGERPRINT" }));
     expect(getVm().lateActorIds.has(1)).toBe(true);
     expect(getVm().recordIdByActor.get(1)).toBe(9);
     expect(getVm().lastRegistration).toEqual({ name: "Ana Pérez", method: "FINGERPRINT", status: "Late", duplicate: false });

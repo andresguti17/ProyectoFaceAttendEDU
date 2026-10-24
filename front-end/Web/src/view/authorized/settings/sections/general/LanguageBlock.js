@@ -17,7 +17,7 @@ export function LanguageBlock() {
             <View style={{ flex: 1 }}>
                 <Text style={labelStyle}>{t("Idioma de la aplicación")}</Text>
                 <Text style={[descStyle, { marginTop: 0 }]}>
-                    {t("Traduce toda la interfaz automáticamente. El español es el idioma original de FaceAttend EDU.")}
+                    {t("Traduce toda la interfaz. El español es el idioma original de FaceAttend EDU.")}
                 </Text>
             </View>
             <LanguageSelector />

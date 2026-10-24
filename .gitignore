@@ -12,6 +12,8 @@ target/
 *.env.*
 .qwen
 .claude
+# Notas de asistentes de IA: no forman parte del proyecto
+docs/superpowers/
 
 # IDE files
 .vscode/

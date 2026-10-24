@@ -60,6 +60,8 @@ const studentForm = {
     password: "Secreta123!",
     course: "AED-401",
     status: "active",
+    privacyAccepted: true,
+    biometricAccepted: true,
 };
 
 beforeEach(() => {
@@ -92,4 +94,21 @@ test("markBiometrics forwards the captured flags for that person", () => {
     const getVm = renderVm();
     getVm().markBiometrics("p-9", { hasFacial: true, hasFingerprint: false });
     expect(mockPatchBiometrics).toHaveBeenCalledWith("p-9", { hasFacial: true, hasFingerprint: false });
+});
+
+test("registerUser refuses without the privacy notice and forwards the consent otherwise (Ley 1581)", async () => {
+    const getVm = renderVm();
+    let message;
+    await act(async () => {
+        message = await getVm().registerUser({ ...studentForm, privacyAccepted: false });
+    });
+    expect(message).toMatch(/aviso de privacidad/);
+    expect(provisionStudent).not.toHaveBeenCalled();
+
+    await act(async () => {
+        await getVm().registerUser(studentForm);
+    });
+    expect(provisionStudent).toHaveBeenCalledWith(
+        expect.objectContaining({ consent: { privacyAccepted: true, biometricAccepted: true } })
+    );
 });

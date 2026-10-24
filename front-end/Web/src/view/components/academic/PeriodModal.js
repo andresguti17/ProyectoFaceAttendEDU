@@ -8,13 +8,28 @@
 import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { Button, BaseModal, TextInput } from "../common";
+import { DateInput } from "../common/inputs/DateInput";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
+import { ACADEMIC_PERIOD_CONFIG, getConfiguredAcademicPeriodType } from "../../../core/constants/academicPeriods";
+import { periodNameFor } from "../../../services/api/periodSync";
+
+const ISO = /^d{4}-d{2}-d{2}$/;
+
+// Fin sugerido: el día anterior al aniversario del inicio según la duración del tipo de período.
+function suggestedEnd(startIso, months) {
+    const [y, m, d] = startIso.split("-").map(Number);
+    const end = new Date(y, m - 1 + months, d - 1);
+    return `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
+}
 
 export default function PeriodModal({ visible, period, onClose, onSubmit }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
+    // El tipo (anual, semestral…) se define en Configuración y rige la duración del período.
+    const periodType = getConfiguredAcademicPeriodType();
+    const typeConfig = ACADEMIC_PERIOD_CONFIG[periodType];
 
     const [form, setForm] = useState({ name: "", startsOn: "", endsOn: "" });
     const [error, setError] = useState(null);
@@ -37,13 +52,25 @@ export default function PeriodModal({ visible, period, onClose, onSubmit }) {
     if (!visible) return null;
 
     const setField = (key, value) => {
-        setForm((prev) => ({ ...prev, [key]: value }));
+        setForm((prev) => {
+            const next = { ...prev, [key]: value };
+            // Al completar el inicio se proponen fin y nombre según el tipo configurado.
+            if (key === "startsOn" && ISO.test(value)) {
+                if (!prev.endsOn) next.endsOn = suggestedEnd(value, typeConfig.durationMonths);
+                if (!String(prev.name ?? "").trim()) next.name = periodNameFor(periodType, value);
+            }
+            return next;
+        });
         if (showErrors) setError(null);
     };
 
     const handleSubmit = async () => {
         setShowErrors(true);
         setError(null);
+        if (form.startsOn && form.endsOn && form.startsOn >= form.endsOn) {
+            setError(t("La fecha de fin debe ser posterior a la de inicio"));
+            return;
+        }
         setSaving(true);
         const err = await onSubmit({ academicPeriodId: period?.academicPeriodId ?? null, ...form });
         setSaving(false);
@@ -84,9 +111,12 @@ export default function PeriodModal({ visible, period, onClose, onSubmit }) {
                         marginBottom: 14,
                     }}
                 >
-                    <Text style={{ fontSize: 13, color: c.status.danger }}>{error}</Text>
+                    <Text style={{ fontSize: 13, color: c.status.danger }}>{t(error)}</Text>
                 </View>
             )}
+            <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 8 }}>
+                {`${t("Tipo de período")}: ${t(typeConfig.labelKey)} · ${t("máximo")} ${typeConfig.durationMonths} ${t("meses")} (${t("se cambia en Configuración")})`}
+            </Text>
             <View style={{ gap: 0 }}>
                 <TextInput
                     label={t("Nombre") + " *"}
@@ -96,21 +126,19 @@ export default function PeriodModal({ visible, period, onClose, onSubmit }) {
                     error={showErrors && !String(form.name ?? "").trim()}
                     errorMessage={t("Campo requerido")}
                 />
-                <TextInput
-                    label={t("Inicio (AAAA-MM-DD)") + " *"}
+                <DateInput
+                    label={t("Inicio") + " *"}
                     value={form.startsOn}
                     onChangeText={(v) => setField("startsOn", v)}
-                    placeholder={t("Ej: 2026-02-01")}
                     error={badDate(form.startsOn)}
-                    errorMessage={t("Formato AAAA-MM-DD")}
+                    errorMessage={t("Fecha incompleta o inválida")}
                 />
-                <TextInput
-                    label={t("Fin (AAAA-MM-DD)") + " *"}
+                <DateInput
+                    label={t("Fin") + " *"}
                     value={form.endsOn}
                     onChangeText={(v) => setField("endsOn", v)}
-                    placeholder={t("Ej: 2026-06-30")}
                     error={badDate(form.endsOn)}
-                    errorMessage={t("Formato AAAA-MM-DD")}
+                    errorMessage={t("Fecha incompleta o inválida")}
                 />
             </View>
         </BaseModal>

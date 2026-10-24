@@ -43,6 +43,21 @@ public class PersonPersistenceAdapter implements LoadPersonPort, SavePersonPort,
         return repository.countActive();
     }
 
+    // Same order the scoped list always had (last name, nulls last), plus the key as tie-breaker
+    // so pages never repeat or skip rows.
+    @Override
+    public List<Person> listPersons(int pageIndex, int limit, java.util.Set<UUID> personIds) {
+        Sort order = Sort.by(Sort.Order.asc("lastName").nullsLast(), Sort.Order.asc("personId"));
+        return repository.findAllActiveIn(personIds, PageRequest.of(pageIndex, limit, order))
+                .map(mapper::toDomain)
+                .getContent();
+    }
+
+    @Override
+    public long countPersons(java.util.Set<UUID> personIds) {
+        return repository.countActiveIn(personIds);
+    }
+
     @Override
     public Person savePerson(Person person) {
         return mapper.toDomain(repository.save(mapper.toEntity(person)));

@@ -3,6 +3,8 @@
  * Todas las funciones aceptan Date objects o strings parseables
  */
 
+import { getLocale } from "./locale";
+
 /**
  * Formatea fecha en el formato especificado
  * @param {Date|string} date - Fecha a formatear
@@ -16,7 +18,7 @@ export function formatDate(date, format = "DD/MM/YYYY") {
   if (!date) return "";
   
   const d = new Date(date);
-  if (isNaN(d.getTime())) return "";
+  if (Number.isNaN(Number(d.getTime()))) return "";
   
   const day = String(d.getDate()).padStart(2, "0");
   const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -45,7 +47,7 @@ export function formatTime(date) {
   if (!date) return "";
   
   const d = new Date(date);
-  if (isNaN(d.getTime())) return "";
+  if (Number.isNaN(Number(d.getTime()))) return "";
   
   const hours = String(d.getHours()).padStart(2, "0");
   const minutes = String(d.getMinutes()).padStart(2, "0");
@@ -67,7 +69,7 @@ export function formatDateTime(date, dateFormat = "DD/MM/YYYY") {
 }
 
 /**
- * Obtiene tiempo relativo en español (hace X minutos/horas/días)
+ * Obtiene tiempo relativo en el idioma activo (hace X minutos/horas/días)
  * @param {Date|string} date - Fecha a comparar con ahora
  * @returns {string} Tiempo relativo formateado
  * @example
@@ -78,7 +80,7 @@ export function getRelativeTime(date) {
   if (!date) return "";
   
   const d = new Date(date);
-  if (isNaN(d.getTime())) return "";
+  if (Number.isNaN(Number(d.getTime()))) return "";
   
   const now = new Date();
   const diffMs = now - d;
@@ -89,12 +91,13 @@ export function getRelativeTime(date) {
   const diffMonths = Math.floor(diffDays / 30);
   const diffYears = Math.floor(diffDays / 365);
   
-  if (diffSecs < 60) return "hace un momento";
-  if (diffMins < 60) return `hace ${diffMins} ${diffMins === 1 ? "minuto" : "minutos"}`;
-  if (diffHours < 24) return `hace ${diffHours} ${diffHours === 1 ? "hora" : "horas"}`;
-  if (diffDays < 30) return `hace ${diffDays} ${diffDays === 1 ? "día" : "días"}`;
-  if (diffMonths < 12) return `hace ${diffMonths} ${diffMonths === 1 ? "mes" : "meses"}`;
-  return `hace ${diffYears} ${diffYears === 1 ? "año" : "años"}`;
+  const rtf = new Intl.RelativeTimeFormat(getLocale(), { numeric: "auto" });
+  if (diffSecs < 60) return rtf.format(0, "second");
+  if (diffMins < 60) return rtf.format(-diffMins, "minute");
+  if (diffHours < 24) return rtf.format(-diffHours, "hour");
+  if (diffDays < 30) return rtf.format(-diffDays, "day");
+  if (diffMonths < 12) return rtf.format(-diffMonths, "month");
+  return rtf.format(-diffYears, "year");
 }
 
 /**
@@ -293,17 +296,17 @@ export function parseDate(dateString) {
   
   // Intenta parsear directamente
   let date = new Date(dateString);
-  if (!isNaN(date.getTime())) return date;
+  if (!Number.isNaN(Number(date.getTime()))) return date;
   
   // Intenta formato DD/MM/YYYY
   const parts = dateString.split(/[\/\-\.]/);
   if (parts.length === 3) {
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const year = parseInt(parts[2], 10);
+    const day = Number.parseInt(parts[0], 10);
+    const month = Number.parseInt(parts[1], 10) - 1;
+    const year = Number.parseInt(parts[2], 10);
     
     date = new Date(year, month, day);
-    if (!isNaN(date.getTime())) return date;
+    if (!Number.isNaN(Number(date.getTime()))) return date;
   }
   
   return null;

@@ -50,7 +50,7 @@ jobs:
 
       - name: npm ci
         working-directory: front-end/Web
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: npm test
         working-directory: front-end/Web
