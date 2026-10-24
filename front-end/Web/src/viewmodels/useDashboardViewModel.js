@@ -19,7 +19,7 @@ import { getInstitutionConfig } from "../core/config/institutionConfig";
  * @returns {string} - Número formateado
  */
 function formatNumber(value) {
-    if (typeof value !== 'number' || isNaN(value)) return "0";
+    if (typeof value !== 'number' || Number.isNaN(Number(value))) return "0";
     return Math.round(value).toLocaleString();
 }
 
@@ -31,7 +31,7 @@ function formatNumber(value) {
  * @returns {string} - Porcentaje formateado
  */
 function formatPercentage(value, decimals = 1) {
-    if (typeof value !== 'number' || isNaN(value)) return "0.0";
+    if (typeof value !== 'number' || Number.isNaN(Number(value))) return "0.0";
     
     const maxDecimals = Math.min(Math.max(decimals, 0), 2);
     
@@ -364,8 +364,8 @@ export function useDashboardViewModel() {
                 value: `${formatPercentage(globalAvgAttendance)}%`,
                 subtitle: t("Promedio general"),
                 change: globalAvgAttendance >= thresholds.warning ? 
-                    parseFloat(Math.min(2.5, (globalAvgAttendance - thresholds.warning + 2) * 0.5).toFixed(1)) : 
-                    parseFloat(Math.max(-2.5, (globalAvgAttendance - thresholds.warning) * 0.3).toFixed(1)),
+                    Number.parseFloat(Math.min(2.5, (globalAvgAttendance - thresholds.warning + 2) * 0.5).toFixed(1)) : 
+                    Number.parseFloat(Math.max(-2.5, (globalAvgAttendance - thresholds.warning) * 0.3).toFixed(1)),
                 color: globalAvgAttendance >= thresholds.warning ? c.status.success : c.status.warning,
                 icon: "trending-up",
             },

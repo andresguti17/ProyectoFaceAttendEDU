@@ -10,9 +10,9 @@
 set -euo pipefail
 
 DIR="${1:?Uso: restore.sh <carpeta-de-backup>}"
-[ -d "$DIR" ] || { echo "No existe: $DIR" >&2; exit 1; }
+[[ -d "$DIR" ]] || { echo "No existe: $DIR" >&2; exit 1; }
 
-if [ "${FORCE:-0}" != "1" ]; then
+if [[ "${FORCE:-0}" != "1" ]]; then
   read -r -p "Esto sobrescribe faceattend_db y MongoDB con el backup de $DIR. ¿Continuar? [y/N] " ans
   [[ "$ans" =~ ^[Yy]$ ]] || { echo "Cancelado."; exit 1; }
 fi

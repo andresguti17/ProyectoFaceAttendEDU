@@ -46,7 +46,4 @@ export const academicApi = {
             body: { enrollmentStatus: status },
         }),
     deleteEnrollment: (id) => request(endpoints.academic.enrollmentById(id), { method: "DELETE" }),
-    listEnrollments: (p) => request(endpoints.academic.enrollments, { method: "GET", query: p }),
-    createEnrollment: (b) => request(endpoints.academic.enrollments, { method: "POST", body: b }),
-    deleteEnrollment: (id) => request(endpoints.academic.enrollmentById(id), { method: "DELETE" }),
 };

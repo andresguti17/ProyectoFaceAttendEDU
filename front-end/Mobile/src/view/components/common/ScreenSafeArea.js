@@ -10,7 +10,7 @@ import {useTheme} from './ThemeContext';
 export function isLightColor(color) {
     if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color ?? '')) return false;
     const full = color.length === 4 ? color.replace(/#(.)(.)(.)/, '#$1$1$2$2$3$3') : color;
-    const [r, g, b] = [1, 3, 5].map((i) => parseInt(full.slice(i, i + 2), 16) / 255)
+    const [r, g, b] = [1, 3, 5].map((i) => Number.parseInt(full.slice(i, i + 2), 16) / 255)
         .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
     return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.179;
 }

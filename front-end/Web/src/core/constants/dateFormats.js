@@ -97,7 +97,7 @@ export function formatDate(date, format) {
     format = format ?? configured().dateFormat;
     const dateObj = toDate(date);
 
-    if (!(dateObj instanceof Date) || isNaN(dateObj)) {
+    if (!(dateObj instanceof Date) || Number.isNaN(Number(dateObj))) {
         return "";
     }
 
@@ -124,7 +124,7 @@ export function formatTime(date, is24Hour) {
     is24Hour = is24Hour ?? configured().timeFormat24h;
     const dateObj = toDate(date);
 
-    if (!(dateObj instanceof Date) || isNaN(dateObj)) {
+    if (!(dateObj instanceof Date) || Number.isNaN(Number(dateObj))) {
         return "";
     }
 

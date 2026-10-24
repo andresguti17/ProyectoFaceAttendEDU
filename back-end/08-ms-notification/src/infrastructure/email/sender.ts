@@ -50,7 +50,7 @@ function intEnv(name: string, fallback: number): number {
   if (v === '') {
     return fallback;
   }
-  const n = parseInt(v, 10);
+  const n = Number.parseInt(v, 10);
   if (Number.isNaN(n) || n <= 0 || n > 65535) {
     return fallback;
   }

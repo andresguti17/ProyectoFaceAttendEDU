@@ -19,7 +19,7 @@ import { useAttendanceStatus } from "../common/badges/StatusBadge";
 function AttendanceRateText({ rate, total }) {
     const { theme } = useTheme();
     const c = theme.colors;
-    const status = useAttendanceStatus(parseFloat(rate));
+    const status = useAttendanceStatus(Number.parseFloat(rate));
     
     return (
         <Text style={{

@@ -20,9 +20,9 @@ export function getRelativeLuminance(hexColor) {
         : hex;
     
     // Extraer componentes RGB
-    const r = parseInt(fullHex.substring(0, 2), 16) / 255;
-    const g = parseInt(fullHex.substring(2, 4), 16) / 255;
-    const b = parseInt(fullHex.substring(4, 6), 16) / 255;
+    const r = Number.parseInt(fullHex.substring(0, 2), 16) / 255;
+    const g = Number.parseInt(fullHex.substring(2, 4), 16) / 255;
+    const b = Number.parseInt(fullHex.substring(4, 6), 16) / 255;
     
     // Aplicar corrección gamma según WCAG
     const gammaCorrect = (channel) => {
@@ -100,9 +100,9 @@ export function hexToRgba(hexColor, opacity = 1) {
         ? hex.split('').map(c => c + c).join('')
         : hex;
     
-    const r = parseInt(fullHex.substring(0, 2), 16);
-    const g = parseInt(fullHex.substring(2, 4), 16);
-    const b = parseInt(fullHex.substring(4, 6), 16);
+    const r = Number.parseInt(fullHex.substring(0, 2), 16);
+    const g = Number.parseInt(fullHex.substring(2, 4), 16);
+    const b = Number.parseInt(fullHex.substring(4, 6), 16);
     
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }

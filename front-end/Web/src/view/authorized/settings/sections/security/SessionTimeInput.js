@@ -17,7 +17,7 @@ export function SessionTimeInput({ value, onChange, contextHint }) {
     const { t } = useTranslation();
     const { labelStyle, descStyle, inputStyle } = useSettingsSectionStyles();
 
-    const minutes = parseInt(value) || 60;
+    const minutes = Number.parseInt(value) || 60;
     const hint = contextHint ? contextHint(minutes) : "";
 
     return (

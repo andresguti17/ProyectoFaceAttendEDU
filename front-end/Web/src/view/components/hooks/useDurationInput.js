@@ -35,17 +35,17 @@ function parseDurationToSeconds(input) {
     
     // Detectar unidad
     if (cleaned.endsWith("min")) {
-        const num = parseFloat(cleaned.slice(0, -3));
-        if (isNaN(num)) return null;
+        const num = Number.parseFloat(cleaned.slice(0, -3));
+        if (Number.isNaN(Number(num))) return null;
         return num * 60; // convertir minutos a segundos
     } else if (cleaned.endsWith("s")) {
-        const num = parseFloat(cleaned.slice(0, -1));
-        if (isNaN(num)) return null;
+        const num = Number.parseFloat(cleaned.slice(0, -1));
+        if (Number.isNaN(Number(num))) return null;
         return num;
     } else {
         // Sin unidad, asumir segundos
-        const num = parseFloat(cleaned);
-        if (isNaN(num)) return null;
+        const num = Number.parseFloat(cleaned);
+        if (Number.isNaN(Number(num))) return null;
         return num;
     }
 }

@@ -42,7 +42,7 @@ function nextTeacherCode(actors, schoolShort) {
     for (const a of actors) {
         const code = String(a?.actorCode ?? "");
         if (!code.startsWith(prefix)) continue;
-        const n = parseInt(code.slice(prefix.length), 10);
+        const n = Number.parseInt(code.slice(prefix.length), 10);
         if (!Number.isNaN(n) && n > max) max = n;
     }
     return `${prefix}${String(max + 1).padStart(3, "0")}`;
@@ -132,8 +132,8 @@ export default function RegisterStudentModal({
         studentsInFicha.forEach(s => {
             // Remover el prefijo completo (fichaCode + "00") y obtener solo el número incremental
             const numberPart = s.code.substring(prefix.length);
-            const num = parseInt(numberPart, 10);
-            if (!isNaN(num) && num > maxNumber) {
+            const num = Number.parseInt(numberPart, 10);
+            if (!Number.isNaN(Number(num)) && num > maxNumber) {
                 maxNumber = num;
             }
         });
