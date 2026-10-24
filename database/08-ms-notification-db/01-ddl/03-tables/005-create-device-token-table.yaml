@@ -1,0 +1,82 @@
+databaseChangeLog:
+  - changeSet:
+      id: notif-007-create-device-token-table
+      author: Jonathan Steven Rizo Solano
+      comment: >-
+        Expo push tokens of the mobile app, one row per device. A token is unique: registering it again
+        re-activates it for the current actor. Revoked tokens are kept (revoked_at) and never pushed to.
+        No audit trigger: fn_audit_timestamps also sets row_version, which this table does not have,
+        so the service writes created_at/updated_at itself.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                schemaName: notification
+                tableName: device_token
+      changes:
+        - createTable:
+            schemaName: notification
+            tableName: device_token
+            columns:
+              - column:
+                  name: device_token_id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_device_token
+                    nullable: false
+              - column:
+                  name: academic_actor_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                  remarks: "Cross-context reference to Academic.academic_actor (NO FK)"
+              - column:
+                  name: token
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uq_device_token_token
+                  remarks: "ExponentPushToken[...]"
+              - column:
+                  name: platform
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+                  remarks: "ios | android"
+              - column:
+                  name: locale
+                  type: VARCHAR(5)
+                  defaultValue: es
+                  constraints:
+                    nullable: false
+                  remarks: "es | en | pt | fr"
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: revoked_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+        - sql:
+            sql: ALTER TABLE notification.device_token ADD CONSTRAINT ck_device_token_platform CHECK (platform IN ('ios', 'android'))
+        - sql:
+            sql: ALTER TABLE notification.device_token ADD CONSTRAINT ck_device_token_locale CHECK (locale IN ('es', 'en', 'pt', 'fr'))
+        - sql:
+            sql: CREATE INDEX idx_device_token_actor_active ON notification.device_token (academic_actor_id) WHERE revoked_at IS NULL
+      rollback:
+        - dropTable:
+            schemaName: notification
+            tableName: device_token
