@@ -2,7 +2,7 @@
 //  FaceAttend EDU — ImportStudentsModal
 //
 //  Modal para importar estudiantes desde CSV o Excel.
-//  El parseo vive en ./importStudentsParser (SheetJS para .xlsx,
+//  El parseo vive en ./importStudentsParser (ExcelJS para .xlsx,
 //  texto con delimitador detectado para .csv/.tsv — antes solo
 //  leía como texto y fallaba con .xlsx y con ";" del Excel en
 //  español).
@@ -24,7 +24,7 @@
 import React, { useState, useEffect } from "react";
 import {
     Modal, View, Text, ScrollView, TouchableOpacity,
-    ActivityIndicator, Platform,
+    ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { AnimatedDropdown, Button, Badge, IconButton, Checkbox } from "../common";
@@ -32,6 +32,7 @@ import { useTheme }       from "../hooks/useTheme";
 import { useResponsive }  from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { parseFileContent } from "./importStudentsParser";
+import { downloadCsvTemplate, pickImportFile } from "../common/importFilePicker";
 
 // ── Template CSV descargable ──────────────────────────────
 
@@ -41,46 +42,8 @@ const CSV_TEMPLATE =
     "Carlos Pérez,AED-401002,c.perez@uni.edu,AED-401,2do semestre,88,active\n" +
     "# Nota: código = códigoCurso + 00 + nnn (ej: AED-401001, AED-401020, etc.)\n";
 
-function downloadTemplate() {
-    if (Platform.OS !== "web") return;
-    const blob = new Blob([CSV_TEMPLATE], { type: "text/csv;charset=utf-8;" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href     = url;
-    a.download = "plantilla_estudiantes.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-}
+const downloadTemplate = () => downloadCsvTemplate(CSV_TEMPLATE, "plantilla_estudiantes.csv");
 
-// ── Selector de archivo (Web only) ───────────────────────
-
-function pickFile() {
-    return new Promise((resolve) => {
-        if (Platform.OS !== "web") {
-            resolve(null);
-            return;
-        }
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".csv,.xlsx,.xls,.tsv,.txt";
-        input.onchange = (e) => {
-            const file = e.target?.files?.[0];
-            if (!file) {
-                resolve(null);
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                resolve({ name: file.name, buffer: evt.target?.result });
-            };
-            reader.onerror = () => resolve(null);
-            // ArrayBuffer para todos: los .xlsx son ZIP binarios y leerlos
-            // como texto produce basura que el parser CSV descartaba.
-            reader.readAsArrayBuffer(file);
-        };
-        input.click();
-    });
-}
 
 // ── Componente principal ──────────────────────────────────
 
@@ -153,9 +116,9 @@ export default function ImportStudentsModal({
     };
 
     const handlePickFile = async () => {
-        const result = await pickFile();
+        const result = await pickImportFile();
         if (!result) return;
-        const { rows, errors } = parseFileContent(result.name, result.buffer);
+        const { rows, errors } = await parseFileContent(result.name, result.buffer);
         setFileName(result.name);
         setParseErrors(errors);
         if (rows.length === 0) {

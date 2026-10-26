@@ -45,7 +45,7 @@ export function useHistoricosViewModel(filteredUsers) {
     /**
      * Exporta los datos históricos a Excel
      */
-    const exportExcel = useCallback(() => {
+    const exportExcel = useCallback(async () => {
         const rows = buildExcelRows(filteredUsers);
 
         // Configurar hojas con anchos de columna
@@ -69,7 +69,7 @@ export function useHistoricosViewModel(filteredUsers) {
         ];
 
         const filename = `Historicos_Asistencia_${formatDate(new Date(), "YYYY-MM-DD")}.xlsx`;
-        const result = exportToExcel(sheets, filename);
+        const result = await exportToExcel(sheets, filename);
 
         if (!result.success) {
             console.error("Error al exportar Excel:", result.error);
