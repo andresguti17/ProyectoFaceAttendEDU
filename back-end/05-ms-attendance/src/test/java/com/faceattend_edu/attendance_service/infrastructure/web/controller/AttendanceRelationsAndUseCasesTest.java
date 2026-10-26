@@ -15,6 +15,7 @@ import com.faceattend_edu.attendance_service.domain.model.SupportingDocument;
 import com.faceattend_edu.attendance_service.domain.port.in.GetAttendanceRecordUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.GetSupportingDocumentUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.ListAttendanceRecordsUseCase;
+import com.faceattend_edu.attendance_service.domain.port.in.GetJustificationUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.ListJustificationsUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.ListSupportingDocumentsUseCase;
 import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
@@ -85,9 +86,10 @@ class AttendanceRelationsAndUseCasesTest {
         private final ListAttendanceRecordsUseCase records = mock(ListAttendanceRecordsUseCase.class);
         private final GetAttendanceRecordUseCase getRecord = mock(GetAttendanceRecordUseCase.class);
         private final ListJustificationsUseCase justifications = mock(ListJustificationsUseCase.class);
+        private final GetJustificationUseCase getJustification = mock(GetJustificationUseCase.class);
         private final ListSupportingDocumentsUseCase documents = mock(ListSupportingDocumentsUseCase.class);
         private final AttendanceRelationsController controller = new AttendanceRelationsController(records, getRecord, justifications,
-                documents, new AttendanceRecordWebMapper(), new JustificationWebMapper(), new SupportingDocumentWebMapper());
+                getJustification, documents, new AttendanceRecordWebMapper(), new JustificationWebMapper(), new SupportingDocumentWebMapper());
 
         private Justification justification() {
             Justification j = new Justification();
@@ -119,7 +121,11 @@ class AttendanceRelationsAndUseCasesTest {
         void aJustificationOrItsDocumentsAreVisibleOnlyInsideTheScope() {
             when(getRecord.getById(1L)).thenReturn(record(1, 7));
             when(getRecord.getById(2L)).thenThrow(new EntityNotFoundException("AttendanceRecord", 2L));
-            when(justifications.list()).thenReturn(List.of(justification()));
+            when(justifications.search(any(), eq(0), eq(1)))
+                    .thenReturn(new com.faceattend_edu.attendance_service.domain.model.JustificationSlice(List.of(), 0));
+            when(justifications.search(org.mockito.ArgumentMatchers.argThat(f -> f != null && Long.valueOf(1L).equals(f.attendanceRecordId())), eq(0), eq(1)))
+                    .thenReturn(new com.faceattend_edu.attendance_service.domain.model.JustificationSlice(List.of(justification()), 1));
+            when(getJustification.getById(5L)).thenReturn(justification());
             SupportingDocument doc = new SupportingDocument();
             doc.setSupportingDocumentId(3L);
             doc.setJustificationId(5L);
@@ -133,7 +139,8 @@ class AttendanceRelationsAndUseCasesTest {
             scope(Set.of(8L));
             assertThatThrownBy(() -> controller.byAttendance(1L)).isInstanceOf(ActorScope.ScopeForbiddenException.class);
             assertThatThrownBy(() -> controller.documentsByJustification(5L)).isInstanceOf(ActorScope.ScopeForbiddenException.class);
-            assertThatThrownBy(() -> controller.documentsByJustification(99L)).isInstanceOf(ActorScope.ScopeForbiddenException.class);
+            when(getJustification.getById(99L)).thenThrow(new EntityNotFoundException("Justification", 99L));
+            assertThatThrownBy(() -> controller.documentsByJustification(99L)).isInstanceOf(EntityNotFoundException.class);
 
             scope(null);
             assertThat(controller.byAttendance(2L).getBody()).isNull();
@@ -237,9 +244,7 @@ class AttendanceRelationsAndUseCasesTest {
                     .isInstanceOf(EntityNotFoundException.class);
 
             SupportingDocumentRepository repository = mock(SupportingDocumentRepository.class);
-            when(repository.findAll()).thenReturn(List.of(doc));
             when(repository.findByJustificationId(5L)).thenReturn(List.of());
-            assertThat(new ListSupportingDocumentsUseCaseImpl(repository).list()).hasSize(1);
             assertThat(new ListSupportingDocumentsUseCaseImpl(repository).listByJustificationId(5L)).isEmpty();
         }
     }

@@ -73,12 +73,14 @@ async function call(service, method, path, body, allow404 = false) {
   const url = `${U[service]}${path}`;
   const label = `${method} ${service}${path}`;
   try {
-    const headers = { "Content-Type": "application/json" };
+    const multipart = body instanceof FormData;
+    // FormData sets its own multipart Content-Type (with the boundary).
+    const headers = multipart ? {} : { "Content-Type": "application/json" };
     if (TOKEN) headers.Authorization = `Bearer ${TOKEN}`;
     const res = await fetch(url, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined || multipart ? body : JSON.stringify(body),
       signal: AbortSignal.timeout(30000),
     });
 
@@ -907,14 +909,14 @@ async function seedAttendance() {
       .map((t) => M.justTypes.get(t.name))
       .filter((v) => v != null),
   );
-  const attachSupportingDoc = (jid) =>
-    post("attendance", "/api/v1/supporting-documents", {
-      justificationId: jid,
-      fileName: `soporte-${jid}.pdf`,
-      storageUri: `seed://justifications/${jid}/soporte.pdf`,
-      mimeType: "application/pdf",
-      sizeBytes: 2048,
-    });
+  // Same path as the apps: a real (tiny) PDF uploaded as multipart; the service picks
+  // the storage key itself, so no client-made storage URI exists anymore.
+  const SEED_PDF = ["%PDF-1.4", "1 0 obj<<>>endobj", "trailer<<>>", "%%EOF", ""].join("\n");
+  const attachSupportingDoc = (jid) => {
+    const form = new FormData();
+    form.append("file", new Blob([SEED_PDF], { type: "application/pdf" }), `soporte-${jid}.pdf`);
+    return post("attendance", `/api/v1/justifications/${jid}/documents`, form);
+  };
 
   const existingJustifications = [];
   for (const j of asArray(await get("attendance", "/api/v1/justifications"))) {
