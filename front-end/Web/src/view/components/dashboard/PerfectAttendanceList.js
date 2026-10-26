@@ -6,154 +6,38 @@
 // ============================================================
 
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Card, Badge, Avatar, ProgressBar } from "../common";
+import { Card } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { getAttendanceThresholds } from "../../../models/data/userDerivedData";
 import { useAttendanceColor } from "../common/badges/StatusBadge";
+import { StudentAttendanceRow, StudentStat, MoreStudentsLink } from "./StudentAttendanceRow";
 
 /**
- * Componente interno para renderizar cada estudiante destacado con color dinámico
+ * Fila de estudiante destacado: estrella si tiene 100 %, check si no.
  */
-function StudentRow({ student, isLast, onPress, c, t }) {
+function StudentRow({ student, isLast, onPress, c }) {
     const thresholds = getAttendanceThresholds();
     const attColor = useAttendanceColor(student.attendanceRate);
-    
-    // Perfect = 100%, Excellent = >= excellent threshold
     const isPerfect = student.attendanceRate === 100;
     const isExcellent = student.attendanceRate >= thresholds.excellent;
 
     return (
-        <TouchableOpacity
+        <StudentAttendanceRow
+            student={student}
+            isLast={isLast}
             onPress={() => onPress?.(student)}
-            style={{
-                flexDirection: "row",
-                alignItems: "center",
-                padding: 16,
-                gap: 12,
-                borderBottomWidth: isLast ? 0 : 1,
-                borderBottomColor: c.border.primary,
-                backgroundColor: isPerfect 
-                    ? c.status.successLight 
-                    : "transparent",
-            }}
-        >
-            {/* Avatar con badge de estrella */}
-            <View style={{ position: "relative" }}>
-                <Avatar name={student.name} size={48} />
-                <View style={{
-                    position: "absolute",
-                    bottom: -2,
-                    right: -2,
-                    width: 20,
-                    height: 20,
-                    borderRadius: 10,
-                    backgroundColor: isPerfect ? "#FFD700" : attColor,
-                    borderWidth: 2,
-                    borderColor: c.background.surface,
-                    alignItems: "center",
-                    justifyContent: "center",
-                }}>
-                    <Text style={{ fontSize: 10 }}>
-                        {isPerfect ? "⭐" : "✓"}
-                    </Text>
-                </View>
-            </View>
-
-            {/* Información */}
-            <View style={{ flex: 1, gap: 6 }}>
-                {/* Header: Nombre + Badge */}
-                <View style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 8,
-                }}>
-                    <Text style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: c.text.primary,
-                        flex: 1,
-                    }} numberOfLines={1}>
-                        {student.name}
-                    </Text>
-
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 8,
-                    }}>
-                        <Badge 
-                            variant={isExcellent ? "success" : "warning"} 
-                            size="sm"
-                        >
-                            {student.attendanceRate}%
-                        </Badge>
-                    </View>
-                </View>
-
-                {/* Segunda línea: Código + Ficha + Stats */}
-                <View style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 8,
-                }}>
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 8,
-                        flex: 1,
-                    }}>
-                        <Text style={{
-                            fontSize: 12,
-                            color: c.text.secondary,
-                        }}>
-                            {student.code}
-                        </Text>
-                        <Text style={{
-                            fontSize: 12,
-                            color: c.text.secondary,
-                        }}>
-                            • {student.fichaName}
-                        </Text>
-                    </View>
-
-                    {/* Stats: Racha */}
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 10,
-                    }}>
-                        <View style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 4,
-                        }}>
-                            <Feather name="trending-up" size={12} color={attColor} />
-                            <Text style={{
-                                fontSize: 11,
-                                color: c.text.secondary,
-                            }}>
-                                {student.streak}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Barra de progreso con color dinámico */}
-                <ProgressBar
-                    value={student.attendanceRate}
-                    color={attColor}
-                    size="sm"
-                />
-            </View>
-
-            {/* Chevron - Indicador de clickeable */}
-            <Feather name="chevron-right" size={20} color={c.text.secondary} />
-        </TouchableOpacity>
+            c={c}
+            attColor={attColor}
+            backgroundColor={isPerfect ? c.status.successLight : "transparent"}
+            markerColor={isPerfect ? "#FFD700" : attColor}
+            marker={<Text style={{ fontSize: 10 }}>{isPerfect ? "⭐" : "✓"}</Text>}
+            badgeVariant={isExcellent ? "success" : "warning"}
+            subtitle={student.fichaName}
+            stats={<StudentStat icon="trending-up" color={attColor} c={c}>{student.streak}</StudentStat>}
+        />
     );
 }
 
@@ -204,32 +88,17 @@ export function PerfectAttendanceList({
                     isLast={index === displayedStudents.length - 1}
                     onPress={onStudentPress}
                     c={c}
-                    t={t}
                 />
             ))}
 
             {students.length > maxItems && (
-                <TouchableOpacity
-                    onPress={() => navigation?.navigate("Users", { 
-                        section: "students", 
-                        attendanceFilter: "gt" 
-                    })}
-                    style={{
-                        padding: 12,
-                        alignItems: "center",
-                        borderTopWidth: 1,
-                        borderTopColor: c.border.primary,
-                    }}
-                    activeOpacity={0.7}
-                >
-                    <Text style={{
-                        fontSize: 12,
-                        color: c.brand.primary,
-                        fontWeight: "600",
-                    }}>
-                        +{students.length - maxItems} {t("estudiantes destacados más")}
-                    </Text>
-                </TouchableOpacity>
+                <MoreStudentsLink
+                    count={students.length - maxItems}
+                    label={t("estudiantes destacados más")}
+                    attendanceFilter="gt"
+                    navigation={navigation}
+                    c={c}
+                />
             )}
         </Card>
     );

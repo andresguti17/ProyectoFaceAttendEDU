@@ -1,0 +1,3346 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`dashboard student lists render at-risk list: overflow footer and empty state 1`] = `
+<div
+  className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+  dir={null}
+  ref={[Function]}
+  style={
+    {
+      "backgroundColor": "rgba(255,255,255,1.00)",
+      "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+    }
+  }
+>
+  <div
+    className="css-view-g5y9jx"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "paddingBottom": "0px",
+        "paddingLeft": "0px",
+        "paddingRight": "0px",
+        "paddingTop": "0px",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+      dir={null}
+      onClick={[Function]}
+      onContextMenu={[Function]}
+      onKeyDown={[Function]}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "rgba(253,224,222,1.00)",
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomWidth": "0px",
+          "flexDirection": "row",
+          "gap": "12px",
+          "paddingBottom": "16px",
+          "paddingLeft": "16px",
+          "paddingRight": "16px",
+          "paddingTop": "16px",
+          "transitionDuration": "0s",
+        }
+      }
+      tabIndex="0"
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "position": "relative",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(25,131,252,1.00)",
+              "borderBottomLeftRadius": "24px",
+              "borderBottomRightRadius": "24px",
+              "borderTopLeftRadius": "24px",
+              "borderTopRightRadius": "24px",
+              "height": "48px",
+              "justifyContent": "center",
+              "width": "48px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(255,255,255,1.00)",
+                "fontSize": "19.2px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            E2
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(240,68,56,1.00)",
+              "borderBottomColor": "rgba(255,255,255,1.00)",
+              "borderBottomLeftRadius": "10px",
+              "borderBottomRightRadius": "10px",
+              "borderBottomWidth": "2px",
+              "borderLeftColor": "rgba(255,255,255,1.00)",
+              "borderLeftWidth": "2px",
+              "borderRightColor": "rgba(255,255,255,1.00)",
+              "borderRightWidth": "2px",
+              "borderTopColor": "rgba(255,255,255,1.00)",
+              "borderTopLeftRadius": "10px",
+              "borderTopRightRadius": "10px",
+              "borderTopWidth": "2px",
+              "bottom": "-2px",
+              "height": "20px",
+              "justifyContent": "center",
+              "position": "absolute",
+              "right": "-2px",
+              "width": "20px",
+            }
+          }
+        >
+          Feather:alert-octagon:10:#FFFFFF
+        </div>
+      </div>
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "flex": 1,
+            "gap": "6px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(0,0,0,1.00)",
+                "flex": 1,
+                "fontSize": "14px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            Estudiante 2
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(148,163,184,1.00)",
+                  "fontSize": "11px",
+                }
+              }
+            >
+              Última
+              : 
+              hace 2 días
+            </div>
+            <div
+              className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(253,224,222,1.00)",
+                  "borderBottomLeftRadius": "9999px",
+                  "borderBottomRightRadius": "9999px",
+                  "borderTopLeftRadius": "9999px",
+                  "borderTopRightRadius": "9999px",
+                  "gap": "4px",
+                  "paddingBottom": "2px",
+                  "paddingLeft": "4px",
+                  "paddingRight": "4px",
+                  "paddingTop": "2px",
+                }
+              }
+            >
+              <div
+                className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(240,68,56,1.00)",
+                    "fontSize": "10px",
+                  }
+                }
+              >
+                50
+                %
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flex": 1,
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              C-2
+            </div>
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              • 
+              ADSI 2758
+            </div>
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "10px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": "4px",
+                }
+              }
+            >
+              Feather:x-circle:12:#F04438
+              <div
+                className="css-text-146c3p1"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(100,116,139,1.00)",
+                    "fontSize": "11px",
+                  }
+                }
+              >
+                4
+                 
+                faltas
+              </div>
+            </div>
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": "4px",
+                }
+              }
+            >
+              Feather:repeat:12:#FFAB00
+              <div
+                className="css-text-146c3p1"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(100,116,139,1.00)",
+                    "fontSize": "11px",
+                  }
+                }
+              >
+                3
+                 
+                seguidas
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-width-13qz1uu"
+          dir={null}
+          ref={[Function]}
+        >
+          <div
+            className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "backgroundColor": "rgba(226,232,240,1.00)",
+                "height": "4px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(240,68,56,1.00)",
+                  "width": "50%",
+                }
+              }
+            />
+          </div>
+        </div>
+      </div>
+      Feather:chevron-right:20:#64748B
+    </div>
+    <div
+      className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+      dir={null}
+      onClick={[Function]}
+      onContextMenu={[Function]}
+      onKeyDown={[Function]}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "borderTopColor": "rgba(226,232,240,1.00)",
+          "borderTopWidth": "1px",
+          "paddingBottom": "12px",
+          "paddingLeft": "12px",
+          "paddingRight": "12px",
+          "paddingTop": "12px",
+          "transitionDuration": "0s",
+        }
+      }
+      tabIndex="0"
+    >
+      <div
+        className="css-text-146c3p1"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(25,131,252,1.00)",
+            "fontSize": "12px",
+            "fontWeight": "600",
+          }
+        }
+      >
+        +
+        2
+         
+        estudiantes más en riesgo
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`dashboard student lists render at-risk list: overflow footer and empty state 2`] = `
+<div
+  className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+  dir={null}
+  ref={[Function]}
+  style={
+    {
+      "backgroundColor": "rgba(255,255,255,1.00)",
+      "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+    }
+  }
+>
+  <div
+    className="css-view-g5y9jx"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "paddingBottom": "16px",
+        "paddingLeft": "16px",
+        "paddingRight": "16px",
+        "paddingTop": "16px",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "paddingBottom": "24px",
+          "paddingLeft": "24px",
+          "paddingRight": "24px",
+          "paddingTop": "24px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "rgba(213,247,207,1.00)",
+            "borderBottomLeftRadius": "32px",
+            "borderBottomRightRadius": "32px",
+            "borderTopLeftRadius": "32px",
+            "borderTopRightRadius": "32px",
+            "height": "64px",
+            "justifyContent": "center",
+            "marginBottom": "12px",
+            "width": "64px",
+          }
+        }
+      >
+        Feather:check-circle:32:#4fdd36
+      </div>
+      <div
+        className="css-text-146c3p1"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(0,0,0,1.00)",
+            "fontSize": "16px",
+            "fontWeight": "600",
+            "marginBottom": "4px",
+          }
+        }
+      >
+        ¡Excelente!
+      </div>
+      <div
+        className="css-text-146c3p1"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "14px",
+            "textAlign": "center",
+          }
+        }
+      >
+        No hay estudiantes en riesgo de sanción
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`dashboard student lists render at-risk list: sorted rows, highlight on the first high-risk row 1`] = `
+<div
+  className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+  dir={null}
+  ref={[Function]}
+  style={
+    {
+      "backgroundColor": "rgba(255,255,255,1.00)",
+      "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+    }
+  }
+>
+  <div
+    className="css-view-g5y9jx"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "paddingBottom": "0px",
+        "paddingLeft": "0px",
+        "paddingRight": "0px",
+        "paddingTop": "0px",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+      dir={null}
+      onClick={[Function]}
+      onContextMenu={[Function]}
+      onKeyDown={[Function]}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "rgba(253,224,222,1.00)",
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomWidth": "1px",
+          "flexDirection": "row",
+          "gap": "12px",
+          "paddingBottom": "16px",
+          "paddingLeft": "16px",
+          "paddingRight": "16px",
+          "paddingTop": "16px",
+          "transitionDuration": "0s",
+        }
+      }
+      tabIndex="0"
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "position": "relative",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(25,131,252,1.00)",
+              "borderBottomLeftRadius": "24px",
+              "borderBottomRightRadius": "24px",
+              "borderTopLeftRadius": "24px",
+              "borderTopRightRadius": "24px",
+              "height": "48px",
+              "justifyContent": "center",
+              "width": "48px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(255,255,255,1.00)",
+                "fontSize": "19.2px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            E2
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(240,68,56,1.00)",
+              "borderBottomColor": "rgba(255,255,255,1.00)",
+              "borderBottomLeftRadius": "10px",
+              "borderBottomRightRadius": "10px",
+              "borderBottomWidth": "2px",
+              "borderLeftColor": "rgba(255,255,255,1.00)",
+              "borderLeftWidth": "2px",
+              "borderRightColor": "rgba(255,255,255,1.00)",
+              "borderRightWidth": "2px",
+              "borderTopColor": "rgba(255,255,255,1.00)",
+              "borderTopLeftRadius": "10px",
+              "borderTopRightRadius": "10px",
+              "borderTopWidth": "2px",
+              "bottom": "-2px",
+              "height": "20px",
+              "justifyContent": "center",
+              "position": "absolute",
+              "right": "-2px",
+              "width": "20px",
+            }
+          }
+        >
+          Feather:alert-octagon:10:#FFFFFF
+        </div>
+      </div>
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "flex": 1,
+            "gap": "6px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(0,0,0,1.00)",
+                "flex": 1,
+                "fontSize": "14px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            Estudiante 2
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(148,163,184,1.00)",
+                  "fontSize": "11px",
+                }
+              }
+            >
+              Última
+              : 
+              hace 2 días
+            </div>
+            <div
+              className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(253,224,222,1.00)",
+                  "borderBottomLeftRadius": "9999px",
+                  "borderBottomRightRadius": "9999px",
+                  "borderTopLeftRadius": "9999px",
+                  "borderTopRightRadius": "9999px",
+                  "gap": "4px",
+                  "paddingBottom": "2px",
+                  "paddingLeft": "4px",
+                  "paddingRight": "4px",
+                  "paddingTop": "2px",
+                }
+              }
+            >
+              <div
+                className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(240,68,56,1.00)",
+                    "fontSize": "10px",
+                  }
+                }
+              >
+                50
+                %
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flex": 1,
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              C-2
+            </div>
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              • 
+              ADSI 2758
+            </div>
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "10px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": "4px",
+                }
+              }
+            >
+              Feather:x-circle:12:#F04438
+              <div
+                className="css-text-146c3p1"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(100,116,139,1.00)",
+                    "fontSize": "11px",
+                  }
+                }
+              >
+                4
+                 
+                faltas
+              </div>
+            </div>
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": "4px",
+                }
+              }
+            >
+              Feather:repeat:12:#FFAB00
+              <div
+                className="css-text-146c3p1"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(100,116,139,1.00)",
+                    "fontSize": "11px",
+                  }
+                }
+              >
+                3
+                 
+                seguidas
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-width-13qz1uu"
+          dir={null}
+          ref={[Function]}
+        >
+          <div
+            className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "backgroundColor": "rgba(226,232,240,1.00)",
+                "height": "4px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(240,68,56,1.00)",
+                  "width": "50%",
+                }
+              }
+            />
+          </div>
+        </div>
+      </div>
+      Feather:chevron-right:20:#64748B
+    </div>
+    <div
+      className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+      dir={null}
+      onClick={[Function]}
+      onContextMenu={[Function]}
+      onKeyDown={[Function]}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "rgba(0,0,0,0.00)",
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomWidth": "1px",
+          "flexDirection": "row",
+          "gap": "12px",
+          "paddingBottom": "16px",
+          "paddingLeft": "16px",
+          "paddingRight": "16px",
+          "paddingTop": "16px",
+          "transitionDuration": "0s",
+        }
+      }
+      tabIndex="0"
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "position": "relative",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(25,131,252,1.00)",
+              "borderBottomLeftRadius": "24px",
+              "borderBottomRightRadius": "24px",
+              "borderTopLeftRadius": "24px",
+              "borderTopRightRadius": "24px",
+              "height": "48px",
+              "justifyContent": "center",
+              "width": "48px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(255,255,255,1.00)",
+                "fontSize": "19.2px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            E1
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(255,171,0,1.00)",
+              "borderBottomColor": "rgba(255,255,255,1.00)",
+              "borderBottomLeftRadius": "10px",
+              "borderBottomRightRadius": "10px",
+              "borderBottomWidth": "2px",
+              "borderLeftColor": "rgba(255,255,255,1.00)",
+              "borderLeftWidth": "2px",
+              "borderRightColor": "rgba(255,255,255,1.00)",
+              "borderRightWidth": "2px",
+              "borderTopColor": "rgba(255,255,255,1.00)",
+              "borderTopLeftRadius": "10px",
+              "borderTopRightRadius": "10px",
+              "borderTopWidth": "2px",
+              "bottom": "-2px",
+              "height": "20px",
+              "justifyContent": "center",
+              "position": "absolute",
+              "right": "-2px",
+              "width": "20px",
+            }
+          }
+        >
+          Feather:alert-circle:10:#0F172A
+        </div>
+      </div>
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "flex": 1,
+            "gap": "6px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(0,0,0,1.00)",
+                "flex": 1,
+                "fontSize": "14px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            Estudiante 1
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(148,163,184,1.00)",
+                  "fontSize": "11px",
+                }
+              }
+            >
+              Última
+              : 
+              hace 2 días
+            </div>
+            <div
+              className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,230,179,1.00)",
+                  "borderBottomLeftRadius": "9999px",
+                  "borderBottomRightRadius": "9999px",
+                  "borderTopLeftRadius": "9999px",
+                  "borderTopRightRadius": "9999px",
+                  "gap": "4px",
+                  "paddingBottom": "2px",
+                  "paddingLeft": "4px",
+                  "paddingRight": "4px",
+                  "paddingTop": "2px",
+                }
+              }
+            >
+              <div
+                className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(255,171,0,1.00)",
+                    "fontSize": "10px",
+                  }
+                }
+              >
+                75
+                %
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flex": 1,
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              C-1
+            </div>
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              • 
+              ADSI 2758
+            </div>
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "10px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": "4px",
+                }
+              }
+            >
+              Feather:x-circle:12:#F04438
+              <div
+                className="css-text-146c3p1"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(100,116,139,1.00)",
+                    "fontSize": "11px",
+                  }
+                }
+              >
+                4
+                 
+                faltas
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-width-13qz1uu"
+          dir={null}
+          ref={[Function]}
+        >
+          <div
+            className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "backgroundColor": "rgba(226,232,240,1.00)",
+                "height": "4px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,171,0,1.00)",
+                  "width": "75%",
+                }
+              }
+            />
+          </div>
+        </div>
+      </div>
+      Feather:chevron-right:20:#64748B
+    </div>
+    <div
+      className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+      dir={null}
+      onClick={[Function]}
+      onContextMenu={[Function]}
+      onKeyDown={[Function]}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "rgba(0,0,0,0.00)",
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomWidth": "0px",
+          "flexDirection": "row",
+          "gap": "12px",
+          "paddingBottom": "16px",
+          "paddingLeft": "16px",
+          "paddingRight": "16px",
+          "paddingTop": "16px",
+          "transitionDuration": "0s",
+        }
+      }
+      tabIndex="0"
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "position": "relative",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(25,131,252,1.00)",
+              "borderBottomLeftRadius": "24px",
+              "borderBottomRightRadius": "24px",
+              "borderTopLeftRadius": "24px",
+              "borderTopRightRadius": "24px",
+              "height": "48px",
+              "justifyContent": "center",
+              "width": "48px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(255,255,255,1.00)",
+                "fontSize": "19.2px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            E3
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(255,171,0,1.00)",
+              "borderBottomColor": "rgba(255,255,255,1.00)",
+              "borderBottomLeftRadius": "10px",
+              "borderBottomRightRadius": "10px",
+              "borderBottomWidth": "2px",
+              "borderLeftColor": "rgba(255,255,255,1.00)",
+              "borderLeftWidth": "2px",
+              "borderRightColor": "rgba(255,255,255,1.00)",
+              "borderRightWidth": "2px",
+              "borderTopColor": "rgba(255,255,255,1.00)",
+              "borderTopLeftRadius": "10px",
+              "borderTopRightRadius": "10px",
+              "borderTopWidth": "2px",
+              "bottom": "-2px",
+              "height": "20px",
+              "justifyContent": "center",
+              "position": "absolute",
+              "right": "-2px",
+              "width": "20px",
+            }
+          }
+        >
+          Feather:alert-octagon:10:#0F172A
+        </div>
+      </div>
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "flex": 1,
+            "gap": "6px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(0,0,0,1.00)",
+                "flex": 1,
+                "fontSize": "14px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            Estudiante 3
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(148,163,184,1.00)",
+                  "fontSize": "11px",
+                }
+              }
+            >
+              Última
+              : 
+              hace 2 días
+            </div>
+            <div
+              className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(253,224,222,1.00)",
+                  "borderBottomLeftRadius": "9999px",
+                  "borderBottomRightRadius": "9999px",
+                  "borderTopLeftRadius": "9999px",
+                  "borderTopRightRadius": "9999px",
+                  "gap": "4px",
+                  "paddingBottom": "2px",
+                  "paddingLeft": "4px",
+                  "paddingRight": "4px",
+                  "paddingTop": "2px",
+                }
+              }
+            >
+              <div
+                className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(240,68,56,1.00)",
+                    "fontSize": "10px",
+                  }
+                }
+              >
+                78
+                %
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flex": 1,
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              C-3
+            </div>
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              • 
+              ADSI 2758
+            </div>
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "10px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": "4px",
+                }
+              }
+            >
+              Feather:x-circle:12:#F04438
+              <div
+                className="css-text-146c3p1"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(100,116,139,1.00)",
+                    "fontSize": "11px",
+                  }
+                }
+              >
+                4
+                 
+                faltas
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-width-13qz1uu"
+          dir={null}
+          ref={[Function]}
+        >
+          <div
+            className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "backgroundColor": "rgba(226,232,240,1.00)",
+                "height": "4px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,171,0,1.00)",
+                  "width": "78%",
+                }
+              }
+            />
+          </div>
+        </div>
+      </div>
+      Feather:chevron-right:20:#64748B
+    </div>
+  </div>
+</div>
+`;
+
+exports[`dashboard student lists render perfect list: overflow footer and empty state 1`] = `
+<div
+  className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+  dir={null}
+  ref={[Function]}
+  style={
+    {
+      "backgroundColor": "rgba(255,255,255,1.00)",
+      "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+    }
+  }
+>
+  <div
+    className="css-view-g5y9jx"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "paddingBottom": "0px",
+        "paddingLeft": "0px",
+        "paddingRight": "0px",
+        "paddingTop": "0px",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+      dir={null}
+      onClick={[Function]}
+      onContextMenu={[Function]}
+      onKeyDown={[Function]}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "rgba(213,247,207,1.00)",
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomWidth": "1px",
+          "flexDirection": "row",
+          "gap": "12px",
+          "paddingBottom": "16px",
+          "paddingLeft": "16px",
+          "paddingRight": "16px",
+          "paddingTop": "16px",
+          "transitionDuration": "0s",
+        }
+      }
+      tabIndex="0"
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "position": "relative",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(25,131,252,1.00)",
+              "borderBottomLeftRadius": "24px",
+              "borderBottomRightRadius": "24px",
+              "borderTopLeftRadius": "24px",
+              "borderTopRightRadius": "24px",
+              "height": "48px",
+              "justifyContent": "center",
+              "width": "48px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(255,255,255,1.00)",
+                "fontSize": "19.2px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            E4
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(255,215,0,1.00)",
+              "borderBottomColor": "rgba(255,255,255,1.00)",
+              "borderBottomLeftRadius": "10px",
+              "borderBottomRightRadius": "10px",
+              "borderBottomWidth": "2px",
+              "borderLeftColor": "rgba(255,255,255,1.00)",
+              "borderLeftWidth": "2px",
+              "borderRightColor": "rgba(255,255,255,1.00)",
+              "borderRightWidth": "2px",
+              "borderTopColor": "rgba(255,255,255,1.00)",
+              "borderTopLeftRadius": "10px",
+              "borderTopRightRadius": "10px",
+              "borderTopWidth": "2px",
+              "bottom": "-2px",
+              "height": "20px",
+              "justifyContent": "center",
+              "position": "absolute",
+              "right": "-2px",
+              "width": "20px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "fontSize": "10px",
+              }
+            }
+          >
+            ⭐
+          </div>
+        </div>
+      </div>
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "flex": 1,
+            "gap": "6px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(0,0,0,1.00)",
+                "flex": 1,
+                "fontSize": "14px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            Estudiante 4
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(213,247,207,1.00)",
+                  "borderBottomLeftRadius": "9999px",
+                  "borderBottomRightRadius": "9999px",
+                  "borderTopLeftRadius": "9999px",
+                  "borderTopRightRadius": "9999px",
+                  "gap": "4px",
+                  "paddingBottom": "2px",
+                  "paddingLeft": "4px",
+                  "paddingRight": "4px",
+                  "paddingTop": "2px",
+                }
+              }
+            >
+              <div
+                className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(79,221,54,1.00)",
+                    "fontSize": "10px",
+                  }
+                }
+              >
+                100
+                %
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flex": 1,
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              C-4
+            </div>
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              • 
+              ADSI 2758
+            </div>
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "10px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": "4px",
+                }
+              }
+            >
+              Feather:trending-up:12:#4fdd36
+              <div
+                className="css-text-146c3p1"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(100,116,139,1.00)",
+                    "fontSize": "11px",
+                  }
+                }
+              >
+                10 días
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-width-13qz1uu"
+          dir={null}
+          ref={[Function]}
+        >
+          <div
+            className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "backgroundColor": "rgba(226,232,240,1.00)",
+                "height": "4px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(79,221,54,1.00)",
+                  "width": "100%",
+                }
+              }
+            />
+          </div>
+        </div>
+      </div>
+      Feather:chevron-right:20:#64748B
+    </div>
+    <div
+      className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+      dir={null}
+      onClick={[Function]}
+      onContextMenu={[Function]}
+      onKeyDown={[Function]}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "rgba(0,0,0,0.00)",
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomWidth": "0px",
+          "flexDirection": "row",
+          "gap": "12px",
+          "paddingBottom": "16px",
+          "paddingLeft": "16px",
+          "paddingRight": "16px",
+          "paddingTop": "16px",
+          "transitionDuration": "0s",
+        }
+      }
+      tabIndex="0"
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "position": "relative",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(25,131,252,1.00)",
+              "borderBottomLeftRadius": "24px",
+              "borderBottomRightRadius": "24px",
+              "borderTopLeftRadius": "24px",
+              "borderTopRightRadius": "24px",
+              "height": "48px",
+              "justifyContent": "center",
+              "width": "48px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(255,255,255,1.00)",
+                "fontSize": "19.2px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            E5
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(79,221,54,1.00)",
+              "borderBottomColor": "rgba(255,255,255,1.00)",
+              "borderBottomLeftRadius": "10px",
+              "borderBottomRightRadius": "10px",
+              "borderBottomWidth": "2px",
+              "borderLeftColor": "rgba(255,255,255,1.00)",
+              "borderLeftWidth": "2px",
+              "borderRightColor": "rgba(255,255,255,1.00)",
+              "borderRightWidth": "2px",
+              "borderTopColor": "rgba(255,255,255,1.00)",
+              "borderTopLeftRadius": "10px",
+              "borderTopRightRadius": "10px",
+              "borderTopWidth": "2px",
+              "bottom": "-2px",
+              "height": "20px",
+              "justifyContent": "center",
+              "position": "absolute",
+              "right": "-2px",
+              "width": "20px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "fontSize": "10px",
+              }
+            }
+          >
+            ✓
+          </div>
+        </div>
+      </div>
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "flex": 1,
+            "gap": "6px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(0,0,0,1.00)",
+                "flex": 1,
+                "fontSize": "14px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            Estudiante 5
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(213,247,207,1.00)",
+                  "borderBottomLeftRadius": "9999px",
+                  "borderBottomRightRadius": "9999px",
+                  "borderTopLeftRadius": "9999px",
+                  "borderTopRightRadius": "9999px",
+                  "gap": "4px",
+                  "paddingBottom": "2px",
+                  "paddingLeft": "4px",
+                  "paddingRight": "4px",
+                  "paddingTop": "2px",
+                }
+              }
+            >
+              <div
+                className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(79,221,54,1.00)",
+                    "fontSize": "10px",
+                  }
+                }
+              >
+                90
+                %
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flex": 1,
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              C-5
+            </div>
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              • 
+              ADSI 2758
+            </div>
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "10px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": "4px",
+                }
+              }
+            >
+              Feather:trending-up:12:#4fdd36
+              <div
+                className="css-text-146c3p1"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(100,116,139,1.00)",
+                    "fontSize": "11px",
+                  }
+                }
+              >
+                10 días
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-width-13qz1uu"
+          dir={null}
+          ref={[Function]}
+        >
+          <div
+            className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "backgroundColor": "rgba(226,232,240,1.00)",
+                "height": "4px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(79,221,54,1.00)",
+                  "width": "90%",
+                }
+              }
+            />
+          </div>
+        </div>
+      </div>
+      Feather:chevron-right:20:#64748B
+    </div>
+    <div
+      className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+      dir={null}
+      onClick={[Function]}
+      onContextMenu={[Function]}
+      onKeyDown={[Function]}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "borderTopColor": "rgba(226,232,240,1.00)",
+          "borderTopWidth": "1px",
+          "paddingBottom": "12px",
+          "paddingLeft": "12px",
+          "paddingRight": "12px",
+          "paddingTop": "12px",
+          "transitionDuration": "0s",
+        }
+      }
+      tabIndex="0"
+    >
+      <div
+        className="css-text-146c3p1"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(25,131,252,1.00)",
+            "fontSize": "12px",
+            "fontWeight": "600",
+          }
+        }
+      >
+        +
+        1
+         
+        estudiantes destacados más
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`dashboard student lists render perfect list: overflow footer and empty state 2`] = `
+<div
+  className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+  dir={null}
+  ref={[Function]}
+  style={
+    {
+      "backgroundColor": "rgba(255,255,255,1.00)",
+      "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+    }
+  }
+>
+  <div
+    className="css-view-g5y9jx"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "paddingBottom": "16px",
+        "paddingLeft": "16px",
+        "paddingRight": "16px",
+        "paddingTop": "16px",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "paddingBottom": "16px",
+          "paddingLeft": "16px",
+          "paddingRight": "16px",
+          "paddingTop": "16px",
+        }
+      }
+    >
+      Feather:award:32:#64748B
+      <div
+        className="css-text-146c3p1"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "14px",
+            "marginTop": "8px",
+          }
+        }
+      >
+        No hay datos disponibles
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`dashboard student lists render perfect list: perfect, excellent and low rows 1`] = `
+<div
+  className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+  dir={null}
+  ref={[Function]}
+  style={
+    {
+      "backgroundColor": "rgba(255,255,255,1.00)",
+      "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+    }
+  }
+>
+  <div
+    className="css-view-g5y9jx"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "paddingBottom": "0px",
+        "paddingLeft": "0px",
+        "paddingRight": "0px",
+        "paddingTop": "0px",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+      dir={null}
+      onClick={[Function]}
+      onContextMenu={[Function]}
+      onKeyDown={[Function]}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "rgba(213,247,207,1.00)",
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomWidth": "1px",
+          "flexDirection": "row",
+          "gap": "12px",
+          "paddingBottom": "16px",
+          "paddingLeft": "16px",
+          "paddingRight": "16px",
+          "paddingTop": "16px",
+          "transitionDuration": "0s",
+        }
+      }
+      tabIndex="0"
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "position": "relative",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(25,131,252,1.00)",
+              "borderBottomLeftRadius": "24px",
+              "borderBottomRightRadius": "24px",
+              "borderTopLeftRadius": "24px",
+              "borderTopRightRadius": "24px",
+              "height": "48px",
+              "justifyContent": "center",
+              "width": "48px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(255,255,255,1.00)",
+                "fontSize": "19.2px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            E4
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(255,215,0,1.00)",
+              "borderBottomColor": "rgba(255,255,255,1.00)",
+              "borderBottomLeftRadius": "10px",
+              "borderBottomRightRadius": "10px",
+              "borderBottomWidth": "2px",
+              "borderLeftColor": "rgba(255,255,255,1.00)",
+              "borderLeftWidth": "2px",
+              "borderRightColor": "rgba(255,255,255,1.00)",
+              "borderRightWidth": "2px",
+              "borderTopColor": "rgba(255,255,255,1.00)",
+              "borderTopLeftRadius": "10px",
+              "borderTopRightRadius": "10px",
+              "borderTopWidth": "2px",
+              "bottom": "-2px",
+              "height": "20px",
+              "justifyContent": "center",
+              "position": "absolute",
+              "right": "-2px",
+              "width": "20px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "fontSize": "10px",
+              }
+            }
+          >
+            ⭐
+          </div>
+        </div>
+      </div>
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "flex": 1,
+            "gap": "6px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(0,0,0,1.00)",
+                "flex": 1,
+                "fontSize": "14px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            Estudiante 4
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(213,247,207,1.00)",
+                  "borderBottomLeftRadius": "9999px",
+                  "borderBottomRightRadius": "9999px",
+                  "borderTopLeftRadius": "9999px",
+                  "borderTopRightRadius": "9999px",
+                  "gap": "4px",
+                  "paddingBottom": "2px",
+                  "paddingLeft": "4px",
+                  "paddingRight": "4px",
+                  "paddingTop": "2px",
+                }
+              }
+            >
+              <div
+                className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(79,221,54,1.00)",
+                    "fontSize": "10px",
+                  }
+                }
+              >
+                100
+                %
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flex": 1,
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              C-4
+            </div>
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              • 
+              ADSI 2758
+            </div>
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "10px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": "4px",
+                }
+              }
+            >
+              Feather:trending-up:12:#4fdd36
+              <div
+                className="css-text-146c3p1"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(100,116,139,1.00)",
+                    "fontSize": "11px",
+                  }
+                }
+              >
+                10 días
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-width-13qz1uu"
+          dir={null}
+          ref={[Function]}
+        >
+          <div
+            className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "backgroundColor": "rgba(226,232,240,1.00)",
+                "height": "4px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(79,221,54,1.00)",
+                  "width": "100%",
+                }
+              }
+            />
+          </div>
+        </div>
+      </div>
+      Feather:chevron-right:20:#64748B
+    </div>
+    <div
+      className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+      dir={null}
+      onClick={[Function]}
+      onContextMenu={[Function]}
+      onKeyDown={[Function]}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "rgba(0,0,0,0.00)",
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomWidth": "1px",
+          "flexDirection": "row",
+          "gap": "12px",
+          "paddingBottom": "16px",
+          "paddingLeft": "16px",
+          "paddingRight": "16px",
+          "paddingTop": "16px",
+          "transitionDuration": "0s",
+        }
+      }
+      tabIndex="0"
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "position": "relative",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(25,131,252,1.00)",
+              "borderBottomLeftRadius": "24px",
+              "borderBottomRightRadius": "24px",
+              "borderTopLeftRadius": "24px",
+              "borderTopRightRadius": "24px",
+              "height": "48px",
+              "justifyContent": "center",
+              "width": "48px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(255,255,255,1.00)",
+                "fontSize": "19.2px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            E5
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(79,221,54,1.00)",
+              "borderBottomColor": "rgba(255,255,255,1.00)",
+              "borderBottomLeftRadius": "10px",
+              "borderBottomRightRadius": "10px",
+              "borderBottomWidth": "2px",
+              "borderLeftColor": "rgba(255,255,255,1.00)",
+              "borderLeftWidth": "2px",
+              "borderRightColor": "rgba(255,255,255,1.00)",
+              "borderRightWidth": "2px",
+              "borderTopColor": "rgba(255,255,255,1.00)",
+              "borderTopLeftRadius": "10px",
+              "borderTopRightRadius": "10px",
+              "borderTopWidth": "2px",
+              "bottom": "-2px",
+              "height": "20px",
+              "justifyContent": "center",
+              "position": "absolute",
+              "right": "-2px",
+              "width": "20px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "fontSize": "10px",
+              }
+            }
+          >
+            ✓
+          </div>
+        </div>
+      </div>
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "flex": 1,
+            "gap": "6px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(0,0,0,1.00)",
+                "flex": 1,
+                "fontSize": "14px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            Estudiante 5
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(213,247,207,1.00)",
+                  "borderBottomLeftRadius": "9999px",
+                  "borderBottomRightRadius": "9999px",
+                  "borderTopLeftRadius": "9999px",
+                  "borderTopRightRadius": "9999px",
+                  "gap": "4px",
+                  "paddingBottom": "2px",
+                  "paddingLeft": "4px",
+                  "paddingRight": "4px",
+                  "paddingTop": "2px",
+                }
+              }
+            >
+              <div
+                className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(79,221,54,1.00)",
+                    "fontSize": "10px",
+                  }
+                }
+              >
+                90
+                %
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flex": 1,
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              C-5
+            </div>
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              • 
+              ADSI 2758
+            </div>
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "10px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": "4px",
+                }
+              }
+            >
+              Feather:trending-up:12:#4fdd36
+              <div
+                className="css-text-146c3p1"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(100,116,139,1.00)",
+                    "fontSize": "11px",
+                  }
+                }
+              >
+                10 días
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-width-13qz1uu"
+          dir={null}
+          ref={[Function]}
+        >
+          <div
+            className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "backgroundColor": "rgba(226,232,240,1.00)",
+                "height": "4px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(79,221,54,1.00)",
+                  "width": "90%",
+                }
+              }
+            />
+          </div>
+        </div>
+      </div>
+      Feather:chevron-right:20:#64748B
+    </div>
+    <div
+      className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+      dir={null}
+      onClick={[Function]}
+      onContextMenu={[Function]}
+      onKeyDown={[Function]}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "rgba(0,0,0,0.00)",
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomWidth": "0px",
+          "flexDirection": "row",
+          "gap": "12px",
+          "paddingBottom": "16px",
+          "paddingLeft": "16px",
+          "paddingRight": "16px",
+          "paddingTop": "16px",
+          "transitionDuration": "0s",
+        }
+      }
+      tabIndex="0"
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "position": "relative",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(25,131,252,1.00)",
+              "borderBottomLeftRadius": "24px",
+              "borderBottomRightRadius": "24px",
+              "borderTopLeftRadius": "24px",
+              "borderTopRightRadius": "24px",
+              "height": "48px",
+              "justifyContent": "center",
+              "width": "48px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(255,255,255,1.00)",
+                "fontSize": "19.2px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            E6
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "rgba(240,68,56,1.00)",
+              "borderBottomColor": "rgba(255,255,255,1.00)",
+              "borderBottomLeftRadius": "10px",
+              "borderBottomRightRadius": "10px",
+              "borderBottomWidth": "2px",
+              "borderLeftColor": "rgba(255,255,255,1.00)",
+              "borderLeftWidth": "2px",
+              "borderRightColor": "rgba(255,255,255,1.00)",
+              "borderRightWidth": "2px",
+              "borderTopColor": "rgba(255,255,255,1.00)",
+              "borderTopLeftRadius": "10px",
+              "borderTopRightRadius": "10px",
+              "borderTopWidth": "2px",
+              "bottom": "-2px",
+              "height": "20px",
+              "justifyContent": "center",
+              "position": "absolute",
+              "right": "-2px",
+              "width": "20px",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "fontSize": "10px",
+              }
+            }
+          >
+            ✓
+          </div>
+        </div>
+      </div>
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "flex": 1,
+            "gap": "6px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+            dir="auto"
+            ref={[Function]}
+            style={
+              {
+                "color": "rgba(0,0,0,1.00)",
+                "flex": 1,
+                "fontSize": "14px",
+                "fontWeight": "600",
+              }
+            }
+          >
+            Estudiante 6
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,230,179,1.00)",
+                  "borderBottomLeftRadius": "9999px",
+                  "borderBottomRightRadius": "9999px",
+                  "borderTopLeftRadius": "9999px",
+                  "borderTopRightRadius": "9999px",
+                  "gap": "4px",
+                  "paddingBottom": "2px",
+                  "paddingLeft": "4px",
+                  "paddingRight": "4px",
+                  "paddingTop": "2px",
+                }
+              }
+            >
+              <div
+                className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(255,171,0,1.00)",
+                    "fontSize": "10px",
+                  }
+                }
+              >
+                60
+                %
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "gap": "8px",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flex": 1,
+                "flexDirection": "row",
+                "gap": "8px",
+              }
+            }
+          >
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              C-6
+            </div>
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "12px",
+                }
+              }
+            >
+              • 
+              ADSI 2758
+            </div>
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": "10px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": "4px",
+                }
+              }
+            >
+              Feather:trending-up:12:#F04438
+              <div
+                className="css-text-146c3p1"
+                dir="auto"
+                ref={[Function]}
+                style={
+                  {
+                    "color": "rgba(100,116,139,1.00)",
+                    "fontSize": "11px",
+                  }
+                }
+              >
+                10 días
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-width-13qz1uu"
+          dir={null}
+          ref={[Function]}
+        >
+          <div
+            className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "backgroundColor": "rgba(226,232,240,1.00)",
+                "height": "4px",
+              }
+            }
+          >
+            <div
+              className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(240,68,56,1.00)",
+                  "width": "60%",
+                }
+              }
+            />
+          </div>
+        </div>
+      </div>
+      Feather:chevron-right:20:#64748B
+    </div>
+  </div>
+</div>
+`;
