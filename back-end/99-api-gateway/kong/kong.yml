@@ -249,13 +249,13 @@ plugins:
           local header = kong.request.get_header("authorization")
           local token = header and header:match("^[Bb]earer%s+(%S+)$")
           -- El navegador no puede poner cabeceras en el handshake de un
-          -- WebSocket: el kiosco manda la sesión como ?token=. Solo el canal
-          -- biométrico lo admite (el MS lo valida igual); el resto de rutas
-          -- sigue exigiendo la cabecera para no dejar tokens en URLs ni logs.
+          -- WebSocket: el kiosco manda la sesión como subprotocolo
+          -- ("faceattend.bearer, <token>"), nunca en la URL, que quedaría en
+          -- los logs de acceso. Solo el canal biométrico lo admite (el MS lo
+          -- valida igual); el resto de rutas exige la cabecera Authorization.
           if not token and method == "GET" and path == "/api/v1/biometric/ws" then
-            local ws_args = kong.request.get_query()
-            local ws_token = ws_args and ws_args.token
-            if type(ws_token) == "string" then token = ws_token end
+            local protocols = kong.request.get_header("sec-websocket-protocol")
+            token = protocols and protocols:match("^%s*faceattend%.bearer%s*,%s*([%x%-]+)%s*$")
           end
           if not token or not token:match("^%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$") then
             return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Missing or invalid bearer token", path = path })

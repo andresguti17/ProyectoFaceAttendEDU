@@ -154,8 +154,12 @@ es la notificación en tiempo real de "quién fue registrado".
 
 **Auth:** misma sesión + permiso `attendance.record:write` que REST
 (`infrastructure/web/security.py`). El navegador no puede fijar cabeceras en
-el handshake de WS, así que el token viaja como `?token=<session-uuid>`
-(también se acepta `Authorization: Bearer` para clientes no-browser). Un
+el handshake de WS, así que el token viaja como subprotocolo
+(`Sec-WebSocket-Protocol: faceattend.bearer, <session-uuid>`; el servidor
+responde con `faceattend.bearer`), nunca en la URL, que quedaría en los logs
+de acceso. También se acepta `Authorization: Bearer` para clientes no-browser.
+Cada usuario puede tener a lo sumo `BIOMETRIC_WS_MAX_CONNECTIONS_PER_USER`
+(5) sockets abiertos; el excedente se cierra con 4429. Un
 token inválido o sin permiso cierra el socket con un código 4401/4403/4503
 (mismo significado que 401/403/503 en REST).
 

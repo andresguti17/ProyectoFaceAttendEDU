@@ -3,12 +3,13 @@ jest.mock("../../../api/apiClient", () => ({
     resolveBaseUrl: jest.fn(() => "http://localhost:8080"),
 }));
 
-import { connectBiometricSocket } from "../biometricSocket";
+import { connectBiometricSocket, WS_BEARER_PROTOCOL } from "../biometricSocket";
 import { getToken } from "../../../api/apiClient";
 
 class FakeWebSocket {
-    constructor(url) {
+    constructor(url, protocols) {
         this.url = url;
+        this.protocols = protocols;
         this.sent = [];
         this.readyState = 0; // CONNECTING
         FakeWebSocket.instances.push(this);
@@ -271,4 +272,13 @@ test("gives up resending a message after a fixed number of reconnect attempts an
 
     await expect(pending).rejects.toMatchObject({ message: expect.stringContaining("gave up") });
     expect(ws.sent.length).toBe(0); // nothing was transmitted for this message this time
+});
+
+test("sends the session as a subprotocol, never in the URL", async () => {
+    connectBiometricSocket({ token: "11111111-1111-4111-8111-111111111111" });
+    await Promise.resolve();
+    const ws = FakeWebSocket.instances[0];
+
+    expect(ws.url).toBe("ws://localhost:8080/api/v1/biometric/ws");
+    expect(ws.protocols).toEqual([WS_BEARER_PROTOCOL, "11111111-1111-4111-8111-111111111111"]);
 });

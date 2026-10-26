@@ -20,16 +20,23 @@ logger = logging.getLogger("biometric.ws")
 
 class ConnectionManager:
     def __init__(self) -> None:
-        self._connections: set[WebSocket] = set()
+        # socket -> owner (user id, or None when auth is disabled)
+        self._connections: dict[WebSocket, str | None] = {}
         self._lock = asyncio.Lock()
 
-    async def connect(self, websocket: WebSocket) -> None:
+    async def connect(self, websocket: WebSocket, owner: str | None, max_per_owner: int) -> bool:
+        """Registers the socket unless `owner` already holds `max_per_owner` of them,
+        so one session cannot pin an unbounded number of long-lived connections."""
         async with self._lock:
-            self._connections.add(websocket)
+            held = sum(1 for o in self._connections.values() if o == owner)
+            if held >= max_per_owner:
+                return False
+            self._connections[websocket] = owner
+            return True
 
     async def disconnect(self, websocket: WebSocket) -> None:
         async with self._lock:
-            self._connections.discard(websocket)
+            self._connections.pop(websocket, None)
 
     async def broadcast(self, message: dict, *, exclude: WebSocket | None = None) -> None:
         """Best-effort fan-out: one dead peer must never block or drop the rest."""

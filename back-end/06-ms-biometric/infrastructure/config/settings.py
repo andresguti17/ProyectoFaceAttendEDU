@@ -156,6 +156,8 @@ class Settings(BaseSettings):
     # presumed dead and closed, so a half-open TCP socket does not pin a slot
     # forever.
     ws_idle_timeout_seconds: int = 60
+    # Kiosk, dashboard and a spare tab or two per user; more is a leak or abuse.
+    ws_max_connections_per_user: int = 5
     # Bounds the idempotency cache below: entries older than this are evicted
     # even if the cache is not full, so a reconnect long after the original
     # attempt reprocesses instead of replaying a stale response.

@@ -45,7 +45,9 @@ Reliability
 -----------
 * **Auth**: same session + RBAC rule as REST (`infrastructure.web.security`),
   since a WS handshake has no Authorization-header support in browsers the
-  session token travels as `?token=`.
+  session token travels in Sec-WebSocket-Protocol (`faceattend.bearer, <token>`),
+  never in the URL. Each user holds at most
+  `settings.ws_max_connections_per_user` sockets at once.
 * **Heartbeat**: the client is expected to send `{"type": "ping"}`
   periodically; the server replies `pong` and, independently, closes any
   connection that has sent nothing at all for `settings.ws_idle_timeout_seconds`
@@ -114,11 +116,15 @@ from infrastructure.web.security import (
     ensure_biometric_consent,
     extract_ws_token,
     face_threshold_for_caller,
+    ws_bearer_subprotocol,
 )
 from infrastructure.web.ws.connection_manager import ConnectionManager
 from infrastructure.web.ws.idempotency import IdempotencyCache
 
 router = APIRouter(prefix="/api/v1/biometric", tags=["biometric-ws"])
+
+# Private-use close code (RFC 6455 §7.4.2) mirroring HTTP 429.
+WS_CLOSE_TOO_MANY_CONNECTIONS = 4429
 logger = logging.getLogger("biometric.ws")
 
 # Same permission REST requires to capture attendance.
@@ -401,7 +407,7 @@ async def biometric_ws(
     secret: str = Depends(get_liveness_secret),
     settings: Settings = Depends(get_settings),
 ) -> None:
-    await websocket.accept()
+    await websocket.accept(subprotocol=ws_bearer_subprotocol(websocket))
     try:
         user_id = await authenticate_websocket(websocket, PERMISSION)
     except WebSocketAuthError as exc:
@@ -410,7 +416,9 @@ async def biometric_ws(
 
     manager: ConnectionManager = websocket.app.state.ws_connection_manager
     idempotency: IdempotencyCache = websocket.app.state.ws_idempotency_cache
-    await manager.connect(websocket)
+    if not await manager.connect(websocket, user_id, settings.ws_max_connections_per_user):
+        await websocket.close(code=WS_CLOSE_TOO_MANY_CONNECTIONS, reason="too many open connections")
+        return
     logger.info(
         "biometric ws connected user=%s connections=%s", user_id, manager.connection_count()
     )
