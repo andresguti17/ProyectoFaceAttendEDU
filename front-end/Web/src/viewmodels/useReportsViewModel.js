@@ -738,7 +738,7 @@ export function useReportsViewModel(
      * Exporta datos a Excel
      * Orquesta la exportación delegando formato a servicio
      */
-    const exportExcel = useCallback(() => {
+    const exportExcel = useCallback(async () => {
         const rows = buildExcelRows(filteredStudents, period, filters, t);
 
         // Hoja 2: evolución semanal
@@ -781,7 +781,7 @@ export function useReportsViewModel(
         ];
 
         const filename = `Reporte_Asistencia_${periodLabel(period, t).replace(/ /g, "_")}.xlsx`;
-        const result = exportToExcel(sheets, filename);
+        const result = await exportToExcel(sheets, filename);
 
         if (!result.success) {
             console.error("Error al exportar Excel:", result.error);

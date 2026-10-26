@@ -12,7 +12,7 @@
 //  Uso:
 //    import { exportToExcel, exportToPDF } from '@/core/utils/exportHelpers';
 //    
-//    exportToExcel(data, sheets, filename);
+//    await exportToExcel(sheets, filename);
 //    exportToPDF(htmlContent, filename);
 // ============================================================
 
@@ -39,33 +39,42 @@ import { formatDate } from "../constants/dateFormats";
  *   { name: "Resumen", data: [...] }
  * ], "reporte.xlsx");
  */
-export function exportToExcel(sheets, filename) {
+export async function exportToExcel(sheets, filename) {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const XLSX = require("xlsx");
+        const ExcelJS = require("exceljs");
+        const workbook = new ExcelJS.Workbook();
 
-        const wb = XLSX.utils.book_new();
-
-        // Agregar cada hoja al libro
-        sheets.forEach(sheet => {
-            const ws = XLSX.utils.json_to_sheet(sheet.data);
-            
-            // Aplicar anchos de columna si están definidos
-            if (sheet.columns && sheet.columns.length > 0) {
-                ws["!cols"] = sheet.columns;
-            }
-            
-            XLSX.utils.book_append_sheet(wb, ws, sheet.name);
+        sheets.forEach((sheet) => {
+            const worksheet = workbook.addWorksheet(sheet.name);
+            const keys = Object.keys(sheet.data[0] ?? {});
+            // Same layout json_to_sheet produced: one column per key, the key as header.
+            worksheet.columns = keys.map((key, index) => ({ header: key, key, width: sheet.columns?.[index]?.wch }));
+            worksheet.addRows(sheet.data);
         });
 
-        // Escribir archivo
-        XLSX.writeFile(wb, filename);
-        
+        const buffer = await workbook.xlsx.writeBuffer();
+        downloadFile(
+            new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+            filename,
+        );
         return { success: true };
     } catch (err) {
         console.error("[exportHelpers] Error al exportar Excel:", err);
         return { success: false, error: err.message };
     }
+}
+
+/** Saves a Blob through a temporary link (web only, like the PDF export). */
+function downloadFile(blob, filename) {
+    if (Platform.OS !== "web") throw new Error("Excel export only available on web");
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
 }
 
 /**

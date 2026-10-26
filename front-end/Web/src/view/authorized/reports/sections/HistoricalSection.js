@@ -514,8 +514,8 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
     const { exportExcel, exportPDF } = useHistoricosViewModel(filteredUsers);
 
     // Handlers de exportación con feedback
-    const handleExportExcel = () => {
-        const result = exportExcel();
+    const handleExportExcel = async () => {
+        const result = await exportExcel();
         if (result.success) {
             pushNotification.success(
                 t("Exportación exitosa"),
@@ -589,7 +589,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
         setShowExportModal(false);
     };
 
-    const handleExportSelected = (format, exportType) => {
+    const handleExportSelected = async (format, exportType) => {
         // IMPORTANTE: Usar todos los usuarios, no solo los filtrados
         // Los usuarios seleccionados pueden estar en cualquier parte de la lista original
         const usersToExport = usersData.filter(u => selectedUsers.has(u.id));
@@ -769,7 +769,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
             }];
 
             const filename = `Historicos_Seleccionados_${formatDate(new Date(), "YYYY-MM-DD")}.xlsx`;
-            const result = exportToExcel(sheets, filename);
+            const result = await exportToExcel(sheets, filename);
 
             if (result.success) {
                 pushNotification.success(
