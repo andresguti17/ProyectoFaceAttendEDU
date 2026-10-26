@@ -161,8 +161,13 @@ verificado.
 
 | Metodo | Endpoint | Descripcion |
 |--------|----------|-------------|
-| GET | `/api/v1/sessions` | Listar sesiones del usuario |
-| DELETE | `/api/v1/sessions/{id}` | Revocar sesion |
+| GET | `/api/v1/sessions` | Listar todas las sesiones (solo Super Administrador) |
+| GET | `/api/v1/sessions/user/{userId}` | Sesiones de un usuario (el propio, o Super Administrador) |
+| POST | `/api/v1/sessions` | Crear sesion para un usuario (solo Super Administrador) |
+| DELETE | `/api/v1/sessions/{id}` | Revocar sesion (solo Super Administrador; el cierre propio es `POST /auth/logout`) |
+
+El `sessionId` es el bearer: listar, crear o revocar sesiones ajenas equivale a actuar
+como ese usuario, por eso esas operaciones no bastan con `identity.person:write`.
 
 ### 4.5.1 Credenciales por correo y cambio obligatorio
 
