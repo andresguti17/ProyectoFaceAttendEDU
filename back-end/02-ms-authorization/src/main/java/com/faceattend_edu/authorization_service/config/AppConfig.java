@@ -1,8 +1,9 @@
 package com.faceattend_edu.authorization_service.config;
 
+import com.faceattend_edu.shared.auth.UserSchools;
+import org.springframework.beans.factory.annotation.Value;
 import com.faceattend_edu.authorization_service.infrastructure.web.security.AuthTokenFilter;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -20,13 +21,16 @@ public class AppConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/health", "/api/v1/health", "/api/health",
                                  "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                // Primitivas de lectura del propio filtro (ver AuthTokenFilter.isPublic):
-                // rompen la recursión de validación entre microservicios.
-                .requestMatchers(HttpMethod.GET, "/api/v1/auth/evaluate", "/auth/evaluate",
-                                 "/api/v1/users/*/roles", "/users/*/roles").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    /** School membership of users, for scoping role changes by a school Administrador. */
+    @Bean
+    public UserSchools userSchools(@Value("${faceattend.auth.identity-url:http://localhost:8081}") String identityUrl,
+                                   @Value("${faceattend.auth.academic-url:http://localhost:8083}") String academicUrl) {
+        return new UserSchools(identityUrl, academicUrl);
     }
 }

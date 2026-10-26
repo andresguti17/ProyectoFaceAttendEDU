@@ -76,12 +76,20 @@ class AuthTokenFilterFlowTest {
     }
 
     @Test
-    void nonApiPathsAndOwnPrimitivesPassWithoutASession() throws Exception {
+    void onlyHealthAndDocsPassWithoutASession() throws Exception {
         FilterChain chain = mock(FilterChain.class);
         assertThat(run("GET", "/actuator/health", null, chain).getStatus()).isEqualTo(200);
-        assertThat(run("GET", "/api/v1/auth/evaluate", null, chain).getStatus()).isEqualTo(200);
-        assertThat(run("GET", "/api/v1/users/" + ADMIN_USER + "/roles", null, chain).getStatus()).isEqualTo(200);
         assertThat(run("GET", "/api/v1/health", null, chain).getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    void roleLookupsNeedASessionAndOnlyTheOwnOnesAreFree() throws Exception {
+        FilterChain chain = mock(FilterChain.class);
+        assertThat(run("GET", "/api/v1/users/" + ADMIN_USER + "/roles", null, chain).getStatus()).isEqualTo(401);
+        assertThat(run("GET", "/api/v1/auth/evaluate", null, chain).getStatus()).isEqualTo(401);
+        assertThat(run("GET", "/api/v1/users/" + ADMIN_USER + "/roles", ADMIN_TOKEN, chain).getStatus()).isEqualTo(200);
+        assertThat(run("GET", "/api/v1/users/" + SUPER_USER + "/roles", ADMIN_TOKEN, chain).getStatus()).isEqualTo(403);
+        assertThat(run("GET", "/api/v1/users/" + ADMIN_USER + "/roles", SUPER_TOKEN, chain).getStatus()).isEqualTo(200);
     }
 
     @Test
@@ -128,10 +136,14 @@ class AuthTokenFilterFlowTest {
     }
 
     @Test
-    void anotherUsersRoleAssignmentNeedsConfigurationManageButOwnDoesNot() throws Exception {
+    void assigningOrRemovingRolesNeedsConfigurationManageEvenOnOneself() throws Exception {
+        // Without it, any user could grant themselves an operational role (Aprendiz -> Instructor).
         FilterChain chain = mock(FilterChain.class);
         assertThat(run("POST", "/api/v1/users/" + SUPER_USER + "/roles", ADMIN_TOKEN, chain).getStatus()).isEqualTo(403);
-        assertThat(run("DELETE", "/api/v1/users/" + ADMIN_USER + "/roles/2", ADMIN_TOKEN, chain).getStatus()).isEqualTo(200);
+        assertThat(run("POST", "/api/v1/users/" + ADMIN_USER + "/roles", ADMIN_TOKEN, chain).getStatus()).isEqualTo(403);
+        assertThat(run("DELETE", "/api/v1/users/" + ADMIN_USER + "/roles/2", ADMIN_TOKEN, chain).getStatus()).isEqualTo(403);
+        verify(chain, never()).doFilter(any(), any());
+        assertThat(run("POST", "/api/v1/users/" + ADMIN_USER + "/roles", SUPER_TOKEN, chain).getStatus()).isEqualTo(200);
     }
 
     @Test
@@ -145,12 +157,21 @@ class AuthTokenFilterFlowTest {
         filter.doFilter(request, response, chain);
         assertThat(response.getStatus()).isEqualTo(403);
 
+        // Only GET is the free self-lookup; any other method is treated as a write.
         MockHttpServletRequest own = new MockHttpServletRequest("POST", "/api/v1/auth/evaluate");
         own.setRequestURI("/api/v1/auth/evaluate");
         own.setParameter("userId", ADMIN_USER);
         own.addHeader("Authorization", "Bearer " + ADMIN_TOKEN);
         MockHttpServletResponse ownResponse = new MockHttpServletResponse();
         filter.doFilter(own, ownResponse, chain);
-        assertThat(ownResponse.getStatus()).isEqualTo(200);
+        assertThat(ownResponse.getStatus()).isEqualTo(403);
+
+        MockHttpServletRequest ownGet = new MockHttpServletRequest("GET", "/api/v1/auth/evaluate");
+        ownGet.setRequestURI("/api/v1/auth/evaluate");
+        ownGet.setParameter("userId", ADMIN_USER);
+        ownGet.addHeader("Authorization", "Bearer " + ADMIN_TOKEN);
+        MockHttpServletResponse ownGetResponse = new MockHttpServletResponse();
+        filter.doFilter(ownGet, ownGetResponse, chain);
+        assertThat(ownGetResponse.getStatus()).isEqualTo(200);
     }
 }

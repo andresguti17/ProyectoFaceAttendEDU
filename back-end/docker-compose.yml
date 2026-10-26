@@ -201,6 +201,8 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
       FACEATTEND_AUTH_IDENTITY_URL: http://ms-identity:8081
       FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8082
+      # Sede de cada usuario: un Administrador solo cambia roles dentro de la suya.
+      FACEATTEND_AUTH_ACADEMIC_URL: http://ms-academic:8083
       SERVER_PORT: 8082
     ports:
       - "${BIND_IP:-127.0.0.1}:8082:8082"
