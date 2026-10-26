@@ -17,6 +17,8 @@ from urllib.parse import unquote
 import cv2
 import numpy as np
 
+from domain.image_bounds import decode_bounded
+
 _BASE64_RE = re.compile(r"[A-Za-z0-9+/]*={0,2}")
 _MAX_ENCODED_LENGTH = 4_000_000
 
@@ -52,13 +54,6 @@ def decode_fingerprint(data_base64: str, max_bytes: int, max_pixels: int) -> np.
             raise ValueError("Invalid base64 payload")
         encoded += "=" * (-len(encoded) % 4)
         image_bytes = base64.b64decode(encoded, validate=True)
-        if len(image_bytes) > max_bytes:
-            raise ValueError("Sample exceeds the maximum allowed size")
-        image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_GRAYSCALE)
-        if image is None:
-            raise ValueError("Could not decode the sample")
-        if image.shape[0] * image.shape[1] > max_pixels:
-            raise ValueError("Sample has too many pixels")
-        return image
+        return decode_bounded(image_bytes, max_bytes, max_pixels, cv2.IMREAD_GRAYSCALE)
     except Exception as exc:
         raise ValueError(f"Invalid fingerprint sample: {exc}") from exc

@@ -123,13 +123,15 @@ export async function fetchAll(token, route, { by = "offset", maxPages = 30 } = 
 /** Handshake de WebSocket sin librerías: devuelve el status (101 si se aceptó). */
 export function wsHandshake(route, { token, bearer } = {}) {
     return new Promise((resolve) => {
-        const url = new URL(`${API}${route}${token ? `?token=${token}` : ""}`);
+        const url = new URL(`${API}${route}`);
         const headers = {
             Connection: "Upgrade",
             Upgrade: "websocket",
             "Sec-WebSocket-Version": "13",
             "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
         };
+        // Same channel the kiosk uses: the session as a subprotocol, never in the URL.
+        if (token) headers["Sec-WebSocket-Protocol"] = `faceattend.bearer, ${token}`;
         if (bearer) headers.Authorization = `Bearer ${bearer}`;
         const request = http.request(
             { host: url.hostname, port: url.port, path: `${url.pathname}${url.search}`, method: "GET", headers, timeout: 8000 },

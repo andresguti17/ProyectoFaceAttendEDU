@@ -128,8 +128,24 @@ def get_match_log_repository_ws(
     return MongoMatchLogRepository(client, settings)
 
 
+def _rate_limit_caller(request: Request) -> str:
+    user_id = getattr(request.state, "user_id", None)
+    if user_id:
+        return f"user:{user_id}"
+    real_ip = request.headers.get("x-real-ip", "").strip()
+    if real_ip:
+        return f"ip:{real_ip}"
+    return f"ip:{request.client.host if request.client else 'unknown'}"
+
+
 def rate_limit(key: str):
-    """Build a 429 dependency for `key`, bucketed per logical endpoint + client IP."""
+    """Build a 429 dependency for `key`, bucketed per logical endpoint + caller.
+
+    The caller is the authenticated user (set by `require_permission`, which runs
+    first in each route's dependency list), else the client address Kong forwards
+    in X-Real-IP. Behind the gateway `request.client` is always Kong, so keying on
+    it made every user share one bucket and let one account starve the rest.
+    """
 
     def dependency(request: Request, settings: Settings = Depends(get_settings)) -> None:
         limiter = _rate_limiters.get(key)
@@ -139,8 +155,7 @@ def rate_limit(key: str):
         ):
             limiter = RateLimiter(settings.rate_limit_max_attempts, settings.rate_limit_window_seconds)
             _rate_limiters[key] = limiter
-        client_host = request.client.host if request.client else "unknown"
-        allowed, _ = limiter.check(f"{key}:{client_host}")
+        allowed, _ = limiter.check(f"{key}:{_rate_limit_caller(request)}")
         if not allowed:
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Too many attempts, slow down")
 

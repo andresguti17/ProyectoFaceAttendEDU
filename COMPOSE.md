@@ -30,7 +30,6 @@ raíz solo orquesta.
 | `docker-compose.yml` (raíz) | `include` de `database/` y `back-end/`; servicio `frontend-web`; **cadena de dependencias** de los 8 Liquibase y de los 9 microservicios; red `faceattend-edge` | ✅ es el entrypoint oficial |
 | `database/docker-compose.yml` | `postgres` + 8 servicios `*-liquibase`, volumen `postgres_data`, red `faceattend-data` | ✅ `cd database && docker compose up -d` |
 | `back-end/docker-compose.yml` | `mongodb`, `redis`, `kafka`, 9 `ms-*`, `kong-gateway` | ❌ **no**: `ms-*` declaran `depends_on: postgres`, que vive en `database/`. Correrlo solo falla con `service "ms-identity" depends on undefined service "postgres"` (error intencional y claro) |
-| `back-end/99-api-gateway/docker-compose.yml` | solo `kong`, con las mismas variables/puertos que la definición canónica | ✅ solo para reiniciar Kong contra un stack ya levantado. Usa redes `external: true`; no levántelo a la vez que `kong-gateway` (chocan por nombre y puerto) |
 | `database/0X-ms-*-db/docker-compose.yml` (8) | un servicio `liquibase` que migra **ese** contexto contra `host.docker.internal:5432` | ✅ para migrar un bounded context aislado, sin subir todo el stack |
 
 > **Regla:** `postgres` está definido **una sola vez**, en `database/`. Si alguien
@@ -115,7 +114,7 @@ invisibles para el resto de la LAN:
 |---|---|---|---|
 | **8000** | `kong-gateway` (proxy) | `0.0.0.0` | el navegador y un celular en la LAN consumen la API |
 | **8090** | `frontend-web` | `0.0.0.0` | el navegador (y un celular) cargan el SPA |
-| 8001 | `kong-gateway` (admin) | `127.0.0.1` fijo | administración local (por túnel SSH en producción) |
+| 8001 | `kong-gateway` (admin) | solo loopback del contenedor, sin puerto publicado | `docker run --rm --network container:faceattend-kong curlimages/curl -s localhost:8001/` |
 | 5432 / 27017 / 6379 / 9092 | postgres / mongodb / redis / kafka | `127.0.0.1` fijo | bases y broker: nunca exponerlos |
 | 8081–8089 | los 9 microservicios (`ms-biometric` 8086 incluye biometría web) | `BIND_IP` | solo los consume Kong (y el IDE/curl locales) |
 
@@ -210,7 +209,7 @@ docker compose down                   # parar conservando datos
 docker compose config                 # validar el modelo (1 = error)
 
 cd database && docker compose up -d                    # solo datos + migraciones
-cd back-end/99-api-gateway && docker compose up -d     # solo Kong (stack ya creado)
+docker compose up -d kong-gateway                      # solo Kong (stack ya creado)
 cd database/01-ms-identity-db && docker compose up liquibase   # un contexto
 ```
 

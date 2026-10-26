@@ -613,9 +613,12 @@ services:
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      # Loopback inside the container: in DB-less mode POST /config replaces the
+      # whole gateway configuration, so no other container may reach the Admin
+      # API. Inspect it with `docker run --rm --network container:faceattend-kong curlimages/curl -s localhost:8001/`.
+      KONG_ADMIN_LISTEN: 127.0.0.1:8001
       # Docker's embedded DNS blackholes SRV queries (~8s cold-start latency
-      # per upstream host). Same value as the standalone gateway file.
+      # per upstream host).
       KONG_DNS_ORDER: 'LAST,A,AAAA,CNAME'
       # A recreated service gets a new container IP. Docker answers with a ~10 min
       # TTL and Kong used to cache it that long, so after a rebuild every call to
@@ -623,11 +626,13 @@ services:
       # against an IP that now belongs to another container. Re-resolve every 5 s.
       KONG_DNS_VALID_TTL: '5'
       KONG_DNS_STALE_TTL: '0'
-      # Lets the pre-function token check call identity through resty.http.
+      # Lets the post-function token check call identity through resty.http.
       KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
-      # Real client IP behind Caddy (and the Docker NAT in dev): identity limits
-      # failed logins per IP using the X-Real-IP that Kong sets from this.
-      KONG_TRUSTED_IPS: "172.16.0.0/12,10.0.0.0/8,192.168.0.0/16"
+      # Real client IP: only the two proxies in front of Kong are trusted to set
+      # X-Forwarded-For (frontend-web nginx and Caddy, fixed addresses on
+      # faceattend-edge). Trusting whole private ranges let any client pick its
+      # own IP and walk past the per-IP rate limits and login lockout.
+      KONG_TRUSTED_IPS: "10.203.10.10,10.203.10.11"
       KONG_REAL_IP_HEADER: X-Forwarded-For
       KONG_REAL_IP_RECURSIVE: "on"
       # Browser origins allowed by CORS. Production must list its real web
@@ -637,7 +642,6 @@ services:
       # Dev: 0.0.0.0 so phones on the LAN reach the API. Production sets
       # KONG_PROXY_BIND_IP=127.0.0.1: Caddy reaches Kong over the Docker network.
       - "${KONG_PROXY_BIND_IP:-0.0.0.0}:${KONG_PROXY_PORT:-8000}:8000"
-      - "127.0.0.1:${KONG_ADMIN_PORT:-8001}:8001"
     volumes:
       - ./99-api-gateway/kong/kong.yml:/kong/kong.yml:ro
     networks:
@@ -653,13 +657,18 @@ services:
   # Frontend web lives in FULL/docker-compose.yml (presentation concern,
   # context ./front-end/Web). It is intentionally NOT defined here.
 networks:
-  # edge â€” browser tier: frontend-web <-> Kong proxy (:8000).
+  # edge - browser tier: frontend-web/Caddy <-> Kong proxy (:8000). Fixed
+  # subnet so the proxies get the addresses KONG_TRUSTED_IPS lists
+  # (frontend-web .10, caddy .11); the gateway .1 (published ports) is not trusted.
   faceattend-edge:
     driver: bridge
-  # app â€” service tier: Kong <-> microservices <-> Redis.
+    ipam:
+      config:
+        - subnet: 10.203.10.0/24
+  # app - service tier: Kong <-> microservices <-> Redis.
   faceattend-app:
     driver: bridge
-  # data â€” data tier: microservices <-> MongoDB/Kafka (PostgreSQL lives in database/).
+  # data - data tier: microservices <-> MongoDB/Kafka (PostgreSQL lives in database/).
   faceattend-data:
     driver: bridge
 

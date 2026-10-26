@@ -34,7 +34,9 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     networks:
-      - faceattend-edge
+      # Fixed address: one of the two proxies Kong trusts for X-Forwarded-For.
+      faceattend-edge:
+        ipv4_address: 10.203.10.11
 
 volumes:
   caddy_data:
