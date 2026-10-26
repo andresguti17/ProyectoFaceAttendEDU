@@ -18,7 +18,6 @@ export { ActorTypeService } from './ActorTypeService';
 export { EnrollmentService } from './EnrollmentService';
 
 export { EnvironmentService } from './EnvironmentService';
-export { StaffService } from './StaffService';
 export { ScheduleBlockService } from './ScheduleBlockService';
 export { ClassSessionService } from './ClassSessionService';
 
