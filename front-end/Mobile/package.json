@@ -61,5 +61,8 @@
       "/node_modules/",
       "/dist/"
     ]
+  },
+  "overrides": {
+    "follow-redirects": "^1.16.1"
   }
 }
