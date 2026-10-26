@@ -57,6 +57,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private static final Pattern USER_SCOPED = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})(?:/status|/activate)?$");
     private static final Pattern USER_SESSIONS = Pattern.compile("^/api/v1/sessions/user/([0-9a-fA-F-]{36})$");
     private static final String WRITE = "identity.person:write";
+    static final String SUPER_ADMIN_ROLE = "Super Administrador";
 
     private final SessionAuthClient sessionAuth;
     // Perezoso: los tests @WebMvcTest cargan el filtro sin la capa de persistencia.
@@ -91,6 +92,13 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         final String caller = result.caller().userId();
         final List<String> roles = result.caller().roles();
         final String rawToken = result.caller().token();
+
+        // A session id is a bearer: listing, minting or revoking other people's sessions
+        // would let a school administrator act as anyone, so only the platform role may.
+        if (sessionAdminOnly(request.getMethod(), path, caller) && !roles.contains(SUPER_ADMIN_ROLE)) {
+            deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + SUPER_ADMIN_ROLE, path);
+            return;
+        }
 
         String required = requiredPermission(request.getMethod(), path, caller);
         // Cada rol edita sus propios datos personales (perfil) sin identity.person:write.
@@ -156,6 +164,19 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         // Solo un segmento: /sessions/user/{id} devuelve session ids (bearer) ajenos.
         return method.equalsIgnoreCase("GET") && path.startsWith("/api/v1/sessions/")
                 && path.indexOf("/", "/api/v1/sessions/".length()) < 0;
+    }
+
+    /**
+     * Session endpoints that expose or create someone else's bearer: the full listing,
+     * another user's listing, and every write (POST mints, DELETE revokes by id).
+     * GET /sessions/{id} stays public (see isPublic) and the own listing stays open.
+     */
+    static boolean sessionAdminOnly(String method, String path, String caller) {
+        if (!path.equals("/api/v1/sessions") && !path.startsWith("/api/v1/sessions/")) return false;
+        if (!method.equalsIgnoreCase("GET")) return true;
+        if (path.equals("/api/v1/sessions")) return true;
+        Matcher own = USER_SESSIONS.matcher(path);
+        return own.matches() && !own.group(1).equalsIgnoreCase(caller);
     }
 
     static String requiredPermission(String method, String path, String caller) {

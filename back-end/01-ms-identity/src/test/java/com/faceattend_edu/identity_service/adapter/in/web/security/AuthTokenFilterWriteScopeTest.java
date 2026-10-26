@@ -137,6 +137,28 @@ class AuthTokenFilterWriteScopeTest {
     }
 
     @Test
+    void schoolAdminCannotListMintOrRevokeOtherSessions() throws Exception {
+        String[][] calls = {
+                {"GET", "/api/v1/sessions"},
+                {"GET", "/api/v1/sessions/user/" + OTHER_SCHOOL_USER},
+                {"POST", "/api/v1/sessions"},
+                {"DELETE", "/api/v1/sessions/" + TOKEN},
+        };
+        for (String[] call : calls) {
+            FilterChain chain = mock(FilterChain.class);
+            assertEquals(403, run(call[0], call[1], chain).getStatus(), call[0] + " " + call[1]);
+            verify(chain, never()).doFilter(any(), any());
+        }
+    }
+
+    @Test
+    void ownSessionListingStaysOpen() throws Exception {
+        FilterChain chain = mock(FilterChain.class);
+        assertEquals(200, run("GET", "/api/v1/sessions/user/" + ADMIN_USER, chain).getStatus());
+        verify(chain).doFilter(any(), any());
+    }
+
+    @Test
     void authMeRequiresASession() throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain chain = mock(FilterChain.class);
