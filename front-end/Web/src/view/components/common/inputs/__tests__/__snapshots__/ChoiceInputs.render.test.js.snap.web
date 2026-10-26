@@ -1,0 +1,2306 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Checkbox / Radio / Switch render Checkbox case 0 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "backgroundColor": "rgba(25,131,252,1.00)",
+          "borderBottomColor": "rgba(25,131,252,1.00)",
+          "borderBottomLeftRadius": "4px",
+          "borderBottomRightRadius": "4px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(25,131,252,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(25,131,252,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(25,131,252,1.00)",
+          "borderTopLeftRadius": "4px",
+          "borderTopRightRadius": "4px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    >
+      Feather:check:14:#FFFFFF
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(0,0,0,1.00)",
+            "fontSize": "14px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Acepto
+      </div>
+      <div
+        className="css-text-146c3p1 r-lineHeight-14yzgew"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "13px",
+            "marginTop": "2px",
+          }
+        }
+      >
+        Detalle
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Checkbox case 0 2`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "backgroundColor": "rgba(25,131,252,1.00)",
+          "borderBottomColor": "rgba(25,131,252,1.00)",
+          "borderBottomLeftRadius": "4px",
+          "borderBottomRightRadius": "4px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(25,131,252,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(25,131,252,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(25,131,252,1.00)",
+          "borderTopLeftRadius": "4px",
+          "borderTopRightRadius": "4px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    >
+      Feather:minus:14:#FFFFFF
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(0,0,0,1.00)",
+            "fontSize": "14px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Acepto
+      </div>
+      <div
+        className="css-text-146c3p1 r-lineHeight-14yzgew"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "13px",
+            "marginTop": "2px",
+          }
+        }
+      >
+        Detalle
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Checkbox case 1 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "backgroundColor": "rgba(79,221,54,1.00)",
+          "borderBottomColor": "rgba(79,221,54,1.00)",
+          "borderBottomLeftRadius": "4px",
+          "borderBottomRightRadius": "4px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(79,221,54,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(79,221,54,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(79,221,54,1.00)",
+          "borderTopLeftRadius": "4px",
+          "borderTopRightRadius": "4px",
+          "borderTopWidth": "2px",
+          "height": "24px",
+          "opacity": 1,
+          "width": "24px",
+        }
+      }
+    >
+      Feather:check:16:#0F172A
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(0,0,0,1.00)",
+            "fontSize": "15px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Activo
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Checkbox case 1 2`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "backgroundColor": "rgba(79,221,54,1.00)",
+          "borderBottomColor": "rgba(79,221,54,1.00)",
+          "borderBottomLeftRadius": "4px",
+          "borderBottomRightRadius": "4px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(79,221,54,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(79,221,54,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(79,221,54,1.00)",
+          "borderTopLeftRadius": "4px",
+          "borderTopRightRadius": "4px",
+          "borderTopWidth": "2px",
+          "height": "24px",
+          "opacity": 1,
+          "width": "24px",
+        }
+      }
+    >
+      Feather:minus:16:#0F172A
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(0,0,0,1.00)",
+            "fontSize": "15px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Activo
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Checkbox case 2 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    aria-disabled={true}
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-alignItems-1habvwh r-flexDirection-18u37iz r-pointerEvents-12vffkv"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="-1"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "backgroundColor": "rgba(226,232,240,1.00)",
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomLeftRadius": "4px",
+          "borderBottomRightRadius": "4px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(226,232,240,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(226,232,240,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(226,232,240,1.00)",
+          "borderTopLeftRadius": "4px",
+          "borderTopRightRadius": "4px",
+          "borderTopWidth": "2px",
+          "height": "16px",
+          "opacity": 0.5,
+          "width": "16px",
+        }
+      }
+    >
+      Feather:check:12:#94A3B8
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(148,163,184,1.00)",
+            "fontSize": "13px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Peligro
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Checkbox case 2 2`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    aria-disabled={true}
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-alignItems-1habvwh r-flexDirection-18u37iz r-pointerEvents-12vffkv"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="-1"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "backgroundColor": "rgba(226,232,240,1.00)",
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomLeftRadius": "4px",
+          "borderBottomRightRadius": "4px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(226,232,240,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(226,232,240,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(226,232,240,1.00)",
+          "borderTopLeftRadius": "4px",
+          "borderTopRightRadius": "4px",
+          "borderTopWidth": "2px",
+          "height": "16px",
+          "opacity": 0.5,
+          "width": "16px",
+        }
+      }
+    >
+      Feather:minus:12:#94A3B8
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(148,163,184,1.00)",
+            "fontSize": "13px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Peligro
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Checkbox case 3 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "backgroundColor": "rgba(240,68,56,1.00)",
+          "borderBottomColor": "rgba(240,68,56,1.00)",
+          "borderBottomLeftRadius": "4px",
+          "borderBottomRightRadius": "4px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(240,68,56,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(240,68,56,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(240,68,56,1.00)",
+          "borderTopLeftRadius": "4px",
+          "borderTopRightRadius": "4px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    >
+      Feather:check:14:#FFFFFF
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(240,68,56,1.00)",
+            "fontSize": "14px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Con error
+      </div>
+    </div>
+  </div>
+  <div
+    className="css-text-146c3p1 r-lineHeight-1cwl3u0"
+    dir="auto"
+    ref={[Function]}
+    style={
+      {
+        "color": "rgba(240,68,56,1.00)",
+        "fontSize": "13px",
+        "marginLeft": "28px",
+        "marginTop": "4px",
+      }
+    }
+  >
+    Campo requerido
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Checkbox case 3 2`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "backgroundColor": "rgba(240,68,56,1.00)",
+          "borderBottomColor": "rgba(240,68,56,1.00)",
+          "borderBottomLeftRadius": "4px",
+          "borderBottomRightRadius": "4px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(240,68,56,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(240,68,56,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(240,68,56,1.00)",
+          "borderTopLeftRadius": "4px",
+          "borderTopRightRadius": "4px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    >
+      Feather:minus:14:#FFFFFF
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(240,68,56,1.00)",
+            "fontSize": "14px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Con error
+      </div>
+    </div>
+  </div>
+  <div
+    className="css-text-146c3p1 r-lineHeight-1cwl3u0"
+    dir="auto"
+    ref={[Function]}
+    style={
+      {
+        "color": "rgba(240,68,56,1.00)",
+        "fontSize": "13px",
+        "marginLeft": "28px",
+        "marginTop": "4px",
+      }
+    }
+  >
+    Campo requerido
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Checkbox case 4 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "backgroundColor": "rgba(255,171,0,1.00)",
+          "borderBottomColor": "rgba(255,171,0,1.00)",
+          "borderBottomLeftRadius": "4px",
+          "borderBottomRightRadius": "4px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(255,171,0,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(255,171,0,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(255,171,0,1.00)",
+          "borderTopLeftRadius": "4px",
+          "borderTopRightRadius": "4px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    >
+      Feather:check:14:#0F172A
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-14yzgew"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "13px",
+            "marginTop": "2px",
+          }
+        }
+      >
+        Solo descripción
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Checkbox case 4 2`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "backgroundColor": "rgba(255,171,0,1.00)",
+          "borderBottomColor": "rgba(255,171,0,1.00)",
+          "borderBottomLeftRadius": "4px",
+          "borderBottomRightRadius": "4px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(255,171,0,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(255,171,0,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(255,171,0,1.00)",
+          "borderTopLeftRadius": "4px",
+          "borderTopRightRadius": "4px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    >
+      Feather:minus:14:#0F172A
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-14yzgew"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "13px",
+            "marginTop": "2px",
+          }
+        }
+      >
+        Solo descripción
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Checkbox case 5 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "backgroundColor": "rgba(25,131,252,1.00)",
+          "borderBottomColor": "rgba(25,131,252,1.00)",
+          "borderBottomLeftRadius": "4px",
+          "borderBottomRightRadius": "4px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(25,131,252,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(25,131,252,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(25,131,252,1.00)",
+          "borderTopLeftRadius": "4px",
+          "borderTopRightRadius": "4px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    >
+      Feather:check:14:#FFFFFF
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Checkbox case 5 2`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "backgroundColor": "rgba(25,131,252,1.00)",
+          "borderBottomColor": "rgba(25,131,252,1.00)",
+          "borderBottomLeftRadius": "4px",
+          "borderBottomRightRadius": "4px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(25,131,252,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(25,131,252,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(25,131,252,1.00)",
+          "borderTopLeftRadius": "4px",
+          "borderTopRightRadius": "4px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    >
+      Feather:minus:14:#FFFFFF
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Radio case 0 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "borderBottomColor": "rgba(25,131,252,1.00)",
+          "borderBottomLeftRadius": "10px",
+          "borderBottomRightRadius": "10px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(25,131,252,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(25,131,252,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(25,131,252,1.00)",
+          "borderTopLeftRadius": "10px",
+          "borderTopRightRadius": "10px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(25,131,252,1.00)",
+            "borderBottomLeftRadius": "5px",
+            "borderBottomRightRadius": "5px",
+            "borderTopLeftRadius": "5px",
+            "borderTopRightRadius": "5px",
+            "height": "10px",
+            "width": "10px",
+          }
+        }
+      />
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(0,0,0,1.00)",
+            "fontSize": "14px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Acepto
+      </div>
+      <div
+        className="css-text-146c3p1 r-lineHeight-14yzgew"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "13px",
+            "marginTop": "2px",
+          }
+        }
+      >
+        Detalle
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Radio case 0 2`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomLeftRadius": "10px",
+          "borderBottomRightRadius": "10px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(226,232,240,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(226,232,240,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(226,232,240,1.00)",
+          "borderTopLeftRadius": "10px",
+          "borderTopRightRadius": "10px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    />
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(0,0,0,1.00)",
+            "fontSize": "14px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Acepto
+      </div>
+      <div
+        className="css-text-146c3p1 r-lineHeight-14yzgew"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "13px",
+            "marginTop": "2px",
+          }
+        }
+      >
+        Detalle
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Radio case 1 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "borderBottomColor": "rgba(79,221,54,1.00)",
+          "borderBottomLeftRadius": "12px",
+          "borderBottomRightRadius": "12px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(79,221,54,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(79,221,54,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(79,221,54,1.00)",
+          "borderTopLeftRadius": "12px",
+          "borderTopRightRadius": "12px",
+          "borderTopWidth": "2px",
+          "height": "24px",
+          "opacity": 1,
+          "width": "24px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(79,221,54,1.00)",
+            "borderBottomLeftRadius": "6px",
+            "borderBottomRightRadius": "6px",
+            "borderTopLeftRadius": "6px",
+            "borderTopRightRadius": "6px",
+            "height": "12px",
+            "width": "12px",
+          }
+        }
+      />
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(0,0,0,1.00)",
+            "fontSize": "15px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Activo
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Radio case 1 2`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomLeftRadius": "12px",
+          "borderBottomRightRadius": "12px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(226,232,240,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(226,232,240,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(226,232,240,1.00)",
+          "borderTopLeftRadius": "12px",
+          "borderTopRightRadius": "12px",
+          "borderTopWidth": "2px",
+          "height": "24px",
+          "opacity": 1,
+          "width": "24px",
+        }
+      }
+    />
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(0,0,0,1.00)",
+            "fontSize": "15px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Activo
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Radio case 2 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    aria-disabled={true}
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-alignItems-1habvwh r-flexDirection-18u37iz r-pointerEvents-12vffkv"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="-1"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomLeftRadius": "8px",
+          "borderBottomRightRadius": "8px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(226,232,240,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(226,232,240,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(226,232,240,1.00)",
+          "borderTopLeftRadius": "8px",
+          "borderTopRightRadius": "8px",
+          "borderTopWidth": "2px",
+          "height": "16px",
+          "opacity": 0.5,
+          "width": "16px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(148,163,184,1.00)",
+            "borderBottomLeftRadius": "4px",
+            "borderBottomRightRadius": "4px",
+            "borderTopLeftRadius": "4px",
+            "borderTopRightRadius": "4px",
+            "height": "8px",
+            "width": "8px",
+          }
+        }
+      />
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(148,163,184,1.00)",
+            "fontSize": "13px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Peligro
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Radio case 2 2`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    aria-disabled={true}
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-alignItems-1habvwh r-flexDirection-18u37iz r-pointerEvents-12vffkv"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="-1"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomLeftRadius": "8px",
+          "borderBottomRightRadius": "8px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(226,232,240,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(226,232,240,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(226,232,240,1.00)",
+          "borderTopLeftRadius": "8px",
+          "borderTopRightRadius": "8px",
+          "borderTopWidth": "2px",
+          "height": "16px",
+          "opacity": 0.5,
+          "width": "16px",
+        }
+      }
+    />
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(148,163,184,1.00)",
+            "fontSize": "13px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Peligro
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Radio case 3 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "borderBottomColor": "rgba(240,68,56,1.00)",
+          "borderBottomLeftRadius": "10px",
+          "borderBottomRightRadius": "10px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(240,68,56,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(240,68,56,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(240,68,56,1.00)",
+          "borderTopLeftRadius": "10px",
+          "borderTopRightRadius": "10px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(240,68,56,1.00)",
+            "borderBottomLeftRadius": "5px",
+            "borderBottomRightRadius": "5px",
+            "borderTopLeftRadius": "5px",
+            "borderTopRightRadius": "5px",
+            "height": "10px",
+            "width": "10px",
+          }
+        }
+      />
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(240,68,56,1.00)",
+            "fontSize": "14px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Con error
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Radio case 3 2`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "borderBottomColor": "rgba(240,68,56,1.00)",
+          "borderBottomLeftRadius": "10px",
+          "borderBottomRightRadius": "10px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(240,68,56,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(240,68,56,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(240,68,56,1.00)",
+          "borderTopLeftRadius": "10px",
+          "borderTopRightRadius": "10px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    />
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(240,68,56,1.00)",
+            "fontSize": "14px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Con error
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Radio case 4 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "borderBottomColor": "rgba(255,171,0,1.00)",
+          "borderBottomLeftRadius": "10px",
+          "borderBottomRightRadius": "10px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(255,171,0,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(255,171,0,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(255,171,0,1.00)",
+          "borderTopLeftRadius": "10px",
+          "borderTopRightRadius": "10px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(255,171,0,1.00)",
+            "borderBottomLeftRadius": "5px",
+            "borderBottomRightRadius": "5px",
+            "borderTopLeftRadius": "5px",
+            "borderTopRightRadius": "5px",
+            "height": "10px",
+            "width": "10px",
+          }
+        }
+      />
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-14yzgew"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "13px",
+            "marginTop": "2px",
+          }
+        }
+      >
+        Solo descripción
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Radio case 4 2`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomLeftRadius": "10px",
+          "borderBottomRightRadius": "10px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(226,232,240,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(226,232,240,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(226,232,240,1.00)",
+          "borderTopLeftRadius": "10px",
+          "borderTopRightRadius": "10px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    />
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci r-marginLeft-1jkjb"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-14yzgew"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "13px",
+            "marginTop": "2px",
+          }
+        }
+      >
+        Solo descripción
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Radio case 5 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "borderBottomColor": "rgba(25,131,252,1.00)",
+          "borderBottomLeftRadius": "10px",
+          "borderBottomRightRadius": "10px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(25,131,252,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(25,131,252,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(25,131,252,1.00)",
+          "borderTopLeftRadius": "10px",
+          "borderTopRightRadius": "10px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(25,131,252,1.00)",
+            "borderBottomLeftRadius": "5px",
+            "borderBottomRightRadius": "5px",
+            "borderTopLeftRadius": "5px",
+            "borderTopRightRadius": "5px",
+            "height": "10px",
+            "width": "10px",
+          }
+        }
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Radio case 5 2`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1habvwh r-flexDirection-18u37iz"
+    dir={null}
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    onKeyDown={[Function]}
+    ref={[Function]}
+    style={
+      {
+        "transitionDuration": "0s",
+      }
+    }
+    tabIndex="0"
+  >
+    <div
+      className="css-view-g5y9jx r-alignItems-1awozwy r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "borderBottomColor": "rgba(226,232,240,1.00)",
+          "borderBottomLeftRadius": "10px",
+          "borderBottomRightRadius": "10px",
+          "borderBottomWidth": "2px",
+          "borderLeftColor": "rgba(226,232,240,1.00)",
+          "borderLeftWidth": "2px",
+          "borderRightColor": "rgba(226,232,240,1.00)",
+          "borderRightWidth": "2px",
+          "borderTopColor": "rgba(226,232,240,1.00)",
+          "borderTopLeftRadius": "10px",
+          "borderTopRightRadius": "10px",
+          "borderTopWidth": "2px",
+          "height": "20px",
+          "opacity": 1,
+          "width": "20px",
+        }
+      }
+    />
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Switch case 0 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-alignItems-1awozwy r-flexDirection-18u37iz"
+    dir={null}
+    ref={[Function]}
+  >
+    <div
+      className="css-view-g5y9jx r-cursor-1loqt21 r-userSelect-lrvibr r-marginRight-1kb76zh"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "height": "20px",
+          "opacity": 1,
+          "width": "40px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx r-bottom-1p0dtai r-forcedColorAdjust-1c6unfx r-height-1dernwh r-left-1d2f490 r-margin-ywje51 r-position-u8s1d r-right-zchlnj r-top-ipm5af r-transitionDuration-13tjlyg r-width-13qz1uu"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(25,131,252,1.00)",
+            "borderBottomLeftRadius": "10px",
+            "borderBottomRightRadius": "10px",
+            "borderTopLeftRadius": "10px",
+            "borderTopRightRadius": "10px",
+          }
+        }
+      />
+      <div
+        className="css-view-g5y9jx r-alignSelf-k200y r-borderRadius-1j16mh1 r-boxShadow-1ewcgjf r-forcedColorAdjust-1c6unfx r-transform-agouwx r-transitionDuration-13tjlyg r-insetInlineStart-rci37q"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(0,150,136,1.00)",
+            "height": "20px",
+            "marginLeft": "-20px",
+            "width": "20px",
+          }
+        }
+      />
+      <input
+        checked={true}
+        className="r-appearance-30o5oe r-bottom-1p0dtai r-height-1pi2tsx r-left-1d2f490 r-margin-crgep1 r-padding-t60dpp r-position-u8s1d r-right-zchlnj r-top-ipm5af r-width-13qz1uu r-cursor-1ei5mc7"
+        disabled={false}
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        ref={null}
+        role="switch"
+        type="checkbox"
+      />
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(0,0,0,1.00)",
+            "fontSize": "14px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Acepto
+      </div>
+      <div
+        className="css-text-146c3p1 r-lineHeight-14yzgew"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "13px",
+            "marginTop": "2px",
+          }
+        }
+      >
+        Detalle
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Switch case 1 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-alignItems-1awozwy r-flexDirection-18u37iz"
+    dir={null}
+    ref={[Function]}
+  >
+    <div
+      className="css-view-g5y9jx r-cursor-1loqt21 r-userSelect-lrvibr r-marginRight-1kb76zh"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "height": "20px",
+          "opacity": 1,
+          "width": "40px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx r-bottom-1p0dtai r-forcedColorAdjust-1c6unfx r-height-1dernwh r-left-1d2f490 r-margin-ywje51 r-position-u8s1d r-right-zchlnj r-top-ipm5af r-transitionDuration-13tjlyg r-width-13qz1uu"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(79,221,54,1.00)",
+            "borderBottomLeftRadius": "10px",
+            "borderBottomRightRadius": "10px",
+            "borderTopLeftRadius": "10px",
+            "borderTopRightRadius": "10px",
+          }
+        }
+      />
+      <div
+        className="css-view-g5y9jx r-alignSelf-k200y r-borderRadius-1j16mh1 r-boxShadow-1ewcgjf r-forcedColorAdjust-1c6unfx r-transform-agouwx r-transitionDuration-13tjlyg r-insetInlineStart-rci37q"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(0,150,136,1.00)",
+            "height": "20px",
+            "marginLeft": "-20px",
+            "width": "20px",
+          }
+        }
+      />
+      <input
+        checked={true}
+        className="r-appearance-30o5oe r-bottom-1p0dtai r-height-1pi2tsx r-left-1d2f490 r-margin-crgep1 r-padding-t60dpp r-position-u8s1d r-right-zchlnj r-top-ipm5af r-width-13qz1uu r-cursor-1ei5mc7"
+        disabled={false}
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        ref={null}
+        role="switch"
+        type="checkbox"
+      />
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(0,0,0,1.00)",
+            "fontSize": "15px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Activo
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Switch case 2 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-alignItems-1awozwy r-flexDirection-18u37iz"
+    dir={null}
+    ref={[Function]}
+  >
+    <div
+      className="css-view-g5y9jx r-userSelect-lrvibr r-marginRight-1kb76zh r-cursor-7q8q6z"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "height": "20px",
+          "opacity": 0.5,
+          "width": "40px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx r-bottom-1p0dtai r-forcedColorAdjust-1c6unfx r-height-1dernwh r-left-1d2f490 r-margin-ywje51 r-position-u8s1d r-right-zchlnj r-top-ipm5af r-transitionDuration-13tjlyg r-width-13qz1uu"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(240,68,56,1.00)",
+            "borderBottomLeftRadius": "10px",
+            "borderBottomRightRadius": "10px",
+            "borderTopLeftRadius": "10px",
+            "borderTopRightRadius": "10px",
+          }
+        }
+      />
+      <div
+        className="css-view-g5y9jx r-alignSelf-k200y r-borderRadius-1j16mh1 r-boxShadow-1ewcgjf r-forcedColorAdjust-1c6unfx r-transform-agouwx r-transitionDuration-13tjlyg r-insetInlineStart-rci37q"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(189,189,189,1.00)",
+            "height": "20px",
+            "marginLeft": "-20px",
+            "width": "20px",
+          }
+        }
+      />
+      <input
+        checked={true}
+        className="r-appearance-30o5oe r-bottom-1p0dtai r-height-1pi2tsx r-left-1d2f490 r-margin-crgep1 r-padding-t60dpp r-position-u8s1d r-right-zchlnj r-top-ipm5af r-width-13qz1uu r-cursor-1ei5mc7"
+        disabled={true}
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        ref={null}
+        role="switch"
+        type="checkbox"
+      />
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(148,163,184,1.00)",
+            "fontSize": "13px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Peligro
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Switch case 3 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-alignItems-1awozwy r-flexDirection-18u37iz"
+    dir={null}
+    ref={[Function]}
+  >
+    <div
+      className="css-view-g5y9jx r-cursor-1loqt21 r-userSelect-lrvibr r-marginRight-1kb76zh"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "height": "20px",
+          "opacity": 1,
+          "width": "40px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx r-bottom-1p0dtai r-forcedColorAdjust-1c6unfx r-height-1dernwh r-left-1d2f490 r-margin-ywje51 r-position-u8s1d r-right-zchlnj r-top-ipm5af r-transitionDuration-13tjlyg r-width-13qz1uu"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(240,68,56,1.00)",
+            "borderBottomLeftRadius": "10px",
+            "borderBottomRightRadius": "10px",
+            "borderTopLeftRadius": "10px",
+            "borderTopRightRadius": "10px",
+          }
+        }
+      />
+      <div
+        className="css-view-g5y9jx r-alignSelf-k200y r-borderRadius-1j16mh1 r-boxShadow-1ewcgjf r-forcedColorAdjust-1c6unfx r-transform-agouwx r-transitionDuration-13tjlyg r-insetInlineStart-rci37q"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(0,150,136,1.00)",
+            "height": "20px",
+            "marginLeft": "-20px",
+            "width": "20px",
+          }
+        }
+      />
+      <input
+        checked={true}
+        className="r-appearance-30o5oe r-bottom-1p0dtai r-height-1pi2tsx r-left-1d2f490 r-margin-crgep1 r-padding-t60dpp r-position-u8s1d r-right-zchlnj r-top-ipm5af r-width-13qz1uu r-cursor-1ei5mc7"
+        disabled={false}
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        ref={null}
+        role="switch"
+        type="checkbox"
+      />
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-rjixqe"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(240,68,56,1.00)",
+            "fontSize": "14px",
+            "fontWeight": "500",
+          }
+        }
+      >
+        Con error
+      </div>
+    </div>
+  </div>
+  <div
+    className="css-text-146c3p1 r-lineHeight-1cwl3u0"
+    dir="auto"
+    ref={[Function]}
+    style={
+      {
+        "color": "rgba(240,68,56,1.00)",
+        "fontSize": "13px",
+        "marginLeft": "56px",
+        "marginTop": "4px",
+      }
+    }
+  >
+    Campo requerido
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Switch case 4 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-alignItems-1awozwy r-flexDirection-18u37iz"
+    dir={null}
+    ref={[Function]}
+  >
+    <div
+      className="css-view-g5y9jx r-cursor-1loqt21 r-userSelect-lrvibr r-marginRight-1kb76zh"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "height": "20px",
+          "opacity": 1,
+          "width": "40px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx r-bottom-1p0dtai r-forcedColorAdjust-1c6unfx r-height-1dernwh r-left-1d2f490 r-margin-ywje51 r-position-u8s1d r-right-zchlnj r-top-ipm5af r-transitionDuration-13tjlyg r-width-13qz1uu"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(255,171,0,1.00)",
+            "borderBottomLeftRadius": "10px",
+            "borderBottomRightRadius": "10px",
+            "borderTopLeftRadius": "10px",
+            "borderTopRightRadius": "10px",
+          }
+        }
+      />
+      <div
+        className="css-view-g5y9jx r-alignSelf-k200y r-borderRadius-1j16mh1 r-boxShadow-1ewcgjf r-forcedColorAdjust-1c6unfx r-transform-agouwx r-transitionDuration-13tjlyg r-insetInlineStart-rci37q"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(0,150,136,1.00)",
+            "height": "20px",
+            "marginLeft": "-20px",
+            "width": "20px",
+          }
+        }
+      />
+      <input
+        checked={true}
+        className="r-appearance-30o5oe r-bottom-1p0dtai r-height-1pi2tsx r-left-1d2f490 r-margin-crgep1 r-padding-t60dpp r-position-u8s1d r-right-zchlnj r-top-ipm5af r-width-13qz1uu r-cursor-1ei5mc7"
+        disabled={false}
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        ref={null}
+        role="switch"
+        type="checkbox"
+      />
+    </div>
+    <div
+      className="css-view-g5y9jx r-flex-13awgt0 r-justifyContent-1777fci"
+      dir={null}
+      ref={[Function]}
+    >
+      <div
+        className="css-text-146c3p1 r-lineHeight-14yzgew"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "13px",
+            "marginTop": "2px",
+          }
+        }
+      >
+        Solo descripción
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Checkbox / Radio / Switch render Switch case 5 1`] = `
+<div
+  className="css-view-g5y9jx r-marginBlock-l00any"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-alignItems-1awozwy r-flexDirection-18u37iz"
+    dir={null}
+    ref={[Function]}
+  >
+    <div
+      className="css-view-g5y9jx r-cursor-1loqt21 r-userSelect-lrvibr r-marginRight-1kb76zh"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "height": "20px",
+          "opacity": 1,
+          "width": "40px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx r-bottom-1p0dtai r-forcedColorAdjust-1c6unfx r-height-1dernwh r-left-1d2f490 r-margin-ywje51 r-position-u8s1d r-right-zchlnj r-top-ipm5af r-transitionDuration-13tjlyg r-width-13qz1uu"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(25,131,252,1.00)",
+            "borderBottomLeftRadius": "10px",
+            "borderBottomRightRadius": "10px",
+            "borderTopLeftRadius": "10px",
+            "borderTopRightRadius": "10px",
+          }
+        }
+      />
+      <div
+        className="css-view-g5y9jx r-alignSelf-k200y r-borderRadius-1j16mh1 r-boxShadow-1ewcgjf r-forcedColorAdjust-1c6unfx r-transform-agouwx r-transitionDuration-13tjlyg r-insetInlineStart-rci37q"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(0,150,136,1.00)",
+            "height": "20px",
+            "marginLeft": "-20px",
+            "width": "20px",
+          }
+        }
+      />
+      <input
+        checked={true}
+        className="r-appearance-30o5oe r-bottom-1p0dtai r-height-1pi2tsx r-left-1d2f490 r-margin-crgep1 r-padding-t60dpp r-position-u8s1d r-right-zchlnj r-top-ipm5af r-width-13qz1uu r-cursor-1ei5mc7"
+        disabled={false}
+        onBlur={[Function]}
+        onChange={[Function]}
+        onFocus={[Function]}
+        ref={null}
+        role="switch"
+        type="checkbox"
+      />
+    </div>
+  </div>
+</div>
+`;
