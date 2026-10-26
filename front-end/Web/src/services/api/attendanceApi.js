@@ -32,7 +32,6 @@ export const attendanceApi = {
     deleteJustificationType: (id) =>
         request(endpoints.attendance.justificationTypeById(id), { method: "DELETE" }),
     justificationDocuments: (id) => request(endpoints.attendance.justificationDocuments(id), { method: "GET" }),
-    createSupportingDocument: (b) => request(endpoints.attendance.supportingDocuments, { method: "POST", body: b }),
     // Sube el archivo real (multipart) a MinIO a través de attendance.
     uploadJustificationDocument: (id, file, fileName) => {
         const form = new FormData();

@@ -9,6 +9,10 @@ const ENROLLMENT_STATUS_TYPE = 'academic.enrollment_status';
 
 const ENROLLMENT_STATUSES: readonly EnrollmentStatus[] = ['Active', 'Withdrawn', 'Completed'];
 
+/** Live ids of a school's cohorts (through their program); $1 = school_id. */
+const COHORTS_OF_SCHOOL =
+  `SELECT c.cohort_id FROM academic.cohort c JOIN academic.program p ON p.program_id = c.program_id WHERE p.school_id = $1 AND c.deleted_at IS NULL AND p.deleted_at IS NULL`;
+
 /**
  * PostgreSQL adapter for `academic.enrollment`.
  *
@@ -79,6 +83,14 @@ export class PostgresEnrollmentRepository
 
   countByCohort(cohortId: number): Promise<number> {
     return this.countWhere([this.filterOn('cohortId', cohortId)]);
+  }
+
+  findBySchool(schoolId: number, page?: PageOptions): Promise<EnrollmentRecord[]> {
+    return this.listInSubquery('cohortId', COHORTS_OF_SCHOOL, [schoolId], page);
+  }
+
+  countBySchool(schoolId: number): Promise<number> {
+    return this.countInSubquery('cohortId', COHORTS_OF_SCHOOL, [schoolId]);
   }
 
   findByAcademicActor(academicActorId: number, page?: PageOptions): Promise<EnrollmentRecord[]> {

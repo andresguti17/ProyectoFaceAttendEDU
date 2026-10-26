@@ -282,7 +282,7 @@ export function registerDeviceTokenRoutes(app: FastifyInstance, tokens: IDeviceT
 const sendEmailBody = z.object({
   to: z.string().email(),
   template: z.string().min(1),
-  data: z.record(z.string()).optional(),
+  data: z.record(z.string(), z.string()).optional(),
 });
 
 /**

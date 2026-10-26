@@ -34,6 +34,9 @@ jobs:
       - name: node --test (auth-node)
         working-directory: back-end/shared/auth-node
         run: npm test
+      - name: node --test (node-infra)
+        working-directory: back-end/shared/node-infra
+        run: npm test
 
   java-services:
     name: java / ${{ matrix.service }}
