@@ -44,6 +44,13 @@ public final class CallerSchoolContext {
         if (!allowsSchool(schoolId)) throw new ScopeForbiddenException();
     }
 
+    /** Whether the caller administers their school (role propagated by AuthTokenFilter as X-User-Roles). */
+    public static boolean isSchoolAdmin() {
+        RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
+        Object roles = attributes == null ? null : attributes.getAttribute("X-User-Roles", RequestAttributes.SCOPE_REQUEST);
+        return roles instanceof java.util.List<?> list && list.contains("Administrador");
+    }
+
     /** The caller's own academic_actor in their school — for stamping opened_by/closed_by. */
     public static Long ownActorId() {
         CallerSchool cs = current();
