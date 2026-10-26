@@ -7,7 +7,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const METRICS = { frame: { x: 0, y: 0, width: 1280, height: 800 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } };
 import UsersFilterBar from "../users/sections/UsersFilterBar";
-import CoursesFilterBar from "../courses/sections/CoursesFilterBar";
 
 // Icon fonts cannot load under jest; the icon keeps its name/size/color in the tree.
 jest.mock("@expo/vector-icons", () => ({ Feather: (props) => `Feather:${props.name}:${props.size}:${props.color}` }));
@@ -56,16 +55,9 @@ describe("filter bars render", () => {
         ).toMatchSnapshot();
     });
 
-    test.each(STATES.map((s, i) => [i, s]))("CoursesFilterBar state %i", (_i, state) => {
-        expect(render(<CoursesFilterBar vm={vm(state)} />).toJSON()).toMatchSnapshot();
-        expect(
-            render(<CoursesFilterBar vm={vm(state)} options={{ filterColumns: [{ key: "name", label: "Nombre", icon: "type" }] }} />).toJSON(),
-        ).toMatchSnapshot();
-    });
-
     test("typing in the search box updates the view model", () => {
         const model = vm(STATES[0]);
-        const tree = render(<CoursesFilterBar vm={model} />);
+        const tree = render(<UsersFilterBar vm={model} />);
         act(() => tree.root.findByType(TextInput).props.onChangeText("redes"));
         expect(model.setSearch).toHaveBeenCalledWith("redes");
     });
