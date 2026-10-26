@@ -174,6 +174,39 @@ export abstract class PostgresCrudRepository<T extends object> {
     return rows.map((row) => this.mapRow(row));
   }
 
+  /**
+   * Rows whose `field` is among the ids `subquery` returns (e.g. the cohorts of a
+   * school's programs), filtered and paged in one query. `subquery` is a constant
+   * written in a repository, never built from input; its values come in `subParams`.
+   */
+  protected async listInSubquery(
+    field: string,
+    subquery: string,
+    subParams: readonly unknown[],
+    page?: { limit?: number; offset?: number },
+  ): Promise<T[]> {
+    const params = [...subParams];
+    let sql = `SELECT ${this.selectColumns} FROM ${this.qualifiedTable} WHERE deleted_at IS NULL AND ${this.columnOf(field)} IN (${subquery}) ORDER BY ${this.orderByClause}`;
+    if (page?.limit !== undefined) {
+      params.push(page.limit);
+      sql += ` LIMIT $${params.length}`;
+    }
+    if (page?.offset !== undefined) {
+      params.push(page.offset);
+      sql += ` OFFSET $${params.length}`;
+    }
+    const rows = await this.select<Row>(sql, params);
+    return rows.map((row) => this.mapRow(row));
+  }
+
+  protected async countInSubquery(field: string, subquery: string, subParams: readonly unknown[]): Promise<number> {
+    const rows = await this.select<{ total: number }>(
+      `SELECT COUNT(*)::int AS total FROM ${this.qualifiedTable} WHERE deleted_at IS NULL AND ${this.columnOf(field)} IN (${subquery})`,
+      subParams,
+    );
+    return Number(rows[0]?.total ?? 0);
+  }
+
   /** Total matching rows, ignoring LIMIT/OFFSET — backs the `x-total-count` header. */
   async count(query: ListQuery = {}): Promise<number> {
     const { clause, params } = this.buildFilters(query.filters, 1);

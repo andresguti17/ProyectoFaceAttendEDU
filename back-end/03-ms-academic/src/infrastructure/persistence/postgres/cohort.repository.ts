@@ -4,6 +4,10 @@ import type { PageOptions } from '../../../domain/ports/out/ICrudRepository';
 import { PostgresCrudRepository, type FieldSpec } from './crud.repository';
 import { AUDIT_FIELDS } from './audit.fields';
 
+/** Live ids of a school's programs; $1 = school_id. */
+const PROGRAMS_OF_SCHOOL =
+  `SELECT program_id FROM academic.program WHERE school_id = $1 AND deleted_at IS NULL`;
+
 /**
  * PostgreSQL adapter for `academic.cohort`.
  * `cohort_id` is BIGINT; the int8 parser in `db/database.ts` turns it into a JSON
@@ -29,5 +33,13 @@ export class PostgresCohortRepository extends PostgresCrudRepository<Cohort> imp
 
   countByProgram(programId: number): Promise<number> {
     return this.countWhere([this.filterOn('programId', programId)]);
+  }
+
+  findBySchool(schoolId: number, page?: PageOptions): Promise<Cohort[]> {
+    return this.listInSubquery('programId', PROGRAMS_OF_SCHOOL, [schoolId], page);
+  }
+
+  countBySchool(schoolId: number): Promise<number> {
+    return this.countInSubquery('programId', PROGRAMS_OF_SCHOOL, [schoolId]);
   }
 }
