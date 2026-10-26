@@ -31,7 +31,7 @@ import UserHistoryModal from "../../../components/reports/UserHistoryModal";
 import { ExportConfigModal } from "../../../components/reports/ExportConfigModal";
 import { useHistoricosViewModel } from "../../../../viewmodels/useHistoricosViewModel";
 import { usePushNotification } from "../../../components/common/feedback/PushNotification";
-import { exportToExcel, exportToPDF, buildHTMLTable, formatPercentageWithColor, formatStatusBadge } from "../../../../core/utils/exportHelpers";
+import { exportToExcel, exportToPDF, buildHTMLTable, formatPercentageWithColor, formatStatusBadge, trustedHtml } from "../../../../core/utils/exportHelpers";
 import { getInstitutionConfig } from "../../../../core/config/institutionConfig";
 import { getAttendanceThresholds } from "../../../../models/data/userDerivedData";
 
@@ -842,39 +842,34 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                 }
             }
             
-            // Determinar columnas según el tipo de exportación
-            let columns;
-            
-            if (exportType === "simple") {
-                // Exportación SENCILLA: Solo nombre, ficha y asistencia con progressbar
-                columns = [
-                    { key: "studentName", label: t("Nombre"), width: "40%" },
-                    { key: "fichaName", label: t("Ficha"), width: "30%", align: "center" },
-                    {
-                        key: "attendance",
-                        label: t("Asistencia"),
-                        width: "30%",
-                        align: "center",
-                        render: (value) => {
-                            const percentage = value || 0;
-                            // Determinar color según umbrales del tema
-                            let barColor = successColor; // Verde por defecto (>= excellent)
-                            if (percentage < warning) {
-                                barColor = dangerColor; // Rojo
-                            } else if (percentage < excellent) {
-                                barColor = warningColor; // Amarillo
-                            }
-                            
-                            return `
+            // Barra de asistencia coloreada según los umbrales del tema (la usan ambas exportaciones).
+            const attendanceBar = (value) => {
+                const percentage = Number(value) || 0;
+                let barColor = successColor; // Verde por defecto (>= excellent)
+                if (percentage < warning) {
+                    barColor = dangerColor; // Rojo
+                } else if (percentage < excellent) {
+                    barColor = warningColor; // Amarillo
+                }
+                return trustedHtml(`
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <div style="flex: 1; height: 8px; background: #E5E7EB; border-radius: 4px; overflow: hidden;">
                                         <div style="height: 100%; background: ${barColor}; width: ${percentage}%; transition: width 0.3s;"></div>
                                     </div>
                                     <strong style="color: ${barColor}; font-size: 14px; min-width: 45px; text-align: right;">${Math.round(percentage)}%</strong>
                                 </div>
-                            `;
-                        },
-                    },
+                            `);
+            };
+
+            // Determinar columnas según el tipo de exportación
+            let columns;
+
+            if (exportType === "simple") {
+                // Exportación SENCILLA: Solo nombre, ficha y asistencia con progressbar
+                columns = [
+                    { key: "studentName", label: t("Nombre"), width: "40%" },
+                    { key: "fichaName", label: t("Ficha"), width: "30%", align: "center" },
+                    { key: "attendance", label: t("Asistencia"), width: "30%", align: "center", render: attendanceBar },
                 ];
             } else {
                 // Exportación DETALLADA: Todos los campos
@@ -902,31 +897,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                             });
                         },
                     },
-                    {
-                        key: "attendance",
-                        label: t("Asistencia"),
-                        width: "15%",
-                        align: "center",
-                        render: (value) => {
-                            const percentage = value || 0;
-                            // Determinar color según umbrales del tema
-                            let barColor = successColor; // Verde por defecto (>= excellent)
-                            if (percentage < warning) {
-                                barColor = dangerColor; // Rojo
-                            } else if (percentage < excellent) {
-                                barColor = warningColor; // Amarillo
-                            }
-                            
-                            return `
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="flex: 1; height: 8px; background: #E5E7EB; border-radius: 4px; overflow: hidden;">
-                                        <div style="height: 100%; background: ${barColor}; width: ${percentage}%; transition: width 0.3s;"></div>
-                                    </div>
-                                    <strong style="color: ${barColor}; font-size: 14px; min-width: 45px; text-align: right;">${Math.round(percentage)}%</strong>
-                                </div>
-                            `;
-                        },
-                    },
+                    { key: "attendance", label: t("Asistencia"), width: "15%", align: "center", render: attendanceBar },
                 ];
             }
             
