@@ -34,3 +34,5 @@ faceattend:
   auth:
     identity-url: http://localhost:8081
     authorization-url: http://localhost:8082
+    # Sede de cada usuario (academic_actor), para acotar los cambios de rol de un Administrador.
+    academic-url: http://localhost:8083

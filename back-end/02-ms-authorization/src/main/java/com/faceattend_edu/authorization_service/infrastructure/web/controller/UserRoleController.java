@@ -5,6 +5,7 @@ import com.faceattend_edu.authorization_service.domain.port.in.AssignRoleToUserU
 import com.faceattend_edu.authorization_service.domain.port.in.CheckPermissionUseCase;
 import com.faceattend_edu.authorization_service.domain.port.out.RoleRepository;
 import com.faceattend_edu.authorization_service.domain.port.out.UserRoleRepository;
+import com.faceattend_edu.shared.auth.UserSchools;
 import jakarta.servlet.http.HttpServletRequest;
 import com.faceattend_edu.authorization_service.infrastructure.web.dto.AssignRoleRequest;
 import com.faceattend_edu.authorization_service.infrastructure.web.dto.RoleResponse;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,18 +30,20 @@ public class UserRoleController {
     /** Keeps the query string inside every sane URL limit and bounds the IN clause. */
     private static final int MAX_BATCH_USERS = 300;
 
-    private static final Set<String> PRIVILEGED_ROLE_NAMES = Set.of("Super Administrador", "Administrador");
+    private static final String SUPER_ADMIN_ROLE = "Super Administrador";
+    private static final Set<String> PRIVILEGED_ROLE_NAMES = Set.of(SUPER_ADMIN_ROLE, "Administrador");
 
     private final AssignRoleToUserUseCase assignRoleToUserUseCase;
     private final CheckPermissionUseCase checkPermissionUseCase;
     private final UserRoleRepository userRoleRepository;
     private final RoleRepository roleRepository;
     private final RoleWebMapper roleWebMapper;
+    private final UserSchools userSchools;
 
     @PostMapping({"/api/v1/users/{userId}/roles", "/users/{userId}/roles"})
     public ResponseEntity<Void> assignRole(@PathVariable UUID userId, @Valid @RequestBody AssignRoleRequest req,
                                            HttpServletRequest request) {
-        if (!mayChangeRole(req.getRoleId(), request)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        if (!mayChangeRole(userId, req.getRoleId(), request)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         assignRoleToUserUseCase.assignRoleToUser(userId, req.getRoleId());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -47,21 +51,31 @@ public class UserRoleController {
     @DeleteMapping({"/api/v1/users/{userId}/roles/{roleId}", "/users/{userId}/roles/{roleId}"})
     public ResponseEntity<Void> removeRole(@PathVariable UUID userId, @PathVariable Integer roleId,
                                            HttpServletRequest request) {
-        if (!mayChangeRole(roleId, request)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        if (!mayChangeRole(userId, roleId, request)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         assignRoleToUserUseCase.removeRoleFromUser(userId, roleId);
         return ResponseEntity.noContent().build();
     }
 
     /**
-     * Administrador de sede asigna roles operativos (estudiante, instructor) y solo
-     * Super Administrador puede tocar los roles que dan acceso global o de sede.
+     * Administrador de sede asigna roles operativos (Aprendiz, Instructor) solo a usuarios
+     * de su propia sede; los roles que dan acceso global o de sede, y cualquier usuario
+     * de otra sede, quedan para Super Administrador. La sede sale de los academic_actor
+     * de cada usuario, consultados con el token del llamante (nunca del cuerpo).
      */
-    private boolean mayChangeRole(Integer roleId, HttpServletRequest request) {
+    private boolean mayChangeRole(UUID target, Integer roleId, HttpServletRequest request) {
+        List<?> callerRoles = request.getAttribute("X-User-Roles") instanceof List<?> roles ? roles : List.of();
+        if (callerRoles.contains(SUPER_ADMIN_ROLE)) return true;
         boolean privileged = roleRepository.findById(roleId)
                 .map(role -> PRIVILEGED_ROLE_NAMES.contains(role.getRoleName()))
                 .orElse(false);
-        if (!privileged) return true;
-        return request.getAttribute("X-User-Roles") instanceof List<?> roles && roles.contains("Super Administrador");
+        if (privileged) return false;
+
+        Object caller = request.getAttribute("X-User-Id");
+        String header = request.getHeader("Authorization");
+        if (caller == null || header == null || !header.regionMatches(true, 0, "Bearer ", 0, 7)) return false;
+        String token = header.substring(7).trim();
+        Set<Integer> callerSchools = userSchools.of(String.valueOf(caller), token);
+        return !callerSchools.isEmpty() && !Collections.disjoint(callerSchools, userSchools.of(target.toString(), token));
     }
 
     @GetMapping({"/api/v1/users/{userId}/roles", "/users/{userId}/roles"})
