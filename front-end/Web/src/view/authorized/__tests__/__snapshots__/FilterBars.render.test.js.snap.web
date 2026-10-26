@@ -1,0 +1,3637 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`filter bars render CoursesFilterBar state 0 1`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "backgroundColor": "rgba(255,255,255,1.00)",
+        "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "paddingBottom": "14px",
+          "paddingLeft": "14px",
+          "paddingRight": "14px",
+          "paddingTop": "14px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "column",
+            "gap": "12px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "minWidth": "200px",
+              "position": "relative",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "left": "14px",
+                "position": "absolute",
+                "zIndex": 1,
+              }
+            }
+          >
+            Feather:search:16:#64748B
+          </div>
+          <input
+            autoCapitalize="sentences"
+            autoComplete="on"
+            autoCorrect="on"
+            className="css-textinput-11aywtz r-placeholderTextColor-6taxm2"
+            dir="auto"
+            onBlur={[Function]}
+            onChange={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onSelect={[Function]}
+            placeholder="Buscar curso, código o instructor..."
+            readOnly={false}
+            ref={[Function]}
+            rows={1}
+            spellCheck={true}
+            style={
+              {
+                "--placeholderTextColor": "#94A3B8",
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomLeftRadius": "14px",
+                "borderBottomRightRadius": "14px",
+                "borderBottomWidth": "1.5px",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderLeftWidth": "1.5px",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderRightWidth": "1.5px",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "borderTopLeftRadius": "14px",
+                "borderTopRightRadius": "14px",
+                "borderTopWidth": "1.5px",
+                "color": "rgba(0,0,0,1.00)",
+                "fontSize": "14px",
+                "height": "48px",
+                "paddingLeft": "40px",
+                "paddingRight": "14px",
+              }
+            }
+            value="ana"
+            virtualkeyboardpolicy="auto"
+          />
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "120px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:columns:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Sin filtro
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`filter bars render CoursesFilterBar state 0 2`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "backgroundColor": "rgba(255,255,255,1.00)",
+        "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "paddingBottom": "14px",
+          "paddingLeft": "14px",
+          "paddingRight": "14px",
+          "paddingTop": "14px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "column",
+            "gap": "12px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "minWidth": "200px",
+              "position": "relative",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "left": "14px",
+                "position": "absolute",
+                "zIndex": 1,
+              }
+            }
+          >
+            Feather:search:16:#64748B
+          </div>
+          <input
+            autoCapitalize="sentences"
+            autoComplete="on"
+            autoCorrect="on"
+            className="css-textinput-11aywtz r-placeholderTextColor-6taxm2"
+            dir="auto"
+            onBlur={[Function]}
+            onChange={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onSelect={[Function]}
+            placeholder="Buscar curso, código o instructor..."
+            readOnly={false}
+            ref={[Function]}
+            rows={1}
+            spellCheck={true}
+            style={
+              {
+                "--placeholderTextColor": "#94A3B8",
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomLeftRadius": "14px",
+                "borderBottomRightRadius": "14px",
+                "borderBottomWidth": "1.5px",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderLeftWidth": "1.5px",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderRightWidth": "1.5px",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "borderTopLeftRadius": "14px",
+                "borderTopRightRadius": "14px",
+                "borderTopWidth": "1.5px",
+                "color": "rgba(0,0,0,1.00)",
+                "fontSize": "14px",
+                "height": "48px",
+                "paddingLeft": "40px",
+                "paddingRight": "14px",
+              }
+            }
+            value="ana"
+            virtualkeyboardpolicy="auto"
+          />
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "120px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:columns:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Sin filtro
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`filter bars render CoursesFilterBar state 1 1`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "backgroundColor": "rgba(255,255,255,1.00)",
+        "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "paddingBottom": "14px",
+          "paddingLeft": "14px",
+          "paddingRight": "14px",
+          "paddingTop": "14px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "column",
+            "gap": "12px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "minWidth": "200px",
+              "position": "relative",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "left": "14px",
+                "position": "absolute",
+                "zIndex": 1,
+              }
+            }
+          >
+            Feather:search:16:#64748B
+          </div>
+          <input
+            autoCapitalize="sentences"
+            autoComplete="on"
+            autoCorrect="on"
+            className="css-textinput-11aywtz r-placeholderTextColor-6taxm2"
+            dir="auto"
+            onBlur={[Function]}
+            onChange={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onSelect={[Function]}
+            placeholder="Buscar curso, código o instructor..."
+            readOnly={false}
+            ref={[Function]}
+            rows={1}
+            spellCheck={true}
+            style={
+              {
+                "--placeholderTextColor": "#94A3B8",
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomLeftRadius": "14px",
+                "borderBottomRightRadius": "14px",
+                "borderBottomWidth": "1.5px",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderLeftWidth": "1.5px",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderRightWidth": "1.5px",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "borderTopLeftRadius": "14px",
+                "borderTopRightRadius": "14px",
+                "borderTopWidth": "1.5px",
+                "color": "rgba(0,0,0,1.00)",
+                "fontSize": "14px",
+                "height": "48px",
+                "paddingLeft": "40px",
+                "paddingRight": "14px",
+              }
+            }
+            value="ana"
+            virtualkeyboardpolicy="auto"
+          />
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "120px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:columns:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Estado
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "140px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:filter:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Activo
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`filter bars render CoursesFilterBar state 1 2`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "backgroundColor": "rgba(255,255,255,1.00)",
+        "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "paddingBottom": "14px",
+          "paddingLeft": "14px",
+          "paddingRight": "14px",
+          "paddingTop": "14px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "column",
+            "gap": "12px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "minWidth": "200px",
+              "position": "relative",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "left": "14px",
+                "position": "absolute",
+                "zIndex": 1,
+              }
+            }
+          >
+            Feather:search:16:#64748B
+          </div>
+          <input
+            autoCapitalize="sentences"
+            autoComplete="on"
+            autoCorrect="on"
+            className="css-textinput-11aywtz r-placeholderTextColor-6taxm2"
+            dir="auto"
+            onBlur={[Function]}
+            onChange={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onSelect={[Function]}
+            placeholder="Buscar curso, código o instructor..."
+            readOnly={false}
+            ref={[Function]}
+            rows={1}
+            spellCheck={true}
+            style={
+              {
+                "--placeholderTextColor": "#94A3B8",
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomLeftRadius": "14px",
+                "borderBottomRightRadius": "14px",
+                "borderBottomWidth": "1.5px",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderLeftWidth": "1.5px",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderRightWidth": "1.5px",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "borderTopLeftRadius": "14px",
+                "borderTopRightRadius": "14px",
+                "borderTopWidth": "1.5px",
+                "color": "rgba(0,0,0,1.00)",
+                "fontSize": "14px",
+                "height": "48px",
+                "paddingLeft": "40px",
+                "paddingRight": "14px",
+              }
+            }
+            value="ana"
+            virtualkeyboardpolicy="auto"
+          />
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "120px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:columns:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(100,116,139,1.00)",
+                      "fontWeight": "400",
+                    }
+                  }
+                >
+                  Sin filtro
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "140px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:filter:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Activo
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`filter bars render CoursesFilterBar state 2 1`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "backgroundColor": "rgba(255,255,255,1.00)",
+        "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "paddingBottom": "14px",
+          "paddingLeft": "14px",
+          "paddingRight": "14px",
+          "paddingTop": "14px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "column",
+            "gap": "12px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "minWidth": "200px",
+              "position": "relative",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "left": "14px",
+                "position": "absolute",
+                "zIndex": 1,
+              }
+            }
+          >
+            Feather:search:16:#64748B
+          </div>
+          <input
+            autoCapitalize="sentences"
+            autoComplete="on"
+            autoCorrect="on"
+            className="css-textinput-11aywtz r-placeholderTextColor-6taxm2"
+            dir="auto"
+            onBlur={[Function]}
+            onChange={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onSelect={[Function]}
+            placeholder="Buscar curso, código o instructor..."
+            readOnly={false}
+            ref={[Function]}
+            rows={1}
+            spellCheck={true}
+            style={
+              {
+                "--placeholderTextColor": "#94A3B8",
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomLeftRadius": "14px",
+                "borderBottomRightRadius": "14px",
+                "borderBottomWidth": "1.5px",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderLeftWidth": "1.5px",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderRightWidth": "1.5px",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "borderTopLeftRadius": "14px",
+                "borderTopRightRadius": "14px",
+                "borderTopWidth": "1.5px",
+                "color": "rgba(0,0,0,1.00)",
+                "fontSize": "14px",
+                "height": "48px",
+                "paddingLeft": "40px",
+                "paddingRight": "14px",
+              }
+            }
+            value="ana"
+            virtualkeyboardpolicy="auto"
+          />
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "position": "absolute",
+                "right": "12px",
+                "zIndex": 1,
+              }
+            }
+          />
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "120px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:columns:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Asistencia
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-gap-9aw3ui"
+          dir={null}
+          ref={[Function]}
+        >
+          <div
+            className="css-view-g5y9jx r-alignItems-1awozwy r-flexDirection-18u37iz r-gap-9aw3ui"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-width-cfp7ip"
+              dir={null}
+              ref={[Function]}
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "position": "relative",
+                    "zIndex": 1,
+                  }
+                }
+              >
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                >
+                  <div
+                    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+                    dir={null}
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                    onKeyDown={[Function]}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(255,255,255,1.00)",
+                        "borderBottomColor": "rgba(226,232,240,0.50)",
+                        "borderBottomLeftRadius": "12px",
+                        "borderBottomRightRadius": "12px",
+                        "borderBottomWidth": "2px",
+                        "borderLeftColor": "rgba(226,232,240,0.50)",
+                        "borderLeftWidth": "2px",
+                        "borderRightColor": "rgba(226,232,240,0.50)",
+                        "borderRightWidth": "2px",
+                        "borderTopColor": "rgba(226,232,240,0.50)",
+                        "borderTopWidth": "2px",
+                        "height": "48px",
+                        "opacity": 1,
+                        "paddingLeft": "10px",
+                        "paddingRight": "10px",
+                        "transitionDuration": "0s",
+                      }
+                    }
+                    tabIndex="0"
+                  >
+                    <div
+                      className="css-view-g5y9jx r-flex-13awgt0"
+                      dir={null}
+                      ref={[Function]}
+                    >
+                      <div
+                        className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                        dir="auto"
+                        ref={[Function]}
+                        style={
+                          {
+                            "color": "rgba(100,116,139,1.00)",
+                            "fontWeight": "400",
+                          }
+                        }
+                      >
+                        =
+                      </div>
+                    </div>
+                    <div
+                      className="css-view-g5y9jx"
+                      dir={null}
+                      ref={[Function]}
+                      style={
+                        {
+                          "transform": "rotate(0deg)",
+                        }
+                      }
+                    >
+                      Feather:chevron-down:14:#64748B
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              className="css-view-g5y9jx r-flex-13awgt0 r-minWidth-ytfskt"
+              dir={null}
+              ref={[Function]}
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "position": "relative",
+                    "zIndex": 1,
+                  }
+                }
+              >
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                >
+                  <div
+                    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+                    dir={null}
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                    onKeyDown={[Function]}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(255,255,255,1.00)",
+                        "borderBottomColor": "rgba(226,232,240,0.50)",
+                        "borderBottomLeftRadius": "12px",
+                        "borderBottomRightRadius": "12px",
+                        "borderBottomWidth": "2px",
+                        "borderLeftColor": "rgba(226,232,240,0.50)",
+                        "borderLeftWidth": "2px",
+                        "borderRightColor": "rgba(226,232,240,0.50)",
+                        "borderRightWidth": "2px",
+                        "borderTopColor": "rgba(226,232,240,0.50)",
+                        "borderTopWidth": "2px",
+                        "height": "48px",
+                        "opacity": 1,
+                        "paddingLeft": "8px",
+                        "paddingRight": "8px",
+                        "transitionDuration": "0s",
+                      }
+                    }
+                    tabIndex="0"
+                  >
+                    <div
+                      className="css-view-g5y9jx r-flex-13awgt0"
+                      dir={null}
+                      ref={[Function]}
+                    >
+                      <div
+                        className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                        dir="auto"
+                        ref={[Function]}
+                        style={
+                          {
+                            "color": "rgba(100,116,139,1.00)",
+                            "fontWeight": "400",
+                          }
+                        }
+                      >
+                        qué..?
+                      </div>
+                    </div>
+                    <div
+                      className="css-view-g5y9jx"
+                      dir={null}
+                      ref={[Function]}
+                      style={
+                        {
+                          "transform": "rotate(0deg)",
+                        }
+                      }
+                    >
+                      Feather:chevron-down:14:#64748B
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`filter bars render CoursesFilterBar state 2 2`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "backgroundColor": "rgba(255,255,255,1.00)",
+        "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "paddingBottom": "14px",
+          "paddingLeft": "14px",
+          "paddingRight": "14px",
+          "paddingTop": "14px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "column",
+            "gap": "12px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "minWidth": "200px",
+              "position": "relative",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "left": "14px",
+                "position": "absolute",
+                "zIndex": 1,
+              }
+            }
+          >
+            Feather:search:16:#64748B
+          </div>
+          <input
+            autoCapitalize="sentences"
+            autoComplete="on"
+            autoCorrect="on"
+            className="css-textinput-11aywtz r-placeholderTextColor-6taxm2"
+            dir="auto"
+            onBlur={[Function]}
+            onChange={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onSelect={[Function]}
+            placeholder="Buscar curso, código o instructor..."
+            readOnly={false}
+            ref={[Function]}
+            rows={1}
+            spellCheck={true}
+            style={
+              {
+                "--placeholderTextColor": "#94A3B8",
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomLeftRadius": "14px",
+                "borderBottomRightRadius": "14px",
+                "borderBottomWidth": "1.5px",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderLeftWidth": "1.5px",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderRightWidth": "1.5px",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "borderTopLeftRadius": "14px",
+                "borderTopRightRadius": "14px",
+                "borderTopWidth": "1.5px",
+                "color": "rgba(0,0,0,1.00)",
+                "fontSize": "14px",
+                "height": "48px",
+                "paddingLeft": "40px",
+                "paddingRight": "14px",
+              }
+            }
+            value="ana"
+            virtualkeyboardpolicy="auto"
+          />
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "position": "absolute",
+                "right": "12px",
+                "zIndex": 1,
+              }
+            }
+          />
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "120px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:columns:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(100,116,139,1.00)",
+                      "fontWeight": "400",
+                    }
+                  }
+                >
+                  Sin filtro
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-gap-9aw3ui"
+          dir={null}
+          ref={[Function]}
+        >
+          <div
+            className="css-view-g5y9jx r-alignItems-1awozwy r-flexDirection-18u37iz r-gap-9aw3ui"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-width-cfp7ip"
+              dir={null}
+              ref={[Function]}
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "position": "relative",
+                    "zIndex": 1,
+                  }
+                }
+              >
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                >
+                  <div
+                    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+                    dir={null}
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                    onKeyDown={[Function]}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(255,255,255,1.00)",
+                        "borderBottomColor": "rgba(226,232,240,0.50)",
+                        "borderBottomLeftRadius": "12px",
+                        "borderBottomRightRadius": "12px",
+                        "borderBottomWidth": "2px",
+                        "borderLeftColor": "rgba(226,232,240,0.50)",
+                        "borderLeftWidth": "2px",
+                        "borderRightColor": "rgba(226,232,240,0.50)",
+                        "borderRightWidth": "2px",
+                        "borderTopColor": "rgba(226,232,240,0.50)",
+                        "borderTopWidth": "2px",
+                        "height": "48px",
+                        "opacity": 1,
+                        "paddingLeft": "10px",
+                        "paddingRight": "10px",
+                        "transitionDuration": "0s",
+                      }
+                    }
+                    tabIndex="0"
+                  >
+                    <div
+                      className="css-view-g5y9jx r-flex-13awgt0"
+                      dir={null}
+                      ref={[Function]}
+                    >
+                      <div
+                        className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                        dir="auto"
+                        ref={[Function]}
+                        style={
+                          {
+                            "color": "rgba(100,116,139,1.00)",
+                            "fontWeight": "400",
+                          }
+                        }
+                      >
+                        =
+                      </div>
+                    </div>
+                    <div
+                      className="css-view-g5y9jx"
+                      dir={null}
+                      ref={[Function]}
+                      style={
+                        {
+                          "transform": "rotate(0deg)",
+                        }
+                      }
+                    >
+                      Feather:chevron-down:14:#64748B
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              className="css-view-g5y9jx r-flex-13awgt0 r-minWidth-ytfskt"
+              dir={null}
+              ref={[Function]}
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "position": "relative",
+                    "zIndex": 1,
+                  }
+                }
+              >
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                >
+                  <div
+                    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+                    dir={null}
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                    onKeyDown={[Function]}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(255,255,255,1.00)",
+                        "borderBottomColor": "rgba(226,232,240,0.50)",
+                        "borderBottomLeftRadius": "12px",
+                        "borderBottomRightRadius": "12px",
+                        "borderBottomWidth": "2px",
+                        "borderLeftColor": "rgba(226,232,240,0.50)",
+                        "borderLeftWidth": "2px",
+                        "borderRightColor": "rgba(226,232,240,0.50)",
+                        "borderRightWidth": "2px",
+                        "borderTopColor": "rgba(226,232,240,0.50)",
+                        "borderTopWidth": "2px",
+                        "height": "48px",
+                        "opacity": 1,
+                        "paddingLeft": "8px",
+                        "paddingRight": "8px",
+                        "transitionDuration": "0s",
+                      }
+                    }
+                    tabIndex="0"
+                  >
+                    <div
+                      className="css-view-g5y9jx r-flex-13awgt0"
+                      dir={null}
+                      ref={[Function]}
+                    >
+                      <div
+                        className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                        dir="auto"
+                        ref={[Function]}
+                        style={
+                          {
+                            "color": "rgba(100,116,139,1.00)",
+                            "fontWeight": "400",
+                          }
+                        }
+                      >
+                        qué..?
+                      </div>
+                    </div>
+                    <div
+                      className="css-view-g5y9jx"
+                      dir={null}
+                      ref={[Function]}
+                      style={
+                        {
+                          "transform": "rotate(0deg)",
+                        }
+                      }
+                    >
+                      Feather:chevron-down:14:#64748B
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`filter bars render UsersFilterBar state 0 1`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "backgroundColor": "rgba(255,255,255,1.00)",
+        "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "paddingBottom": "14px",
+          "paddingLeft": "14px",
+          "paddingRight": "14px",
+          "paddingTop": "14px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "column",
+            "gap": "12px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "minWidth": "200px",
+              "position": "relative",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "left": "14px",
+                "position": "absolute",
+                "zIndex": 1,
+              }
+            }
+          >
+            Feather:search:16:#64748B
+          </div>
+          <input
+            autoCapitalize="sentences"
+            autoComplete="on"
+            autoCorrect="on"
+            className="css-textinput-11aywtz r-placeholderTextColor-6taxm2"
+            dir="auto"
+            onBlur={[Function]}
+            onChange={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onSelect={[Function]}
+            placeholder="Buscar por nombre o código..."
+            readOnly={false}
+            ref={[Function]}
+            rows={1}
+            spellCheck={true}
+            style={
+              {
+                "--placeholderTextColor": "#94A3B8",
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomLeftRadius": "14px",
+                "borderBottomRightRadius": "14px",
+                "borderBottomWidth": "1.5px",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderLeftWidth": "1.5px",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderRightWidth": "1.5px",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "borderTopLeftRadius": "14px",
+                "borderTopRightRadius": "14px",
+                "borderTopWidth": "1.5px",
+                "color": "rgba(0,0,0,1.00)",
+                "fontSize": "14px",
+                "height": "48px",
+                "paddingLeft": "40px",
+                "paddingRight": "14px",
+              }
+            }
+            value="ana"
+            virtualkeyboardpolicy="auto"
+          />
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "120px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:columns:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Sin filtro
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`filter bars render UsersFilterBar state 0 2`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "backgroundColor": "rgba(255,255,255,1.00)",
+        "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "paddingBottom": "14px",
+          "paddingLeft": "14px",
+          "paddingRight": "14px",
+          "paddingTop": "14px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "column",
+            "gap": "12px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "minWidth": "200px",
+              "position": "relative",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "left": "14px",
+                "position": "absolute",
+                "zIndex": 1,
+              }
+            }
+          >
+            Feather:search:16:#64748B
+          </div>
+          <input
+            autoCapitalize="sentences"
+            autoComplete="on"
+            autoCorrect="on"
+            className="css-textinput-11aywtz r-placeholderTextColor-6taxm2"
+            dir="auto"
+            onBlur={[Function]}
+            onChange={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onSelect={[Function]}
+            placeholder="Buscar estudiante..."
+            readOnly={false}
+            ref={[Function]}
+            rows={1}
+            spellCheck={true}
+            style={
+              {
+                "--placeholderTextColor": "#94A3B8",
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomLeftRadius": "14px",
+                "borderBottomRightRadius": "14px",
+                "borderBottomWidth": "1.5px",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderLeftWidth": "1.5px",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderRightWidth": "1.5px",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "borderTopLeftRadius": "14px",
+                "borderTopRightRadius": "14px",
+                "borderTopWidth": "1.5px",
+                "color": "rgba(0,0,0,1.00)",
+                "fontSize": "14px",
+                "height": "48px",
+                "paddingLeft": "40px",
+                "paddingRight": "14px",
+              }
+            }
+            value="ana"
+            virtualkeyboardpolicy="auto"
+          />
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "120px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:columns:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Sin filtro
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-marginBottom-1ifxtd0"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "minWidth": "180px",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-borderWidth-1rf8fdq r-flexDirection-18u37iz r-justifyContent-1wtj0ep r-minHeight-ero68b r-paddingBlock-11f147o r-paddingInline-3pj75a"
+            dir={null}
+            onClick={[Function]}
+            onContextMenu={[Function]}
+            onKeyDown={[Function]}
+            ref={[Function]}
+            style={
+              {
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "transitionDuration": "0s",
+              }
+            }
+            tabIndex="0"
+          >
+            <div
+              className="css-text-146c3p1 r-flex-13awgt0 r-fontSize-1b43r93"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(0,0,0,1.00)",
+                }
+              }
+            >
+              ADSI
+            </div>
+            Feather:chevron-down:18:#64748B
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`filter bars render UsersFilterBar state 1 1`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "backgroundColor": "rgba(255,255,255,1.00)",
+        "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "paddingBottom": "14px",
+          "paddingLeft": "14px",
+          "paddingRight": "14px",
+          "paddingTop": "14px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "column",
+            "gap": "12px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "minWidth": "200px",
+              "position": "relative",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "left": "14px",
+                "position": "absolute",
+                "zIndex": 1,
+              }
+            }
+          >
+            Feather:search:16:#64748B
+          </div>
+          <input
+            autoCapitalize="sentences"
+            autoComplete="on"
+            autoCorrect="on"
+            className="css-textinput-11aywtz r-placeholderTextColor-6taxm2"
+            dir="auto"
+            onBlur={[Function]}
+            onChange={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onSelect={[Function]}
+            placeholder="Buscar por nombre o código..."
+            readOnly={false}
+            ref={[Function]}
+            rows={1}
+            spellCheck={true}
+            style={
+              {
+                "--placeholderTextColor": "#94A3B8",
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomLeftRadius": "14px",
+                "borderBottomRightRadius": "14px",
+                "borderBottomWidth": "1.5px",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderLeftWidth": "1.5px",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderRightWidth": "1.5px",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "borderTopLeftRadius": "14px",
+                "borderTopRightRadius": "14px",
+                "borderTopWidth": "1.5px",
+                "color": "rgba(0,0,0,1.00)",
+                "fontSize": "14px",
+                "height": "48px",
+                "paddingLeft": "40px",
+                "paddingRight": "14px",
+              }
+            }
+            value="ana"
+            virtualkeyboardpolicy="auto"
+          />
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "120px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:columns:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Estado
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "140px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:filter:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Activo
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`filter bars render UsersFilterBar state 1 2`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "backgroundColor": "rgba(255,255,255,1.00)",
+        "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "paddingBottom": "14px",
+          "paddingLeft": "14px",
+          "paddingRight": "14px",
+          "paddingTop": "14px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "column",
+            "gap": "12px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "minWidth": "200px",
+              "position": "relative",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "left": "14px",
+                "position": "absolute",
+                "zIndex": 1,
+              }
+            }
+          >
+            Feather:search:16:#64748B
+          </div>
+          <input
+            autoCapitalize="sentences"
+            autoComplete="on"
+            autoCorrect="on"
+            className="css-textinput-11aywtz r-placeholderTextColor-6taxm2"
+            dir="auto"
+            onBlur={[Function]}
+            onChange={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onSelect={[Function]}
+            placeholder="Buscar estudiante..."
+            readOnly={false}
+            ref={[Function]}
+            rows={1}
+            spellCheck={true}
+            style={
+              {
+                "--placeholderTextColor": "#94A3B8",
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomLeftRadius": "14px",
+                "borderBottomRightRadius": "14px",
+                "borderBottomWidth": "1.5px",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderLeftWidth": "1.5px",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderRightWidth": "1.5px",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "borderTopLeftRadius": "14px",
+                "borderTopRightRadius": "14px",
+                "borderTopWidth": "1.5px",
+                "color": "rgba(0,0,0,1.00)",
+                "fontSize": "14px",
+                "height": "48px",
+                "paddingLeft": "40px",
+                "paddingRight": "14px",
+              }
+            }
+            value="ana"
+            virtualkeyboardpolicy="auto"
+          />
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "120px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:columns:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Estado
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-marginBottom-1ifxtd0"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "minWidth": "180px",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-borderWidth-1rf8fdq r-flexDirection-18u37iz r-justifyContent-1wtj0ep r-minHeight-ero68b r-paddingBlock-11f147o r-paddingInline-3pj75a"
+            dir={null}
+            onClick={[Function]}
+            onContextMenu={[Function]}
+            onKeyDown={[Function]}
+            ref={[Function]}
+            style={
+              {
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "transitionDuration": "0s",
+              }
+            }
+            tabIndex="0"
+          >
+            <div
+              className="css-text-146c3p1 r-flex-13awgt0 r-fontSize-1b43r93"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(0,0,0,1.00)",
+                }
+              }
+            >
+              ADSI
+            </div>
+            Feather:chevron-down:18:#64748B
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "140px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:filter:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Activo
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`filter bars render UsersFilterBar state 2 1`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "backgroundColor": "rgba(255,255,255,1.00)",
+        "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "paddingBottom": "14px",
+          "paddingLeft": "14px",
+          "paddingRight": "14px",
+          "paddingTop": "14px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "column",
+            "gap": "12px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "minWidth": "200px",
+              "position": "relative",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "left": "14px",
+                "position": "absolute",
+                "zIndex": 1,
+              }
+            }
+          >
+            Feather:search:16:#64748B
+          </div>
+          <input
+            autoCapitalize="sentences"
+            autoComplete="on"
+            autoCorrect="on"
+            className="css-textinput-11aywtz r-placeholderTextColor-6taxm2"
+            dir="auto"
+            onBlur={[Function]}
+            onChange={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onSelect={[Function]}
+            placeholder="Buscar por nombre o código..."
+            readOnly={false}
+            ref={[Function]}
+            rows={1}
+            spellCheck={true}
+            style={
+              {
+                "--placeholderTextColor": "#94A3B8",
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomLeftRadius": "14px",
+                "borderBottomRightRadius": "14px",
+                "borderBottomWidth": "1.5px",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderLeftWidth": "1.5px",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderRightWidth": "1.5px",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "borderTopLeftRadius": "14px",
+                "borderTopRightRadius": "14px",
+                "borderTopWidth": "1.5px",
+                "color": "rgba(0,0,0,1.00)",
+                "fontSize": "14px",
+                "height": "48px",
+                "paddingLeft": "40px",
+                "paddingRight": "14px",
+              }
+            }
+            value="ana"
+            virtualkeyboardpolicy="auto"
+          />
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "position": "absolute",
+                "right": "12px",
+                "zIndex": 1,
+              }
+            }
+          />
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "120px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:columns:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Asistencia
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-gap-9aw3ui"
+          dir={null}
+          ref={[Function]}
+        >
+          <div
+            className="css-view-g5y9jx r-alignItems-1awozwy r-flexDirection-18u37iz r-gap-9aw3ui"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-width-cfp7ip"
+              dir={null}
+              ref={[Function]}
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "position": "relative",
+                    "zIndex": 1,
+                  }
+                }
+              >
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                >
+                  <div
+                    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+                    dir={null}
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                    onKeyDown={[Function]}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(255,255,255,1.00)",
+                        "borderBottomColor": "rgba(226,232,240,0.50)",
+                        "borderBottomLeftRadius": "12px",
+                        "borderBottomRightRadius": "12px",
+                        "borderBottomWidth": "2px",
+                        "borderLeftColor": "rgba(226,232,240,0.50)",
+                        "borderLeftWidth": "2px",
+                        "borderRightColor": "rgba(226,232,240,0.50)",
+                        "borderRightWidth": "2px",
+                        "borderTopColor": "rgba(226,232,240,0.50)",
+                        "borderTopWidth": "2px",
+                        "height": "48px",
+                        "opacity": 1,
+                        "paddingLeft": "10px",
+                        "paddingRight": "10px",
+                        "transitionDuration": "0s",
+                      }
+                    }
+                    tabIndex="0"
+                  >
+                    <div
+                      className="css-view-g5y9jx r-flex-13awgt0"
+                      dir={null}
+                      ref={[Function]}
+                    >
+                      <div
+                        className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                        dir="auto"
+                        ref={[Function]}
+                        style={
+                          {
+                            "color": "rgba(100,116,139,1.00)",
+                            "fontWeight": "400",
+                          }
+                        }
+                      >
+                        =
+                      </div>
+                    </div>
+                    <div
+                      className="css-view-g5y9jx"
+                      dir={null}
+                      ref={[Function]}
+                      style={
+                        {
+                          "transform": "rotate(0deg)",
+                        }
+                      }
+                    >
+                      Feather:chevron-down:14:#64748B
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              className="css-view-g5y9jx r-flex-13awgt0 r-minWidth-ytfskt"
+              dir={null}
+              ref={[Function]}
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "position": "relative",
+                    "zIndex": 1,
+                  }
+                }
+              >
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                >
+                  <div
+                    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+                    dir={null}
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                    onKeyDown={[Function]}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(255,255,255,1.00)",
+                        "borderBottomColor": "rgba(226,232,240,0.50)",
+                        "borderBottomLeftRadius": "12px",
+                        "borderBottomRightRadius": "12px",
+                        "borderBottomWidth": "2px",
+                        "borderLeftColor": "rgba(226,232,240,0.50)",
+                        "borderLeftWidth": "2px",
+                        "borderRightColor": "rgba(226,232,240,0.50)",
+                        "borderRightWidth": "2px",
+                        "borderTopColor": "rgba(226,232,240,0.50)",
+                        "borderTopWidth": "2px",
+                        "height": "48px",
+                        "opacity": 1,
+                        "paddingLeft": "8px",
+                        "paddingRight": "8px",
+                        "transitionDuration": "0s",
+                      }
+                    }
+                    tabIndex="0"
+                  >
+                    <div
+                      className="css-view-g5y9jx r-flex-13awgt0"
+                      dir={null}
+                      ref={[Function]}
+                    >
+                      <div
+                        className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                        dir="auto"
+                        ref={[Function]}
+                        style={
+                          {
+                            "color": "rgba(100,116,139,1.00)",
+                            "fontWeight": "400",
+                          }
+                        }
+                      >
+                        qué..?
+                      </div>
+                    </div>
+                    <div
+                      className="css-view-g5y9jx"
+                      dir={null}
+                      ref={[Function]}
+                      style={
+                        {
+                          "transform": "rotate(0deg)",
+                        }
+                      }
+                    >
+                      Feather:chevron-down:14:#64748B
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`filter bars render UsersFilterBar state 2 2`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "backgroundColor": "rgba(255,255,255,1.00)",
+        "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "paddingBottom": "14px",
+          "paddingLeft": "14px",
+          "paddingRight": "14px",
+          "paddingTop": "14px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "column",
+            "gap": "12px",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "center",
+              "minWidth": "200px",
+              "position": "relative",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "left": "14px",
+                "position": "absolute",
+                "zIndex": 1,
+              }
+            }
+          >
+            Feather:search:16:#64748B
+          </div>
+          <input
+            autoCapitalize="sentences"
+            autoComplete="on"
+            autoCorrect="on"
+            className="css-textinput-11aywtz r-placeholderTextColor-6taxm2"
+            dir="auto"
+            onBlur={[Function]}
+            onChange={[Function]}
+            onFocus={[Function]}
+            onKeyDown={[Function]}
+            onSelect={[Function]}
+            placeholder="Buscar estudiante..."
+            readOnly={false}
+            ref={[Function]}
+            rows={1}
+            spellCheck={true}
+            style={
+              {
+                "--placeholderTextColor": "#94A3B8",
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomLeftRadius": "14px",
+                "borderBottomRightRadius": "14px",
+                "borderBottomWidth": "1.5px",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderLeftWidth": "1.5px",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderRightWidth": "1.5px",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "borderTopLeftRadius": "14px",
+                "borderTopRightRadius": "14px",
+                "borderTopWidth": "1.5px",
+                "color": "rgba(0,0,0,1.00)",
+                "fontSize": "14px",
+                "height": "48px",
+                "paddingLeft": "40px",
+                "paddingRight": "14px",
+              }
+            }
+            value="ana"
+            virtualkeyboardpolicy="auto"
+          />
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "position": "absolute",
+                "right": "12px",
+                "zIndex": 1,
+              }
+            }
+          />
+        </div>
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "alignSelf": "flex-start",
+              "minWidth": "120px",
+              "position": "relative",
+              "zIndex": 1,
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+              dir={null}
+              onClick={[Function]}
+              onContextMenu={[Function]}
+              onKeyDown={[Function]}
+              ref={[Function]}
+              style={
+                {
+                  "backgroundColor": "rgba(255,255,255,1.00)",
+                  "borderBottomColor": "rgba(226,232,240,0.50)",
+                  "borderBottomLeftRadius": "12px",
+                  "borderBottomRightRadius": "12px",
+                  "borderBottomWidth": "2px",
+                  "borderLeftColor": "rgba(226,232,240,0.50)",
+                  "borderLeftWidth": "2px",
+                  "borderRightColor": "rgba(226,232,240,0.50)",
+                  "borderRightWidth": "2px",
+                  "borderTopColor": "rgba(226,232,240,0.50)",
+                  "borderTopWidth": "2px",
+                  "height": "48px",
+                  "opacity": 1,
+                  "paddingLeft": "16px",
+                  "paddingRight": "16px",
+                  "transitionDuration": "0s",
+                }
+              }
+              tabIndex="0"
+            >
+              Feather:columns:14:#64748B
+              <div
+                className="css-view-g5y9jx r-flex-13awgt0"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Asistencia
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "transform": "rotate(0deg)",
+                  }
+                }
+              >
+                Feather:chevron-down:14:#64748B
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-marginBottom-1ifxtd0"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "minWidth": "180px",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-borderWidth-1rf8fdq r-flexDirection-18u37iz r-justifyContent-1wtj0ep r-minHeight-ero68b r-paddingBlock-11f147o r-paddingInline-3pj75a"
+            dir={null}
+            onClick={[Function]}
+            onContextMenu={[Function]}
+            onKeyDown={[Function]}
+            ref={[Function]}
+            style={
+              {
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderLeftColor": "rgba(226,232,240,1.00)",
+                "borderRightColor": "rgba(226,232,240,1.00)",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "transitionDuration": "0s",
+              }
+            }
+            tabIndex="0"
+          >
+            <div
+              className="css-text-146c3p1 r-flex-13awgt0 r-fontSize-1b43r93"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(0,0,0,1.00)",
+                }
+              }
+            >
+              ADSI
+            </div>
+            Feather:chevron-down:18:#64748B
+          </div>
+        </div>
+        <div
+          className="css-view-g5y9jx r-gap-9aw3ui"
+          dir={null}
+          ref={[Function]}
+        >
+          <div
+            className="css-view-g5y9jx r-alignItems-1awozwy r-flexDirection-18u37iz r-gap-9aw3ui"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-width-cfp7ip"
+              dir={null}
+              ref={[Function]}
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "position": "relative",
+                    "zIndex": 1,
+                  }
+                }
+              >
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                >
+                  <div
+                    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+                    dir={null}
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                    onKeyDown={[Function]}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(255,255,255,1.00)",
+                        "borderBottomColor": "rgba(226,232,240,0.50)",
+                        "borderBottomLeftRadius": "12px",
+                        "borderBottomRightRadius": "12px",
+                        "borderBottomWidth": "2px",
+                        "borderLeftColor": "rgba(226,232,240,0.50)",
+                        "borderLeftWidth": "2px",
+                        "borderRightColor": "rgba(226,232,240,0.50)",
+                        "borderRightWidth": "2px",
+                        "borderTopColor": "rgba(226,232,240,0.50)",
+                        "borderTopWidth": "2px",
+                        "height": "48px",
+                        "opacity": 1,
+                        "paddingLeft": "10px",
+                        "paddingRight": "10px",
+                        "transitionDuration": "0s",
+                      }
+                    }
+                    tabIndex="0"
+                  >
+                    <div
+                      className="css-view-g5y9jx r-flex-13awgt0"
+                      dir={null}
+                      ref={[Function]}
+                    >
+                      <div
+                        className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                        dir="auto"
+                        ref={[Function]}
+                        style={
+                          {
+                            "color": "rgba(100,116,139,1.00)",
+                            "fontWeight": "400",
+                          }
+                        }
+                      >
+                        =
+                      </div>
+                    </div>
+                    <div
+                      className="css-view-g5y9jx"
+                      dir={null}
+                      ref={[Function]}
+                      style={
+                        {
+                          "transform": "rotate(0deg)",
+                        }
+                      }
+                    >
+                      Feather:chevron-down:14:#64748B
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              className="css-view-g5y9jx r-flex-13awgt0 r-minWidth-ytfskt"
+              dir={null}
+              ref={[Function]}
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "position": "relative",
+                    "zIndex": 1,
+                  }
+                }
+              >
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                >
+                  <div
+                    className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-1q9bdsx r-flexDirection-18u37iz r-gap-1cmwbt1"
+                    dir={null}
+                    onClick={[Function]}
+                    onContextMenu={[Function]}
+                    onKeyDown={[Function]}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(255,255,255,1.00)",
+                        "borderBottomColor": "rgba(226,232,240,0.50)",
+                        "borderBottomLeftRadius": "12px",
+                        "borderBottomRightRadius": "12px",
+                        "borderBottomWidth": "2px",
+                        "borderLeftColor": "rgba(226,232,240,0.50)",
+                        "borderLeftWidth": "2px",
+                        "borderRightColor": "rgba(226,232,240,0.50)",
+                        "borderRightWidth": "2px",
+                        "borderTopColor": "rgba(226,232,240,0.50)",
+                        "borderTopWidth": "2px",
+                        "height": "48px",
+                        "opacity": 1,
+                        "paddingLeft": "8px",
+                        "paddingRight": "8px",
+                        "transitionDuration": "0s",
+                      }
+                    }
+                    tabIndex="0"
+                  >
+                    <div
+                      className="css-view-g5y9jx r-flex-13awgt0"
+                      dir={null}
+                      ref={[Function]}
+                    >
+                      <div
+                        className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a r-fontSize-1b43r93"
+                        dir="auto"
+                        ref={[Function]}
+                        style={
+                          {
+                            "color": "rgba(100,116,139,1.00)",
+                            "fontWeight": "400",
+                          }
+                        }
+                      >
+                        qué..?
+                      </div>
+                    </div>
+                    <div
+                      className="css-view-g5y9jx"
+                      dir={null}
+                      ref={[Function]}
+                      style={
+                        {
+                          "transform": "rotate(0deg)",
+                        }
+                      }
+                    >
+                      Feather:chevron-down:14:#64748B
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
