@@ -34,7 +34,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(AuthTokenFilter.class);
 
-    private static final Pattern USER_ROLES_PATH = Pattern.compile(".*/users/([^/]+)/roles.*");
+    private static final Pattern USER_ROLES_PATH = Pattern.compile("^/api/v1/users/([^/]+)/roles$");
 
     /** Any write on the role catalog itself, including a role's permission set. */
     private static final Pattern ROLE_CATALOG_WRITE_PATH = Pattern.compile("^(/api/v1)?/roles(/.*)?$");
@@ -55,12 +55,17 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
         String path = request.getRequestURI();
-        if (!path.startsWith("/api/") || isPublic(request.getMethod(), path)) {
+        if (!path.startsWith("/api/") || SessionAuthClient.isPublicPrefix(path)) {
             chain.doFilter(request, response);
             return;
         }
 
-        SessionAuthClient.AuthResult result = sessionAuth.authenticate(request.getHeader("Authorization"));
+        // The role lookups every service makes while authenticating its own callers land
+        // here: checking them with authenticate() would ask for roles again, i.e. call this
+        // very endpoint. They need the session only; whose roles may be read is decided below.
+        SessionAuthClient.AuthResult result = isRoleLookup(request.getMethod(), path)
+                ? sessionAuth.authenticateSession(request.getHeader("Authorization"))
+                : sessionAuth.authenticate(request.getHeader("Authorization"));
         if (!result.authenticated()) {
             deny(response, HttpServletResponse.SC_UNAUTHORIZED, result.denial(), path);
             return;
@@ -106,27 +111,22 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Primitivas (roles propios y evaluate propio) solo exigen sesión válida;
-     * ver roles ajenos o gestionar el catálogo exige configuration:manage.
+     * Reading one's own roles or evaluating one's own permission only needs the session;
+     * reading anyone else's, any write (assigning or removing roles, one's own included)
+     * and the catalog need configuration:manage.
      */
     String requiredPermission(String method, String path, HttpServletRequest request, String caller) {
-        if (path.contains("/auth/evaluate")) {
-            String target = request.getParameter("userId");
-            if (target != null && !target.equals(caller)) return "configuration:manage";
-            return null;
-        }
-        Matcher matcher = USER_ROLES_PATH.matcher(path);
-        if (matcher.matches()) {
-            if (!matcher.group(1).equals(caller)) return "configuration:manage";
-            return null;
+        if (isRoleLookup(method, path)) {
+            Matcher roles = USER_ROLES_PATH.matcher(path);
+            String target = roles.matches() ? roles.group(1) : request.getParameter("userId");
+            return target == null || target.equalsIgnoreCase(caller) ? null : "configuration:manage";
         }
         return "configuration:manage";
     }
 
-    private boolean isPublic(String method, String path) {
-        if (SessionAuthClient.isPublicPrefix(path)) return true;
+    /** GET /api/v1/users/{id}/roles or GET /api/v1/auth/evaluate: the lookups the other services' filters make. */
+    static boolean isRoleLookup(String method, String path) {
         if (!method.equalsIgnoreCase("GET")) return false;
-        if (path.equals("/api/v1/auth/evaluate") || path.equals("/auth/evaluate")) return true;
-        return USER_ROLES_PATH.matcher(path).matches();
+        return path.equals("/api/v1/auth/evaluate") || USER_ROLES_PATH.matcher(path).matches();
     }
 }
