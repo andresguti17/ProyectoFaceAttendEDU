@@ -23,6 +23,9 @@ services:
       SPRING_DATASOURCE_USERNAME: ${IDENTITY_DB_USER:-identity_app}
       SPRING_DATASOURCE_PASSWORD: ${IDENTITY_DB_PASSWORD:?IDENTITY_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: identity
+      # No API documentation in production (springdoc on by default for local runs).
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
 
   ms-authorization:
     depends_on: !override
@@ -35,6 +38,9 @@ services:
       SPRING_DATASOURCE_USERNAME: ${AUTHORIZATION_DB_USER:-authorization_app}
       SPRING_DATASOURCE_PASSWORD: ${AUTHORIZATION_DB_PASSWORD:?AUTHORIZATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: authorization
+      # No API documentation in production (springdoc on by default for local runs).
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
 
   ms-scheduling:
     depends_on: !override
@@ -45,6 +51,9 @@ services:
       SPRING_DATASOURCE_USERNAME: ${SCHEDULING_DB_USER:-scheduling_app}
       SPRING_DATASOURCE_PASSWORD: ${SCHEDULING_DB_PASSWORD:?SCHEDULING_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: scheduling
+      # No API documentation in production (springdoc on by default for local runs).
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
 
   ms-attendance:
     depends_on: !override
@@ -59,6 +68,9 @@ services:
       SPRING_DATASOURCE_USERNAME: ${ATTENDANCE_DB_USER:-attendance_app}
       SPRING_DATASOURCE_PASSWORD: ${ATTENDANCE_DB_PASSWORD:?ATTENDANCE_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: attendance
+      # No API documentation in production (springdoc on by default for local runs).
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
 
   ms-biometric:
     depends_on: !override
@@ -66,11 +78,9 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+    # Biometric keeps its data in MongoDB only: it never receives the Neon credentials.
     environment:
-      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD}
-      SPRING_DATASOURCE_HIKARI_SCHEMA: biometric
+      BIOMETRIC_DOCS_ENABLED: "false"
 
   # ── Node/TypeScript services ──
   ms-academic:

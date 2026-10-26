@@ -88,6 +88,8 @@ class Settings(BaseSettings):
 
     # ── Authentication (session validated against identity, RBAC by authorization) ──
     auth_enabled: bool = True
+    # /docs, /redoc and /openapi.json; production turns them off (BIOMETRIC_DOCS_ENABLED=false).
+    docs_enabled: bool = True
     identity_url: str = Field(
         default="http://localhost:8081",
         validation_alias=AliasChoices("BIOMETRIC_IDENTITY_URL", "IDENTITY_URL"),
