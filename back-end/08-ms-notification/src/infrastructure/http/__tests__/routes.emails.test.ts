@@ -3,27 +3,38 @@ import { registerEmailRoute } from '../routes';
 import * as sender from '../../email/sender';
 
 describe('POST /api/v1/emails', () => {
-  const cfg = { host: 'smtp.local', port: 587, from: 'a@b.c', username: '', password: '', startTls: false, timeoutMs: 1000, internalToken: '' };
+  const cfg = { host: 'smtp.local', port: 587, from: 'a@b.c', username: '', password: '', startTls: false, timeoutMs: 1000, internalToken: 'secret' };
+  const auth = { 'x-internal-token': 'secret' };
 
   it('rejects an unsupported template', async () => {
     const app = Fastify();
     registerEmailRoute(app, cfg);
-    const res = await app.inject({ method: 'POST', url: '/api/v1/emails', payload: { to: 'x@y.com', template: 'other' } });
+    const res = await app.inject({ method: 'POST', url: '/api/v1/emails', headers: auth, payload: { to: 'x@y.com', template: 'other' } });
     expect(res.statusCode).toBe(400);
   });
 
-  it('rejects a missing/invalid internal token when one is configured', async () => {
+  it('rejects a missing or wrong internal token', async () => {
     const app = Fastify();
-    registerEmailRoute(app, { ...cfg, internalToken: 'secret' });
-    const res = await app.inject({ method: 'POST', url: '/api/v1/emails', payload: { to: 'x@y.com', template: 'verification_code', data: { code: '1' } } });
-    expect(res.statusCode).toBe(403);
+    registerEmailRoute(app, cfg);
+    const payload = { to: 'x@y.com', template: 'verification_code', data: { code: '1' } };
+    expect((await app.inject({ method: 'POST', url: '/api/v1/emails', payload })).statusCode).toBe(403);
+    expect((await app.inject({ method: 'POST', url: '/api/v1/emails', payload, headers: { 'x-internal-token': 'nope' } })).statusCode).toBe(403);
+  });
+
+  it('refuses every call while no internal token is configured (fail closed)', async () => {
+    const send = jest.spyOn(sender, 'sendEmail');
+    const app = Fastify();
+    registerEmailRoute(app, { ...cfg, internalToken: '' });
+    const res = await app.inject({ method: 'POST', url: '/api/v1/emails', headers: { 'x-internal-token': '' }, payload: { to: 'x@y.com', template: 'verification_code', data: { code: '1' } } });
+    expect(res.statusCode).toBe(503);
+    expect(send).not.toHaveBeenCalled();
   });
 
   it('responds 202 skipped when SMTP is not configured', async () => {
     jest.spyOn(sender, 'sendEmail').mockResolvedValue(sender.SMTP_NOT_CONFIGURED);
     const app = Fastify();
     registerEmailRoute(app, { ...cfg, host: '' });
-    const res = await app.inject({ method: 'POST', url: '/api/v1/emails', payload: { to: 'x@y.com', template: 'verification_code', data: { code: '123456' } } });
+    const res = await app.inject({ method: 'POST', url: '/api/v1/emails', headers: auth, payload: { to: 'x@y.com', template: 'verification_code', data: { code: '123456' } } });
     expect(res.statusCode).toBe(202);
     expect(res.json().status).toBe('skipped');
   });
@@ -32,7 +43,7 @@ describe('POST /api/v1/emails', () => {
     jest.spyOn(sender, 'sendEmail').mockRejectedValue(new Error('smtp down'));
     const app = Fastify();
     registerEmailRoute(app, cfg);
-    const res = await app.inject({ method: 'POST', url: '/api/v1/emails', payload: { to: 'x@y.com', template: 'verification_code', data: { code: '123456' } } });
+    const res = await app.inject({ method: 'POST', url: '/api/v1/emails', headers: auth, payload: { to: 'x@y.com', template: 'verification_code', data: { code: '123456' } } });
     expect(res.statusCode).toBe(502);
   });
 
@@ -40,7 +51,7 @@ describe('POST /api/v1/emails', () => {
     const spy = jest.spyOn(sender, "sendEmail").mockResolvedValue(undefined as any);
     const app = Fastify();
     registerEmailRoute(app, cfg);
-    const res = await app.inject({ method: "POST", url: "/api/v1/emails", payload: { to: "x@y.com", template: "user_credentials", data: { username: "ana", password: "Secret123!" } } });
+    const res = await app.inject({ method: "POST", url: "/api/v1/emails", headers: auth, payload: { to: "x@y.com", template: "user_credentials", data: { username: "ana", password: "Secret123!" } } });
     expect(res.statusCode).toBe(202);
     expect(res.json().status).toBe("accepted");
     const sent = spy.mock.calls[spy.mock.calls.length - 1][1] as any;
@@ -51,7 +62,7 @@ describe('POST /api/v1/emails', () => {
   it("returns 400 when user_credentials has no password", async () => {
     const app = Fastify();
     registerEmailRoute(app, cfg);
-    const res = await app.inject({ method: "POST", url: "/api/v1/emails", payload: { to: "x@y.com", template: "user_credentials", data: { username: "ana" } } });
+    const res = await app.inject({ method: "POST", url: "/api/v1/emails", headers: auth, payload: { to: "x@y.com", template: "user_credentials", data: { username: "ana" } } });
     expect(res.statusCode).toBe(400);
   });
 });

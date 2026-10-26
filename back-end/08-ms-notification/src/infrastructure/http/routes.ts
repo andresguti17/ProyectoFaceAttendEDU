@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { ALERT_TYPE_CHANNELS } from '../../domain/entities/AlertType';
@@ -292,13 +293,22 @@ const sendEmailBody = z.object({
  * No `/emails` alias: unlike alerts/alert-types, spec §2.2 only defines
  * `/api/v1/emails` and Kong never exposes it outside the compose network.
  */
+/** Constant-time comparison, so response timing does not leak the token byte by byte. */
+function sameSecret(received: unknown, expected: string): boolean {
+  if (typeof received !== 'string') return false;
+  const a = Buffer.from(received);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 export function registerEmailRoute(app: FastifyInstance, cfg: SmtpConfig): void {
   app.post('/api/v1/emails', async (req, reply) => {
-    if (cfg.internalToken) {
-      const token = (req.headers as any)['x-internal-token'];
-      if (token !== cfg.internalToken) {
-        return reply.code(403).send({ error: 'FORBIDDEN', message: 'missing or invalid internal token' });
-      }
+    // Fail closed: without a shared token any container on the network could send mail as the app.
+    if (!cfg.internalToken) {
+      return reply.code(503).send({ error: 'EMAIL_RELAY_DISABLED', message: 'EMAIL_INTERNAL_TOKEN is not configured' });
+    }
+    if (!sameSecret((req.headers as any)['x-internal-token'], cfg.internalToken)) {
+      return reply.code(403).send({ error: 'FORBIDDEN', message: 'missing or invalid internal token' });
     }
 
     const parsed = sendEmailBody.safeParse((req as any).body);
