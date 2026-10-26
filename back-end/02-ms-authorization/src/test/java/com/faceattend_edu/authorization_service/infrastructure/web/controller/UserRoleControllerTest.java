@@ -333,16 +333,25 @@ class UserRoleControllerTest {
         }
 
         @Test
-        @DisplayName("givenMissingUserIdParam_whenEvaluate_thenReturn500ByTheGenericHandler")
-        void givenMissingUserIdParam_whenEvaluate_thenReturn500ByTheGenericHandler() throws Exception {
-            // Arrange: BRECHA CONOCIDA — MissingServletRequestParameterException no tiene
-            // handler propio en GlobalExceptionHandler, asi que cae en el catch-all Exception
-            // y responde 500 ISO-10.2-NC-001 en lugar de 400. Se documenta el comportamiento
-            // REAL: si alguien anade un @ExceptionHandler para ese caso, este test debera ajustarse.
+        @DisplayName("givenUnexpectedFailure_whenEvaluate_thenReturn500WithoutDetails")
+        void givenUnexpectedFailure_whenEvaluate_thenReturn500WithoutDetails() throws Exception {
+            when(checkPermissionUseCase.hasPermission(any(), any())).thenThrow(new IllegalStateException("db password=secret"));
             mockMvc.perform(get("/api/v1/auth/evaluate")
+                            .param("userId", userId.toString())
                             .param("permission", "x"))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(jsonPath("$.error.code").value("ISO-10.2-NC-001"));
+                    .andExpect(jsonPath("$.error.code").value("ISO-10.2-NC-001"))
+                    .andExpect(jsonPath("$.error.message").value("Internal server error"));
+        }
+
+        @Test
+        @DisplayName("givenMissingUserIdParam_whenEvaluate_thenReturn400")
+        void givenMissingUserIdParam_whenEvaluate_thenReturn400() throws Exception {
+            // Spring's request errors keep their 4xx status instead of a logged 500.
+            mockMvc.perform(get("/api/v1/auth/evaluate")
+                            .param("permission", "x"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("ISO-8.2-VAL-002"));
         }
     }
 }

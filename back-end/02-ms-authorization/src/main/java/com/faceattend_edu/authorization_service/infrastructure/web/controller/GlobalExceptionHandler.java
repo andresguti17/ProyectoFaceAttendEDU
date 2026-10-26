@@ -79,6 +79,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
+        // Spring's own request errors (unsupported method, missing parameter, unknown
+        // path...) carry their 4xx status: answering 500 and logging them as critical
+        // let any client flood the error log.
+        if (ex instanceof org.springframework.web.ErrorResponse framework && framework.getStatusCode().is4xxClientError()) {
+            return buildErrorResponse(HttpStatus.valueOf(framework.getStatusCode().value()), "ISO-8.2-VAL-002",
+                "Invalid request", "8.2", "WARNING");
+        }
         errorLog.error("Unhandled exception: {}", ex.getMessage(), ex);
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "ISO-10.2-NC-001",
             "Internal server error", "10.2", "CRITICAL");
