@@ -5,8 +5,19 @@
   "description": "PostgreSQL pool, persistence errors and CRUD base shared by the FaceAttend Node services (no dependencies: each service passes its own pg).",
   "main": "database.js",
   "types": "database.d.ts",
-  "files": ["database.js", "database.d.ts", "errors.js", "errors.d.ts", "crud.js", "crud.d.ts"],
-  "engines": { "node": ">=20" },
+  "files": [
+    "database.js",
+    "database.d.ts",
+    "errors.js",
+    "errors.d.ts",
+    "crud.js",
+    "crud.d.ts",
+    "quality.js",
+    "quality.d.ts"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "test": "node --test --experimental-test-coverage"
   }
