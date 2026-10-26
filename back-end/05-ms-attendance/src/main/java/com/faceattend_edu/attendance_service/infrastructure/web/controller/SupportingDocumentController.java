@@ -5,11 +5,9 @@ import com.faceattend_edu.attendance_service.domain.port.in.*;
 import com.faceattend_edu.attendance_service.infrastructure.web.dto.*;
 import com.faceattend_edu.attendance_service.infrastructure.web.mapper.SupportingDocumentWebMapper;
 import com.faceattend_edu.attendance_service.infrastructure.web.security.ActorScope;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +19,6 @@ import java.util.stream.Collectors;
 @RequestMapping({"/api/v1/supporting-documents", "/supporting-documents"})
 @RequiredArgsConstructor
 public class SupportingDocumentController {
-    private final CreateSupportingDocumentUseCase createUseCase;
     private final GetSupportingDocumentUseCase getUseCase;
     private final ListSupportingDocumentsUseCase listUseCase;
     private final DeleteSupportingDocumentUseCase deleteUseCase;
@@ -30,21 +27,15 @@ public class SupportingDocumentController {
     private final GetAttendanceRecordUseCase recordUseCase;
     private final GetSupportingDocumentContentUseCase contentUseCase;
 
+    /**
+     * Documents of one justification. The filter is mandatory: listing every document meant
+     * loading the whole table and resolving each row's record to decide who could see it.
+     */
     @GetMapping
-    public ResponseEntity<List<SupportingDocumentResponse>> list(@RequestParam(required = false) Long justificationId){
-        List<SupportingDocument> list;
-        if (justificationId != null) list = listUseCase.listByJustificationId(justificationId);
-        else list = listUseCase.list();
-        return ResponseEntity.ok(list.stream()
-                .filter(d -> allowsJustification(d.getJustificationId()))
+    public ResponseEntity<List<SupportingDocumentResponse>> list(@RequestParam Long justificationId){
+        requireJustification(justificationId);
+        return ResponseEntity.ok(listUseCase.listByJustificationId(justificationId).stream()
                 .map(mapper::toResponse).collect(Collectors.toList()));
-    }
-
-    @PostMapping
-    public ResponseEntity<SupportingDocumentResponse> create(@Valid @RequestBody CreateSupportingDocumentRequest req){
-        requireJustification(req.getJustificationId());
-        SupportingDocument created = createUseCase.create(mapper.toDomain(req));
-        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toResponse(created));
     }
 
     @GetMapping("/{id}")

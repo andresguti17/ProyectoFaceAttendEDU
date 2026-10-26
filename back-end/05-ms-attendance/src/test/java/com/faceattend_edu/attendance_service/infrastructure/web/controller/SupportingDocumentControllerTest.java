@@ -4,7 +4,6 @@ import com.faceattend_edu.attendance_service.domain.exception.EntityNotFoundExce
 import com.faceattend_edu.attendance_service.domain.model.SupportingDocument;
 import com.faceattend_edu.attendance_service.domain.port.in.GetAttendanceRecordUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.GetJustificationUseCase;
-import com.faceattend_edu.attendance_service.domain.port.in.CreateSupportingDocumentUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.DeleteSupportingDocumentUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.GetSupportingDocumentUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.GetSupportingDocumentContentUseCase;
@@ -50,8 +49,6 @@ class SupportingDocumentControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private CreateSupportingDocumentUseCase createUseCase;
-    @MockitoBean
     private GetSupportingDocumentUseCase getUseCase;
     @MockitoBean
     private ListSupportingDocumentsUseCase listUseCase;
@@ -82,66 +79,16 @@ class SupportingDocumentControllerTest {
     class CreateTests {
 
         @Test
-        @DisplayName("Given valid document when POST then 201 with document body")
-        void givenValidDocument_whenPost_thenReturn201() throws Exception {
-            // Arrange
-            when(createUseCase.create(any(SupportingDocument.class))).thenAnswer(call -> {
-                SupportingDocument created = call.getArgument(0);
-                created.setSupportingDocumentId(9L);
-                return created;
-            });
-
-            // Act
-            // Assert
+        @DisplayName("Given a JSON body with a storage URI when POST then 405: documents only arrive as uploads")
+        void givenJsonDocument_whenPost_thenMethodNotAllowed() throws Exception {
+            // A client-chosen storageUri could point at someone else's stored file: the only way
+            // to add a document is the multipart upload, where the service picks the key.
             mockMvc.perform(post(BASE)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"justificationId\":5,\"fileName\":\"certificado.pdf\","
-                                    + "\"storageUri\":\"s3://faceattend/justifications/certificado.pdf\","
+                            .content("{\"justificationId\":5,\"fileName\":\"x.pdf\","
+                                    + "\"storageUri\":\"justification-documents/2026/10/other.pdf\","
                                     + "\"mimeType\":\"application/pdf\",\"sizeBytes\":2048}"))
-                    .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.supportingDocumentId").value(9))
-                    .andExpect(jsonPath("$.justificationId").value(5))
-                    .andExpect(jsonPath("$.fileName").value("certificado.pdf"))
-                    .andExpect(jsonPath("$.storageUri").value("s3://faceattend/justifications/certificado.pdf"))
-                    .andExpect(jsonPath("$.mimeType").value("application/pdf"))
-                    .andExpect(jsonPath("$.sizeBytes").value(2048));
-            verify(createUseCase).create(any(SupportingDocument.class));
-        }
-
-        @Test
-        @DisplayName("Given sizeBytes zero when POST then 400 and use case never called")
-        void givenSizeBytesZero_whenPost_thenReturn400() throws Exception {
-            // Arrange
-
-            // Act
-            // Assert
-            mockMvc.perform(post(BASE)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"justificationId\":5,\"fileName\":\"certificado.pdf\","
-                                    + "\"storageUri\":\"s3://bucket/certificado.pdf\","
-                                    + "\"mimeType\":\"application/pdf\",\"sizeBytes\":0}"))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error.code").value("ISO-8.2-VAL-002"))
-                    .andExpect(jsonPath("$.error.message", containsString("sizeBytes")));
-            verify(createUseCase, never()).create(any());
-        }
-
-        @Test
-        @DisplayName("Given blank fileName when POST then 400 and use case never called")
-        void givenBlankFileName_whenPost_thenReturn400() throws Exception {
-            // Arrange
-
-            // Act
-            // Assert
-            mockMvc.perform(post(BASE)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"justificationId\":5,\"fileName\":\" \","
-                                    + "\"storageUri\":\"s3://bucket/certificado.pdf\","
-                                    + "\"mimeType\":\"application/pdf\",\"sizeBytes\":2048}"))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error.code").value("ISO-8.2-VAL-002"))
-                    .andExpect(jsonPath("$.error.message", containsString("fileName")));
-            verify(createUseCase, never()).create(any());
+                    .andExpect(status().isMethodNotAllowed());
         }
     }
 
@@ -196,23 +143,12 @@ class SupportingDocumentControllerTest {
                     .andExpect(jsonPath("$.length()").value(1))
                     .andExpect(jsonPath("$[0].justificationId").value(5));
             verify(listUseCase).listByJustificationId(5L);
-            verify(listUseCase, never()).list();
         }
 
         @Test
-        @DisplayName("Given no filter when GET then all documents")
-        void givenNoFilter_whenGet_thenReturnAll() throws Exception {
-            // Arrange
-            when(listUseCase.list()).thenReturn(List.of(
-                    document(9L, 5L, "certificado.pdf"),
-                    document(10L, 6L, "recibo.pdf")));
-
-            // Act
-            // Assert
-            mockMvc.perform(get(BASE))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.length()").value(2));
-            verify(listUseCase).list();
+        @DisplayName("Given no justificationId when GET then 400: the whole table is never listed")
+        void givenNoFilter_whenGet_thenBadRequest() throws Exception {
+            mockMvc.perform(get(BASE)).andExpect(status().isBadRequest());
             verify(listUseCase, never()).listByJustificationId(any());
         }
     }
