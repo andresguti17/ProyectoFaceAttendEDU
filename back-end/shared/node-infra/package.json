@@ -13,7 +13,9 @@
     "crud.js",
     "crud.d.ts",
     "quality.js",
-    "quality.d.ts"
+    "quality.d.ts",
+    "http.js",
+    "http.d.ts"
   ],
   "engines": {
     "node": ">=20"
