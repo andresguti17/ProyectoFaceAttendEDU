@@ -615,7 +615,7 @@ services:
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       # Loopback inside the container: in DB-less mode POST /config replaces the
       # whole gateway configuration, so no other container may reach the Admin
-      # API. Inspect it with `docker exec faceattend-kong curl -s localhost:8001/`.
+      # API. Inspect it with `docker run --rm --network container:faceattend-kong curlimages/curl -s localhost:8001/`.
       KONG_ADMIN_LISTEN: 127.0.0.1:8001
       # Docker's embedded DNS blackholes SRV queries (~8s cold-start latency
       # per upstream host).
