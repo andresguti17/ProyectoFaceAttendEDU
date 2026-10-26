@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@faceattend/auth": "file:../shared/auth-node",
+    "@faceattend/infra": "file:../shared/node-infra",
     "fastify": "^5.12.7",
     "kafkajs": "^2.2.4",
     "pg": "^8.11.0",
