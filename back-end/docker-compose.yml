@@ -152,7 +152,7 @@ services:
       FACEATTEND_AUTH_SCHEDULING_URL: http://ms-scheduling:8084
       # Canal de correo: identity llama por HTTP a POST /api/v1/emails (SERVICE.md §4.4).
       FACEATTEND_NOTIFICATION_BASE_URL: http://ms-notification:8088
-      FACEATTEND_NOTIFICATION_INTERNAL_TOKEN: "${EMAIL_INTERNAL_TOKEN:-}"
+      FACEATTEND_NOTIFICATION_INTERNAL_TOKEN: "${EMAIL_INTERNAL_TOKEN:?EMAIL_INTERNAL_TOKEN is required (shared secret identity -> notification, e.g. openssl rand -hex 32)}"
       # Enlace de ingreso del correo de credenciales (vacío = el correo no lleva enlace).
       FACEATTEND_NOTIFICATION_LOGIN_URL: "${APP_LOGIN_URL:-}"
       # Alta pública de sedes (POST /api/v1/onboarding/schools): vacío = deshabilitada (503).
@@ -492,7 +492,7 @@ services:
       SMTP_FROM: "${SMTP_FROM:-}"
       SMTP_STARTTLS: "${SMTP_STARTTLS:-true}"
       SMTP_TIMEOUT_SECONDS: "${SMTP_TIMEOUT_SECONDS:-10}"
-      EMAIL_INTERNAL_TOKEN: "${EMAIL_INTERNAL_TOKEN:-}"
+      EMAIL_INTERNAL_TOKEN: "${EMAIL_INTERNAL_TOKEN:?EMAIL_INTERNAL_TOKEN is required (shared secret identity -> notification, e.g. openssl rand -hex 32)}"
       # Webhook de alertas EMAIL/PUSH (SERVICE.md §9.2): WEBHOOK_URL vacío =
       # entrega deshabilitada (no-op), igual que SMTP_HOST arriba.
       WEBHOOK_URL: "${WEBHOOK_URL:-}"
