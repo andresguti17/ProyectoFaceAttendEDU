@@ -30,13 +30,13 @@ src/
 ├── application/use-cases/ CreateEnrollmentUseCase
 └── infrastructure/
     ├── http/ controllers + routes (Fastify)
-    ├── persistence/ Drizzle schema + repository
+    ├── persistence/ repositorios pg (SQL parametrizado)
     └── messaging/ Kafka publisher
 ```
 
 ## Dependencias (package.json)
 
-Fastify 4, Drizzle ORM, `pg` 8, `zod` 3, `kafkajs`, `pino`, `typescript` 5, `jest` + `testcontainers`.
+Fastify 5, `pg` 8, `zod` 4, `kafkajs`, `pino` 9, `typescript` 5, `jest`. (Drizzle ORM se retiró: el esquema lo gobierna Liquibase.)
 
 ## Ejecución
 

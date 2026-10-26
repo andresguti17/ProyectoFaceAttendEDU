@@ -1,3 +1,4 @@
+import { patchSchema } from './patchSchema';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { PageOptions } from '../../domain/ports/out/ICrudRepository';
@@ -217,7 +218,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
   app.put('/api/v1/schools/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
     if (!id) return notFound(reply);
-    const parsed = schoolBody.partial().safeParse((req as any).body);
+    const parsed = patchSchema(schoolBody).safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid school payload', parsed.error.flatten());
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
@@ -321,7 +322,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const id = parseId((req.params as any).id);
     const found = id ? await repos.programs.findById(id) : null;
     if (!found) return notFound(reply);
-    const parsed = programBody.partial().safeParse((req as any).body);
+    const parsed = patchSchema(programBody).safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid program payload', parsed.error.flatten());
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
@@ -395,7 +396,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
       const id = parseId((req.params as any).id);
       const found = id ? await repos.periods.findById(id) : null;
       if (!found) return notFound(reply);
-      const parsed = periodBody.partial().safeParse((req as any).body);
+      const parsed = patchSchema(periodBody).safeParse((req as any).body);
       if (!parsed.success) return send400(reply, 'Invalid period payload', parsed.error.flatten());
       const caller = await callerSchoolOf(req, reply);
       if (!caller) return reply;
@@ -479,7 +480,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const id = parseId((req.params as any).id);
     const found = id ? await repos.cohorts.findById(id) : null;
     if (!found) return notFound(reply);
-    const parsed = cohortBody.partial().safeParse((req as any).body);
+    const parsed = patchSchema(cohortBody).safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid cohort payload', parsed.error.flatten());
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
@@ -567,7 +568,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const id = parseId((req.params as any).id);
     const found = id ? await repos.courses.findById(id) : null;
     if (!found) return notFound(reply);
-    const parsed = courseBody.partial().safeParse((req as any).body);
+    const parsed = patchSchema(courseBody).safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid course payload', parsed.error.flatten());
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
@@ -636,7 +637,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
   app.put('/api/v1/actor-types/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
     if (!id) return reply.code(404).send({ error: 'NotFound' });
-    const parsed = actorTypeBody.partial().safeParse((req as any).body);
+    const parsed = patchSchema(actorTypeBody).safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid actor-type payload', parsed.error.flatten());
     const updated = await repos.actorTypes.update(id, parsed.data);
     if (!updated) return reply.code(404).send({ error: 'NotFound' });
@@ -705,7 +706,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const id = parseId((req.params as any).id);
     const found = id ? await repos.actors.findById(id) : null;
     if (!found) return notFound(reply);
-    const parsed = actorBody.partial().safeParse((req as any).body);
+    const parsed = patchSchema(actorBody).safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid actor payload', parsed.error.flatten());
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
@@ -811,7 +812,7 @@ export async function registerAcademicRoutes(app: FastifyInstance, repos: Academ
     const id = parseId((req.params as any).id);
     const found = id ? await repos.enrollments.findById(id) : null;
     if (!found) return notFound(reply);
-    const parsed = enrollmentBody.partial().safeParse((req as any).body);
+    const parsed = patchSchema(enrollmentBody).safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid enrollment payload', parsed.error.flatten());
     const caller = await callerSchoolOf(req, reply);
     if (!caller) return reply;
