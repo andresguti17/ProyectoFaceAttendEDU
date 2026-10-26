@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-015-document-hash-ignore-soft-deleted
+      author: FaceAttendEDU
+      splitStatements: true
+      comment: >-
+        uq_person_document_hash also counted soft-deleted rows, so legacy persons that share a document
+        with a deleted duplicate made PiiBackfillRunner stop and left them unindexed (login by e-mail
+        failed for them). Like uq_person_email_hash, uniqueness only applies to live rows.
+      changes:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS identity.uq_person_document_hash;
+              CREATE UNIQUE INDEX uq_person_document_hash ON identity.person (document_hash) WHERE deleted_at IS NULL AND document_hash IS NOT NULL;
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS identity.uq_person_document_hash;
+              CREATE UNIQUE INDEX uq_person_document_hash ON identity.person (document_hash) WHERE document_hash IS NOT NULL;
