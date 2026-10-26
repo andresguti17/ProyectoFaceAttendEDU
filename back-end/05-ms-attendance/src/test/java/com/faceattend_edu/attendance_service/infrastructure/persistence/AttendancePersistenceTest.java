@@ -131,8 +131,15 @@ class AttendancePersistenceTest {
         assertThat(jAdapter.findById(1L)).isPresent();
         when(justifications.findByAttendanceRecordId(2L)).thenReturn(Optional.empty());
         assertThat(jAdapter.findByAttendanceRecordId(2L)).isEmpty();
-        when(justifications.findAll()).thenReturn(List.of(jMapper.toEntity(justification)));
-        assertThat(jAdapter.findAll()).hasSize(1);
+        when(justifications.search(org.mockito.ArgumentMatchers.anyBoolean(), any(), org.mockito.ArgumentMatchers.anyBoolean(),
+                org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyBoolean(), any(), any()))
+                .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(jMapper.toEntity(justification))));
+        com.faceattend_edu.attendance_service.domain.model.JustificationSlice slice =
+                jAdapter.search(new com.faceattend_edu.attendance_service.domain.model.JustificationFilter("Pending", 2L, java.util.Set.of(9L)), 0, 10);
+        assertThat(slice.items()).hasSize(1);
+        assertThat(slice.total()).isEqualTo(1);
+        // An empty actor scope sees nothing and never reaches the database.
+        assertThat(jAdapter.search(new com.faceattend_edu.attendance_service.domain.model.JustificationFilter(null, null, java.util.Set.of()), 0, null).items()).isEmpty();
         jAdapter.deleteById(1L);
         verify(justifications).deleteById(1L);
         when(justifications.existsById(1L)).thenReturn(false);
