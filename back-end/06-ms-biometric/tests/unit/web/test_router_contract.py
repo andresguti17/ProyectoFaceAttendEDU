@@ -122,23 +122,25 @@ class TestRouteTable:
     def test_every_business_route_is_mounted_under_the_gateway_prefix(self, client):
         """Kong forwards `/api/v1/biometric` with strip_path=false, so the full
         prefix must be served by the app itself."""
-        actual = {
-            (method, route.path)
-            for route in app.routes
-            for method in getattr(route, "methods", set())
-            if getattr(route, "include_in_schema", True) or route.path.startswith("/health")
-        }
-        missing = EXPECTED_ROUTES - actual
+        missing = EXPECTED_ROUTES - _served_routes()
         assert not missing, f"routes not mounted: {sorted(missing)}"
 
     def test_no_business_route_leaked_outside_the_prefix(self, client):
-        for route in app.routes:
-            path = getattr(route, "path", "")
+        for _method, path in _served_routes():
             if path.startswith("/health") or path in {"/api/v1/health"}:
                 continue
-            if path.startswith(("/openapi.json", "/docs", "/redoc")):
-                continue
             assert path.startswith("/api/v1/biometric"), f"unexpected route {path}"
+
+
+def _served_routes() -> set[tuple[str, str]]:
+    """(METHOD, path) of every HTTP route, read from the OpenAPI document: the
+    public contract, unlike `app.routes`, whose shape changes between FastAPI
+    releases (included routers are no longer flattened into it)."""
+    return {
+        (method.upper(), path)
+        for path, operations in app.openapi()["paths"].items()
+        for method in operations
+    }
 
 
 class TestFacialEndpoints:

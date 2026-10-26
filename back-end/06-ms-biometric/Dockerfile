@@ -6,7 +6,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir --only-binary :all: poetry==1.8.3 && poetry config virtualenvs.in-project true
 COPY pyproject.toml poetry.lock* ./
-RUN poetry install --no-root --only main --no-interaction --no-ansi
+RUN poetry install --no-root --only main --no-interaction --no-ansi \
+    # The runtime never installs packages: drop the venv's seed tools so the image
+    # does not ship pip/setuptools/wheel and their advisories.
+    && .venv/bin/python -m pip uninstall -y -q pip setuptools wheel
 
 FROM python:3.12-slim
 # dlib (a face-recognition dependency) is linked against libopenblas/liblapack
