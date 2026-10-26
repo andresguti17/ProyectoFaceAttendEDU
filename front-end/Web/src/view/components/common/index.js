@@ -3,7 +3,7 @@
  * Importa desde aquí para mantener imports limpios
  * 
  * @example
- * import { Button, TextInput, Card, Tabs } from '@/view/components/common';
+ * import { Button, TextInput, Card } from '@/view/components/common';
  */
 
 // Buttons
@@ -20,9 +20,6 @@ export * from './cards';
 
 // Lists
 export * from './lists';
-
-// Tabs
-export * from './tabs';
 
 // Charts
 export * from './charts';
