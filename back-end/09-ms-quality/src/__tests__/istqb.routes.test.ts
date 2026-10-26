@@ -100,6 +100,13 @@ describe('ISTQB assessments', () => {
     expect(updated).toMatchObject({ globalScore: 5, status: 'Completed' });
   });
 
+  it('a partial update leaves the fields it does not send untouched', async () => {
+    await post(body('ms-identity', 2, { status: 'Completed' }));
+    const url = '/api/v1/quality/istqb/assessments/1';
+    const updated = (await app.inject({ method: 'PUT', url, payload: { comments: 'reviewed' } })).json();
+    expect(updated).toMatchObject({ comments: 'reviewed', status: 'Completed' });
+  });
+
   it('soft deletes an assessment', async () => {
     await post(body('ms-identity', 3));
     expect((await app.inject({ method: 'DELETE', url: '/api/v1/quality/istqb/assessments/1' })).statusCode).toBe(204);
