@@ -163,4 +163,31 @@ class SessionAuthClientTest {
         assertThat(SessionAuthClient.isPublicPrefix("/v3/api-docs")).isTrue();
         assertThat(SessionAuthClient.isPublicPrefix("/api/v1/persons")).isFalse();
     }
+
+    @Test
+    void sessionOnlyNeverAsksAuthorizationForRoles() {
+        activeSession(ExpectedCount.once());
+
+        SessionAuthClient.AuthResult first = client.authenticateSession("Bearer " + TOKEN);
+        SessionAuthClient.AuthResult second = client.authenticateSession("Bearer " + TOKEN);
+
+        assertThat(first.authenticated()).isTrue();
+        assertThat(first.caller().userId()).isEqualTo(USER);
+        assertThat(first.caller().roles()).isEmpty();
+        assertThat(second.caller()).isEqualTo(first.caller());
+        assertThat(client.authenticateSession(null).denial()).isEqualTo("Missing bearer token");
+        server.verify();
+    }
+
+    @Test
+    void fullAuthenticationAfterASessionOnlyCheckStillResolvesRoles() {
+        activeSession(ExpectedCount.once());
+        roles(ExpectedCount.once());
+
+        client.authenticateSession("Bearer " + TOKEN);
+        SessionAuthClient.AuthResult full = client.authenticate("Bearer " + TOKEN);
+
+        assertThat(full.caller().roles()).containsExactly("Instructor", "Aprendiz");
+        server.verify();
+    }
 }

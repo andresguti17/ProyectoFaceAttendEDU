@@ -47,6 +47,10 @@ $PSQL -v ON_ERROR_STOP=1 -q \
 \set QUIET on
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+-- Liquibase may have installed pgcrypto in whatever schema was its default (Neon),
+-- which is not on this session's search_path: crypt()/gen_salt() would not resolve.
+SELECT extnamespace::regnamespace::text AS pgcrypto_schema FROM pg_extension WHERE extname = 'pgcrypto' \gset
+SELECT set_config('search_path', :'pgcrypto_schema' || ', ' || current_setting('search_path'), true);
 
 SELECT EXISTS (SELECT 1 FROM "identity".app_user WHERE username = :'username') AS user_exists \gset
 

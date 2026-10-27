@@ -107,3 +107,43 @@ test('options let a service guard every path on the routed URL', async () => {
   assert.equal((await run('GET', '/not-api', {})).reply.statusCode, 401);
   assert.equal((await run('GET', '/health', {})).reply.statusCode, 200);
 });
+
+test('a percent-encoded /api path is guarded like the decoded one the router runs', async () => {
+  const calls = stubFetch([]);
+  const run = guard(() => null);
+  const encoded = await run('GET', '/%61pi/v1/configurations/academic/1', {});
+  assert.equal(encoded.reply.statusCode, 401);
+  assert.equal(encoded.reply.body.path, '/api/v1/configurations/academic/1');
+  assert.equal(calls.length, 0);
+});
+
+test('permission rules see the decoded path, so encoding cannot dodge them', async () => {
+  stubFetch([
+    ['/sessions/', json(200, { sessionStatus: 'Active', userId: USER })],
+    ['/auth/evaluate', json(200, { allowed: false })],
+  ]);
+  const seen = [];
+  const run = guard((_method, path) => {
+    seen.push(path);
+    return path.startsWith('/api/v1/configurations/academic') ? 'configuration:manage' : null;
+  });
+  assert.equal((await run('GET', '/api/v1/%63onfigurations/academic/1')).reply.statusCode, 403);
+  assert.deepEqual(seen, ['/api/v1/configurations/academic/1']);
+});
+
+test('ambiguous or malformed paths are 400 without calling identity', async () => {
+  const calls = stubFetch([]);
+  const run = guard(() => null);
+  for (const url of ['/api/v1/a%2Fb', '/api/v1/a%5cb', '/api/v1/a%252f', '/api/v1/a;x=1', '/api/v1/%E0%A4%A']) {
+    const { reply } = await run('GET', url);
+    assert.equal(reply.statusCode, 400, url);
+    assert.equal(reply.body.error, 'Bad Request');
+  }
+  assert.equal(calls.length, 0);
+});
+
+test('a throwing custom resolvePath is 400, not an unhandled error', async () => {
+  stubFetch([]);
+  const run = guard(() => null, { resolvePath: (req) => decodeURIComponent(req.url) });
+  assert.equal((await run('GET', '/api/v1/%E0%A4%A')).reply.statusCode, 400);
+});

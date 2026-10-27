@@ -56,6 +56,7 @@ public class SessionAuthClient {
         }
     }
 
+    /** {@code roles} es null cuando solo se validó la sesión ({@link #authenticateSession}). */
     private record CachedSession(String userId, List<String> roles, long expiresAt) {}
 
     private final RestTemplate restTemplate;
@@ -83,38 +84,46 @@ public class SessionAuthClient {
 
     /** Valida el header Authorization: sesión activa en identity y roles en authorization. */
     public AuthResult authenticate(String authorizationHeader) {
-        CachedSession cached = cachedSession(authorizationHeader);
-        if (cached != null) {
-            return new AuthResult(new Caller(cached.userId(), cached.roles(), bearerToken(authorizationHeader)), null);
-        }
         AuthResult session = authenticateSession(authorizationHeader);
         if (!session.authenticated()) return session;
         String token = session.caller().token();
         String caller = session.caller().userId();
+
+        CachedSession cached = sessionCache.get(token);
+        if (cached != null && cached.roles() != null && cached.expiresAt() > System.currentTimeMillis()) {
+            return new AuthResult(new Caller(caller, cached.roles(), token), null);
+        }
         List<String> roles = fetchRoles(token, caller);
         if (roles == null) {
             return new AuthResult(null, "Cannot verify user roles");
         }
-        if (sessionCache.size() > CACHE_MAX_ENTRIES) sessionCache.clear();
-        sessionCache.put(token, new CachedSession(caller, List.copyOf(roles), System.currentTimeMillis() + CACHE_TTL_MS));
+        remember(token, caller, List.copyOf(roles));
         return new AuthResult(new Caller(caller, List.copyOf(roles), token), null);
     }
 
     /**
-     * Solo la sesión, sin roles (el Caller sale con roles vacíos). Lo usa authorization en las
-     * rutas que sirven esas mismas consultas de roles/permisos: pedir roles ahí se llamaría a sí mismo.
+     * Solo la sesión activa en identity, sin pedir roles (el Caller sale con roles vacíos).
+     * Lo usa authorization para sus propias primitivas (roles y evaluate), que
+     * {@link #authenticate} de cualquier servicio consulta: pedir roles desde ahí
+     * volvería a llamar a authorization en bucle.
      */
     public AuthResult authenticateSession(String authorizationHeader) {
-        String token = bearerToken(authorizationHeader);
-        if (token == null) return new AuthResult(null, "Missing bearer token");
+        if (authorizationHeader == null || !authorizationHeader.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            return new AuthResult(null, "Missing bearer token");
+        }
+        String token = authorizationHeader.substring(7).trim();
         UUID sessionId;
         try {
             sessionId = UUID.fromString(token);
         } catch (IllegalArgumentException e) {
             return new AuthResult(null, "Invalid token format");
         }
-        CachedSession cached = cachedSession(authorizationHeader);
-        if (cached != null) return new AuthResult(new Caller(cached.userId(), List.of(), token), null);
+
+        CachedSession cached = sessionCache.get(token);
+        if (cached != null && cached.expiresAt() > System.currentTimeMillis()) {
+            return new AuthResult(new Caller(cached.userId(), List.of(), token), null);
+        }
+        if (cached != null) sessionCache.remove(token);
 
         Map<?, ?> session = fetchSession(token, sessionId);
         if (session == null || !"Active".equals(session.get("sessionStatus"))) {
@@ -124,22 +133,14 @@ public class SessionAuthClient {
         if (userId == null) {
             return new AuthResult(null, "Session without user");
         }
-        return new AuthResult(new Caller(String.valueOf(userId), List.of(), token), null);
+        String caller = String.valueOf(userId);
+        remember(token, caller, null);
+        return new AuthResult(new Caller(caller, List.of(), token), null);
     }
 
-    private static String bearerToken(String authorizationHeader) {
-        if (authorizationHeader == null || !authorizationHeader.regionMatches(true, 0, "Bearer ", 0, 7)) return null;
-        return authorizationHeader.substring(7).trim();
-    }
-
-    private CachedSession cachedSession(String authorizationHeader) {
-        String token = bearerToken(authorizationHeader);
-        if (token == null) return null;
-        CachedSession cached = sessionCache.get(token);
-        if (cached == null) return null;
-        if (cached.expiresAt() > System.currentTimeMillis()) return cached;
-        sessionCache.remove(token);
-        return null;
+    private void remember(String token, String userId, List<String> roles) {
+        if (sessionCache.size() > CACHE_MAX_ENTRIES) sessionCache.clear();
+        sessionCache.put(token, new CachedSession(userId, roles, System.currentTimeMillis() + CACHE_TTL_MS));
     }
 
     /** Pregunta a authorization si el llamante tiene el permiso (solo el "sí" se cachea). */

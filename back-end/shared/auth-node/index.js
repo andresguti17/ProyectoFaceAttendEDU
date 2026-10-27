@@ -13,6 +13,10 @@
  */
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Escapes the router keeps encoded (/, \, %, ?, #) and `;`, where it may cut the path:
+// decoding them would hand the guard a different path than the one routed, so such
+// paths are refused. No client of the API needs them in a path.
+const AMBIGUOUS_PATH_RE = /%(2f|5c|25|3f|23)|;/i;
 const PUBLIC_PREFIXES = ['/health', '/api/v1/health', '/api/health'];
 const TIMEOUT_MS = 4000;
 const CACHE_TTL_MS = 10_000;
@@ -24,7 +28,7 @@ const evalCache = new Map();
 function deny(reply, status, message, path) {
   return reply.code(status).send({
     status,
-    error: status === 401 ? 'Unauthorized' : status === 403 ? 'Forbidden' : 'ServiceUnavailable',
+    error: status === 400 ? 'Bad Request' : status === 401 ? 'Unauthorized' : status === 403 ? 'Forbidden' : 'ServiceUnavailable',
     message,
     path,
   });
@@ -59,8 +63,15 @@ function defaultIsPublic(path) {
   return !path.startsWith('/api/') || PUBLIC_PREFIXES.some((p) => path === p || path.startsWith(p));
 }
 
+/**
+ * Default: the path decoded the way the router decodes it. Deciding on the raw URL let
+ * `/%61pi/v1/...` reach the `/api/v1/...` handler as a public path. Throws on a path
+ * that cannot be decoded unambiguously; the hook answers 400.
+ */
 function defaultResolvePath(req) {
-  return req.url.split('?')[0];
+  const raw = req.url.split('?')[0];
+  if (AMBIGUOUS_PATH_RE.test(raw)) throw new URIError(`Ambiguous request path: ${raw}`);
+  return decodeURIComponent(raw);
 }
 
 function registerAuthGuard(app, requiredPermission, options = {}) {
@@ -70,7 +81,12 @@ function registerAuthGuard(app, requiredPermission, options = {}) {
   const authorizationUrl = process.env.AUTHORIZATION_URL || 'http://localhost:8082';
 
   app.addHook('onRequest', async (req, reply) => {
-    const path = resolvePath(req);
+    let path;
+    try {
+      path = resolvePath(req);
+    } catch {
+      return deny(reply, 400, 'Invalid request path', req.url.split('?')[0]);
+    }
     if (req.method === 'OPTIONS' || isPublic(path, req.method)) return;
 
     const header = req.headers.authorization;

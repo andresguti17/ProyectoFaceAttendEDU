@@ -1,10 +1,12 @@
 package com.faceattend_edu.authorization_service.infrastructure.web.security;
 
+import com.faceattend_edu.authorization_service.domain.port.in.CheckPermissionUseCase;
 import com.faceattend_edu.shared.auth.SessionAuthClient;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +44,7 @@ class AuthTokenFilterFlowTest {
 
     private AuthTokenFilter filter;
     private Set<String> allowed;
+    private List<String> rolesFetched;
 
     @BeforeEach
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -57,12 +61,17 @@ class AuthTokenFilterFlowTest {
             String permission = url.replaceAll(".*permission=", "");
             return ResponseEntity.ok(Map.of("allowed", allowed.contains(user + "|" + permission)));
         });
+        rolesFetched = new ArrayList<>();
         when(rest.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(List.class))).thenAnswer(inv -> {
             String url = inv.getArgument(0);
+            rolesFetched.add(url);
             String role = url.contains(SUPER_USER) ? "Super Administrador" : "Administrador";
             return ResponseEntity.ok(List.of(Map.of("roleName", role)));
         });
-        filter = new AuthTokenFilter("http://identity", "http://authorization");
+        CheckPermissionUseCase inProcess = (userId, permission) -> allowed.contains(userId + "|" + permission);
+        ObjectProvider<CheckPermissionUseCase> provider = mock(ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(inProcess);
+        filter = new AuthTokenFilter(provider, "http://identity", "http://authorization");
         ReflectionTestUtils.setField(filter, "sessionAuth", new SessionAuthClient(rest, "http://identity", "http://authorization"));
     }
 
@@ -76,20 +85,51 @@ class AuthTokenFilterFlowTest {
     }
 
     @Test
-    void onlyHealthAndDocsPassWithoutASession() throws Exception {
+    void nonApiAndHealthPathsPassWithoutASession() throws Exception {
         FilterChain chain = mock(FilterChain.class);
         assertThat(run("GET", "/actuator/health", null, chain).getStatus()).isEqualTo(200);
         assertThat(run("GET", "/api/v1/health", null, chain).getStatus()).isEqualTo(200);
     }
 
     @Test
-    void roleLookupsNeedASessionAndOnlyTheOwnOnesAreFree() throws Exception {
+    void rolesAndEvaluatePrimitivesNeedASession() throws Exception {
         FilterChain chain = mock(FilterChain.class);
-        assertThat(run("GET", "/api/v1/users/" + ADMIN_USER + "/roles", null, chain).getStatus()).isEqualTo(401);
         assertThat(run("GET", "/api/v1/auth/evaluate", null, chain).getStatus()).isEqualTo(401);
+        assertThat(run("GET", "/api/v1/users/" + ADMIN_USER + "/roles", null, chain).getStatus()).isEqualTo(401);
+        verify(chain, never()).doFilter(any(), any());
+    }
+
+    @Test
+    void ownPrimitivesPassWithASessionWithoutCallingThisServiceAgain() throws Exception {
+        FilterChain chain = mock(FilterChain.class);
         assertThat(run("GET", "/api/v1/users/" + ADMIN_USER + "/roles", ADMIN_TOKEN, chain).getStatus()).isEqualTo(200);
-        assertThat(run("GET", "/api/v1/users/" + SUPER_USER + "/roles", ADMIN_TOKEN, chain).getStatus()).isEqualTo(403);
+        assertThat(evaluate(ADMIN_USER.toUpperCase(), ADMIN_TOKEN, chain).getStatus()).isEqualTo(200);
+        assertThat(rolesFetched).isEmpty();
+    }
+
+    @Test
+    void anotherUsersPrimitivesNeedConfigurationManageEvaluatedInProcess() throws Exception {
+        FilterChain chain = mock(FilterChain.class);
+        MockHttpServletResponse denied = run("GET", "/api/v1/users/" + SUPER_USER + "/roles", ADMIN_TOKEN, chain);
+        assertThat(denied.getStatus()).isEqualTo(403);
+        assertThat(denied.getContentAsString()).contains("requires configuration:manage");
+        assertThat(evaluate(SUPER_USER, ADMIN_TOKEN, chain).getStatus()).isEqualTo(403);
+        verify(chain, never()).doFilter(any(), any());
+
         assertThat(run("GET", "/api/v1/users/" + ADMIN_USER + "/roles", SUPER_TOKEN, chain).getStatus()).isEqualTo(200);
+        assertThat(evaluate(ADMIN_USER, SUPER_TOKEN, chain).getStatus()).isEqualTo(200);
+        assertThat(rolesFetched).isEmpty();
+    }
+
+    private MockHttpServletResponse evaluate(String userId, String token, FilterChain chain) throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/auth/evaluate");
+        request.setRequestURI("/api/v1/auth/evaluate");
+        request.setParameter("userId", userId);
+        request.setParameter("permission", "x:read");
+        request.addHeader("Authorization", "Bearer " + token);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        filter.doFilter(request, response, chain);
+        return response;
     }
 
     @Test
@@ -136,14 +176,10 @@ class AuthTokenFilterFlowTest {
     }
 
     @Test
-    void assigningOrRemovingRolesNeedsConfigurationManageEvenOnOneself() throws Exception {
-        // Without it, any user could grant themselves an operational role (Aprendiz -> Instructor).
+    void anotherUsersRoleAssignmentNeedsConfigurationManageButOwnDoesNot() throws Exception {
         FilterChain chain = mock(FilterChain.class);
         assertThat(run("POST", "/api/v1/users/" + SUPER_USER + "/roles", ADMIN_TOKEN, chain).getStatus()).isEqualTo(403);
-        assertThat(run("POST", "/api/v1/users/" + ADMIN_USER + "/roles", ADMIN_TOKEN, chain).getStatus()).isEqualTo(403);
-        assertThat(run("DELETE", "/api/v1/users/" + ADMIN_USER + "/roles/2", ADMIN_TOKEN, chain).getStatus()).isEqualTo(403);
-        verify(chain, never()).doFilter(any(), any());
-        assertThat(run("POST", "/api/v1/users/" + ADMIN_USER + "/roles", SUPER_TOKEN, chain).getStatus()).isEqualTo(200);
+        assertThat(run("DELETE", "/api/v1/users/" + ADMIN_USER + "/roles/2", ADMIN_TOKEN, chain).getStatus()).isEqualTo(200);
     }
 
     @Test
@@ -157,21 +193,12 @@ class AuthTokenFilterFlowTest {
         filter.doFilter(request, response, chain);
         assertThat(response.getStatus()).isEqualTo(403);
 
-        // Only GET is the free self-lookup; any other method is treated as a write.
         MockHttpServletRequest own = new MockHttpServletRequest("POST", "/api/v1/auth/evaluate");
         own.setRequestURI("/api/v1/auth/evaluate");
         own.setParameter("userId", ADMIN_USER);
         own.addHeader("Authorization", "Bearer " + ADMIN_TOKEN);
         MockHttpServletResponse ownResponse = new MockHttpServletResponse();
         filter.doFilter(own, ownResponse, chain);
-        assertThat(ownResponse.getStatus()).isEqualTo(403);
-
-        MockHttpServletRequest ownGet = new MockHttpServletRequest("GET", "/api/v1/auth/evaluate");
-        ownGet.setRequestURI("/api/v1/auth/evaluate");
-        ownGet.setParameter("userId", ADMIN_USER);
-        ownGet.addHeader("Authorization", "Bearer " + ADMIN_TOKEN);
-        MockHttpServletResponse ownGetResponse = new MockHttpServletResponse();
-        filter.doFilter(ownGet, ownGetResponse, chain);
-        assertThat(ownGetResponse.getStatus()).isEqualTo(200);
+        assertThat(ownResponse.getStatus()).isEqualTo(200);
     }
 }
