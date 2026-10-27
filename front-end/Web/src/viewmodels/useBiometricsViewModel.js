@@ -106,18 +106,6 @@ export function useBiometricsViewModel() {
         refreshConsent();
     }, [refreshConsent]);
 
-    // Registra la autorización biométrica (propia o asistida por el admin) y habilita la captura.
-    const authorizeBiometrics = useCallback(
-        () =>
-            run(async () => {
-                const personId = requirePersonId();
-                await consentApi.accept(personId, { biometricAccepted: true });
-                setStatus(t("Autorización biométrica registrada."), "ok");
-                await refreshConsent();
-            }),
-        [run, requirePersonId, setStatus, refreshConsent, t]
-    );
-
     const setPerson = useCallback((selected) => {
         setPersonState(selected ?? null);
     }, []);
@@ -142,6 +130,19 @@ export function useBiometricsViewModel() {
         if (!person?.personId) throw new Error(t("Selecciona una persona."));
         return person.personId;
     }, [person, t]);
+
+    // Registra la autorización biométrica (propia o asistida por el admin) y habilita la captura.
+    // Debe ir después de `run` y `requirePersonId`: sus dependencias se leen al renderizar.
+    const authorizeBiometrics = useCallback(
+        () =>
+            run(async () => {
+                const personId = requirePersonId();
+                await consentApi.accept(personId, { biometricAccepted: true });
+                setStatus(t("Autorización biométrica registrada."), "ok");
+                await refreshConsent();
+            }),
+        [run, requirePersonId, setStatus, refreshConsent, t]
+    );
 
     const checkPerson = useCallback(
         () =>
