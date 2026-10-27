@@ -1,13 +1,18 @@
-import React, {useMemo} from 'react';
-import {Modal, ScrollView, Text, TouchableOpacity, View,} from 'react-native';
-import {useTranslation} from 'react-i18next';
-import {useTheme} from './ThemeContext';
-import {createCommonStyles} from "./style/Style";
+import React from 'react';
+import {
+    Modal,
+    View,
+    Text,
+    ScrollView,
+    TouchableOpacity,
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from './ThemeContext';
+import styleAuth from "./style/Style";
 
 export default function TerminosModal({ isVisible, onClose }) {
     const { t } = useTranslation();
     const { colors } = useTheme();
-    const styleAuth = useMemo(() => createCommonStyles(colors), [colors]);
 
     return (
         <Modal
@@ -20,9 +25,9 @@ export default function TerminosModal({ isVisible, onClose }) {
                 <View style={[styleAuth.modalContainerTerminos, { backgroundColor: colors.modalBackground }]}>
                     <Text style={[styleAuth.titleTerminos, { color: colors.modalText }]}>{t('termsModal.title')}</Text>
 
-                    <ScrollView persistentScrollbar
+                    <ScrollView
                         style={styleAuth.contentTerminos}
-                        showsVerticalScrollIndicator
+                        showsVerticalScrollIndicator={false}
                     >
                         <Text style={[styleAuth.paragraphTerminos, { color: colors.modalTextSecondary }]}>
                             <Text style={[styleAuth.subtitleTerminos, { color: colors.modalText }]}>{t('termsModal.acceptanceTitle')} {"\n\n"}</Text>
