@@ -201,4 +201,16 @@ class AuthTokenFilterFlowTest {
         filter.doFilter(own, ownResponse, chain);
         assertThat(ownResponse.getStatus()).isEqualTo(200);
     }
+
+    @Test
+    void aPercentEncodedPathCannotDodgeTheSessionOrTheSuperAdministradorRule() throws Exception {
+        FilterChain chain = mock(FilterChain.class);
+        assertThat(run("GET", "/%61pi/v1/roles", null, chain).getStatus()).isEqualTo(401);
+        assertThat(run("GET", "/%61pi/v1/auth/evaluate", null, chain).getStatus()).isEqualTo(401);
+
+        MockHttpServletResponse catalog = run("POST", "/api/v1/%72oles", ADMIN_TOKEN, chain);
+        assertThat(catalog.getStatus()).isEqualTo(403);
+        assertThat(catalog.getContentAsString()).contains("requires Super Administrador");
+        verify(chain, never()).doFilter(any(), any());
+    }
 }

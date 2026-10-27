@@ -114,4 +114,20 @@ class AuthTokenFilterFlowTest {
         assertThat(response.getContentAsString()).contains("Cannot resolve caller school");
         verify(chain, never()).doFilter(any(), any());
     }
+
+    @Test
+    void aPercentEncodedPathIsJudgedLikeTheDecodedOneTheControllerRuns() throws Exception {
+        FilterChain chain = mock(FilterChain.class);
+        MockHttpServletResponse noSession = new MockHttpServletResponse();
+        filter.doFilter(request("GET", "/%61pi/v1/class-sessions", false), noSession, chain);
+        assertThat(noSession.getStatus()).isEqualTo(401);
+
+        // An instructor holds scheduling.session:manage but not academic.school:manage:
+        // encoding "environments" must not downgrade the permission the route needs.
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        filter.doFilter(request("POST", "/api/v1/%65nvironments", true), response, chain);
+        assertThat(response.getStatus()).isEqualTo(403);
+        assertThat(response.getContentAsString()).contains("academic.school:manage");
+        verify(chain, never()).doFilter(any(), any());
+    }
 }
