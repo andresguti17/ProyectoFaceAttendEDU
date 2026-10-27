@@ -21,6 +21,61 @@ import PrimaryButton from '../components/auth/PrimaryButton';
 import {createLanguageSettingsStyles} from './Styles/LanguageSettingsScreen/Style';
 import {useLanguageSettingsViewModel} from '../../viewmodels/useLanguageSettingsViewModel';
 
+/** One switch per alert kind: label, description and the theme color it toggles with. */
+const ALERT_TYPES = [
+    {type: 'success', configKey: 'enableSuccess', label: 'settings.successAlerts', color: 'success'},
+    {type: 'error', configKey: 'enableError', label: 'settings.errorAlerts', color: 'danger'},
+    {type: 'warning', configKey: 'enableWarning', label: 'settings.warningAlerts', color: 'warning'},
+    {type: 'confirm', configKey: 'enableConfirm', label: 'settings.confirmAlerts', color: 'primary'},
+    {type: 'default', configKey: 'enableDefault', label: 'settings.defaultAlerts', color: 'primary'},
+    {type: 'iot', configKey: 'enableIot', label: 'settings.iotAlerts', color: 'danger'},
+];
+
+function AlertSwitchRow({alert, enabled, onToggle, colors, styles, t}) {
+    const tint = colors[alert.color];
+    return (
+        <View
+            style={{
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.border,
+                marginBottom: 5,
+            }}
+        >
+            <View style={{flex: 1, marginRight: 12}}>
+                <Text style={[styles.languageSettingsOptionText, {color: colors.text}]}>{t(alert.label)}</Text>
+                <Text
+                    style={[
+                        styles.languageSettingsSubtitle,
+                        {color: colors.textSecondary, fontSize: 12, marginTop: 4, textAlign: 'left'},
+                    ]}
+                >
+                    {t(`${alert.label}Desc`)}
+                </Text>
+            </View>
+            <Switch
+                value={enabled}
+                onValueChange={onToggle}
+                trackColor={{false: colors.textSecondary + '40', true: tint + '70'}}
+                thumbColor={enabled ? tint : colors.textSecondary}
+            />
+        </View>
+    );
+}
+
+/** Section title and its explanatory line. */
+function SectionHeader({title, subtitle, marginTop, colors, styles}) {
+    return (
+        <>
+            <Text style={[styles.languageSettingsTitle, {color: colors.text, marginTop}]}>{title}</Text>
+            <Text style={[styles.languageSettingsSubtitle, {color: colors.textSecondary}]}>{subtitle}</Text>
+        </>
+    );
+}
+
 export default function LanguageSettingsScreen() {
     const {t} = useTranslation();
     const {colors} = useTheme();
@@ -56,23 +111,7 @@ export default function LanguageSettingsScreen() {
                 <ScrollViewWrapper>
                     <View style={[{marginHorizontal: 25}]}>
                         {/* ═══ SECCIÓN: IDIOMA ═══ */}
-                        <Text
-                            style={[
-                                styles.languageSettingsTitle,
-                                {color: colors.text, marginTop: 30},
-                            ]}
-                        >
-                            {t('settings.language')}
-                        </Text>
-
-                        <Text
-                            style={[
-                                styles.languageSettingsSubtitle,
-                                {color: colors.textSecondary},
-                            ]}
-                        >
-                            {t('settings.selectLanguage')}
-                        </Text>
+                        <SectionHeader title={t('settings.language')} subtitle={t('settings.selectLanguage')} marginTop={30} colors={colors} styles={styles} />
 
                         {languages.map((lang) => (
                             <TouchableOpacity
@@ -113,23 +152,7 @@ export default function LanguageSettingsScreen() {
                         ))}
 
                         {/* ═══ SECCIÓN: APARIENCIA ═══ */}
-                        <Text
-                            style={[
-                                styles.languageSettingsTitle,
-                                {marginTop: 28, color: colors.text},
-                            ]}
-                        >
-                            {t('settings.appearance')}
-                        </Text>
-
-                        <Text
-                            style={[
-                                styles.languageSettingsSubtitle,
-                                {color: colors.textSecondary},
-                            ]}
-                        >
-                            {t('settings.appearanceDesc')}
-                        </Text>
+                        <SectionHeader title={t('settings.appearance')} subtitle={t('settings.appearanceDesc')} marginTop={28} colors={colors} styles={styles} />
 
                         {/* Tarjeta de navegación → AppearanceSettingsScreen */}
                         <TouchableOpacity
@@ -159,23 +182,7 @@ export default function LanguageSettingsScreen() {
                         </TouchableOpacity>
 
                         {/* ═══ SECCIÓN: CONFIGURACIÓN DE ALERTAS ═══ */}
-                        <Text
-                            style={[
-                                styles.languageSettingsTitle,
-                                {marginTop: 28, color: colors.text},
-                            ]}
-                        >
-                            {t('settings.alertsConfiguration')}
-                        </Text>
-
-                        <Text
-                            style={[
-                                styles.languageSettingsSubtitle,
-                                {color: colors.textSecondary},
-                            ]}
-                        >
-                            {t('settings.alertsConfigDesc')}
-                        </Text>
+                        <SectionHeader title={t('settings.alertsConfiguration')} subtitle={t('settings.alertsConfigDesc')} marginTop={28} colors={colors} styles={styles} />
 
                         <TouchableOpacity
                             style={[
@@ -276,349 +283,17 @@ export default function LanguageSettingsScreen() {
                                     paddingBottom: 10,
                                 }}
                             >
-                                {/* ─── Alerta de Éxito ─── */}
-                                <View
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'flex-start',
-                                        justifyContent: 'space-between',
-                                        paddingVertical: 12,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor:
-                                            colors.border,
-                                        marginBottom: 5,
-                                    }}
-                                >
-                                    <View
-                                        style={{
-                                            flex: 1,
-                                            marginRight: 12,
-                                        }}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.languageSettingsOptionText,
-                                                {color: colors.text},
-                                            ]}
-                                        >
-                                            {t('settings.successAlerts')}
-                                        </Text>
-
-                                        <Text
-                                            style={[
-                                                styles.languageSettingsSubtitle,
-                                                {
-                                                    color: colors.textSecondary,
-                                                    fontSize: 12,
-                                                    marginTop: 4,
-                                                    textAlign: 'left',
-                                                },
-                                            ]}
-                                        >
-                                            {t('settings.successAlertsDesc')}
-                                        </Text>
-                                    </View>
-
-                                    <Switch
-                                        value={alertsConfig.enableSuccess}
-                                        onValueChange={() => toggleAlertType('success')}
-                                        trackColor={{
-                                            false: colors.textSecondary + '40',
-                                            true: colors.success + '70',
-                                        }}
-                                        thumbColor={
-                                            alertsConfig.enableSuccess
-                                                ? colors.success
-                                                : colors.textSecondary
-                                        }
+                                {ALERT_TYPES.map((alert) => (
+                                    <AlertSwitchRow
+                                        key={alert.type}
+                                        alert={alert}
+                                        enabled={alertsConfig[alert.configKey]}
+                                        onToggle={() => toggleAlertType(alert.type)}
+                                        colors={colors}
+                                        styles={styles}
+                                        t={t}
                                     />
-                                </View>
-
-                                {/* ─── Alerta de Error ─── */}
-                                <View
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'flex-start',
-                                        justifyContent: 'space-between',
-                                        paddingVertical: 12,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor:
-                                            colors.border,
-                                        marginBottom: 5,
-                                    }}
-                                >
-                                    <View
-                                        style={{
-                                            flex: 1,
-                                            marginRight: 12,
-                                        }}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.languageSettingsOptionText,
-                                                {color: colors.text},
-                                            ]}
-                                        >
-                                            {t('settings.errorAlerts')}
-                                        </Text>
-
-                                        <Text
-                                            style={[
-                                                styles.languageSettingsSubtitle,
-                                                {
-                                                    color: colors.textSecondary,
-                                                    fontSize: 12,
-                                                    marginTop: 4,
-                                                    textAlign: 'left',
-                                                },
-                                            ]}
-                                        >
-                                            {t('settings.errorAlertsDesc')}
-                                        </Text>
-                                    </View>
-
-                                    <Switch
-                                        value={alertsConfig.enableError}
-                                        onValueChange={() => toggleAlertType('error')}
-                                        trackColor={{
-                                            false: colors.textSecondary + '40',
-                                            true: colors.danger + '70',
-                                        }}
-                                        thumbColor={
-                                            alertsConfig.enableError
-                                                ? colors.danger
-                                                : colors.textSecondary
-                                        }
-                                    />
-                                </View>
-
-                                {/* ─── Alerta de Advertencia ─── */}
-                                <View
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'flex-start',
-                                        justifyContent: 'space-between',
-                                        paddingVertical: 12,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor:
-                                            colors.border,
-                                        marginBottom: 5,
-                                    }}
-                                >
-                                    <View
-                                        style={{
-                                            flex: 1,
-                                            marginRight: 12,
-                                        }}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.languageSettingsOptionText,
-                                                {color: colors.text},
-                                            ]}
-                                        >
-                                            {t('settings.warningAlerts')}
-                                        </Text>
-
-                                        <Text
-                                            style={[
-                                                styles.languageSettingsSubtitle,
-                                                {
-                                                    color: colors.textSecondary,
-                                                    fontSize: 12,
-                                                    marginTop: 4,
-                                                    textAlign: 'left',
-                                                },
-                                            ]}
-                                        >
-                                            {t('settings.warningAlertsDesc')}
-                                        </Text>
-                                    </View>
-
-                                    <Switch
-                                        value={alertsConfig.enableWarning}
-                                        onValueChange={() => toggleAlertType('warning')}
-                                        trackColor={{
-                                            false: colors.textSecondary + '40',
-                                            true: colors.warning + '70',
-                                        }}
-                                        thumbColor={
-                                            alertsConfig.enableWarning
-                                                ? colors.warning
-                                                : colors.textSecondary
-                                        }
-                                    />
-                                </View>
-
-                                {/* ─── Alerta de Confirmación ─── */}
-                                <View
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'flex-start',
-                                        justifyContent: 'space-between',
-                                        paddingVertical: 12,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor:
-                                            colors.border,
-                                        marginBottom: 5,
-                                    }}
-                                >
-                                    <View
-                                        style={{
-                                            flex: 1,
-                                            marginRight: 12,
-                                        }}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.languageSettingsOptionText,
-                                                {color: colors.text},
-                                            ]}
-                                        >
-                                            {t('settings.confirmAlerts')}
-                                        </Text>
-
-                                        <Text
-                                            style={[
-                                                styles.languageSettingsSubtitle,
-                                                {
-                                                    color: colors.textSecondary,
-                                                    fontSize: 12,
-                                                    marginTop: 4,
-                                                    textAlign: 'left',
-                                                },
-                                            ]}
-                                        >
-                                            {t('settings.confirmAlertsDesc')}
-                                        </Text>
-                                    </View>
-
-                                    <Switch
-                                        value={alertsConfig.enableConfirm}
-                                        onValueChange={() => toggleAlertType('confirm')}
-                                        trackColor={{
-                                            false: colors.textSecondary + '40',
-                                            true: colors.primary + '70',
-                                        }}
-                                        thumbColor={
-                                            alertsConfig.enableConfirm
-                                                ? colors.primary
-                                                : colors.textSecondary
-                                        }
-                                    />
-                                </View>
-
-                                {/* ─── Alertas Generales ─── */}
-                                <View
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'flex-start',
-                                        justifyContent: 'space-between',
-                                        paddingVertical: 12,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor:
-                                            colors.border,
-                                        marginBottom: 5,
-                                    }}
-                                >
-                                    <View
-                                        style={{
-                                            flex: 1,
-                                            marginRight: 12,
-                                        }}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.languageSettingsOptionText,
-                                                {color: colors.text},
-                                            ]}
-                                        >
-                                            {t('settings.defaultAlerts')}
-                                        </Text>
-
-                                        <Text
-                                            style={[
-                                                styles.languageSettingsSubtitle,
-                                                {
-                                                    color: colors.textSecondary,
-                                                    fontSize: 12,
-                                                    marginTop: 4,
-                                                    textAlign: 'left',
-                                                },
-                                            ]}
-                                        >
-                                            {t('settings.defaultAlertsDesc')}
-                                        </Text>
-                                    </View>
-
-                                    <Switch
-                                        value={alertsConfig.enableDefault}
-                                        onValueChange={() => toggleAlertType('default')}
-                                        trackColor={{
-                                            false: colors.textSecondary + '40',
-                                            true: colors.primary + '70',
-                                        }}
-                                        thumbColor={
-                                            alertsConfig.enableDefault
-                                                ? colors.primary
-                                                : colors.textSecondary
-                                        }
-                                    />
-                                </View>
-
-                                {/* ─── Alertas de Dispositivos IoT ─── */}
-                                <View
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'flex-start',
-                                        justifyContent: 'space-between',
-                                        paddingVertical: 12,
-                                    }}
-                                >
-                                    <View
-                                        style={{
-                                            flex: 1,
-                                            marginRight: 12,
-                                        }}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.languageSettingsOptionText,
-                                                {color: colors.text},
-                                            ]}
-                                        >
-                                            {t('settings.iotAlerts')}
-                                        </Text>
-
-                                        <Text
-                                            style={[
-                                                styles.languageSettingsSubtitle,
-                                                {
-                                                    color: colors.textSecondary,
-                                                    fontSize: 12,
-                                                    marginTop: 4,
-                                                    textAlign: 'left',
-                                                },
-                                            ]}
-                                        >
-                                            {t('settings.iotAlertsDesc')}
-                                        </Text>
-                                    </View>
-
-                                    <Switch
-                                        value={alertsConfig.enableIot}
-                                        onValueChange={() => toggleAlertType('iot')}
-                                        trackColor={{
-                                            false: colors.textSecondary + '40',
-                                            true: colors.danger + '70',
-                                        }}
-                                        thumbColor={
-                                            alertsConfig.enableIot
-                                                ? colors.danger
-                                                : colors.textSecondary
-                                        }
-                                    />
-                                </View>
+                                ))}
                             </ScrollView>
 
                             {/* ─── Botón Cerrar Modal ─── */}

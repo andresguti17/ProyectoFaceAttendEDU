@@ -17,6 +17,8 @@ import cv2
 import face_recognition
 import numpy as np
 
+from domain.image_bounds import decode_bounded, max_base64_length
+
 FACE_DETECTION_MODEL = "hog"
 BLINK_EAR_DELTA = 0.06
 MOVEMENT_DELTA = 0.05
@@ -35,14 +37,11 @@ def decode_image(data_url_or_b64: str, max_bytes: int, max_pixels: int) -> np.nd
     """Decode a base64 (optionally `data:...;base64,`-prefixed) image to RGB."""
     try:
         encoded = data_url_or_b64.split(",", 1)[1] if "," in data_url_or_b64 else data_url_or_b64
-        image_bytes = base64.b64decode(encoded, validate=True)
-        if len(image_bytes) > max_bytes:
+        # Reject oversized text before decoding it, not after.
+        if len(encoded) > max_base64_length(max_bytes):
             raise ValueError("Image exceeds the maximum allowed size")
-        image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
-        if image is None:
-            raise ValueError("Could not decode the image")
-        if image.shape[0] * image.shape[1] > max_pixels:
-            raise ValueError("Image has too many pixels")
+        image_bytes = base64.b64decode(encoded, validate=True)
+        image = decode_bounded(image_bytes, max_bytes, max_pixels, cv2.IMREAD_COLOR)
         return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     except Exception as exc:
         raise ValueError(f"Invalid image: {exc}") from exc

@@ -247,6 +247,8 @@ export function generateTheme(accentColorOrColors, mode) {
             text: {
                 primary:   fontColorEffective,
                 secondary: isDark ? "#94A3B8" : "#64748B",
+                // Texto de apoyo más tenue; en claro no hay tono más suave que cumpla 4.5:1.
+                tertiary:  isDark ? "#8494AA" : "#64748B",
                 disabled:  isDark ? "#475569" : "#94A3B8",
                 inverse:   isDark ? "#0F172A" : "#FFFFFF",
                 onBrand:   textOnPrimary,

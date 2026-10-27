@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
+import { ChoiceText, choiceActiveColor } from "./choiceParts";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
 /**
@@ -63,18 +64,7 @@ export function Radio({
 
   const currentSize = sizeConfig[size] || sizeConfig.md;
 
-  // Colores por variant
-  const variantColors = {
-    default: c.brand.primary,
-    primary: c.brand.primary,
-    success: c.status.success,
-    warning: c.status.warning,
-    danger: c.status.danger,
-  };
-
-  const activeColor = error 
-    ? c.status.danger 
-    : variantColors[variant] || variantColors.default;
+  const activeColor = choiceActiveColor(c, variant, error);
 
   const borderColor = disabled
     ? c.border.primary
@@ -130,43 +120,16 @@ export function Radio({
         </View>
 
         {/* Label y descripción */}
-        {(label || description) && (
-          <View style={styles.textContainer}>
-            {label && (
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    fontSize: currentSize.labelSize,
-                    color: disabled
-                      ? c.text.disabled
-                      : error
-                      ? c.status.danger
-                      : c.text.primary,
-                    fontWeight: "500",
-                  },
-                  labelStyle,
-                ]}
-              >
-                {label}
-              </Text>
-            )}
-            {description && (
-              <Text
-                style={[
-                  styles.description,
-                  {
-                    fontSize: currentSize.labelSize - 1,
-                    color: disabled ? c.text.disabled : c.text.secondary,
-                    marginTop: 2,
-                  },
-                ]}
-              >
-                {description}
-              </Text>
-            )}
-          </View>
-        )}
+        <ChoiceText
+          c={c}
+          label={label}
+          description={description}
+          labelSize={currentSize.labelSize}
+          disabled={disabled}
+          error={error}
+          labelStyle={labelStyle}
+          containerStyle={styles.textContainer}
+        />
       </TouchableOpacity>
     </View>
   );
@@ -189,12 +152,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
     justifyContent: "center",
-  },
-  label: {
-    lineHeight: 20,
-  },
-  description: {
-    lineHeight: 18,
   },
 });
 

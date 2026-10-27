@@ -1,6 +1,8 @@
 package com.faceattend_edu.attendance_service.infrastructure.web.controller;
 
 import com.faceattend_edu.attendance_service.domain.model.Justification;
+import com.faceattend_edu.attendance_service.domain.model.JustificationFilter;
+import com.faceattend_edu.attendance_service.domain.model.JustificationSlice;
 import com.faceattend_edu.attendance_service.domain.port.in.*;
 import com.faceattend_edu.attendance_service.infrastructure.web.dto.*;
 import com.faceattend_edu.attendance_service.infrastructure.web.Paging;
@@ -11,9 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,13 +35,16 @@ public class JustificationController {
             @RequestParam(required = false) Long attendanceRecordId,
             @RequestParam(required = false) Integer limit,
             @RequestParam(required = false) Integer offset){
-        Map<Long, Boolean> visibleRecords = new HashMap<>();
-        List<JustificationResponse> list = listUseCase.list().stream()
-                .filter(j -> visibleRecords.computeIfAbsent(j.getAttendanceRecordId(), this::allowsRecord))
-                .filter(j -> status == null || status.equals(j.getReviewStatus()))
-                .filter(j -> attendanceRecordId == null || attendanceRecordId.equals(j.getAttendanceRecordId()))
-                .map(mapper::toResponse).collect(Collectors.toList());
-        return Paging.slice(list, limit, offset);
+        // Filtros, alcance y paginación en SQL: antes se cargaba la tabla entera y se
+        // consultaba el registro de cada fila para decidir si el llamante podía verla.
+        boolean paged = limit != null || offset != null;
+        JustificationSlice slice = listUseCase.search(
+                new JustificationFilter(status, attendanceRecordId, ActorScope.actorIds()),
+                Paging.offsetOf(offset), paged ? Paging.limitOf(limit) : null);
+        List<JustificationResponse> body = slice.items().stream().map(mapper::toResponse).collect(Collectors.toList());
+        return paged
+                ? ResponseEntity.ok().header("X-Total-Count", String.valueOf(slice.total())).body(body)
+                : ResponseEntity.ok(body);
     }
 
     @PostMapping

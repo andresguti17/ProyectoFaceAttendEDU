@@ -37,5 +37,5 @@ Requiere el stack `FULL/` ya levantado (crea las redes externas
 `faceattend-edge` y `faceattend-app`); este archivo solo reinicia Kong.
 
 ```bash
-docker compose up -d && curl http://localhost:8001/ && curl http://localhost:8000/api/v1/persons
+docker compose up -d kong-gateway && docker run --rm --network container:faceattend-kong curlimages/curl -s localhost:8001/ && curl http://localhost:8000/api/v1/persons
 ```

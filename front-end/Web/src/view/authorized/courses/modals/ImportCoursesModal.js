@@ -8,17 +8,18 @@
 //  3. Usuario confirma importación
 //  4. Se procesan los registros y se muestran resultados
 //
-//  El parseo del archivo (SheetJS para .xlsx, delimitador
+//  El parseo del archivo (ExcelJS para .xlsx, delimitador
 //  detectado para .csv — antes solo leía como texto con ","
 //  fijo, y fallaba con .xlsx y con ";" del Excel en español)
 //  vive en components/common/importFileParser.
 // ============================================================
 
 import React, { useState } from "react";
-import { View, Text, ScrollView, ActivityIndicator, Platform } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Button, BaseModal, Badge } from "../../../components/common";
 import { parseFileContent } from "./importCoursesParser";
+import { downloadCsvTemplate, pickImportFile } from "../../../components/common/importFilePicker";
 import { useTheme } from "../../../components/hooks/useTheme";
 import { useResponsive } from "../../../components/hooks/useResponsive";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
@@ -37,44 +38,8 @@ const CSV_TEMPLATE =
     "2240083,Bases de Datos I,ADSI,mañana,B-201\n" +
     "2240084,Redes de Datos,ADSI,tarde,B-202\n";
 
-function downloadTemplate() {
-    if (Platform.OS !== "web") return;
-    const blob = new Blob([CSV_TEMPLATE], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "plantilla_cursos.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-}
+const downloadTemplate = () => downloadCsvTemplate(CSV_TEMPLATE, "plantilla_cursos.csv");
 
-function pickFile() {
-    return new Promise((resolve) => {
-        if (Platform.OS !== "web") {
-            resolve(null);
-            return;
-        }
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".csv,.xlsx,.xls,.tsv,.txt";
-        input.onchange = (e) => {
-            const file = e.target?.files?.[0];
-            if (!file) {
-                resolve(null);
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                resolve({ name: file.name, buffer: evt.target?.result });
-            };
-            reader.onerror = () => resolve(null);
-            // ArrayBuffer para todos: los .xlsx son ZIP binarios y leerlos
-            // como texto produce basura que el parser CSV descartaba.
-            reader.readAsArrayBuffer(file);
-        };
-        input.click();
-    });
-}
 
 // ── Componente principal ─────────────────────────────────
 
@@ -91,9 +56,9 @@ export default function ImportCoursesModal({ visible, onClose, onImport }) {
 
     const handleFileSelect = async () => {
         setFileError(null);
-        const result = await pickFile();
+        const result = await pickImportFile();
         if (!result) return;
-        const { rows } = parseFileContent(result.name, result.buffer);
+        const { rows } = await parseFileContent(result.name, result.buffer);
         if (rows.length === 0) {
             setFileError(t("El archivo no contiene cursos válidos (columnas: código, nombre, programa)"));
             return;

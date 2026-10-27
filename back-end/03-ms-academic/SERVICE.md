@@ -27,7 +27,7 @@ Gestionar la estructura academica completa: sedes educativas, programas curricul
 |------------|-----------|---------------|
 | Lenguaje | **TypeScript 5** | Type-safe para modelos academicos y reportes |
 | Framework | **Fastify 4** | Alto rendimiento, validacion declarativa con Zod |
-| ORM | **Drizzle ORM** | SQL eficiente para JOINs de 8 tablas (mejor que TypeORM) |
+| Acceso a datos | **pg** con SQL parametrizado | El esquema lo gobierna Liquibase (`database/`); sin ORM ni esquema duplicado en el servicio |
 | Arquitectura | **Hexagonal** | Misma estructura que los demas servicios |
 
 ### 3.2 Dependencias Principales
@@ -35,12 +35,11 @@ Gestionar la estructura academica completa: sedes educativas, programas curricul
 ```json
 // package.json
 "dependencies": {
-  "fastify": "^4.26.0",      // HTTP framework
-  "drizzle-orm": "^0.31.0",  // ORM type-safe
+  "fastify": "^5.12.7",      // HTTP framework
   "pg": "^8.11.0",           // PostgreSQL driver
-  "zod": "^3.22.0",          // Validacion de schemas
+  "zod": "^4.6.7",           // Validacion de schemas
   "kafkajs": "^2.2.4",       // Domain Events
-  "pino": "^8.16.0"          // Structured logging
+  "pino": "^9.14.0"          // Structured logging
 }
 ```
 
@@ -48,7 +47,7 @@ Gestionar la estructura academica completa: sedes educativas, programas curricul
 
 | Libreria | Uso | Por que |
 |----------|-----|---------|
-| **Drizzle ORM** | Persistencia | SQL eficiente y type-safe para JOINs de 8 tablas |
+| **pg** | Persistencia | SQL parametrizado; el esquema vive en Liquibase (`database/`) |
 | **Zod** | Validacion | Validacion declarativa de DTOs/queries |
 | **Kafkajs** | Domain Events | Publicacion de eventos de dominio |
 | **Pino** | Logging | Logs JSON estructurados |
@@ -199,11 +198,11 @@ CACHE_TTL_SECONDS=1800
 
 ## 9. Stack Actual
 
-Academic esta implementado en **TypeScript + Fastify + Drizzle** con arquitectura hexagonal. El servicio gestiona la estructura academica completa: sedes, programas, periodos, cohortes, cursos, actores y matriculas.
+Academic esta implementado en **TypeScript + Fastify + pg** con arquitectura hexagonal. El servicio gestiona la estructura academica completa: sedes, programas, periodos, cohortes, cursos, actores y matriculas.
 
 ### Justificacion
 
-- **Drizzle ORM**: SQL eficiente y type-safe para los JOINs de las 8 tablas del dominio
+- **pg**: SQL parametrizado para los JOINs de las 8 tablas del dominio (Drizzle se retiró: su esquema duplicaba el de Liquibase y no se usaba)
 - **Zod**: Validacion declarativa de DTOs y filtros de query
 - **Kafka (Kafkajs)**: Eventos de dominio para notificaciones
 - **Testcontainers**: Tests de integracion con PostgreSQL real

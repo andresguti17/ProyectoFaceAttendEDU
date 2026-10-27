@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, Switch as RNSwitch, StyleSheet, Platform } from "react-native";
+import { View, Switch as RNSwitch, StyleSheet, Platform } from "react-native";
 import { useTheme } from "../../hooks/useTheme";
+import { ChoiceError, ChoiceText, choiceActiveColor } from "./choiceParts";
 import { useTranslation } from "../../../../core/utils/i18n/hooks/useTranslation";
 import { DESIGN_TOKENS } from "../../../../core/config/theme.config";
 
@@ -87,18 +88,7 @@ export function Switch({
 
   const currentSize = sizeConfig[size] || sizeConfig.md;
 
-  // Colores por variant
-  const variantColors = {
-    default: c.brand.primary,
-    primary: c.brand.primary,
-    success: c.status.success,
-    warning: c.status.warning,
-    danger: c.status.danger,
-  };
-
-  const activeColor = error 
-    ? c.status.danger 
-    : variantColors[variant] || variantColors.default;
+  const activeColor = choiceActiveColor(c, variant, error);
 
   // Colores del switch según plataforma
   const trackColorFalse = c.interactive.disabled;
@@ -134,61 +124,20 @@ export function Switch({
         />
 
         {/* Label y descripción */}
-        {(label || description) && (
-          <View style={styles.textContainer}>
-            {label && (
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    fontSize: currentSize.labelSize,
-                    color: disabled
-                      ? c.text.disabled
-                      : error
-                      ? c.status.danger
-                      : c.text.primary,
-                    fontWeight: "500",
-                  },
-                  labelStyle,
-                ]}
-              >
-                {label}
-              </Text>
-            )}
-            {description && (
-              <Text
-                style={[
-                  styles.description,
-                  {
-                    fontSize: currentSize.labelSize - 1,
-                    color: disabled ? c.text.disabled : c.text.secondary,
-                    marginTop: 2,
-                  },
-                ]}
-              >
-                {description}
-              </Text>
-            )}
-          </View>
-        )}
+        <ChoiceText
+          c={c}
+          label={label}
+          description={description}
+          labelSize={currentSize.labelSize}
+          disabled={disabled}
+          error={error}
+          labelStyle={labelStyle}
+          containerStyle={styles.textContainer}
+        />
       </View>
 
       {/* Error message */}
-      {error && errorMessage && (
-        <Text
-          style={[
-            styles.errorMessage,
-            {
-              fontSize: currentSize.labelSize - 1,
-              color: c.status.danger,
-              marginTop: 4,
-              marginLeft: 56, // Ancho aproximado del switch + gap
-            },
-          ]}
-        >
-          {t(errorMessage)}
-        </Text>
-      )}
+      <ChoiceError c={c} message={error ? errorMessage : null} labelSize={currentSize.labelSize} offset={56} t={t} />
     </View>
   );
 }
@@ -208,15 +157,6 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
     justifyContent: "center",
-  },
-  label: {
-    lineHeight: 20,
-  },
-  description: {
-    lineHeight: 18,
-  },
-  errorMessage: {
-    lineHeight: 16,
   },
 });
 

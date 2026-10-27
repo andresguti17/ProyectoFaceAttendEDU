@@ -181,7 +181,7 @@ Tres redes, una por capa: `faceattend-edge` (frontend ↔ Kong),
 
 ```bash
 cd database && docker compose up -d                 # PostgreSQL 17 + 8 Liquibase
-cd back-end/99-api-gateway && docker compose up -d  # solo Kong (requiere el stack FULL/ ya creado)
+docker compose up -d kong-gateway                  # solo Kong (requiere el stack FULL/ ya creado)
 ```
 
 ### Servicio individual
@@ -197,7 +197,7 @@ npm run dev
 uvicorn main:app --reload --port 8086
 
 # Kong 99
-docker compose up -d && curl http://localhost:8001/
+docker compose up -d && docker run --rm --network container:faceattend-kong curlimages/curl -s localhost:8001/
 ```
 
 ### Verificar estado

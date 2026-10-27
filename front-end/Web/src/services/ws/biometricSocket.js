@@ -21,6 +21,8 @@ const MAX_SEND_ATTEMPTS = 3;
 // Mirrored locally (rather than read off global.WebSocket) so a test double
 // that doesn't define the static WebSocket.OPEN constant still works.
 const WS_OPEN = 1;
+// Subprotocol name the gateway and ms-biometric read the session from.
+export const WS_BEARER_PROTOCOL = "faceattend.bearer";
 
 function toWsUrl(httpBaseUrl) {
     return httpBaseUrl.replace(/^http/i, "ws");
@@ -147,8 +149,10 @@ export function connectBiometricSocket({ token, baseUrl } = {}) {
 
     async function connectOnce() {
         const resolvedToken = token ?? (await getToken());
-        const url = `${toWsUrl(resolveBaseUrl(baseUrl))}/api/v1/biometric/ws?token=${resolvedToken}`;
-        ws = new WebSocket(url);
+        const url = `${toWsUrl(resolveBaseUrl(baseUrl))}/api/v1/biometric/ws`;
+        // The browser cannot set headers on the handshake: the session goes in
+        // Sec-WebSocket-Protocol, never in the URL, where proxies and logs keep it.
+        ws = new WebSocket(url, [WS_BEARER_PROTOCOL, resolvedToken]);
         ws.onopen = () => {
             reconnectAttempt = 0;
             notifyStatus("open");

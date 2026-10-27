@@ -98,12 +98,37 @@ export function memoryRepositories(): MemoryRepositories {
   const enrollmentsByCohort = scoped(stores.enrollments, 'cohortId');
   const enrollmentsByActor = scoped(stores.enrollments, 'academicActorId');
 
+  const programIdsOf = (schoolId: unknown) => new Set(stores.programs.by('schoolId', schoolId).map((p) => p.programId));
+  const cohortIdsOf = (schoolId: unknown) => {
+    const programs = programIdsOf(schoolId);
+    return new Set(stores.cohorts.live().filter((c) => programs.has(c.programId)).map((c) => c.cohortId));
+  };
+  const inSchool = (repo: MemoryRepo, field: string, ids: (schoolId: unknown) => Set<unknown>) => ({
+    find: async (schoolId: unknown, page?: Page) => {
+      const allowed = ids(schoolId);
+      return repo.page(repo.live().filter((r) => allowed.has(r[field])), page);
+    },
+    count: async (schoolId: unknown) => {
+      const allowed = ids(schoolId);
+      return repo.live().filter((r) => allowed.has(r[field])).length;
+    },
+  });
+  const cohortsBySchool = inSchool(stores.cohorts, 'programId', programIdsOf);
+  const coursesBySchool = inSchool(stores.courses, 'programId', programIdsOf);
+  const enrollmentsBySchool = inSchool(stores.enrollments, 'cohortId', cohortIdsOf);
+
   const repos = {
     schools: Object.assign(stores.schools, { softDeleteCascade: (id: number) => stores.schools.softDelete(id) }),
     programs: Object.assign(stores.programs, { findBySchool: programsBySchool.find, countBySchool: programsBySchool.count }),
     periods: Object.assign(stores.periods, { findBySchool: periodsBySchool.find, countBySchool: periodsBySchool.count }),
-    cohorts: Object.assign(stores.cohorts, { findByProgram: cohortsByProgram.find, countByProgram: cohortsByProgram.count }),
-    courses: Object.assign(stores.courses, { findByProgram: coursesByProgram.find, countByProgram: coursesByProgram.count }),
+    cohorts: Object.assign(stores.cohorts, {
+      findByProgram: cohortsByProgram.find, countByProgram: cohortsByProgram.count,
+      findBySchool: cohortsBySchool.find, countBySchool: cohortsBySchool.count,
+    }),
+    courses: Object.assign(stores.courses, {
+      findByProgram: coursesByProgram.find, countByProgram: coursesByProgram.count,
+      findBySchool: coursesBySchool.find, countBySchool: coursesBySchool.count,
+    }),
     actorTypes: Object.assign(stores.actorTypes, {
       restoreByCode: async (code: string, name: string) => {
         const gone = [...stores.actorTypes.rows.values()].find((r) => r.code === code && r.deletedAt);
@@ -131,6 +156,8 @@ export function memoryRepositories(): MemoryRepositories {
         return { ...gone };
       },
       findByCohort: enrollmentsByCohort.find,
+      findBySchool: enrollmentsBySchool.find,
+      countBySchool: enrollmentsBySchool.count,
       countByCohort: enrollmentsByCohort.count,
       findByAcademicActor: enrollmentsByActor.find,
       countByAcademicActor: enrollmentsByActor.count,

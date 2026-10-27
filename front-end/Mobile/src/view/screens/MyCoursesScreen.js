@@ -1,19 +1,10 @@
-import ReturnButton from '../components/auth/ReturnButton';
-import React, {useMemo} from "react";
-import {
-  ActivityIndicator,
-  Image,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import ScreenSafeArea from '../components/common/ScreenSafeArea';
-import {createMyCoursesStyles} from "./Styles/MyCoursesScreen/Style";
+import React from "react";
+import { Text, View } from "react-native";
+import ListScreen from '../components/common/ListScreen';
+import { myCoursesStyles as styles } from "./Styles/MyCoursesScreen/Style";
 import { useMyCoursesViewModel } from "../../viewmodels/useMyCoursesViewModel";
 
 function FichaCard({ ficha, colors, t }) {
-  const styles = useMemo(() => createMyCoursesStyles(colors), [colors]);
   return (
     <View
       style={[
@@ -64,59 +55,32 @@ function FichaCard({ ficha, colors, t }) {
 
 export default function MyCoursesScreen({ navigation }) {
   const { role, loading, error, fichas, reload, colors, t } = useMyCoursesViewModel();
-  const styles = useMemo(() => createMyCoursesStyles(colors), [colors]);
 
   const title = t("courses.title");
   const subtitle =
     role === "teacher" ? t("teacher.myCoursesDesc") : t("student.myCoursesDesc");
 
   return (
-    <ScreenSafeArea style={[styles.safeArea, { backgroundColor: colors.backgroundWhite }]}>
-      <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>{title}</Text>
-        </View>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-          {subtitle}
-        </Text>
-
-        {loading ? (
-          <View style={styles.centerBox}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
-        ) : error ? (
-          <View style={styles.centerBox}>
-            <Text style={[styles.centerText, { color: colors.text }]}>{error}</Text>
-            <TouchableOpacity
-              onPress={reload}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              style={[styles.retryButton, { backgroundColor: colors.primary }]}
-            >
-              <Text style={styles.retryText}>{t("courses.retry")}</Text>
-            </TouchableOpacity>
-          </View>
-        ) : fichas.length === 0 ? (
-          <View style={styles.centerBox}>
-            <Text style={[styles.centerText, { color: colors.text }]}>{t("courses.empty")}</Text>
-          </View>
-        ) : (
-          <ScrollView persistentScrollbar
-              showsVerticalScrollIndicator
-              contentContainerStyle={{ paddingBottom: 24 }}
-          >
-            {fichas.map((ficha) => (
-              <FichaCard
-                key={ficha.cohortId ?? ficha.cohortCode}
-                ficha={ficha}
-                colors={colors}
-                t={t}
-              />
-            ))}
-          </ScrollView>
-        )}
-      </View>
-        <ReturnButton onPress={() => navigation?.navigate("DashboardScreen")} />
-    </ScreenSafeArea>
+    <ListScreen
+      title={title}
+      subtitle={subtitle}
+      colors={colors}
+      loading={loading}
+      error={error}
+      onRetry={reload}
+      retryLabel={t("courses.retry")}
+      isEmpty={fichas.length === 0}
+      emptyLabel={t("courses.empty")}
+      onBack={() => navigation?.navigate("DashboardScreen")}
+    >
+      {fichas.map((ficha) => (
+        <FichaCard
+          key={ficha.cohortId ?? ficha.cohortCode}
+          ficha={ficha}
+          colors={colors}
+          t={t}
+        />
+      ))}
+    </ListScreen>
   );
 }

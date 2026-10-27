@@ -72,6 +72,20 @@ class SessionAuthClientTest {
     }
 
     @Test
+    void sessionOnlyCheckNeverAsksForRoles() {
+        // authorization serves the role lookups itself: asking for roles there would call itself.
+        activeSession(ExpectedCount.once());
+
+        SessionAuthClient.AuthResult result = client.authenticateSession("Bearer " + TOKEN);
+
+        assertThat(result.authenticated()).isTrue();
+        assertThat(result.caller().userId()).isEqualTo(USER);
+        assertThat(result.caller().roles()).isEmpty();
+        assertThat(client.authenticateSession("Bearer not-a-uuid").denial()).isEqualTo("Invalid token format");
+        server.verify();
+    }
+
+    @Test
     void inactiveSessionIsRejected() {
         server.expect(requestTo(SESSION_URL))
                 .andRespond(withSuccess("{\"sessionStatus\":\"Closed\",\"userId\":\"" + USER + "\"}", MediaType.APPLICATION_JSON));

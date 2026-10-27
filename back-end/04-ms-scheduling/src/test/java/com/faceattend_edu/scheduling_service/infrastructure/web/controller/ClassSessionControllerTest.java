@@ -268,6 +268,50 @@ class ClassSessionControllerTest {
     @DisplayName("POST /api/v1/class-sessions/{id}/open|close|cancel")
     class LifecycleTests {
 
+        /** A caller of school 7 whose own actor is `actorId` (as AuthTokenFilter would resolve it). */
+        private void blockOfSchool7TaughtBy(long instructorActorId) {
+            com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock block =
+                    new com.faceattend_edu.scheduling_service.domain.model.ScheduleBlock();
+            block.setScheduleBlockId(100L);
+            block.setEnvironmentId(3);
+            block.setInstructorActorId(instructorActorId);
+            com.faceattend_edu.scheduling_service.domain.model.Environment environment =
+                    new com.faceattend_edu.scheduling_service.domain.model.Environment();
+            environment.setSchoolId(7);
+            when(getUseCase.getById(5L)).thenReturn(openSession);
+            when(getScheduleBlockUseCase.getById(100L)).thenReturn(block);
+            when(getEnvironmentUseCase.getById(3)).thenReturn(environment);
+        }
+
+        private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder asCaller(
+                String verb, long ownActorId, String role) {
+            return post("/api/v1/class-sessions/5/" + verb)
+                    .requestAttr(com.faceattend_edu.scheduling_service.infrastructure.web.security.AuthTokenFilter.CALLER_SCHOOL_ATTRIBUTE,
+                            new com.faceattend_edu.scheduling_service.infrastructure.web.security.CallerSchoolResolver.CallerSchool(false, 7, ownActorId))
+                    .requestAttr("X-User-Roles", List.of(role));
+        }
+
+        @Test
+        @DisplayName("givenAnotherInstructorsClass_whenOpenCloseOrCancel_thenReturn404AndNothingChanges")
+        void givenAnotherInstructorsClass_whenOpenCloseOrCancel_thenReturn404() throws Exception {
+            blockOfSchool7TaughtBy(41L);
+
+            for (String verb : List.of("open", "close", "cancel")) {
+                mockMvc.perform(asCaller(verb, 42L, "Instructor")).andExpect(status().isNotFound());
+            }
+            org.mockito.Mockito.verifyNoInteractions(openUseCase, closeUseCase, cancelUseCase);
+        }
+
+        @Test
+        @DisplayName("givenOwnClassOrSchoolAdmin_whenOpen_thenReturn200")
+        void givenOwnClassOrSchoolAdmin_whenOpen_thenReturn200() throws Exception {
+            blockOfSchool7TaughtBy(41L);
+            when(openUseCase.open(org.mockito.ArgumentMatchers.eq(5L), org.mockito.ArgumentMatchers.any())).thenReturn(openSession);
+
+            mockMvc.perform(asCaller("open", 41L, "Instructor")).andExpect(status().isOk());
+            mockMvc.perform(asCaller("open", 99L, "Administrador")).andExpect(status().isOk());
+        }
+
         @Test
         @DisplayName("givenOpenableSession_whenOpen_thenReturn200Open")
         void givenOpenableSession_whenOpen_thenReturn200Open() throws Exception {

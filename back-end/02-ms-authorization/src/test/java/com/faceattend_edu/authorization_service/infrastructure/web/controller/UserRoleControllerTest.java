@@ -8,6 +8,7 @@ import com.faceattend_edu.authorization_service.domain.port.in.CheckPermissionUs
 import com.faceattend_edu.authorization_service.domain.port.out.RoleRepository;
 import com.faceattend_edu.authorization_service.domain.port.out.UserRoleRepository;
 import com.faceattend_edu.authorization_service.infrastructure.web.mapper.RoleWebMapper;
+import com.faceattend_edu.shared.auth.UserSchools;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -66,6 +68,11 @@ class UserRoleControllerTest {
     private RoleRepository roleRepository;
     @MockitoBean
     private UserRoleRepository userRoleRepository;
+    @MockitoBean
+    private UserSchools userSchools;
+
+    private static final String ADMIN = "aaaaaaaa-0000-4000-8000-000000000002";
+    private static final String TOKEN = "22222222-2222-4222-8222-222222222222";
 
     private UUID userId;
 
@@ -92,6 +99,7 @@ class UserRoleControllerTest {
         void givenValidRole_whenAssignRole_thenReturn201AndVerifyUseCase() throws Exception {
             // Act & Assert
             mockMvc.perform(post("/api/v1/users/" + userId + "/roles")
+                            .requestAttr("X-User-Roles", List.of("Super Administrador"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"roleId\":3}"))
                     .andExpect(status().isCreated());
@@ -100,15 +108,58 @@ class UserRoleControllerTest {
         }
 
         @Test
-        @DisplayName("givenOperationalRole_whenSchoolAdmin_thenAllowed")
+        @DisplayName("givenOperationalRole_whenSchoolAdminOfTheSameSchool_thenAllowed")
         void givenOperationalRole_whenSchoolAdmin_thenAllowed() throws Exception {
             when(roleRepository.findById(3)).thenReturn(java.util.Optional.of(role(3, "Aprendiz")));
+            when(userSchools.of(ADMIN, TOKEN)).thenReturn(Set.of(7));
+            when(userSchools.of(userId.toString(), TOKEN)).thenReturn(Set.of(7));
 
             mockMvc.perform(post("/api/v1/users/" + userId + "/roles")
                             .requestAttr("X-User-Roles", List.of("Administrador"))
+                            .requestAttr("X-User-Id", ADMIN)
+                            .header("Authorization", "Bearer " + TOKEN)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"roleId\":3}"))
                     .andExpect(status().isCreated());
+        }
+
+        @Test
+        @DisplayName("givenOperationalRole_whenTargetIsInAnotherSchool_thenForbidden")
+        void givenOperationalRole_whenTargetIsInAnotherSchool_thenForbidden() throws Exception {
+            when(roleRepository.findById(3)).thenReturn(java.util.Optional.of(role(3, "Instructor")));
+            when(userSchools.of(ADMIN, TOKEN)).thenReturn(Set.of(7));
+            when(userSchools.of(userId.toString(), TOKEN)).thenReturn(Set.of());
+
+            mockMvc.perform(post("/api/v1/users/" + userId + "/roles")
+                            .requestAttr("X-User-Roles", List.of("Administrador"))
+                            .requestAttr("X-User-Id", ADMIN)
+                            .header("Authorization", "Bearer " + TOKEN)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"roleId\":3}"))
+                    .andExpect(status().isForbidden());
+            mockMvc.perform(delete("/api/v1/users/" + userId + "/roles/3")
+                            .requestAttr("X-User-Roles", List.of("Administrador"))
+                            .requestAttr("X-User-Id", ADMIN)
+                            .header("Authorization", "Bearer " + TOKEN))
+                    .andExpect(status().isForbidden());
+
+            verify(assignRoleToUserUseCase, never()).assignRoleToUser(any(), any());
+            verify(assignRoleToUserUseCase, never()).removeRoleFromUser(any(), any());
+        }
+
+        @Test
+        @DisplayName("givenOperationalRole_whenCallerHasNoSchool_thenForbidden")
+        void givenOperationalRole_whenCallerHasNoSchool_thenForbidden() throws Exception {
+            when(roleRepository.findById(3)).thenReturn(java.util.Optional.of(role(3, "Aprendiz")));
+            when(userSchools.of(any(), any())).thenReturn(Set.of());
+
+            mockMvc.perform(post("/api/v1/users/" + userId + "/roles")
+                            .requestAttr("X-User-Roles", List.of("Administrador"))
+                            .requestAttr("X-User-Id", ADMIN)
+                            .header("Authorization", "Bearer " + TOKEN)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"roleId\":3}"))
+                    .andExpect(status().isForbidden());
         }
 
         @Test
@@ -139,6 +190,7 @@ class UserRoleControllerTest {
 
             // Act & Assert
             mockMvc.perform(post("/api/v1/users/" + userId + "/roles")
+                            .requestAttr("X-User-Roles", List.of("Super Administrador"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{}"))
                     .andExpect(status().isBadRequest())
@@ -157,6 +209,7 @@ class UserRoleControllerTest {
 
             // Act & Assert
             mockMvc.perform(post("/api/v1/users/" + userId + "/roles")
+                            .requestAttr("X-User-Roles", List.of("Super Administrador"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"roleId\":999}"))
                     .andExpect(status().isNotFound())
@@ -172,6 +225,7 @@ class UserRoleControllerTest {
 
             // Act & Assert
             mockMvc.perform(post("/api/v1/users/" + userId + "/roles")
+                            .requestAttr("X-User-Roles", List.of("Super Administrador"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"roleId\":3}"))
                     .andExpect(status().isConflict())
@@ -187,7 +241,8 @@ class UserRoleControllerTest {
         @DisplayName("givenAssignedRole_whenRemoveRole_thenReturn204")
         void givenAssignedRole_whenRemoveRole_thenReturn204() throws Exception {
             // Act & Assert
-            mockMvc.perform(delete("/api/v1/users/" + userId + "/roles/3"))
+            mockMvc.perform(delete("/api/v1/users/" + userId + "/roles/3")
+                            .requestAttr("X-User-Roles", List.of("Super Administrador")))
                     .andExpect(status().isNoContent());
 
             verify(assignRoleToUserUseCase).removeRoleFromUser(userId, 3);
@@ -201,7 +256,8 @@ class UserRoleControllerTest {
                     .when(assignRoleToUserUseCase).removeRoleFromUser(userId, 3);
 
             // Act & Assert
-            mockMvc.perform(delete("/api/v1/users/" + userId + "/roles/3"))
+            mockMvc.perform(delete("/api/v1/users/" + userId + "/roles/3")
+                            .requestAttr("X-User-Roles", List.of("Super Administrador")))
                     .andExpect(status().isNotFound());
         }
 
@@ -333,16 +389,25 @@ class UserRoleControllerTest {
         }
 
         @Test
-        @DisplayName("givenMissingUserIdParam_whenEvaluate_thenReturn500ByTheGenericHandler")
-        void givenMissingUserIdParam_whenEvaluate_thenReturn500ByTheGenericHandler() throws Exception {
-            // Arrange: BRECHA CONOCIDA — MissingServletRequestParameterException no tiene
-            // handler propio en GlobalExceptionHandler, asi que cae en el catch-all Exception
-            // y responde 500 ISO-10.2-NC-001 en lugar de 400. Se documenta el comportamiento
-            // REAL: si alguien anade un @ExceptionHandler para ese caso, este test debera ajustarse.
+        @DisplayName("givenUnexpectedFailure_whenEvaluate_thenReturn500WithoutDetails")
+        void givenUnexpectedFailure_whenEvaluate_thenReturn500WithoutDetails() throws Exception {
+            when(checkPermissionUseCase.hasPermission(any(), any())).thenThrow(new IllegalStateException("db password=secret"));
             mockMvc.perform(get("/api/v1/auth/evaluate")
+                            .param("userId", userId.toString())
                             .param("permission", "x"))
                     .andExpect(status().isInternalServerError())
-                    .andExpect(jsonPath("$.error.code").value("ISO-10.2-NC-001"));
+                    .andExpect(jsonPath("$.error.code").value("ISO-10.2-NC-001"))
+                    .andExpect(jsonPath("$.error.message").value("Internal server error"));
+        }
+
+        @Test
+        @DisplayName("givenMissingUserIdParam_whenEvaluate_thenReturn400")
+        void givenMissingUserIdParam_whenEvaluate_thenReturn400() throws Exception {
+            // Spring's request errors keep their 4xx status instead of a logged 500.
+            mockMvc.perform(get("/api/v1/auth/evaluate")
+                            .param("permission", "x"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error.code").value("ISO-8.2-VAL-002"));
         }
     }
 }

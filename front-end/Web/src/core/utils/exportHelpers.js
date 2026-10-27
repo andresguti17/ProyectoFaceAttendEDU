@@ -12,13 +12,32 @@
 //  Uso:
 //    import { exportToExcel, exportToPDF } from '@/core/utils/exportHelpers';
 //    
-//    exportToExcel(data, sheets, filename);
+//    await exportToExcel(sheets, filename);
 //    exportToPDF(htmlContent, filename);
 // ============================================================
 
 import { Platform } from "react-native";
 import { getInstitutionConfig } from "../config/institutionConfig";
 import { formatDate } from "../constants/dateFormats";
+
+const HTML_ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+
+/** Texto plano → HTML inerte. Los reportes se escriben con document.write en el mismo origen. */
+export function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (ch) => HTML_ESCAPES[ch]);
+}
+
+/** Marca un fragmento construido por el código (no por datos del usuario) como HTML confiable. */
+export function trustedHtml(markup) {
+    return { trustedHtml: String(markup) };
+}
+
+/** Lo que devuelve un `render`: HTML marcado tal cual; cualquier otro valor se escapa. */
+function cellHtml(rendered) {
+    return rendered && typeof rendered === "object" && "trustedHtml" in rendered
+        ? rendered.trustedHtml
+        : escapeHtml(rendered);
+}
 
 /**
  * Exporta datos a un archivo Excel (.xlsx)
@@ -39,33 +58,42 @@ import { formatDate } from "../constants/dateFormats";
  *   { name: "Resumen", data: [...] }
  * ], "reporte.xlsx");
  */
-export function exportToExcel(sheets, filename) {
+export async function exportToExcel(sheets, filename) {
     try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const XLSX = require("xlsx");
+        const ExcelJS = require("exceljs");
+        const workbook = new ExcelJS.Workbook();
 
-        const wb = XLSX.utils.book_new();
-
-        // Agregar cada hoja al libro
-        sheets.forEach(sheet => {
-            const ws = XLSX.utils.json_to_sheet(sheet.data);
-            
-            // Aplicar anchos de columna si están definidos
-            if (sheet.columns && sheet.columns.length > 0) {
-                ws["!cols"] = sheet.columns;
-            }
-            
-            XLSX.utils.book_append_sheet(wb, ws, sheet.name);
+        sheets.forEach((sheet) => {
+            const worksheet = workbook.addWorksheet(sheet.name);
+            const keys = Object.keys(sheet.data[0] ?? {});
+            // Same layout json_to_sheet produced: one column per key, the key as header.
+            worksheet.columns = keys.map((key, index) => ({ header: key, key, width: sheet.columns?.[index]?.wch }));
+            worksheet.addRows(sheet.data);
         });
 
-        // Escribir archivo
-        XLSX.writeFile(wb, filename);
-        
+        const buffer = await workbook.xlsx.writeBuffer();
+        downloadFile(
+            new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+            filename,
+        );
         return { success: true };
     } catch (err) {
         console.error("[exportHelpers] Error al exportar Excel:", err);
         return { success: false, error: err.message };
     }
+}
+
+/** Saves a Blob through a temporary link (web only, like the PDF export). */
+function downloadFile(blob, filename) {
+    if (Platform.OS !== "web") throw new Error("Excel export only available on web");
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
 }
 
 /**
@@ -153,12 +181,13 @@ export function buildReportHTML({
     
     const filterTags = filters.length > 0
         ? `<div style="margin-bottom:16px">${filters.map(f => 
-            `<span class="filter-tag">${f}</span>`
+            `<span class="filter-tag">${escapeHtml(f)}</span>`
         ).join("")}</div>`
         : "";
 
+    // section.content es HTML ya construido (buildHTMLTable escapa cada celda).
     const sectionsHTML = sections.map(section => `
-        <div class="section-title">${section.title}</div>
+        <div class="section-title">${escapeHtml(section.title)}</div>
         ${section.content}
     `).join("");
 
@@ -166,7 +195,7 @@ export function buildReportHTML({
 <html lang="es">
 <head>
     <meta charset="UTF-8"/>
-    <title>${title}</title>
+    <title>${escapeHtml(title)}</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -229,14 +258,14 @@ export function buildReportHTML({
     </style>
 </head>
 <body>
-    <h1>📊 ${title}</h1>
+    <h1>📊 ${escapeHtml(title)}</h1>
     <div class="subtitle">
-        ${subtitle ? `<strong>${subtitle}</strong> &nbsp;|&nbsp; ` : ""}
-        Generado: ${currentDate}
+        ${subtitle ? `<strong>${escapeHtml(subtitle)}</strong> &nbsp;|&nbsp; ` : ""}
+        Generado: ${escapeHtml(currentDate)}
     </div>
     ${filterTags}
     ${sectionsHTML}
-    <div class="footer">${footer}</div>
+    <div class="footer">${escapeHtml(footer)}</div>
 </body>
 </html>`;
 }
@@ -270,16 +299,22 @@ export function buildReportHTML({
  *   ]
  * );
  */
+const CELL_ALIGNS = new Set(["left", "center", "right"]);
+
+function cellAlign(align) {
+    return CELL_ALIGNS.has(align) ? align : "left";
+}
+
 export function buildHTMLTable(data, columns) {
     const headers = columns.map(col => 
-        `<th style="text-align: ${col.align || 'left'}">${col.label}</th>`
+        `<th style="text-align: ${cellAlign(col.align)}">${escapeHtml(col.label)}</th>`
     ).join("");
 
     const rows = data.map(row => {
         const cells = columns.map(col => {
             const value = row[col.key];
             const rendered = col.render ? col.render(value, row) : value;
-            return `<td style="text-align: ${col.align || 'left'}">${rendered}</td>`;
+            return `<td style="text-align: ${cellAlign(col.align)}">${cellHtml(rendered)}</td>`;
         }).join("");
         return `<tr>${cells}</tr>`;
     }).join("");
@@ -303,13 +338,13 @@ export function buildHTMLTable(data, columns) {
  * @returns {string} HTML del porcentaje con color
  */
 export function formatPercentageWithColor(value, warningThreshold = 75, dangerThreshold = 60) {
-    const color = value >= warningThreshold 
+    const color = value >= warningThreshold
         ? "#10B981"  // Verde
-        : value >= dangerThreshold 
+        : value >= dangerThreshold
         ? "#F59E0B"  // Amarillo
         : "#EF4444"; // Rojo
-    
-    return `<strong style="color: ${color}">${value}%</strong>`;
+
+    return trustedHtml(`<strong style="color: ${color}">${escapeHtml(value)}%</strong>`);
 }
 
 /**
@@ -330,10 +365,11 @@ export function formatStatusBadge(status, labels = {}) {
     };
     
     const config = defaultLabels[status] || { text: status, color: "#6B7280" };
-    
-    return `<span style="display: inline-block; padding: 2px 8px; border-radius: 12px; 
-                        background: ${config.color}20; color: ${config.color}; 
+    const color = escapeHtml(config.color);
+
+    return trustedHtml(`<span style="display: inline-block; padding: 2px 8px; border-radius: 12px;
+                        background: ${color}20; color: ${color};
                         font-size: 11px; font-weight: 600;">
-                ${config.text}
-            </span>`;
+                ${escapeHtml(config.text)}
+            </span>`);
 }

@@ -47,6 +47,10 @@ STUDENT = "22222222-2222-2222-2222-222222222222"
 _PERMISSIONS = {"admin": {"attendance.record:write"}, "student": set()}
 
 
+def _bearer(token):
+    return [security.WS_BEARER_PROTOCOL, token]
+
+
 def _send(ws, message_type, payload=None, client_message_id=None, direction=None):
     body = {"type": message_type, "payload": payload or {}}
     if client_message_id is not None:
@@ -406,15 +410,34 @@ class TestWebSocketAuthentication:
 
     def test_student_without_permission_is_rejected(self, auth_client):
         with pytest.raises(WebSocketDisconnect) as exc_info:
-            with auth_client.websocket_connect(f"{WS_PATH}?token={STUDENT}") as ws:
+            with auth_client.websocket_connect(WS_PATH, subprotocols=_bearer(STUDENT)) as ws:
                 ws.receive_text()
         assert exc_info.value.code == security.WS_CLOSE_FORBIDDEN
 
-    def test_admin_token_is_accepted(self, auth_client):
-        with auth_client.websocket_connect(f"{WS_PATH}?token={ADMIN}") as ws:
+    def test_admin_token_is_accepted_and_the_bearer_subprotocol_echoed(self, auth_client):
+        with auth_client.websocket_connect(WS_PATH, subprotocols=_bearer(ADMIN)) as ws:
+            assert ws.accepted_subprotocol == security.WS_BEARER_PROTOCOL
             _send(ws, ws_router.PING)
             pong = ws.receive_json()
         assert pong["type"] == "pong"
+
+    def test_a_token_in_the_url_is_no_longer_accepted(self, auth_client):
+        # Query strings end up in proxy and access logs; the token must not travel there.
+        with pytest.raises(WebSocketDisconnect) as exc_info:
+            with auth_client.websocket_connect(f"{WS_PATH}?token={ADMIN}") as ws:
+                ws.receive_text()
+        assert exc_info.value.code == security.WS_CLOSE_UNAUTHORIZED
+
+    def test_one_user_cannot_hold_more_than_the_connection_cap(self, auth_client, monkeypatch):
+        monkeypatch.setenv("BIOMETRIC_WS_MAX_CONNECTIONS_PER_USER", "1")
+        get_settings.cache_clear()
+        with auth_client.websocket_connect(WS_PATH, subprotocols=_bearer(ADMIN)) as first:
+            _send(first, ws_router.PING)
+            first.receive_json()
+            with pytest.raises(WebSocketDisconnect) as exc_info:
+                with auth_client.websocket_connect(WS_PATH, subprotocols=_bearer(ADMIN)) as second:
+                    second.receive_text()
+        assert exc_info.value.code == ws_router.WS_CLOSE_TOO_MANY_CONNECTIONS
 
 
 class TestFacialImageOverWebSocket:

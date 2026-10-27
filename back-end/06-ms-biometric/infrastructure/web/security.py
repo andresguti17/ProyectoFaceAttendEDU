@@ -117,12 +117,28 @@ def _bearer(request: Request) -> str:
     return token
 
 
+WS_BEARER_PROTOCOL = "faceattend.bearer"
+
+
+def _offered_ws_protocols(websocket: WebSocket) -> list[str]:
+    raw = websocket.headers.get("sec-websocket-protocol", "")
+    return [p.strip() for p in raw.split(",") if p.strip()]
+
+
+def ws_bearer_subprotocol(websocket: WebSocket) -> str | None:
+    """The subprotocol to echo on accept: browsers drop the connection unless the
+    server picks one of the protocols they offered."""
+    return WS_BEARER_PROTOCOL if WS_BEARER_PROTOCOL in _offered_ws_protocols(websocket) else None
+
+
 def extract_ws_token(websocket: WebSocket) -> str | None:
-    """Browsers cannot set custom headers on a WS handshake, so the token also
-    travels as `?token=`; non-browser clients may still send a Bearer header."""
-    token = websocket.query_params.get("token")
-    if token:
-        return token.strip()
+    """Browsers cannot set custom headers on a WS handshake, so the token travels as
+    the value after `faceattend.bearer` in Sec-WebSocket-Protocol — never in the URL,
+    where proxies and access logs would keep it. Non-browser clients may send a
+    Bearer header instead."""
+    offered = _offered_ws_protocols(websocket)
+    if len(offered) == 2 and offered[0] == WS_BEARER_PROTOCOL:
+        return offered[1]
     header = websocket.headers.get("authorization", "")
     if header.lower().startswith("bearer "):
         return header[7:].strip()
@@ -479,7 +495,7 @@ async def ensure_biometric_consent(person_id: str, token: str | None) -> None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Person outside your scope")
     if code == 400:
         # identity rejected the id itself: a client error, not an outage (nothing is stored either way)
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "person_id is not a valid person")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "person_id is not a valid person")
     raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify the biometric data authorization")
 
 

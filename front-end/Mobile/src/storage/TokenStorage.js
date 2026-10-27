@@ -67,7 +67,6 @@ export const saveToken = async (token, email = null) => {
 
   const data = { token, savedAt: Date.now(), expiresAt, email: email || null };
   await writePayload(JSON.stringify(data));
-  console.log("saveToken: token guardado exitosamente");
   return true;
 };
 

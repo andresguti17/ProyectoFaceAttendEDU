@@ -1,3 +1,4 @@
+import { patchSchema } from './patchSchema';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import {
@@ -95,7 +96,7 @@ export async function registerIstqbRoutes(app: FastifyInstance, assessments: IIs
   app.put('/api/v1/quality/istqb/assessments/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
     if (!id) return reply.code(404).send({ error: 'NotFound', message: 'ISTQB assessment not found' });
-    const parsed = istqbBody.partial().safeParse((req as any).body);
+    const parsed = patchSchema(istqbBody).safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid ISTQB assessment payload', parsed.error.flatten());
     if (parsed.data.scores) {
       const unknownIds = Object.keys(parsed.data.scores).filter((k) => !ALL_ISTQB_ITEM_IDS.includes(k));

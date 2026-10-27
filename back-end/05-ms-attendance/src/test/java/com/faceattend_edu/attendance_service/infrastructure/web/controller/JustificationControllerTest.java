@@ -32,6 +32,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -177,56 +179,46 @@ class JustificationControllerTest {
     }
 
     @Nested
-    @DisplayName("TC-05-J03: List justifications with in-memory filters")
+    @DisplayName("TC-05-J03: List justifications (filters, scope and paging in SQL)")
     class ListTests {
 
-        @Test
-        @DisplayName("Given no filters when GET then 200 with all justifications")
-        void givenNoFilters_whenGet_thenReturnAll() throws Exception {
-            // Arrange
-            when(listUseCase.list()).thenReturn(List.of(
-                    justification(1L, 100L, 2, "Medical leave", "Pending"),
-                    justification(2L, 200L, 3, "Domestic calamity", "Approved")));
+        private org.mockito.ArgumentCaptor<com.faceattend_edu.attendance_service.domain.model.JustificationFilter> filter;
 
-            // Act
-            // Assert
+        @org.junit.jupiter.api.BeforeEach
+        void stubSearch() {
+            filter = org.mockito.ArgumentCaptor.forClass(com.faceattend_edu.attendance_service.domain.model.JustificationFilter.class);
+            when(listUseCase.search(filter.capture(), org.mockito.ArgumentMatchers.anyInt(), any())).thenReturn(
+                    new com.faceattend_edu.attendance_service.domain.model.JustificationSlice(List.of(
+                            justification(1L, 100L, 2, "Medical leave", "Pending"),
+                            justification(2L, 200L, 3, "Domestic calamity", "Approved")), 2));
+        }
+
+        @Test
+        @DisplayName("Given no filters when GET then 200 with every justification and no paging")
+        void givenNoFilters_whenGet_thenReturnAll() throws Exception {
             mockMvc.perform(get(BASE))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.length()").value(2));
+                    .andExpect(jsonPath("$.length()").value(2))
+                    .andExpect(header().doesNotExist("X-Total-Count"));
+            verify(listUseCase).search(any(), org.mockito.ArgumentMatchers.eq(0), org.mockito.ArgumentMatchers.isNull());
         }
 
         @Test
-        @DisplayName("Given status filter when GET then only matching review status returned")
-        void givenStatusFilter_whenGet_thenReturnFiltered() throws Exception {
-            // Arrange
-            when(listUseCase.list()).thenReturn(List.of(
-                    justification(1L, 100L, 2, "Medical leave", "Pending"),
-                    justification(2L, 200L, 3, "Domestic calamity", "Approved")));
-
-            // Act
-            // Assert
-            mockMvc.perform(get(BASE).param("status", "Approved"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.length()").value(1))
-                    .andExpect(jsonPath("$[0].justificationId").value(2))
-                    .andExpect(jsonPath("$[0].reviewStatus").value("Approved"));
+        @DisplayName("Given status and record filters when GET then both reach the query")
+        void givenFilters_whenGet_thenTheyReachTheQuery() throws Exception {
+            mockMvc.perform(get(BASE).param("status", "Approved").param("attendanceRecordId", "100"))
+                    .andExpect(status().isOk());
+            assertThat(filter.getValue().reviewStatus()).isEqualTo("Approved");
+            assertThat(filter.getValue().attendanceRecordId()).isEqualTo(100L);
         }
 
         @Test
-        @DisplayName("Given attendanceRecordId filter when GET then only matching record returned")
-        void givenAttendanceRecordIdFilter_whenGet_thenReturnFiltered() throws Exception {
-            // Arrange
-            when(listUseCase.list()).thenReturn(List.of(
-                    justification(1L, 100L, 2, "Medical leave", "Pending"),
-                    justification(2L, 200L, 3, "Domestic calamity", "Approved")));
-
-            // Act
-            // Assert
-            mockMvc.perform(get(BASE).param("attendanceRecordId", "100"))
+        @DisplayName("Given limit and offset when GET then a capped page and X-Total-Count")
+        void givenPaging_whenGet_thenCappedPageWithTotal() throws Exception {
+            mockMvc.perform(get(BASE).param("limit", "500").param("offset", "4"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.length()").value(1))
-                    .andExpect(jsonPath("$[0].justificationId").value(1))
-                    .andExpect(jsonPath("$[0].attendanceRecordId").value(100));
+                    .andExpect(header().string("X-Total-Count", "2"));
+            verify(listUseCase).search(any(), org.mockito.ArgumentMatchers.eq(4), org.mockito.ArgumentMatchers.eq(100));
         }
     }
 
