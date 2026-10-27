@@ -48,7 +48,7 @@
     "password": "Mot de passe",
     "emailPlaceholder": "exemple@email.com",
     "passwordPlaceholder": "Entrez votre mot de passe",
-    "terms": "Acceptation des conditions générales.",
+    "terms": "Conditions générales",
     "noAccount": "Vous n'avez pas de compte enregistré ?",
     "loading": "Connexion en cours...",
     "errorEmail": "Veuillez saisir votre adresse e-mail",
@@ -1356,5 +1356,20 @@
       "body": "Vous ne recevrez pas de notifications d’alertes sur cet appareil. Pour les activer, ouvrez les réglages du système, allez dans FaceAttend EDU > Notifications et autorisez-les. Vos alertes restent disponibles dans Actualités.",
       "open_settings": "Ouvrir les réglages"
     }
+  },
+  "termsGate": {
+    "sign": "Signer et continuer",
+    "signing": "Signature...",
+    "leave": "Quitter sans signer"
+  },
+  "minorBlocked": {
+    "title": "INSCRIPTION EN ATTENTE",
+    "body": "Vous êtes mineur : votre représentant termine l'inscription au site du SENA avec l'administrateur.",
+    "stepGuardian": "Étape en attente : enregistrer votre représentant. Il doit se présenter au site avec sa pièce d'identité.",
+    "stepTerms": "Étape en attente : votre représentant doit accepter les conditions générales au site.",
+    "restriction": "Tant que l'inscription n'est pas terminée, vous ne pouvez pas utiliser les fonctions qui exigent l'acceptation des conditions ni la vérification faciale.",
+    "recheck": "L'inscription est terminée, vérifier",
+    "checking": "Vérification...",
+    "logout": "Se déconnecter"
   }
 }

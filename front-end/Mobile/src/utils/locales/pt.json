@@ -48,7 +48,7 @@
     "password": "Senha",
     "emailPlaceholder": "exemplo@email.com",
     "passwordPlaceholder": "Digite sua senha",
-    "terms": "Aceitação dos termos e condições.",
+    "terms": "Termos e condições",
     "noAccount": "Não tem uma conta registrada?",
     "loading": "Entrando...",
     "errorEmail": "Por favor, digite seu e-mail",
@@ -1356,5 +1356,20 @@
       "body": "Você não receberá avisos de alertas neste dispositivo. Para ativá-los, abra os ajustes do sistema, vá em FaceAttend EDU > Notificações e permita-as. Enquanto isso, seus alertas continuam em Novidades.",
       "open_settings": "Abrir ajustes"
     }
+  },
+  "termsGate": {
+    "sign": "Assinar e continuar",
+    "signing": "Assinando...",
+    "leave": "Sair sem assinar"
+  },
+  "minorBlocked": {
+    "title": "CADASTRO PENDENTE",
+    "body": "Você é menor de idade: seu responsável conclui o cadastro na sede do SENA com o administrador.",
+    "stepGuardian": "Etapa pendente: cadastrar seu responsável. Ele deve comparecer à sede com seu documento de identidade.",
+    "stepTerms": "Etapa pendente: seu responsável deve aceitar os termos e condições na sede.",
+    "restriction": "Enquanto o cadastro não estiver completo, você não pode usar as funções que exigem termos aceitos nem a verificação facial.",
+    "recheck": "Já concluímos o cadastro, verificar",
+    "checking": "Verificando...",
+    "logout": "Sair"
   }
 }

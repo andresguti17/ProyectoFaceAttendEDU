@@ -48,7 +48,7 @@
     "password": "Password",
     "emailPlaceholder": "example@email.com",
     "passwordPlaceholder": "Enter your password",
-    "terms": "Acceptance of terms and conditions.",
+    "terms": "Terms and conditions",
     "noAccount": "Don't have a registered account?",
     "loading": "Logging in...",
     "errorEmail": "Please enter your email",
@@ -1356,5 +1356,20 @@
       "body": "You will not get alert notifications on this device. To turn them on, open the system settings, go to FaceAttend EDU > Notifications and allow them. Your alerts are still available in News.",
       "open_settings": "Open settings"
     }
+  },
+  "termsGate": {
+    "sign": "Sign and continue",
+    "signing": "Signing...",
+    "leave": "Leave without signing"
+  },
+  "minorBlocked": {
+    "title": "REGISTRATION PENDING",
+    "body": "You are a minor: your guardian completes the registration at the SENA campus with the administrator.",
+    "stepGuardian": "Pending step: register your guardian. They must come to the campus with their ID.",
+    "stepTerms": "Pending step: your guardian must accept the terms and conditions at the campus.",
+    "restriction": "Until the registration is complete you cannot use the features that require accepted terms or facial verification.",
+    "recheck": "We completed the registration, check again",
+    "checking": "Checking...",
+    "logout": "Sign out"
   }
 }

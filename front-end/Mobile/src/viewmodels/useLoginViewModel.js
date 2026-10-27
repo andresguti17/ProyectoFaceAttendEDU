@@ -9,13 +9,13 @@ import {removeToken, saveToken} from "../storage/TokenStorage";
 import {getHighestRole} from "../utils/getHighestRole";
 import AuthResponse from "../models/identity/AuthResponse";
 import {ConsentService} from "../services/consentService";
+import {TERMS_GATE, TermsService} from "../services/termsService";
 
 const MAX_FAILED_ATTEMPTS = 3;
 
 export function useLoginViewModel({onLogin}) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [terms, setTerms] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [errorTimestamp, setErrorTimestamp] = useState(0);
@@ -29,6 +29,12 @@ export function useLoginViewModel({onLogin}) {
     // Contraseña inicial: la app no entra hasta cambiarla (el gateway también
     // rechaza escrituras mientras la sesión tenga mustChangePassword).
     const [pendingLogin, setPendingLogin] = useState(null);
+
+    // Términos y condiciones: el adulto los firma una vez; el menor queda bloqueado hasta que
+    // el administrador de la sede registre a su acudiente y la aceptación de este.
+    const [termsGate, setTermsGate] = useState(null);
+    const [termsBusy, setTermsBusy] = useState(false);
+    const [termsError, setTermsError] = useState(null);
 
     const {t} = useTranslation();
     const {loadThemeForRole} = useTheme();
@@ -45,10 +51,6 @@ export function useLoginViewModel({onLogin}) {
         }
         if (!password.trim()) {
             setErrorWithTimestamp(t("login.errorPassword"));
-            return false;
-        }
-        if (!terms) {
-            setErrorWithTimestamp(t('login.acceptTerms'));
             return false;
         }
         setError(null);
@@ -82,6 +84,20 @@ export function useLoginViewModel({onLogin}) {
         } catch (e) {
             console.warn('No se pudo registrar la aceptación del aviso de privacidad', e?.message);
         }
+    };
+
+    // Última puerta antes de entrar: términos vigentes (adulto) o registro completo (menor).
+    // El aviso de datos lo registra la propia persona adulta; el de un menor lo registró el
+    // administrador con su acudiente, así que aquí no se acepta por él.
+    const enterOrGate = async ({role, token, personId}) => {
+        const gate = await TermsService.gateFor(personId);
+        if (gate.gate !== TERMS_GATE.NONE) {
+            setTermsError(null);
+            setTermsGate({...gate, role, token, personId});
+            return;
+        }
+        if (!gate.minor) await recordConsent(personId);
+        if (onLogin) onLogin(role, token);
     };
 
     // Con la sesión ya emitida (directa o tras el código): guarda el perfil, el tema y avisa a la app.
@@ -123,19 +139,61 @@ export function useLoginViewModel({onLogin}) {
             return;
         }
 
-        await recordConsent(userData?.person_id);
-
-        if (onLogin) {
-            onLogin(role, authResponse.token);
-        }
+        await enterOrGate({role, token: authResponse.token, personId: userData?.person_id});
     };
 
     const onForcedPasswordChanged = async () => {
         const pending = pendingLogin;
         setPendingLogin(null);
         if (!pending) return;
-        await recordConsent(pending.personId);
-        if (onLogin) onLogin(pending.role, pending.token);
+        await enterOrGate(pending);
+    };
+
+    // El adulto firma los términos vigentes (una sola vez por versión).
+    const acceptTerms = async () => {
+        // Un menor nunca firma por si mismo: lo registra el administrador con el acudiente.
+        if (termsGate?.gate !== TERMS_GATE.ACCEPT || termsBusy) return;
+        setTermsBusy(true);
+        setTermsError(null);
+        try {
+            await TermsService.accept(termsGate.personId);
+            const {role, token, personId} = termsGate;
+            setTermsGate(null);
+            await recordConsent(personId);
+            if (onLogin) onLogin(role, token);
+        } catch (err) {
+            setTermsError(err?.message || t('httpErrors.unknown'));
+        } finally {
+            setTermsBusy(false);
+        }
+    };
+
+    // El menor vuelve a consultar su estado (el administrador pudo completar el registro).
+    const recheckTerms = async () => {
+        if (!termsGate || termsBusy) return;
+        setTermsBusy(true);
+        setTermsError(null);
+        try {
+            const {role, token, personId} = termsGate;
+            const gate = await TermsService.gateFor(personId);
+            if (gate.gate === TERMS_GATE.NONE) {
+                setTermsGate(null);
+                await enterOrGate({role, token, personId});
+            } else {
+                setTermsGate({...gate, role, token, personId});
+            }
+        } finally {
+            setTermsBusy(false);
+        }
+    };
+
+    // Sale sin completar: la sesión que se guardó para firmar se descarta.
+    const leaveTermsGate = async () => {
+        setTermsGate(null);
+        setTermsError(null);
+        try {
+            await removeToken();
+        } catch {}
     };
 
     const submit = async () => {
@@ -215,11 +273,12 @@ export function useLoginViewModel({onLogin}) {
     };
 
     return {
-        email, password, terms, isLoading, error, errorTimestamp,
+        email, password, isLoading, error, errorTimestamp,
         failedAttempts, maxFailedAttempts: MAX_FAILED_ATTEMPTS,
-        setEmail, setPassword, setTerms,
+        setEmail, setPassword,
         submit, clearError, resetFailedAttempts,
         codeStep, code, maskedEmail, setCode, submitCode, cancelCode,
         mustChangePassword: pendingLogin !== null, onForcedPasswordChanged,
+        termsGate, termsBusy, termsError, acceptTerms, recheckTerms, leaveTermsGate,
     };
 }
