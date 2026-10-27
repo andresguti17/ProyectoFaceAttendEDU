@@ -78,7 +78,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
-        String path = request.getRequestURI();
+        String path = SessionAuthClient.requestPath(request);
         if (!path.startsWith("/api/") || isPublic(request.getMethod(), path)) {
             chain.doFilter(request, response);
             return;

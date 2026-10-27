@@ -13,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UrlPathHelper;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -158,6 +159,18 @@ public class SessionAuthClient {
             allowedUntil.put(key, now + CACHE_TTL_MS);
         }
         return allowed;
+    }
+
+    private static final UrlPathHelper PATHS = new UrlPathHelper();
+
+    /**
+     * Ruta de la petición decodificada y sin parámetros de ruta, como la resuelve Spring MVC.
+     * Los filtros deben decidir (pública, permiso requerido) sobre esta ruta y no sobre
+     * {@code getRequestURI()}: ahí {@code /%61pi/v1/...} llega al controlador de
+     * {@code /api/v1/...} pero un filtro que compara el texto crudo no lo reconoce.
+     */
+    public static String requestPath(HttpServletRequest request) {
+        return PATHS.getPathWithinApplication(request);
     }
 
     public static boolean isPublicPrefix(String path) {

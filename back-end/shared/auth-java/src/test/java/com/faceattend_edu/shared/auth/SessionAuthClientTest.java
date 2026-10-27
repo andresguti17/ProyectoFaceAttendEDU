@@ -190,4 +190,19 @@ class SessionAuthClientTest {
         assertThat(full.caller().roles()).containsExactly("Instructor", "Aprendiz");
         server.verify();
     }
+
+    @Test
+    void requestPathIsDecodedLikeSpringMvcDoes() {
+        assertThat(SessionAuthClient.requestPath(request("/api/v1/roles"))).isEqualTo("/api/v1/roles");
+        assertThat(SessionAuthClient.requestPath(request("/%61pi/v1/%72oles"))).isEqualTo("/api/v1/roles");
+        assertThat(SessionAuthClient.requestPath(request("/api/v1/roles;jsessionid=abc"))).isEqualTo("/api/v1/roles");
+        assertThat(SessionAuthClient.isPublicPrefix(SessionAuthClient.requestPath(request("/%68ealth")))).isTrue();
+        assertThat(SessionAuthClient.isPublicPrefix(SessionAuthClient.requestPath(request("/%61pi/v1/persons")))).isFalse();
+    }
+
+    private static MockHttpServletRequest request(String uri) {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", uri);
+        request.setRequestURI(uri);
+        return request;
+    }
 }
