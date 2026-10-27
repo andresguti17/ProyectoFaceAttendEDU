@@ -1926,5 +1926,6 @@
   "Registra primero al acudiente": "Register the guardian first",
   "No se pudo guardar al acudiente": "The guardian could not be saved",
   "No se pudo registrar la aceptación de los términos": "The acceptance of the terms could not be recorded",
-  "No se pudo consultar el estado del registro": "The registration status could not be checked"
+  "No se pudo consultar el estado del registro": "The registration status could not be checked",
+  "Política de privacidad": "Privacy policy"
 }

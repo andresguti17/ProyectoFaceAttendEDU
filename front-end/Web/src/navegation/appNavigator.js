@@ -24,6 +24,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LandingScreen from "../view/screens/LandingScreen";
 import LoginScreen from "../view/screens/LoginScreen";
 import SignupScreen from "../view/screens/SignupScreen";
+import { PrivacyScreen, TermsScreen } from "../view/screens/LegalScreen";
 import RecoveryScreen from "../view/screens/RecoveryScreen";
 
 // ── Importación de Screens Autenticados ─────────────────────
@@ -96,6 +97,9 @@ export default function AppNavigator() {
                 name="FaceAttendEDU-Recovery"
                 component={RecoveryScreen}
             />
+
+            <Stack.Screen name="FaceAttendEDU-Privacy" component={PrivacyScreen} />
+            <Stack.Screen name="FaceAttendEDU-Terms" component={TermsScreen} />
 
             {/* ── Rutas Autenticadas (con AuthMiddleware) ─────── */}
             <Stack.Screen name="Dashboard" component={DashboardWrapped} />

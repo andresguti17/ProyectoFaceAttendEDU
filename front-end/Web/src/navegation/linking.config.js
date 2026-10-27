@@ -40,6 +40,8 @@ export const linkingConfig = {
             'FaceAttendEDU-Login': 'login',
             'FaceAttendEDU-Register': 'register',
             'FaceAttendEDU-Recovery': 'recovery',
+            'FaceAttendEDU-Privacy': 'privacy',
+            'FaceAttendEDU-Terms': 'terms',
             
             // ── Rutas autenticadas DIRECTAS ───────────────────
             Dashboard: 'app',  // /app → Dashboard
@@ -143,6 +145,8 @@ export function buildUrl(screen, params = {}) {
         'FaceAttendEDU-Login': '/login',
         'FaceAttendEDU-Register': '/register',
         'FaceAttendEDU-Recovery': '/recovery',
+        'FaceAttendEDU-Privacy': '/privacy',
+        'FaceAttendEDU-Terms': '/terms',
         'Dashboard': '/app',
         'Users': params.section ? `/app/users/${params.section}` : '/app/users',
         'Courses': '/app/courses',
