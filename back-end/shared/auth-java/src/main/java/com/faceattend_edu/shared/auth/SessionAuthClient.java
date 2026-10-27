@@ -39,10 +39,9 @@ public class SessionAuthClient {
 
     private static final Logger log = LoggerFactory.getLogger(SessionAuthClient.class);
 
-    /** Salud y documentación: nunca piden sesión. */
+    /** Salud: nunca pide sesión (la documentación de springdoc se abre aparte, solo si está activada). */
     public static final List<String> PUBLIC_PREFIXES = List.of(
-            "/health", "/api/v1/health", "/api/health",
-            "/actuator/", "/v3/api-docs", "/swagger-ui", "/swagger-ui.html");
+            "/health", "/api/v1/health", "/api/health", "/actuator/health");
 
     static final long CACHE_TTL_MS = 10_000;
     private static final int CACHE_MAX_ENTRIES = 5_000;
