@@ -158,9 +158,11 @@ class SessionAuthClientTest {
     }
 
     @Test
-    void healthAndDocsArePublic() {
+    void onlyHealthIsPublic() {
         assertThat(SessionAuthClient.isPublicPrefix("/actuator/health")).isTrue();
-        assertThat(SessionAuthClient.isPublicPrefix("/v3/api-docs")).isTrue();
+        assertThat(SessionAuthClient.isPublicPrefix("/api/v1/health")).isTrue();
+        assertThat(SessionAuthClient.isPublicPrefix("/actuator/env")).isFalse();
+        assertThat(SessionAuthClient.isPublicPrefix("/v3/api-docs")).isFalse();
         assertThat(SessionAuthClient.isPublicPrefix("/api/v1/persons")).isFalse();
     }
 
