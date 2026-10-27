@@ -163,7 +163,7 @@ export const listEnvironments = () =>
         })
     );
 
-/** GET /users/{id}/roles (público, respuesta: arreglo de RoleResponse). */
+/** GET /users/{id}/roles (con sesión; los de otro usuario piden configuration:manage). Respuesta: arreglo de RoleResponse. */
 export const rolesForUser = (userId) =>
     memo(`roles:${userId}`, () =>
         request(endpoints.authorization.userRoles(userId), { method: "GET" })
