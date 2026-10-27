@@ -51,6 +51,27 @@ jobs:
         working-directory: database
         run: docker compose -f docker-compose.neon.yml pull --quiet
 
+      # Liquibase crea databasechangelog sin calificar: si el search_path del usuario
+      # apunta a un esquema que no existe (base nueva o esquemas recién borrados),
+      # falla con "no schema has been selected to create in". Idempotente.
+      - name: Asegurar esquemas base
+        run: |
+          url="${NEON_JDBC_URL#jdbc:}"
+          export PGUSER="$NEON_USER" PGPASSWORD="$NEON_PASSWORD"
+          sudo apt-get install -y -qq postgresql-client >/dev/null
+          psql "${url%%\?*}?sslmode=require" -v ON_ERROR_STOP=1 -q <<'SQL'
+          CREATE SCHEMA IF NOT EXISTS public;
+          CREATE SCHEMA IF NOT EXISTS identity;
+          CREATE SCHEMA IF NOT EXISTS "authorization";
+          CREATE SCHEMA IF NOT EXISTS academic;
+          CREATE SCHEMA IF NOT EXISTS scheduling;
+          CREATE SCHEMA IF NOT EXISTS attendance;
+          CREATE SCHEMA IF NOT EXISTS biometric;
+          CREATE SCHEMA IF NOT EXISTS configuration;
+          CREATE SCHEMA IF NOT EXISTS quality;
+          CREATE SCHEMA IF NOT EXISTS notification;
+          SQL
+
       # `up` sin flags de abort: los servicios se encadenan con depends_on
       # (service_completed_successfully), así que cada changelog corre en orden.
       # El código de salida real se verifica en el paso siguiente.
@@ -90,7 +111,9 @@ jobs:
         run: |
           # libpq URL desde la JDBC (sin credenciales: van por PGUSER/PGPASSWORD).
           export PGUSER="$NEON_USER" PGPASSWORD="$NEON_PASSWORD"
-          export PSQL="psql ${NEON_JDBC_URL#jdbc:}"
+          # Sin los parámetros solo-JDBC (channelBinding, stringtype): libpq los rechaza.
+          url="${NEON_JDBC_URL#jdbc:}"
+          export PSQL="psql ${url%%\?*}?sslmode=require"
           sudo apt-get install -y -qq postgresql-client >/dev/null
           bash database/scripts/create-service-logins.sh
 
