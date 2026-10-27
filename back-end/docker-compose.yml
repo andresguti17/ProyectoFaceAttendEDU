@@ -606,7 +606,10 @@ services:
           printf '%s' "$$o" | grep -Eq '^https?://[A-Za-z0-9.-]+(:[0-9]+)?$$' || { echo "invalid CORS origin: $$o" >&2; exit 1; }
           out="$${out:+$$out, }\"$$o\""
         done
-        sed "s#\"__CORS_ORIGINS__\"#$$out#g" /kong/kong.yml > /tmp/kong.yml
+        # General rate limit (requests per minute per IP): a positive integer, nothing else.
+        general="$${KONG_RATE_LIMIT_PER_MINUTE:-3000}"
+        printf '%s' "$$general" | grep -Eq '^[1-9][0-9]*$$' || { echo "invalid KONG_RATE_LIMIT_PER_MINUTE: $$general" >&2; exit 1; }
+        sed -e "s#\"__CORS_ORIGINS__\"#$$out#g" -e "s#__RATE_LIMIT_GENERAL__#$$general#g" /kong/kong.yml > /tmp/kong.yml
         exec /docker-entrypoint.sh kong docker-start
     environment:
       KONG_DATABASE: "off"
@@ -640,6 +643,8 @@ services:
       # Browser origins allowed by CORS. Production must list its real web
       # domains (docker-compose.neon-overrides.yml makes it mandatory there).
       KONG_CORS_ORIGINS: ${KONG_CORS_ORIGINS:-http://localhost:8090,http://127.0.0.1:8090,http://localhost:8081,http://localhost:19006}
+      # General rate limit, requests per minute per client IP (see .env.example).
+      KONG_RATE_LIMIT_PER_MINUTE: ${KONG_RATE_LIMIT_PER_MINUTE:-3000}
     ports:
       # Dev: 0.0.0.0 so phones on the LAN reach the API. Production sets
       # KONG_PROXY_BIND_IP=127.0.0.1: Caddy reaches Kong over the Docker network.

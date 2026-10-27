@@ -48,7 +48,7 @@ services:
           credentials: true
       - name: rate-limiting
         config:
-          minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+          minute: __RATE_LIMIT_GENERAL__ # general, por IP (KONG_RATE_LIMIT_PER_MINUTE)
           fault_tolerant: true
           redis_host: redis
           redis_port: 6379
@@ -90,7 +90,7 @@ services:
       # JWT retirado: AuthTokenFilter valida sesión + evaluate en el MS.
       - name: rate-limiting
         config:
-          minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+          minute: __RATE_LIMIT_GENERAL__ # general, por IP (KONG_RATE_LIMIT_PER_MINUTE)
           fault_tolerant: true
           redis_host: redis
           redis_port: 6379
@@ -127,7 +127,7 @@ services:
       # JWT retirado: AuthTokenFilter valida sesión + evaluate en el MS.
       - name: rate-limiting
         config:
-          minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+          minute: __RATE_LIMIT_GENERAL__ # general, por IP (KONG_RATE_LIMIT_PER_MINUTE)
           fault_tolerant: true
           redis_host: redis
           redis_port: 6379
@@ -187,7 +187,7 @@ services:
       # JWT retirado: el enforcement vive en cada MS.
       - name: rate-limiting
         config:
-          minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+          minute: __RATE_LIMIT_GENERAL__ # general, por IP (KONG_RATE_LIMIT_PER_MINUTE)
           fault_tolerant: true
           redis_host: redis
           redis_port: 6379
@@ -316,7 +316,7 @@ plugins:
       max_age: 3600
   - name: rate-limiting
     config:
-      minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+      minute: __RATE_LIMIT_GENERAL__ # general, por IP (KONG_RATE_LIMIT_PER_MINUTE)
       fault_tolerant: true
       redis_host: redis
       redis_port: 6379
