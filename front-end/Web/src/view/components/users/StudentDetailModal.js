@@ -16,6 +16,9 @@ import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useAppData } from "../../../context/AppDataContext";
 import { biometricCaptureApi } from "../../../services/api/biometricCaptureApi";
 import BiometricEnrollmentModal from "./BiometricEnrollmentModal";
+import MinorEnrollmentModal from "./MinorEnrollmentModal";
+import { termsApi } from "../../../services/api/termsApi";
+import { isMinorPerson } from "../../../core/utils/termsGate";
 
 
 export default function StudentDetailModal({
@@ -69,6 +72,30 @@ export default function StudentDetailModal({
         };
     }, [showsBiometrics, personId, summaryTick]);
 
+    // Un menor de edad queda habilitado cuando tiene acudiente y este aceptó los términos:
+    // hasta entonces el servidor rechaza su enrolamiento facial, así que aquí tampoco se ofrece.
+    const isMinorStudent = !!student && (student.userType ?? "student") === "student" && isMinorPerson(student);
+    const [minorState, setMinorState] = useState({ personId: null, enabled: null });
+    const [minorTick, setMinorTick] = useState(0);
+    const minorEnabled = minorState.personId === personId ? minorState.enabled : null;
+    const [minorOpen, setMinorOpen] = useState(false);
+    useEffect(() => {
+        if (!isMinorStudent || !personId) return undefined;
+        let cancelled = false;
+        termsApi.get(personId).then(
+            (data) => {
+                if (!cancelled) setMinorState({ personId, enabled: data?.enabled === true });
+            },
+            () => {
+                if (!cancelled) setMinorState({ personId, enabled: false });
+            }
+        );
+        return () => {
+            cancelled = true;
+        };
+    }, [isMinorStudent, personId, minorTick]);
+    const minorBlocked = isMinorStudent && minorEnabled !== true;
+
     if (!student) return null;
 
     // Asistencia y programa/semestre solo existen para estudiantes: un
@@ -91,6 +118,24 @@ export default function StudentDetailModal({
                 onClose={() => {
                     setEnrolling(false);
                     setSummaryTick((tick) => tick + 1);
+                }}
+            />
+        );
+    }
+
+    if (minorOpen) {
+        return (
+            <MinorEnrollmentModal
+                visible
+                student={student}
+                onClose={() => {
+                    setMinorOpen(false);
+                    setMinorTick((tick) => tick + 1);
+                }}
+                onReadyForFace={() => {
+                    setMinorOpen(false);
+                    setMinorTick((tick) => tick + 1);
+                    setEnrolling(true);
                 }}
             />
         );
@@ -218,6 +263,41 @@ export default function StudentDetailModal({
                                 </View>
                             )}
 
+                            {/* Menor de edad: acudiente y términos los registra el administrador de la sede */}
+                            {isMinorStudent && canManage && (
+                                <View style={{
+                                    padding: 14,
+                                    borderWidth: 1,
+                                    borderColor: minorBlocked ? c.status.warning : c.border.primary,
+                                    borderRadius: 14,
+                                    marginBottom: 16,
+                                    gap: 10,
+                                }}>
+                                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                                        <Feather
+                                            name={minorBlocked ? "alert-triangle" : "check-circle"}
+                                            size={18}
+                                            color={minorBlocked ? c.status.warning : c.status.success}
+                                        />
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary }}>
+                                                {t("Menor de edad: acudiente y términos")}
+                                            </Text>
+                                            <Text style={{ fontSize: 13, color: c.text.secondary }}>
+                                                {minorEnabled === null
+                                                    ? t("Verificando...")
+                                                    : minorBlocked
+                                                        ? t("Registro incompleto: el menor no puede usar funciones con términos ni verificación facial.")
+                                                        : t("Registro completo: acudiente vinculado y términos aceptados.")}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                    <Button variant={minorBlocked ? "primary" : "ghost"} size="sm" disabled={!personId} onPress={() => setMinorOpen(true)}>
+                                        {minorBlocked ? t("Completar registro") : t("Ver o editar acudiente")}
+                                    </Button>
+                                </View>
+                            )}
+
                             {/* Bloque biométrico — solo para quienes pueden registrar;
                                 un admin no tiene academic_actor ni biometría (MODELO §2.6) */}
                             {canRegisterFace && !isAdmin && (() => {
@@ -284,7 +364,7 @@ export default function StudentDetailModal({
                                                 <Button
                                                     variant="primary"
                                                     size="sm"
-                                                    disabled={!personId}
+                                                    disabled={!personId || minorBlocked}
                                                     onPress={() => setEnrolling(true)}
                                                 >
                                                     {t("Registrar")}
