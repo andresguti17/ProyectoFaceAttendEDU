@@ -84,6 +84,11 @@ def _liveness_failure_reason(images, action: str) -> str:
         return "reason unavailable"
 
 
+def _actor_user_id(request: Request | None) -> str | None:
+    """The authenticated user who made the call (audit: who enrolled a face)."""
+    return str(getattr(getattr(request, "state", None), "user_id", "") or "") or None
+
+
 def _correlation_id(request: Request) -> str | None:
     return getattr(request.state, "correlation_id", None)
 
@@ -169,6 +174,7 @@ async def _closest_other_face(
 async def enroll_facial(
     req: EnrollFacialRequest,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
+    match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
     request: Request = None,
 ):
     # REST only: the WebSocket channel checks the authorization itself before calling this.
@@ -179,7 +185,22 @@ async def enroll_facial(
         encoding=req.encoding,
         model_version=req.model_version,
     )
-    return template_response(await repository.enroll(template))
+    stored = await repository.enroll(template)
+    await record_match(
+        match_logs,
+        BiometricMatchLog(
+            biometric_type=BiometricType.FACIAL,
+            operation=OPERATION_ENROLL,
+            matched=True,
+            score=1.0,
+            threshold=0.0,
+            person_id=req.person_id,
+            embedding_id=stored.embedding_id,
+            correlation_id=_correlation_id(request) if request is not None else None,
+            actor_user_id=_actor_user_id(request),
+        ),
+    )
+    return template_response(stored)
 
 
 @router.get("/liveness-challenge", dependencies=[ANY_ROLE])
@@ -464,6 +485,7 @@ async def enroll_facial_image(
             person_id=req.person_id,
             embedding_id=template.embedding_id,
             correlation_id=_correlation_id(request),
+            actor_user_id=_actor_user_id(request),
         ),
     )
     return template_response(template)

@@ -60,6 +60,11 @@ NO_ACTIVE_TEMPLATE = "no active fingerprint template"
 NO_MATCH = "no match found"
 
 
+def _actor_user_id(request: Request | None) -> str | None:
+    """The authenticated user who made the call (audit: who enrolled a fingerprint)."""
+    return str(getattr(getattr(request, "state", None), "user_id", "") or "") or None
+
+
 def _correlation_id(request: Request) -> str | None:
     return getattr(request.state, "correlation_id", None)
 
@@ -102,6 +107,7 @@ class IdentifyFingerprintSampleRequest(BaseModel):
 async def enroll_fingerprint(
     req: EnrollFingerprintRequest,
     repository: BiometricRepositoryPort = Depends(get_fingerprint_repository),
+    match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
     request: Request = None,
 ):
     if request is not None:
@@ -112,7 +118,23 @@ async def enroll_fingerprint(
         encoding=req.encoding,
         model_version=req.model_version,
     )
-    return template_response(await repository.enroll(template))
+    stored = await repository.enroll(template)
+    await record_match(
+        match_logs,
+        BiometricMatchLog(
+            biometric_type=BiometricType.FINGERPRINT,
+            operation=OPERATION_ENROLL,
+            matched=True,
+            score=1.0,
+            threshold=0.0,
+            person_id=req.person_id,
+            finger_number=req.finger_number,
+            embedding_id=stored.embedding_id,
+            correlation_id=_correlation_id(request) if request is not None else None,
+            actor_user_id=_actor_user_id(request),
+        ),
+    )
+    return template_response(stored)
 
 
 @router.get("/{person_id}")
@@ -318,6 +340,7 @@ async def enroll_fingerprint_sample(
             finger_number=req.finger_number,
             embedding_id=template.embedding_id,
             correlation_id=_correlation_id(request),
+            actor_user_id=_actor_user_id(request),
         ),
     )
     return template_response(template)
