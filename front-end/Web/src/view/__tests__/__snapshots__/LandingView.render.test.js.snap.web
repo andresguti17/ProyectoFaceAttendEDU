@@ -1697,6 +1697,7 @@ exports[`LandingView render hero and testimonials with backgrounds 1`] = `
                               ref={[Function]}
                               style={
                                 {
+                                  "color": "rgba(100,116,139,1.00)",
                                   "fontSize": "13px",
                                   "fontWeight": "400",
                                   "lineHeight": "20px",
@@ -1815,6 +1816,7 @@ exports[`LandingView render hero and testimonials with backgrounds 1`] = `
                               ref={[Function]}
                               style={
                                 {
+                                  "color": "rgba(100,116,139,1.00)",
                                   "fontSize": "13px",
                                   "fontWeight": "400",
                                   "lineHeight": "20px",
@@ -1933,6 +1935,7 @@ exports[`LandingView render hero and testimonials with backgrounds 1`] = `
                               ref={[Function]}
                               style={
                                 {
+                                  "color": "rgba(100,116,139,1.00)",
                                   "fontSize": "13px",
                                   "fontWeight": "400",
                                   "lineHeight": "20px",
@@ -2534,6 +2537,7 @@ exports[`LandingView render hero and testimonials with backgrounds 1`] = `
                     ref={[Function]}
                     style={
                       {
+                        "color": "rgba(100,116,139,1.00)",
                         "fontSize": "12px",
                         "fontWeight": "400",
                       }
@@ -3812,6 +3816,7 @@ exports[`LandingView render plain sections at 375px 1`] = `
                           ref={[Function]}
                           style={
                             {
+                              "color": "rgba(100,116,139,1.00)",
                               "fontSize": "11px",
                               "fontWeight": "400",
                               "lineHeight": "16px",
@@ -3930,6 +3935,7 @@ exports[`LandingView render plain sections at 375px 1`] = `
                           ref={[Function]}
                           style={
                             {
+                              "color": "rgba(100,116,139,1.00)",
                               "fontSize": "11px",
                               "fontWeight": "400",
                               "lineHeight": "16px",
@@ -4048,6 +4054,7 @@ exports[`LandingView render plain sections at 375px 1`] = `
                           ref={[Function]}
                           style={
                             {
+                              "color": "rgba(100,116,139,1.00)",
                               "fontSize": "11px",
                               "fontWeight": "400",
                               "lineHeight": "16px",
@@ -4422,6 +4429,7 @@ exports[`LandingView render plain sections at 375px 1`] = `
                     ref={[Function]}
                     style={
                       {
+                        "color": "rgba(100,116,139,1.00)",
                         "fontSize": "10px",
                         "fontWeight": "400",
                       }
@@ -5700,6 +5708,7 @@ exports[`LandingView render plain sections at 1440px 1`] = `
                           ref={[Function]}
                           style={
                             {
+                              "color": "rgba(100,116,139,1.00)",
                               "fontSize": "13px",
                               "fontWeight": "400",
                               "lineHeight": "20px",
@@ -5818,6 +5827,7 @@ exports[`LandingView render plain sections at 1440px 1`] = `
                           ref={[Function]}
                           style={
                             {
+                              "color": "rgba(100,116,139,1.00)",
                               "fontSize": "13px",
                               "fontWeight": "400",
                               "lineHeight": "20px",
@@ -5936,6 +5946,7 @@ exports[`LandingView render plain sections at 1440px 1`] = `
                           ref={[Function]}
                           style={
                             {
+                              "color": "rgba(100,116,139,1.00)",
                               "fontSize": "13px",
                               "fontWeight": "400",
                               "lineHeight": "20px",
@@ -6535,6 +6546,7 @@ exports[`LandingView render plain sections at 1440px 1`] = `
                     ref={[Function]}
                     style={
                       {
+                        "color": "rgba(100,116,139,1.00)",
                         "fontSize": "12px",
                         "fontWeight": "400",
                       }

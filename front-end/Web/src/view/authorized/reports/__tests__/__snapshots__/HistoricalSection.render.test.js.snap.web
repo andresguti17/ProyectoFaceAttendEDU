@@ -1130,13 +1130,14 @@ exports[`HistoricosSection render and exports every record inside a date range 1
                     }
                   }
                 >
-                  Feather:clock:11:undefined
+                  Feather:clock:11:#64748B
                   <div
                     className="css-text-146c3p1"
                     dir="auto"
                     ref={[Function]}
                     style={
                       {
+                        "color": "rgba(100,116,139,1.00)",
                         "fontSize": "11px",
                         "lineHeight": "13px",
                       }
@@ -1518,13 +1519,14 @@ exports[`HistoricosSection render and exports every record inside a date range 1
                     }
                   }
                 >
-                  Feather:clock:11:undefined
+                  Feather:clock:11:#64748B
                   <div
                     className="css-text-146c3p1"
                     dir="auto"
                     ref={[Function]}
                     style={
                       {
+                        "color": "rgba(100,116,139,1.00)",
                         "fontSize": "11px",
                         "lineHeight": "13px",
                       }
@@ -1952,13 +1954,14 @@ exports[`HistoricosSection render and exports every record inside a date range 1
                     }
                   }
                 >
-                  Feather:clock:11:undefined
+                  Feather:clock:11:#64748B
                   <div
                     className="css-text-146c3p1"
                     dir="auto"
                     ref={[Function]}
                     style={
                       {
+                        "color": "rgba(100,116,139,1.00)",
                         "fontSize": "11px",
                         "lineHeight": "13px",
                       }
@@ -3342,13 +3345,14 @@ exports[`HistoricosSection render and exports latest record per student 1`] = `
                     }
                   }
                 >
-                  Feather:clock:11:undefined
+                  Feather:clock:11:#64748B
                   <div
                     className="css-text-146c3p1"
                     dir="auto"
                     ref={[Function]}
                     style={
                       {
+                        "color": "rgba(100,116,139,1.00)",
                         "fontSize": "11px",
                         "lineHeight": "13px",
                       }
@@ -3730,13 +3734,14 @@ exports[`HistoricosSection render and exports latest record per student 1`] = `
                     }
                   }
                 >
-                  Feather:clock:11:undefined
+                  Feather:clock:11:#64748B
                   <div
                     className="css-text-146c3p1"
                     dir="auto"
                     ref={[Function]}
                     style={
                       {
+                        "color": "rgba(100,116,139,1.00)",
                         "fontSize": "11px",
                         "lineHeight": "13px",
                       }

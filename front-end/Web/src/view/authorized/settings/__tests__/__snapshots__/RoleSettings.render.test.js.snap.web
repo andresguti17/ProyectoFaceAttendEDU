@@ -1926,6 +1926,7 @@ exports[`role settings render AdminSettings appearance 1`] = `
                 ref={[Function]}
                 style={
                   {
+                    "color": "rgba(100,116,139,1.00)",
                     "fontSize": "13px",
                     "lineHeight": "20px",
                   }
@@ -2049,6 +2050,7 @@ exports[`role settings render AdminSettings appearance 1`] = `
                           spellCheck={true}
                           style={
                             {
+                              "--placeholderTextColor": "#64748B",
                               "color": "rgba(0,0,0,1.00)",
                               "flex": 1,
                               "fontSize": "15px",
@@ -2071,6 +2073,7 @@ exports[`role settings render AdminSettings appearance 1`] = `
                           ref={[Function]}
                           style={
                             {
+                              "color": "rgba(100,116,139,1.00)",
                               "fontSize": "12px",
                               "fontWeight": "600",
                               "textTransform": "uppercase",
@@ -4961,6 +4964,7 @@ exports[`role settings render AdminSettings appearance 2`] = `
                 ref={[Function]}
                 style={
                   {
+                    "color": "rgba(100,116,139,1.00)",
                     "fontSize": "13px",
                     "lineHeight": "20px",
                   }
@@ -5084,6 +5088,7 @@ exports[`role settings render AdminSettings appearance 2`] = `
                           spellCheck={true}
                           style={
                             {
+                              "--placeholderTextColor": "#64748B",
                               "color": "rgba(0,0,0,1.00)",
                               "flex": 1,
                               "fontSize": "15px",
@@ -5106,6 +5111,7 @@ exports[`role settings render AdminSettings appearance 2`] = `
                           ref={[Function]}
                           style={
                             {
+                              "color": "rgba(100,116,139,1.00)",
                               "fontSize": "12px",
                               "fontWeight": "600",
                               "textTransform": "uppercase",
@@ -9065,6 +9071,7 @@ exports[`role settings render StudentSettings appearance 1`] = `
                 ref={[Function]}
                 style={
                   {
+                    "color": "rgba(100,116,139,1.00)",
                     "fontSize": "13px",
                     "lineHeight": "20px",
                   }
@@ -9188,6 +9195,7 @@ exports[`role settings render StudentSettings appearance 1`] = `
                           spellCheck={true}
                           style={
                             {
+                              "--placeholderTextColor": "#64748B",
                               "color": "rgba(0,0,0,1.00)",
                               "flex": 1,
                               "fontSize": "15px",
@@ -9210,6 +9218,7 @@ exports[`role settings render StudentSettings appearance 1`] = `
                           ref={[Function]}
                           style={
                             {
+                              "color": "rgba(100,116,139,1.00)",
                               "fontSize": "12px",
                               "fontWeight": "600",
                               "textTransform": "uppercase",
@@ -13330,6 +13339,7 @@ exports[`role settings render TeacherSettings appearance 1`] = `
                 ref={[Function]}
                 style={
                   {
+                    "color": "rgba(100,116,139,1.00)",
                     "fontSize": "13px",
                     "lineHeight": "20px",
                   }
@@ -13453,6 +13463,7 @@ exports[`role settings render TeacherSettings appearance 1`] = `
                           spellCheck={true}
                           style={
                             {
+                              "--placeholderTextColor": "#64748B",
                               "color": "rgba(0,0,0,1.00)",
                               "flex": 1,
                               "fontSize": "15px",
@@ -13475,6 +13486,7 @@ exports[`role settings render TeacherSettings appearance 1`] = `
                           ref={[Function]}
                           style={
                             {
+                              "color": "rgba(100,116,139,1.00)",
                               "fontSize": "12px",
                               "fontWeight": "600",
                               "textTransform": "uppercase",
