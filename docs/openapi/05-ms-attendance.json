@@ -142,39 +142,6 @@
         ],
         "type": "object"
       },
-      "CreateSupportingDocumentRequest": {
-        "properties": {
-          "fileName": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "justificationId": {
-            "format": "int64",
-            "type": "integer"
-          },
-          "mimeType": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "sizeBytes": {
-            "format": "int64",
-            "minimum": 0,
-            "type": "integer"
-          },
-          "storageUri": {
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "required": [
-          "fileName",
-          "justificationId",
-          "mimeType",
-          "sizeBytes",
-          "storageUri"
-        ],
-        "type": "object"
-      },
       "JustificationResponse": {
         "properties": {
           "attendanceRecordId": {
@@ -417,7 +384,7 @@
     },
     "/api/v1/attendance-records": {
       "get": {
-        "operationId": "list_6",
+        "operationId": "list_4",
         "parameters": [
           {
             "in": "query",
@@ -484,7 +451,7 @@
         ]
       },
       "post": {
-        "operationId": "create_6",
+        "operationId": "create_4",
         "requestBody": {
           "content": {
             "application/json": {
@@ -822,7 +789,7 @@
     },
     "/api/v1/justification-types": {
       "get": {
-        "operationId": "list_4",
+        "operationId": "list_2",
         "responses": {
           "200": {
             "content": {
@@ -843,7 +810,7 @@
         ]
       },
       "post": {
-        "operationId": "create_4",
+        "operationId": "create_2",
         "requestBody": {
           "content": {
             "application/json": {
@@ -965,7 +932,7 @@
     },
     "/api/v1/justifications": {
       "get": {
-        "operationId": "list_3",
+        "operationId": "list_1",
         "parameters": [
           {
             "in": "query",
@@ -1023,7 +990,7 @@
         ]
       },
       "post": {
-        "operationId": "create_3",
+        "operationId": "create_1",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1249,12 +1216,12 @@
     },
     "/api/v1/supporting-documents": {
       "get": {
-        "operationId": "list_1",
+        "operationId": "list_7",
         "parameters": [
           {
             "in": "query",
             "name": "justificationId",
-            "required": false,
+            "required": true,
             "schema": {
               "format": "int64",
               "type": "integer"
@@ -1270,34 +1237,6 @@
                     "$ref": "#/components/schemas/SupportingDocumentResponse"
                   },
                   "type": "array"
-                }
-              }
-            },
-            "description": "OK"
-          }
-        },
-        "tags": [
-          "supporting-document-controller"
-        ]
-      },
-      "post": {
-        "operationId": "create_1",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSupportingDocumentRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/SupportingDocumentResponse"
                 }
               }
             },
@@ -1396,7 +1335,7 @@
     },
     "/attendance-records": {
       "get": {
-        "operationId": "list_7",
+        "operationId": "list_5",
         "parameters": [
           {
             "in": "query",
@@ -1463,7 +1402,7 @@
         ]
       },
       "post": {
-        "operationId": "create_7",
+        "operationId": "create_5",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1757,7 +1696,7 @@
     },
     "/justification-types": {
       "get": {
-        "operationId": "list_5",
+        "operationId": "list_3",
         "responses": {
           "200": {
             "content": {
@@ -1778,7 +1717,7 @@
         ]
       },
       "post": {
-        "operationId": "create_5",
+        "operationId": "create_3",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1900,7 +1839,7 @@
     },
     "/justifications": {
       "get": {
-        "operationId": "list_2",
+        "operationId": "list",
         "parameters": [
           {
             "in": "query",
@@ -1958,7 +1897,7 @@
         ]
       },
       "post": {
-        "operationId": "create_2",
+        "operationId": "create",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2082,12 +2021,12 @@
     },
     "/supporting-documents": {
       "get": {
-        "operationId": "list",
+        "operationId": "list_6",
         "parameters": [
           {
             "in": "query",
             "name": "justificationId",
-            "required": false,
+            "required": true,
             "schema": {
               "format": "int64",
               "type": "integer"
@@ -2103,34 +2042,6 @@
                     "$ref": "#/components/schemas/SupportingDocumentResponse"
                   },
                   "type": "array"
-                }
-              }
-            },
-            "description": "OK"
-          }
-        },
-        "tags": [
-          "supporting-document-controller"
-        ]
-      },
-      "post": {
-        "operationId": "create",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSupportingDocumentRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/SupportingDocumentResponse"
                 }
               }
             },
