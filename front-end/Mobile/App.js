@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { AppState, Keyboard, Platform } from 'react-native';
 import * as NavigationBar from 'expo-navigation-bar';
+import * as Updates from 'expo-updates';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { I18nextProvider } from 'react-i18next';
@@ -14,7 +15,24 @@ import AppNavigator from './src/navigations/AppNavigator';
 // al abrir el teclado o al volver a la app, así que se ocultan de nuevo en esos dos eventos.
 const hideNavigationBar = () => NavigationBar.setVisibilityAsync('hidden').catch(() => {});
 
+// Descarga y aplica la actualización OTA al abrir la app; sin esto el APK la aplicaba hasta la siguiente apertura.
+async function applyPendingUpdate() {
+    if (__DEV__ || !Updates.isEnabled) return;
+    try {
+        const {isAvailable} = await Updates.checkForUpdateAsync();
+        if (!isAvailable) return;
+        await Updates.fetchUpdateAsync();
+        await Updates.reloadAsync();
+    } catch {
+        // Sin red o servidor caído: se sigue con el bundle actual y se reintenta en la próxima apertura.
+    }
+}
+
 function AppContent() {
+
+    useEffect(() => {
+        applyPendingUpdate();
+    }, []);
 
     useEffect(() => {
         if (Platform.OS !== 'android') return undefined;
