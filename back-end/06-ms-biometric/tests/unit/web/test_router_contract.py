@@ -406,7 +406,8 @@ class TestMatchAudit:
             f"{FACIAL_PREFIX}/verify", json={"person_id": PERSON, "encoding": UNIT_VECTOR}
         )
 
-        entries = stores["match_logs"].entries
+        # The enrollment is audited too (who enrolled), so only the verification is counted here.
+        entries = [e for e in stores["match_logs"].entries if e.operation != "ENROLL"]
         assert len(entries) == 1
         assert entries[0].operation == "VERIFY"
         assert entries[0].biometric_type is BiometricType.FACIAL
@@ -420,7 +421,7 @@ class TestMatchAudit:
             f"{FACIAL_PREFIX}/identify", json={"encoding": UNIT_VECTOR}
         ).status_code == 404
 
-        entries = stores["match_logs"].entries
+        entries = [e for e in stores["match_logs"].entries if e.operation != "ENROLL"]
         assert len(entries) == 1
         assert entries[0].operation == "IDENTIFY"
         assert entries[0].matched is False
