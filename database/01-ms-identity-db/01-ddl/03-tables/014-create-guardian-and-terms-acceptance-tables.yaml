@@ -1,0 +1,79 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-016-create-guardian-table
+      author: FaceAttendEDU
+      splitStatements: false
+      comment: >-
+        Legal guardian (acudiente) of a minor learner (Ley 1581 art. 7, Decreto 1377 art. 12). Registered by the
+        school administrator. Identification and contact data are stored AES-256-GCM encrypted by ms-identity
+        (enc:v1:...). One active guardian per minor; replacing the guardian soft-deletes the previous row.
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE identity.guardian (
+                guardian_id UUID NOT NULL,
+                minor_person_id UUID NOT NULL,
+                full_name VARCHAR(512) NOT NULL,
+                document_type VARCHAR(10) NOT NULL,
+                document_number VARCHAR(255) NOT NULL,
+                email VARCHAR(512) NULL,
+                phone VARCHAR(255) NULL,
+                relationship VARCHAR(30) NOT NULL,
+                school_id BIGINT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL,
+                updated_by UUID NULL,
+                deleted_by UUID NULL,
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT guardian_pkey PRIMARY KEY (guardian_id),
+                CONSTRAINT fk_guardian_minor FOREIGN KEY (minor_person_id) REFERENCES identity.person (person_id) ON DELETE CASCADE,
+                CONSTRAINT ck_guardian_document_type CHECK (document_type IN ('CC', 'CE', 'PP')),
+                CONSTRAINT ck_guardian_contact CHECK (email IS NOT NULL OR phone IS NOT NULL)
+              );
+              CREATE UNIQUE INDEX uq_guardian_minor_active ON identity.guardian (minor_person_id) WHERE deleted_at IS NULL;
+      rollback:
+        - sql:
+            sql: DROP TABLE IF EXISTS identity.guardian;
+  - changeSet:
+      id: id-017-create-terms-acceptance-table
+      author: FaceAttendEDU
+      splitStatements: false
+      comment: >-
+        Audit trail of the acceptance of the Terms and Conditions: version, date, user type (ADULT or MINOR),
+        who accepted (the holder, or the guardian in person at the school) and who recorded it, in which school.
+        One row per acceptance; the current one is the latest by accepted_at.
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE identity.terms_acceptance (
+                acceptance_id UUID NOT NULL,
+                person_id UUID NOT NULL,
+                terms_version VARCHAR(20) NOT NULL,
+                user_type VARCHAR(10) NOT NULL,
+                accepted_by VARCHAR(10) NOT NULL,
+                guardian_id UUID NULL,
+                channel VARCHAR(10) NOT NULL,
+                recorded_by UUID NULL,
+                school_id BIGINT NULL,
+                accepted_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                deleted_at TIMESTAMP NULL,
+                created_by UUID NULL,
+                updated_by UUID NULL,
+                deleted_by UUID NULL,
+                row_version BIGINT NOT NULL DEFAULT 1,
+                CONSTRAINT terms_acceptance_pkey PRIMARY KEY (acceptance_id),
+                CONSTRAINT fk_terms_person FOREIGN KEY (person_id) REFERENCES identity.person (person_id) ON DELETE CASCADE,
+                CONSTRAINT fk_terms_guardian FOREIGN KEY (guardian_id) REFERENCES identity.guardian (guardian_id),
+                CONSTRAINT ck_terms_user_type CHECK (user_type IN ('ADULT', 'MINOR')),
+                CONSTRAINT ck_terms_accepted_by CHECK (accepted_by IN ('SELF', 'GUARDIAN')),
+                CONSTRAINT ck_terms_channel CHECK (channel IN ('self', 'assisted')),
+                CONSTRAINT ck_terms_guardian CHECK (accepted_by <> 'GUARDIAN' OR (guardian_id IS NOT NULL AND recorded_by IS NOT NULL))
+              );
+              CREATE INDEX idx_terms_person_accepted ON identity.terms_acceptance (person_id, accepted_at DESC);
+      rollback:
+        - sql:
+            sql: DROP TABLE IF EXISTS identity.terms_acceptance;
