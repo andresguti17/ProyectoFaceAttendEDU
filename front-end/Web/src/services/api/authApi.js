@@ -33,7 +33,8 @@ export const authApi = {
     disableTwoFactor: (password) =>
         request(endpoints.identity.twoFactorDisable, { method: "POST", body: { password } }),
     logout: (sessionId) =>
-        request(endpoints.identity.logout, { method: "POST", query: { sessionId } }),
+        // El id viaja como bearer, no en la URL: la URL queda en los logs de acceso.
+        request(endpoints.identity.logout, { method: "POST", headers: { Authorization: `Bearer ${sessionId}` } }),
     me: (identifier) =>
         request(endpoints.identity.me, {
             method: "GET",

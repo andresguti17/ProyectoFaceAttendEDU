@@ -1,5 +1,6 @@
 package com.faceattend_edu.identity_service.adapter.out.notification.email;
 
+import com.faceattend_edu.identity_service.application.support.LogMask;
 import com.faceattend_edu.identity_service.application.port.out.SendCredentialsEmailPort;
 import com.faceattend_edu.identity_service.application.port.out.SendLoginCodePort;
 import com.faceattend_edu.identity_service.application.port.out.SendRecoveryEmailPort;
@@ -66,12 +67,12 @@ public class NotificationEmailAdapter implements SendRecoveryEmailPort, SendCred
             Object status = response.getBody() != null ? response.getBody().get("status") : null;
             if (!"accepted".equals(status)) {
                 // notification respondió 202 "skipped": no hay relay configurado.
-                log.warn("Email channel not delivering to={} status={}", to, status);
+                log.warn("Email channel not delivering to={} status={}", LogMask.email(to), status);
                 return false;
             }
             return true;
         } catch (Exception ex) {
-            log.warn("Email delivery failed to={} error={}", to, ex.getMessage());
+            log.warn("Email delivery failed to={} error={}", LogMask.email(to), ex.getMessage());
             return false;
         }
     }
@@ -108,12 +109,12 @@ public class NotificationEmailAdapter implements SendRecoveryEmailPort, SendCred
                     new HttpEntity<>(payload, headers()), Map.class);
             Object status = response.getBody() != null ? response.getBody().get("status") : null;
             if (!"accepted".equals(status)) {
-                log.warn("Email channel not delivering to={} template={} status={}", to, template, status);
+                log.warn("Email channel not delivering to={} template={} status={}", LogMask.email(to), template, status);
                 return false;
             }
             return true;
         } catch (Exception ex) {
-            log.warn("Email delivery failed to={} template={} error={}", to, template, ex.getMessage());
+            log.warn("Email delivery failed to={} template={} error={}", LogMask.email(to), template, ex.getMessage());
             return false;
         }
     }

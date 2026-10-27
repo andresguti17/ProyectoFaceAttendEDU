@@ -236,8 +236,12 @@ plugins:
             -- su ventana de 10 s).
             if path == "/api/v1/auth/logout" then
               pcall(function()
-                local args = kong.request.get_query()
-                local sid = args and args.sessionId
+                local auth = kong.request.get_header("authorization")
+                local sid = auth and auth:match("^[Bb]earer%s+(%S+)$")
+                if not sid then
+                  local args = kong.request.get_query()
+                  sid = args and args.sessionId
+                end
                 if type(sid) == "string" and #sid > 0 then
                   kong.cache:invalidate("faceattend:session:" .. sid)
                 end
