@@ -17,6 +17,7 @@ services:
       - ./01-ms-identity-db:/liquibase/project
     command:
       - --searchPath=/liquibase/project
+      - --liquibaseSchemaName=public
       - --url=${NEON_JDBC_URL}
       - --username=${NEON_USER}
       - --password=${NEON_PASSWORD}
@@ -42,6 +43,7 @@ services:
       - ./02-ms-authorization-db:/liquibase/project
     command:
       - --searchPath=/liquibase/project
+      - --liquibaseSchemaName=public
       - --url=${NEON_JDBC_URL}
       - --username=${NEON_USER}
       - --password=${NEON_PASSWORD}
@@ -67,6 +69,7 @@ services:
       - ./03-ms-academic-db:/liquibase/project
     command:
       - --searchPath=/liquibase/project
+      - --liquibaseSchemaName=public
       - --url=${NEON_JDBC_URL}
       - --username=${NEON_USER}
       - --password=${NEON_PASSWORD}
@@ -92,6 +95,7 @@ services:
       - ./04-ms-scheduling-db:/liquibase/project
     command:
       - --searchPath=/liquibase/project
+      - --liquibaseSchemaName=public
       - --url=${NEON_JDBC_URL}
       - --username=${NEON_USER}
       - --password=${NEON_PASSWORD}
@@ -117,6 +121,7 @@ services:
       - ./05-ms-attendance-db:/liquibase/project
     command:
       - --searchPath=/liquibase/project
+      - --liquibaseSchemaName=public
       - --url=${NEON_JDBC_URL}
       - --username=${NEON_USER}
       - --password=${NEON_PASSWORD}
@@ -142,6 +147,7 @@ services:
       - ./06-ms-biometric-db:/liquibase/project
     command:
       - --searchPath=/liquibase/project
+      - --liquibaseSchemaName=public
       - --url=${NEON_JDBC_URL}
       - --username=${NEON_USER}
       - --password=${NEON_PASSWORD}
@@ -167,6 +173,7 @@ services:
       - ./07-ms-configuration-db:/liquibase/project
     command:
       - --searchPath=/liquibase/project
+      - --liquibaseSchemaName=public
       - --url=${NEON_JDBC_URL}
       - --username=${NEON_USER}
       - --password=${NEON_PASSWORD}
@@ -192,6 +199,7 @@ services:
       - ./08-ms-notification-db:/liquibase/project
     command:
       - --searchPath=/liquibase/project
+      - --liquibaseSchemaName=public
       - --url=${NEON_JDBC_URL}
       - --username=${NEON_USER}
       - --password=${NEON_PASSWORD}
