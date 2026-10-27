@@ -632,7 +632,7 @@ exports[`HistoricosSection render and exports every record inside a date range 1
             style={
               {
                 "alignItems": "center",
-                "backgroundColor": undefined,
+                "backgroundColor": "rgba(25,131,252,0.13)",
                 "borderBottomLeftRadius": "6px",
                 "borderBottomRightRadius": "6px",
                 "borderTopLeftRadius": "6px",
@@ -646,13 +646,14 @@ exports[`HistoricosSection render and exports every record inside a date range 1
               }
             }
           >
-            Feather:filter:12:undefined
+            Feather:filter:12:#1983fc
             <div
               className="css-text-146c3p1"
               dir="auto"
               ref={[Function]}
               style={
                 {
+                  "color": "rgba(25,131,252,1.00)",
                   "fontSize": "12px",
                   "fontWeight": "500",
                 }
@@ -2139,12 +2140,12 @@ exports[`HistoricosSection render and exports full-list exports from the view mo
             text-align: center;
             margin-bottom: 40px;
             padding-bottom: 20px;
-            border-bottom: 3px solid undefined;
+            border-bottom: 3px solid #1983fc;
         }
         .header h1 {
             font-size: 32px;
             font-weight: 700;
-            color: undefined;
+            color: #1983fc;
             margin-bottom: 8px;
         }
         .header p {
@@ -2166,7 +2167,7 @@ exports[`HistoricosSection render and exports full-list exports from the view mo
         .summary-item .value {
             font-size: 36px;
             font-weight: 700;
-            color: undefined;
+            color: #1983fc;
             margin-bottom: 4px;
         }
         .summary-item .label {
@@ -2181,7 +2182,7 @@ exports[`HistoricosSection render and exports full-list exports from the view mo
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         thead {
-            background: undefined;
+            background: #1983fc;
             color: white;
         }
         th {

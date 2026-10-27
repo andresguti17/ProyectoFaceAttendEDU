@@ -142,12 +142,12 @@ export function useHistoricosViewModel(filteredUsers) {
             text-align: center;
             margin-bottom: 40px;
             padding-bottom: 20px;
-            border-bottom: 3px solid ${c.primary};
+            border-bottom: 3px solid ${c.brand.primary};
         }
         .header h1 {
             font-size: 32px;
             font-weight: 700;
-            color: ${c.primary};
+            color: ${c.brand.primary};
             margin-bottom: 8px;
         }
         .header p {
@@ -169,7 +169,7 @@ export function useHistoricosViewModel(filteredUsers) {
         .summary-item .value {
             font-size: 36px;
             font-weight: 700;
-            color: ${c.primary};
+            color: ${c.brand.primary};
             margin-bottom: 4px;
         }
         .summary-item .label {
@@ -184,7 +184,7 @@ export function useHistoricosViewModel(filteredUsers) {
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         thead {
-            background: ${c.primary};
+            background: ${c.brand.primary};
             color: white;
         }
         th {

@@ -124,7 +124,7 @@ function UserRow({ user, index, isLast, onPress, isExportMode, isSelected, onTog
                 gap: 12,
                 borderBottomWidth: isLast ? 0 : 1,
                 borderBottomColor: c.border.primary,
-                backgroundColor: isSelected ? c.primary + "10" : "transparent",
+                backgroundColor: isSelected ? c.brand.primary + "10" : "transparent",
             }}
         >
             {/* Checkbox en modo exportación */}
@@ -1239,12 +1239,12 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                                             paddingHorizontal: 8,
                                             paddingVertical: 3,
                                             borderRadius: 6,
-                                            backgroundColor: c.primary + "20",
+                                            backgroundColor: c.brand.primary + "20",
                                         }}>
-                                            <Feather name="filter" size={12} color={c.primary} />
+                                            <Feather name="filter" size={12} color={c.brand.primary} />
                                             <Text style={{
                                                 fontSize: 12,
-                                                color: c.primary,
+                                                color: c.brand.primary,
                                                 fontWeight: "500",
                                             }}>
                                                 {t("Filtros activos")}
