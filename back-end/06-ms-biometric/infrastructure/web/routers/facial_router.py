@@ -54,6 +54,7 @@ from infrastructure.web.security import (
     bearer_or_none,
     ensure_biometric_consent,
     ensure_can_enroll,
+    ensure_staff_scope,
     require_permission,
 )
 from infrastructure.web.schemas.responses import template_response
@@ -211,8 +212,10 @@ async def liveness_challenge(
 @router.get("/{person_id}", dependencies=[STAFF])
 async def get_facial(
     person_id: str,
+    request: Request,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
 ):
+    await ensure_staff_scope(request, person_id)
     active = await repository.find_active(person_id)
     if active is None:
         raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
@@ -222,8 +225,10 @@ async def get_facial(
 @router.get("/{person_id}/history", dependencies=[STAFF])
 async def facial_history(
     person_id: str,
+    request: Request,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
 ):
+    await ensure_staff_scope(request, person_id)
     history = await repository.list_history(person_id)
     return {"history": [template_response(template) for template in history]}
 
@@ -235,6 +240,7 @@ async def delete_facial(
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
 ):
+    await ensure_staff_scope(request, person_id)
     # Soft delete: the document stays, is_active goes false and deleted_at is set.
     # Covers both "revoke template" and "delete subject" from the merged
     # 10-ms-face-auth lifecycle endpoints — there is no identity left to keep

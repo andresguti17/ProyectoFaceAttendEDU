@@ -370,6 +370,16 @@ async def ensure_can_touch_person(request: Request, person_id: str) -> None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only manage biometric data within your own school")
 
 
+async def ensure_staff_scope(request: Request, person_id: str) -> None:
+    """Staff routes addressed by `person_id` (read, list or delete someone's templates).
+
+    The route dependency already proved the staff permission; this narrows it to the caller's
+    school (Super Administrador: any), so an Instructor or Administrador cannot read or erase the
+    biometrics of another school. A caller without an academic actor gets 403, never "everything".
+    """
+    await ensure_can_touch_case_person(request, person_id)
+
+
 async def ensure_can_touch_case_person(request: Request, case_person_id: str) -> None:
     """Who may review/delete a biometric update case belonging to `case_person_id`.
 
