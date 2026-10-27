@@ -31,6 +31,7 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -335,6 +336,39 @@ class AuthControllerTest {
                     .andExpect(status().isNoContent());
 
             verify(closeUserSessionUseCase).closeSession(sessionId);
+        }
+
+        @Test
+        @DisplayName("givenBearerHeader_whenLogout_thenClosesThatSessionWithoutAQueryString")
+        void givenBearerHeader_whenLogout_thenClosesThatSessionWithoutAQueryString() throws Exception {
+            mockMvc.perform(post("/api/v1/auth/logout")
+                            .header("Authorization", "Bearer " + sessionId))
+                    .andExpect(status().isNoContent());
+
+            verify(closeUserSessionUseCase).closeSession(sessionId);
+        }
+
+        @Test
+        @DisplayName("givenHeaderAndLegacyParam_whenLogout_thenTheHeaderWins")
+        void givenHeaderAndLegacyParam_whenLogout_thenTheHeaderWins() throws Exception {
+            UUID other = UUID.randomUUID();
+            mockMvc.perform(post("/api/v1/auth/logout")
+                            .header("Authorization", "Bearer " + sessionId)
+                            .param("sessionId", other.toString()))
+                    .andExpect(status().isNoContent());
+
+            verify(closeUserSessionUseCase).closeSession(sessionId);
+            verify(closeUserSessionUseCase, never()).closeSession(other);
+        }
+
+        @Test
+        @DisplayName("givenNoSessionAtAll_whenLogout_thenReturn400AndClosesNothing")
+        void givenNoSessionAtAll_whenLogout_thenReturn400AndClosesNothing() throws Exception {
+            mockMvc.perform(post("/api/v1/auth/logout")).andExpect(status().isBadRequest());
+            mockMvc.perform(post("/api/v1/auth/logout").header("Authorization", "Bearer not-a-uuid"))
+                    .andExpect(status().isBadRequest());
+
+            verify(closeUserSessionUseCase, never()).closeSession(any());
         }
 
         @Test

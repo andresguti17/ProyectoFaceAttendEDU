@@ -13,6 +13,7 @@ import {
 import { notifyWebhook, webhookConfigFromEnv, WEBHOOK_NOT_CONFIGURED, type WebhookPayload } from '../webhook/notifier';
 import { sendEmail, SMTP_NOT_CONFIGURED, type SmtpConfig } from '../email/sender';
 import { render, subjectFor, SUPPORTED_TEMPLATES } from '../email/render';
+import { maskEmail } from './logMask';
 
 /**
  * HTTP adapters — 08-ms-notification.
@@ -336,11 +337,11 @@ export function registerEmailRoute(app: FastifyInstance, cfg: SmtpConfig): void 
         htmlBody: body.html,
       });
       if (result === SMTP_NOT_CONFIGURED) {
-        app.log.warn({ to, template }, 'email skipped, SMTP_HOST is empty');
+        app.log.warn({ to: maskEmail(to), template }, 'email skipped, SMTP_HOST is empty');
         return reply.code(202).send({ status: 'skipped', reason: 'smtp_not_configured' });
       }
     } catch (err) {
-      app.log.error({ err, to, template }, 'email delivery failed');
+      app.log.error({ err, to: maskEmail(to), template }, 'email delivery failed');
       return reply.code(502).send({ error: 'DELIVERY_FAILED', message: 'email delivery failed' });
     }
 

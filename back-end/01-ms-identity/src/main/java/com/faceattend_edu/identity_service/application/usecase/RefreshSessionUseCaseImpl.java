@@ -40,13 +40,13 @@ public class RefreshSessionUseCaseImpl implements RefreshSessionUseCase {
         if (current.isExpired(authProperties.sessionTimeout())) {
             current.end();
             updateUserSessionPort.updateUserSession(current);
-            log.info("Session expired on refresh sessionId={}", sessionId);
+            log.info("Session expired on refresh userId={}", ownerOf(current));
             throw new UnauthorizedException("Session expired");
         }
 
         // Un solo ganador: quien cierra la sesión Active es quien emite la nueva.
         if (updateUserSessionPort.closeSessionIfActive(sessionId, LocalDateTime.now()) != 1) {
-            log.info("Session already rotated sessionId={}", sessionId);
+            log.info("Session already rotated userId={}", ownerOf(current));
             throw new UnauthorizedException("Session already refreshed");
         }
 
@@ -56,7 +56,12 @@ public class RefreshSessionUseCaseImpl implements RefreshSessionUseCase {
         next.start();
 
         UserSession saved = saveUserSessionPort.saveUserSession(next);
-        log.info("Session refreshed oldSessionId={} newSessionId={}", sessionId, saved.getSessionId());
+        log.info("Session refreshed userId={}", ownerOf(current));
         return saved;
+    }
+
+    /** The account the session belongs to, for the logs: the session id itself is a bearer and never goes there. */
+    private static Object ownerOf(UserSession session) {
+        return session.getUserId() != null ? session.getUserId().getUserId() : null;
     }
 }
