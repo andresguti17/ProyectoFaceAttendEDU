@@ -44,7 +44,7 @@ from infrastructure.web.schemas.responses import template_response
 # Templates are sensitive: only roles that capture attendance (admin, instructor).
 logger = logging.getLogger(__name__)
 
-from infrastructure.web.security import bearer_or_none, ensure_biometric_consent
+from infrastructure.web.security import bearer_or_none, ensure_biometric_consent, ensure_staff_scope
 
 router = APIRouter(
     prefix="/api/v1/biometric/fingerprint",
@@ -118,8 +118,10 @@ async def enroll_fingerprint(
 @router.get("/{person_id}")
 async def list_fingerprints(
     person_id: str,
+    request: Request,
     repository: BiometricRepositoryPort = Depends(get_fingerprint_repository),
 ):
+    await ensure_staff_scope(request, person_id)
     templates = await repository.list_active(person_id)
     return {"templates": [template_response(template) for template in templates]}
 
@@ -128,8 +130,10 @@ async def list_fingerprints(
 async def get_fingerprint(
     person_id: str,
     finger: int,
+    request: Request,
     repository: BiometricRepositoryPort = Depends(get_fingerprint_repository),
 ):
+    await ensure_staff_scope(request, person_id)
     active = await repository.find_active(person_id, finger)
     if active is None:
         raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
@@ -144,6 +148,7 @@ async def delete_fingerprint(
     repository: BiometricRepositoryPort = Depends(get_fingerprint_repository),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
 ):
+    await ensure_staff_scope(request, person_id)
     # Soft delete: the document stays, is_active goes false and deleted_at is set.
     if not await repository.deactivate(person_id, finger):
         raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
