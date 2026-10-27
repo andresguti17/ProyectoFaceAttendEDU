@@ -899,9 +899,17 @@
         "operationId": "logout",
         "parameters": [
           {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "in": "query",
             "name": "sessionId",
-            "required": true,
+            "required": false,
             "schema": {
               "format": "uuid",
               "type": "string"
