@@ -3,9 +3,12 @@
 //
 //  Mismo patrón que privacy.js: título y cuerpo son literales en español que
 //  la vista pasa por t(); las traducciones viven en src/locales/*.json.
-//  Cuando cambie el texto, sube también PRIVACY_POLICY_VERSION (privacy.js) y
-//  faceattend.privacy.policy-version del servidor para pedir aceptación nueva.
+//  TERMS_VERSION debe coincidir con faceattend.terms.version de ms-identity: el
+//  servidor solo acepta la versión vigente. Al cambiar el texto se sube en ambos
+//  lados y todos los adultos lo aceptan de nuevo (y el acudiente de cada menor).
 // ============================================================
+
+export const TERMS_VERSION = "2026-10";
 
 export const TERMS_TITLE = "Términos y Condiciones";
 
