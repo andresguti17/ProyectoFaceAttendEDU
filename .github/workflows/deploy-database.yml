@@ -111,7 +111,9 @@ jobs:
         run: |
           # libpq URL desde la JDBC (sin credenciales: van por PGUSER/PGPASSWORD).
           export PGUSER="$NEON_USER" PGPASSWORD="$NEON_PASSWORD"
-          export PSQL="psql ${NEON_JDBC_URL#jdbc:}"
+          # Sin los parámetros solo-JDBC (channelBinding, stringtype): libpq los rechaza.
+          url="${NEON_JDBC_URL#jdbc:}"
+          export PSQL="psql ${url%%\?*}?sslmode=require"
           sudo apt-get install -y -qq postgresql-client >/dev/null
           bash database/scripts/create-service-logins.sh
 
