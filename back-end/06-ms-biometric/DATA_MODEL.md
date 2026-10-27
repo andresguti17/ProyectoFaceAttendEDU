@@ -25,6 +25,10 @@ Ver detalle canónico en:
 - [ ] Cross-context refs sin FK real (solo comentarios `remarks: Cross-context reference ... NO FK`)
 - [ ] Audit fields en todas las tablas: `created_at, updated_at, deleted_at, created_by, updated_by, deleted_by, row_version`
 
+## Registro de intentos biometricos (`biometric_match_logs`)
+
+Cada ENROLL, VERIFY, IDENTIFY y DELETE deja un documento con TTL de 90 dias. Campo `actor_user_id`: usuario autenticado que hizo la llamada. En el enrolamiento de un menor es el administrador de la sede que lo hizo con el acudiente presente. La sede se obtiene de `academic_actor` de la persona. Cualquier enrolamiento (facial o huella) exige ademas que identity responda `enabled: true` en `GET /api/v1/persons/{id}/terms` (variable `BIOMETRIC_ENABLEMENT_CHECK_ENABLED`).
+
 ## Relación con otros contextos
 
 Ver `../../fae-docs/06-data/domains/06-biometric.md` § Design Principles y `../database/MODELO.md` §11 (Sin FK entre contextos).
