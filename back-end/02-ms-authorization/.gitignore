@@ -93,11 +93,11 @@ docker-compose.override.yml
 *.swp
 *.swo
 
-# Ignorar la carpeta .mvn pero mantener el wrapper de Maven versionado
-/.mvn/
-# Excepto el wrapper y su carpeta
-!.mvn/wrapper/
-!.mvn/wrapper/maven-wrapper.jar
+# Ignorar el contenido de .mvn pero mantener el wrapper de Maven versionado.
+# Con `/.mvn/` git excluía la carpeta entera y las excepciones no tenían efecto:
+# maven-wrapper.properties nunca se versionaba y ./mvnw fallaba en un clon limpio.
+/.mvn/*
+!/.mvn/wrapper/
 
 # Mantener archivos de recursos del proyecto (no ignorar por defecto)
 !src/main/resources/
