@@ -1,19 +1,10 @@
-import ReturnButton from '../components/auth/ReturnButton';
-import React, {useMemo} from "react";
-import {
-  ActivityIndicator,
-  Image,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import ScreenSafeArea from '../components/common/ScreenSafeArea';
-import {createSchoolsStyles} from "./Styles/SchoolsScreen/Style";
+import React from "react";
+import { Text, View } from "react-native";
+import ListScreen from '../components/common/ListScreen';
+import { schoolsStyles as styles } from "./Styles/SchoolsScreen/Style";
 import { useSchoolsViewModel } from "../../viewmodels/useSchoolsViewModel";
 
 function SchoolCard({ school, colors, t }) {
-  const styles = useMemo(() => createSchoolsStyles(colors), [colors]);
   const active = school.status !== false;
   return (
     <View
@@ -50,50 +41,23 @@ function SchoolCard({ school, colors, t }) {
 
 export default function SchoolsScreen({ navigation }) {
   const { loading, error, schools, reload, colors, t } = useSchoolsViewModel();
-  const styles = useMemo(() => createSchoolsStyles(colors), [colors]);
 
   return (
-    <ScreenSafeArea style={[styles.safeArea, { backgroundColor: colors.backgroundWhite }]}>
-      <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>{t("schools.title")}</Text>
-        </View>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-          {t("schools.subtitle")}
-        </Text>
-
-        {loading ? (
-          <View style={styles.centerBox}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
-        ) : error ? (
-          <View style={styles.centerBox}>
-            <Text style={[styles.centerText, { color: colors.text }]}>{error}</Text>
-            <TouchableOpacity
-              onPress={reload}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              style={[styles.retryButton, { backgroundColor: colors.primary }]}
-            >
-              <Text style={styles.retryText}>{t("schools.retry")}</Text>
-            </TouchableOpacity>
-          </View>
-        ) : schools.length === 0 ? (
-          <View style={styles.centerBox}>
-            <Text style={[styles.centerText, { color: colors.text }]}>{t("schools.empty")}</Text>
-          </View>
-        ) : (
-          <ScrollView persistentScrollbar
-              showsVerticalScrollIndicator
-              contentContainerStyle={{ paddingBottom: 24 }}
-          >
-            {schools.map((school) => (
-              <SchoolCard key={school.schoolId} school={school} colors={colors} t={t} />
-            ))}
-          </ScrollView>
-        )}
-      </View>
-        <ReturnButton onPress={() => navigation?.navigate("DashboardScreen")} />
-    </ScreenSafeArea>
+    <ListScreen
+      title={t("schools.title")}
+      subtitle={t("schools.subtitle")}
+      colors={colors}
+      loading={loading}
+      error={error}
+      onRetry={reload}
+      retryLabel={t("schools.retry")}
+      isEmpty={schools.length === 0}
+      emptyLabel={t("schools.empty")}
+      onBack={() => navigation?.navigate("DashboardScreen")}
+    >
+      {schools.map((school) => (
+        <SchoolCard key={school.schoolId} school={school} colors={colors} t={t} />
+      ))}
+    </ListScreen>
   );
 }

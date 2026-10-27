@@ -1,0 +1,2093 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`list screens: data MyCoursesScreen as student 1`] = `
+<ScreenSafeArea
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#backgroundWhite",
+      },
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+        "paddingHorizontal": 16,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "marginBottom": 12,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 22,
+              "fontWeight": "800",
+              "marginLeft": 8,
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        courses.title
+      </Text>
+    </View>
+    <Text
+      style={
+        [
+          {
+            "fontSize": 14,
+            "marginBottom": 12,
+            "marginLeft": 48,
+            "marginTop": -6,
+          },
+          {
+            "color": "#textSecondary",
+          },
+        ]
+      }
+    >
+      student.myCoursesDesc
+    </Text>
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "paddingBottom": 24,
+        }
+      }
+      persistentScrollbar={true}
+      showsVerticalScrollIndicator={true}
+    >
+      <View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 16,
+                "borderWidth": 1,
+                "marginBottom": 14,
+                "padding": 16,
+              },
+              {
+                "backgroundColor": "#card",
+                "borderColor": "#separator",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 18,
+                  "fontWeight": "800",
+                },
+                {
+                  "color": "#text",
+                },
+              ]
+            }
+          >
+            2758
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 13,
+                  "marginTop": 4,
+                },
+                {
+                  "color": "#textSecondary",
+                },
+              ]
+            }
+          >
+            courses.program
+            : 
+            ADSI
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 13,
+                  "marginTop": 4,
+                },
+                {
+                  "color": "#textSecondary",
+                },
+              ]
+            }
+          >
+            courses.enrolledOn
+            : 
+            2026-02-01
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 13,
+                  "marginTop": 4,
+                },
+                {
+                  "color": "#textSecondary",
+                },
+              ]
+            }
+          >
+            courses.students
+            : 
+            28
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 14,
+                  "fontWeight": "700",
+                  "marginBottom": 8,
+                  "marginTop": 12,
+                },
+                {
+                  "color": "#text",
+                },
+              ]
+            }
+          >
+            courses.courses
+             (
+            2
+            )
+          </Text>
+          <View
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "borderTopWidth": 1,
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                  "paddingVertical": 10,
+                },
+                {
+                  "borderTopColor": "#separator",
+                },
+              ]
+            }
+          >
+            <Text
+              numberOfLines={1}
+              style={
+                [
+                  {
+                    "flex": 1,
+                    "fontSize": 14,
+                    "fontWeight": "600",
+                  },
+                  {
+                    "color": "#text",
+                  },
+                ]
+              }
+            >
+              Bases de datos
+            </Text>
+            <Text
+              style={
+                [
+                  {
+                    "fontSize": 12,
+                    "marginLeft": 8,
+                  },
+                  {
+                    "color": "#textSecondary",
+                  },
+                ]
+              }
+            >
+              BD1
+            </Text>
+          </View>
+          <View
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "borderTopWidth": 1,
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                  "paddingVertical": 10,
+                },
+                {
+                  "borderTopColor": "#separator",
+                },
+              ]
+            }
+          >
+            <Text
+              numberOfLines={1}
+              style={
+                [
+                  {
+                    "flex": 1,
+                    "fontSize": 14,
+                    "fontWeight": "600",
+                  },
+                  {
+                    "color": "#text",
+                  },
+                ]
+              }
+            >
+              —
+            </Text>
+            <Text
+              style={
+                [
+                  {
+                    "fontSize": 12,
+                    "marginLeft": 8,
+                  },
+                  {
+                    "color": "#textSecondary",
+                  },
+                ]
+              }
+            >
+              X2
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 16,
+                "borderWidth": 1,
+                "marginBottom": 14,
+                "padding": 16,
+              },
+              {
+                "backgroundColor": "#card",
+                "borderColor": "#separator",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 18,
+                  "fontWeight": "800",
+                },
+                {
+                  "color": "#text",
+                },
+              ]
+            }
+          >
+            2760
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 13,
+                  "marginTop": 4,
+                },
+                {
+                  "color": "#textSecondary",
+                },
+              ]
+            }
+          >
+            courses.program
+            : 
+            Redes
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 14,
+                  "fontWeight": "700",
+                  "marginBottom": 8,
+                  "marginTop": 12,
+                },
+                {
+                  "color": "#text",
+                },
+              ]
+            }
+          >
+            courses.courses
+             (
+            0
+            )
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 13,
+                  "marginTop": 4,
+                },
+                {
+                  "color": "#textSecondary",
+                },
+              ]
+            }
+          >
+            courses.noCourses
+          </Text>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+  <ReturnButton
+    onPress={[Function]}
+  />
+</ScreenSafeArea>
+`;
+
+exports[`list screens: data MyCoursesScreen as teacher 1`] = `
+<ScreenSafeArea
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#backgroundWhite",
+      },
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+        "paddingHorizontal": 16,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "marginBottom": 12,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 22,
+              "fontWeight": "800",
+              "marginLeft": 8,
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        courses.title
+      </Text>
+    </View>
+    <Text
+      style={
+        [
+          {
+            "fontSize": 14,
+            "marginBottom": 12,
+            "marginLeft": 48,
+            "marginTop": -6,
+          },
+          {
+            "color": "#textSecondary",
+          },
+        ]
+      }
+    >
+      teacher.myCoursesDesc
+    </Text>
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "paddingBottom": 24,
+        }
+      }
+      persistentScrollbar={true}
+      showsVerticalScrollIndicator={true}
+    >
+      <View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 16,
+                "borderWidth": 1,
+                "marginBottom": 14,
+                "padding": 16,
+              },
+              {
+                "backgroundColor": "#card",
+                "borderColor": "#separator",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 18,
+                  "fontWeight": "800",
+                },
+                {
+                  "color": "#text",
+                },
+              ]
+            }
+          >
+            2758
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 13,
+                  "marginTop": 4,
+                },
+                {
+                  "color": "#textSecondary",
+                },
+              ]
+            }
+          >
+            courses.program
+            : 
+            ADSI
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 13,
+                  "marginTop": 4,
+                },
+                {
+                  "color": "#textSecondary",
+                },
+              ]
+            }
+          >
+            courses.enrolledOn
+            : 
+            2026-02-01
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 13,
+                  "marginTop": 4,
+                },
+                {
+                  "color": "#textSecondary",
+                },
+              ]
+            }
+          >
+            courses.students
+            : 
+            28
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 14,
+                  "fontWeight": "700",
+                  "marginBottom": 8,
+                  "marginTop": 12,
+                },
+                {
+                  "color": "#text",
+                },
+              ]
+            }
+          >
+            courses.courses
+             (
+            2
+            )
+          </Text>
+          <View
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "borderTopWidth": 1,
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                  "paddingVertical": 10,
+                },
+                {
+                  "borderTopColor": "#separator",
+                },
+              ]
+            }
+          >
+            <Text
+              numberOfLines={1}
+              style={
+                [
+                  {
+                    "flex": 1,
+                    "fontSize": 14,
+                    "fontWeight": "600",
+                  },
+                  {
+                    "color": "#text",
+                  },
+                ]
+              }
+            >
+              Bases de datos
+            </Text>
+            <Text
+              style={
+                [
+                  {
+                    "fontSize": 12,
+                    "marginLeft": 8,
+                  },
+                  {
+                    "color": "#textSecondary",
+                  },
+                ]
+              }
+            >
+              BD1
+            </Text>
+          </View>
+          <View
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "borderTopWidth": 1,
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                  "paddingVertical": 10,
+                },
+                {
+                  "borderTopColor": "#separator",
+                },
+              ]
+            }
+          >
+            <Text
+              numberOfLines={1}
+              style={
+                [
+                  {
+                    "flex": 1,
+                    "fontSize": 14,
+                    "fontWeight": "600",
+                  },
+                  {
+                    "color": "#text",
+                  },
+                ]
+              }
+            >
+              —
+            </Text>
+            <Text
+              style={
+                [
+                  {
+                    "fontSize": 12,
+                    "marginLeft": 8,
+                  },
+                  {
+                    "color": "#textSecondary",
+                  },
+                ]
+              }
+            >
+              X2
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 16,
+                "borderWidth": 1,
+                "marginBottom": 14,
+                "padding": 16,
+              },
+              {
+                "backgroundColor": "#card",
+                "borderColor": "#separator",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 18,
+                  "fontWeight": "800",
+                },
+                {
+                  "color": "#text",
+                },
+              ]
+            }
+          >
+            2760
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 13,
+                  "marginTop": 4,
+                },
+                {
+                  "color": "#textSecondary",
+                },
+              ]
+            }
+          >
+            courses.program
+            : 
+            Redes
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 14,
+                  "fontWeight": "700",
+                  "marginBottom": 8,
+                  "marginTop": 12,
+                },
+                {
+                  "color": "#text",
+                },
+              ]
+            }
+          >
+            courses.courses
+             (
+            0
+            )
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 13,
+                  "marginTop": 4,
+                },
+                {
+                  "color": "#textSecondary",
+                },
+              ]
+            }
+          >
+            courses.noCourses
+          </Text>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+  <ReturnButton
+    onPress={[Function]}
+  />
+</ScreenSafeArea>
+`;
+
+exports[`list screens: data SchoolsScreen 1`] = `
+<ScreenSafeArea
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#backgroundWhite",
+      },
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+        "paddingHorizontal": 16,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "marginBottom": 12,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 22,
+              "fontWeight": "800",
+              "marginLeft": 8,
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        schools.title
+      </Text>
+    </View>
+    <Text
+      style={
+        [
+          {
+            "fontSize": 14,
+            "marginBottom": 12,
+            "marginLeft": 48,
+            "marginTop": -6,
+          },
+          {
+            "color": "#textSecondary",
+          },
+        ]
+      }
+    >
+      schools.subtitle
+    </Text>
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "paddingBottom": 24,
+        }
+      }
+      persistentScrollbar={true}
+      showsVerticalScrollIndicator={true}
+    >
+      <View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 16,
+                "borderWidth": 1,
+                "marginBottom": 14,
+                "padding": 16,
+              },
+              {
+                "backgroundColor": "#card",
+                "borderColor": "#separator",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 18,
+                  "fontWeight": "800",
+                },
+                {
+                  "color": "#text",
+                },
+              ]
+            }
+          >
+            Sede Norte
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 13,
+                  "marginTop": 4,
+                },
+                {
+                  "color": "#textSecondary",
+                },
+              ]
+            }
+          >
+            N01
+             · Calle 1
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 13,
+                  "marginTop": 4,
+                },
+                {
+                  "color": "#textSecondary",
+                },
+              ]
+            }
+          >
+            555
+          </Text>
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": 8,
+                "marginTop": 10,
+              }
+            }
+          >
+            <View
+              style={
+                [
+                  {
+                    "borderRadius": 12,
+                    "paddingHorizontal": 10,
+                    "paddingVertical": 4,
+                  },
+                  {
+                    "backgroundColor": "#statusPresente",
+                  },
+                ]
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                    },
+                    {
+                      "color": "#statusTextPresente",
+                    },
+                  ]
+                }
+              >
+                schools.active
+              </Text>
+            </View>
+            <View
+              style={
+                [
+                  {
+                    "borderRadius": 12,
+                    "paddingHorizontal": 10,
+                    "paddingVertical": 4,
+                  },
+                  {
+                    "backgroundColor": "#primaryLight",
+                  },
+                ]
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                    },
+                    {
+                      "color": "#primary",
+                    },
+                  ]
+                }
+              >
+                schools.programs
+                : 
+                4
+              </Text>
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            [
+              {
+                "borderRadius": 16,
+                "borderWidth": 1,
+                "marginBottom": 14,
+                "padding": 16,
+              },
+              {
+                "backgroundColor": "#card",
+                "borderColor": "#separator",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 18,
+                  "fontWeight": "800",
+                },
+                {
+                  "color": "#text",
+                },
+              ]
+            }
+          >
+            Sede Sur
+          </Text>
+          <Text
+            style={
+              [
+                {
+                  "fontSize": 13,
+                  "marginTop": 4,
+                },
+                {
+                  "color": "#textSecondary",
+                },
+              ]
+            }
+          >
+            S02
+          </Text>
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "gap": 8,
+                "marginTop": 10,
+              }
+            }
+          >
+            <View
+              style={
+                [
+                  {
+                    "borderRadius": 12,
+                    "paddingHorizontal": 10,
+                    "paddingVertical": 4,
+                  },
+                  {
+                    "backgroundColor": "#statusTarde",
+                  },
+                ]
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                    },
+                    {
+                      "color": "#statusTextTarde",
+                    },
+                  ]
+                }
+              >
+                schools.inactive
+              </Text>
+            </View>
+            <View
+              style={
+                [
+                  {
+                    "borderRadius": 12,
+                    "paddingHorizontal": 10,
+                    "paddingVertical": 4,
+                  },
+                  {
+                    "backgroundColor": "#primaryLight",
+                  },
+                ]
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                    },
+                    {
+                      "color": "#primary",
+                    },
+                  ]
+                }
+              >
+                schools.programs
+                : 
+                0
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+  <ReturnButton
+    onPress={[Function]}
+  />
+</ScreenSafeArea>
+`;
+
+exports[`list screens: empty MyCoursesScreen as student 1`] = `
+<ScreenSafeArea
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#backgroundWhite",
+      },
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+        "paddingHorizontal": 16,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "marginBottom": 12,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 22,
+              "fontWeight": "800",
+              "marginLeft": 8,
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        courses.title
+      </Text>
+    </View>
+    <Text
+      style={
+        [
+          {
+            "fontSize": 14,
+            "marginBottom": 12,
+            "marginLeft": 48,
+            "marginTop": -6,
+          },
+          {
+            "color": "#textSecondary",
+          },
+        ]
+      }
+    >
+      student.myCoursesDesc
+    </Text>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flex": 1,
+          "justifyContent": "center",
+          "paddingHorizontal": 32,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 15,
+              "lineHeight": 22,
+              "marginBottom": 16,
+              "textAlign": "center",
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        courses.empty
+      </Text>
+    </View>
+  </View>
+  <ReturnButton
+    onPress={[Function]}
+  />
+</ScreenSafeArea>
+`;
+
+exports[`list screens: empty MyCoursesScreen as teacher 1`] = `
+<ScreenSafeArea
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#backgroundWhite",
+      },
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+        "paddingHorizontal": 16,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "marginBottom": 12,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 22,
+              "fontWeight": "800",
+              "marginLeft": 8,
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        courses.title
+      </Text>
+    </View>
+    <Text
+      style={
+        [
+          {
+            "fontSize": 14,
+            "marginBottom": 12,
+            "marginLeft": 48,
+            "marginTop": -6,
+          },
+          {
+            "color": "#textSecondary",
+          },
+        ]
+      }
+    >
+      teacher.myCoursesDesc
+    </Text>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flex": 1,
+          "justifyContent": "center",
+          "paddingHorizontal": 32,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 15,
+              "lineHeight": 22,
+              "marginBottom": 16,
+              "textAlign": "center",
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        courses.empty
+      </Text>
+    </View>
+  </View>
+  <ReturnButton
+    onPress={[Function]}
+  />
+</ScreenSafeArea>
+`;
+
+exports[`list screens: empty SchoolsScreen 1`] = `
+<ScreenSafeArea
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#backgroundWhite",
+      },
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+        "paddingHorizontal": 16,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "marginBottom": 12,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 22,
+              "fontWeight": "800",
+              "marginLeft": 8,
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        schools.title
+      </Text>
+    </View>
+    <Text
+      style={
+        [
+          {
+            "fontSize": 14,
+            "marginBottom": 12,
+            "marginLeft": 48,
+            "marginTop": -6,
+          },
+          {
+            "color": "#textSecondary",
+          },
+        ]
+      }
+    >
+      schools.subtitle
+    </Text>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flex": 1,
+          "justifyContent": "center",
+          "paddingHorizontal": 32,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 15,
+              "lineHeight": 22,
+              "marginBottom": 16,
+              "textAlign": "center",
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        schools.empty
+      </Text>
+    </View>
+  </View>
+  <ReturnButton
+    onPress={[Function]}
+  />
+</ScreenSafeArea>
+`;
+
+exports[`list screens: error MyCoursesScreen as student 1`] = `
+<ScreenSafeArea
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#backgroundWhite",
+      },
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+        "paddingHorizontal": 16,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "marginBottom": 12,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 22,
+              "fontWeight": "800",
+              "marginLeft": 8,
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        courses.title
+      </Text>
+    </View>
+    <Text
+      style={
+        [
+          {
+            "fontSize": 14,
+            "marginBottom": 12,
+            "marginLeft": 48,
+            "marginTop": -6,
+          },
+          {
+            "color": "#textSecondary",
+          },
+        ]
+      }
+    >
+      student.myCoursesDesc
+    </Text>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flex": 1,
+          "justifyContent": "center",
+          "paddingHorizontal": 32,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 15,
+              "lineHeight": 22,
+              "marginBottom": 16,
+              "textAlign": "center",
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        Sin conexión
+      </Text>
+      <View
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "backgroundColor": "#primary",
+            "borderRadius": 12,
+            "opacity": 1,
+            "paddingHorizontal": 24,
+            "paddingVertical": 12,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#onPrimary",
+              "fontSize": 15,
+              "fontWeight": "700",
+            }
+          }
+        >
+          courses.retry
+        </Text>
+      </View>
+    </View>
+  </View>
+  <ReturnButton
+    onPress={[Function]}
+  />
+</ScreenSafeArea>
+`;
+
+exports[`list screens: error MyCoursesScreen as teacher 1`] = `
+<ScreenSafeArea
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#backgroundWhite",
+      },
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+        "paddingHorizontal": 16,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "marginBottom": 12,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 22,
+              "fontWeight": "800",
+              "marginLeft": 8,
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        courses.title
+      </Text>
+    </View>
+    <Text
+      style={
+        [
+          {
+            "fontSize": 14,
+            "marginBottom": 12,
+            "marginLeft": 48,
+            "marginTop": -6,
+          },
+          {
+            "color": "#textSecondary",
+          },
+        ]
+      }
+    >
+      teacher.myCoursesDesc
+    </Text>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flex": 1,
+          "justifyContent": "center",
+          "paddingHorizontal": 32,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 15,
+              "lineHeight": 22,
+              "marginBottom": 16,
+              "textAlign": "center",
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        Sin conexión
+      </Text>
+      <View
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "backgroundColor": "#primary",
+            "borderRadius": 12,
+            "opacity": 1,
+            "paddingHorizontal": 24,
+            "paddingVertical": 12,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#onPrimary",
+              "fontSize": 15,
+              "fontWeight": "700",
+            }
+          }
+        >
+          courses.retry
+        </Text>
+      </View>
+    </View>
+  </View>
+  <ReturnButton
+    onPress={[Function]}
+  />
+</ScreenSafeArea>
+`;
+
+exports[`list screens: error SchoolsScreen 1`] = `
+<ScreenSafeArea
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#backgroundWhite",
+      },
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+        "paddingHorizontal": 16,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "marginBottom": 12,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 22,
+              "fontWeight": "800",
+              "marginLeft": 8,
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        schools.title
+      </Text>
+    </View>
+    <Text
+      style={
+        [
+          {
+            "fontSize": 14,
+            "marginBottom": 12,
+            "marginLeft": 48,
+            "marginTop": -6,
+          },
+          {
+            "color": "#textSecondary",
+          },
+        ]
+      }
+    >
+      schools.subtitle
+    </Text>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flex": 1,
+          "justifyContent": "center",
+          "paddingHorizontal": 32,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 15,
+              "lineHeight": 22,
+              "marginBottom": 16,
+              "textAlign": "center",
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        Sin conexión
+      </Text>
+      <View
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "backgroundColor": "#primary",
+            "borderRadius": 12,
+            "opacity": 1,
+            "paddingHorizontal": 24,
+            "paddingVertical": 12,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#onPrimary",
+              "fontSize": 15,
+              "fontWeight": "700",
+            }
+          }
+        >
+          schools.retry
+        </Text>
+      </View>
+    </View>
+  </View>
+  <ReturnButton
+    onPress={[Function]}
+  />
+</ScreenSafeArea>
+`;
+
+exports[`list screens: loading MyCoursesScreen as student 1`] = `
+<ScreenSafeArea
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#backgroundWhite",
+      },
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+        "paddingHorizontal": 16,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "marginBottom": 12,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 22,
+              "fontWeight": "800",
+              "marginLeft": 8,
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        courses.title
+      </Text>
+    </View>
+    <Text
+      style={
+        [
+          {
+            "fontSize": 14,
+            "marginBottom": 12,
+            "marginLeft": 48,
+            "marginTop": -6,
+          },
+          {
+            "color": "#textSecondary",
+          },
+        ]
+      }
+    >
+      student.myCoursesDesc
+    </Text>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flex": 1,
+          "justifyContent": "center",
+          "paddingHorizontal": 32,
+        }
+      }
+    >
+      <ActivityIndicator
+        color="#primary"
+        size="large"
+      />
+    </View>
+  </View>
+  <ReturnButton
+    onPress={[Function]}
+  />
+</ScreenSafeArea>
+`;
+
+exports[`list screens: loading MyCoursesScreen as teacher 1`] = `
+<ScreenSafeArea
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#backgroundWhite",
+      },
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+        "paddingHorizontal": 16,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "marginBottom": 12,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 22,
+              "fontWeight": "800",
+              "marginLeft": 8,
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        courses.title
+      </Text>
+    </View>
+    <Text
+      style={
+        [
+          {
+            "fontSize": 14,
+            "marginBottom": 12,
+            "marginLeft": 48,
+            "marginTop": -6,
+          },
+          {
+            "color": "#textSecondary",
+          },
+        ]
+      }
+    >
+      teacher.myCoursesDesc
+    </Text>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flex": 1,
+          "justifyContent": "center",
+          "paddingHorizontal": 32,
+        }
+      }
+    >
+      <ActivityIndicator
+        color="#primary"
+        size="large"
+      />
+    </View>
+  </View>
+  <ReturnButton
+    onPress={[Function]}
+  />
+</ScreenSafeArea>
+`;
+
+exports[`list screens: loading SchoolsScreen 1`] = `
+<ScreenSafeArea
+  style={
+    [
+      {
+        "flex": 1,
+      },
+      {
+        "backgroundColor": "#backgroundWhite",
+      },
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+        "paddingHorizontal": 16,
+        "paddingTop": 12,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "marginBottom": 12,
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 22,
+              "fontWeight": "800",
+              "marginLeft": 8,
+            },
+            {
+              "color": "#text",
+            },
+          ]
+        }
+      >
+        schools.title
+      </Text>
+    </View>
+    <Text
+      style={
+        [
+          {
+            "fontSize": 14,
+            "marginBottom": 12,
+            "marginLeft": 48,
+            "marginTop": -6,
+          },
+          {
+            "color": "#textSecondary",
+          },
+        ]
+      }
+    >
+      schools.subtitle
+    </Text>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flex": 1,
+          "justifyContent": "center",
+          "paddingHorizontal": 32,
+        }
+      }
+    >
+      <ActivityIndicator
+        color="#primary"
+        size="large"
+      />
+    </View>
+  </View>
+  <ReturnButton
+    onPress={[Function]}
+  />
+</ScreenSafeArea>
+`;
