@@ -36,8 +36,9 @@ Server -> client:
 * ``error`` — the message was invalid or the operation failed (e.g. no match);
   the connection stays open.
 * ``pong`` — reply to a client ``ping``.
-* ``attendance.event`` — pushed to every *other* connected client when an
-  enroll or a successful identify happens anywhere on this channel: who
+* ``attendance.event`` — pushed to every *other* connected client of the same
+  school (a Super Administrador receives every school's) when an
+  enroll or a successful identify happens on this channel: who
   (`person_id`), which modality, what kind of event (`CHECK_IN` / `CHECK_OUT`
   / `FACIAL_ENROLLED` / `FINGERPRINT_ENROLLED`) and `timestamp`.
 
@@ -111,14 +112,17 @@ from infrastructure.web.routers.fingerprint_router import (
     verify_fingerprint,
 )
 from infrastructure.web.security import (
+    WS_CLOSE_SERVICE_UNAVAILABLE,
     WebSocketAuthError,
     authenticate_websocket,
     ensure_biometric_consent,
     extract_ws_token,
     face_threshold_for_caller,
+    resolve_caller_school,
+    resolve_person_school,
     ws_bearer_subprotocol,
 )
-from infrastructure.web.ws.connection_manager import ConnectionManager
+from infrastructure.web.ws.connection_manager import UNRESTRICTED, ConnectionManager, Scope
 from infrastructure.web.ws.idempotency import IdempotencyCache
 
 router = APIRouter(prefix="/api/v1/biometric", tags=["biometric-ws"])
@@ -307,6 +311,19 @@ async def _dispatch(
     return result, event
 
 
+async def _event_school(event: dict[str, Any], token: str | None, settings: Settings) -> str | None:
+    """School of the person the event is about, so it only reaches that school's
+    connections. `None` (auth off, or the school cannot be resolved) means only the
+    connections that see every school receive it."""
+    if not settings.auth_enabled or not token:
+        return None
+    try:
+        return await resolve_person_school(str(event["person_id"]), token)
+    except HTTPException:
+        logger.warning("could not resolve the school of an attendance event; limiting it to super admins")
+        return None
+
+
 async def _handle_frame(
     websocket: WebSocket,
     raw: str,
@@ -393,7 +410,8 @@ async def _handle_frame(
     await websocket.send_json(response)
 
     if event is not None:
-        await manager.broadcast({"type": "attendance.event", **event}, exclude=websocket)
+        school_id = await _event_school(event, extract_ws_token(websocket), settings)
+        await manager.broadcast({"type": "attendance.event", **event}, exclude=websocket, school_id=school_id)
 
 
 @router.websocket("/ws")
@@ -414,9 +432,17 @@ async def biometric_ws(
         await websocket.close(code=exc.code, reason=exc.reason)
         return
 
+    scope: Scope = UNRESTRICTED
+    if user_id is not None:
+        try:
+            scope = await resolve_caller_school(user_id, extract_ws_token(websocket) or "")
+        except HTTPException:
+            await websocket.close(code=WS_CLOSE_SERVICE_UNAVAILABLE, reason="cannot resolve the caller's school")
+            return
+
     manager: ConnectionManager = websocket.app.state.ws_connection_manager
     idempotency: IdempotencyCache = websocket.app.state.ws_idempotency_cache
-    if not await manager.connect(websocket, user_id, settings.ws_max_connections_per_user):
+    if not await manager.connect(websocket, user_id, settings.ws_max_connections_per_user, scope):
         await websocket.close(code=WS_CLOSE_TOO_MANY_CONNECTIONS, reason="too many open connections")
         return
     logger.info(
