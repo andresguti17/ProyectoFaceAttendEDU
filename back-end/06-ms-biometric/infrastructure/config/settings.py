@@ -84,6 +84,9 @@ class Settings(BaseSettings):
     )
     # Enrollment requires the holder's biometric authorization, read from identity.
     consent_check_enabled: bool = True
+    # A person uses facial/fingerprint features only when identity says the terms are accepted
+    # (and, for a minor, a guardian is registered): GET /persons/{id}/terms.
+    enablement_check_enabled: bool = True
     server_selection_timeout_ms: int = 3_000
 
     # ── Authentication (session validated against identity, RBAC by authorization) ──
