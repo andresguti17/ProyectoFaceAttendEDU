@@ -71,6 +71,14 @@ Genérelas con `openssl rand -base64 32` (MinIO: `nombre:$(openssl rand -base64 
 - Consulta directa: `select document_number, email from identity.person` devuelve valores `enc:v1:…`; en MongoDB, `db.facial_embeddings.findOne().encoding` es una cadena `enc:v1:…`, no números.
 - Pruebas automáticas: `ManageConsentUseCaseImplTest`, `ProvisionUserUseCaseImplTest`, `PiiCipherTest`, `PersonPiiPersistenceTest` (identity); `tests/unit/web/test_ley1581.py` (biometric); `consentApi.test.js`, `staffProvisioning.test.js`, `BiometricEnrollmentModal.test.js` (web); `consentService.test.js`, `userProvisioning.test.js` (móvil).
 
+## 6.1 Menores de edad
+
+Los datos de un menor (y los de su acudiente) se tratan con la autorización del representante
+legal, que el acudiente da en persona ante el administrador de la sede. Hasta que el registro esté
+completo el menor no usa funciones con términos ni verificación facial; el servidor biométrico lo
+rechaza (`PERSON_NOT_ENABLED`). Los datos del acudiente se guardan cifrados. Detalle:
+`MENORES_ACUDIENTES_Y_TERMINOS.md`.
+
 ## 7. Fuera de alcance
 
 - Las respuestas de algunos endpoints biométricos de staff siguen devolviendo el vector descifrado (`template_response`); limitar esa exposición es un cambio de API aparte.

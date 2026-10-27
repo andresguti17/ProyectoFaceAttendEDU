@@ -68,6 +68,59 @@ Table app_user {
   }
 }
 
+Table guardian {
+  guardian_id uuid [pk, not null]
+  minor_person_id uuid [not null, note: 'person menor de edad (FK identity.person)']
+  full_name varchar [not null, note: 'cifrado AES-256-GCM']
+  document_type varchar [not null, note: 'CC / CE / PP']
+  document_number varchar [not null, note: 'cifrado AES-256-GCM']
+  email varchar [null, note: 'cifrado; correo o teléfono obligatorio']
+  phone varchar [null, note: 'cifrado']
+  relationship varchar [not null]
+  school_id bigint [null, note: 'sede donde se registró (academic.school, sin FK)']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    minor_person_id [unique, name: 'uq_guardian_minor_active', where: 'deleted_at IS NULL']
+  }
+}
+
+Table terms_acceptance {
+  acceptance_id uuid [pk, not null]
+  person_id uuid [not null]
+  terms_version varchar [not null]
+  user_type varchar [not null, note: 'ADULT / MINOR']
+  accepted_by varchar [not null, note: 'SELF / GUARDIAN']
+  guardian_id uuid [null, note: 'obligatorio si accepted_by = GUARDIAN']
+  channel varchar [not null, note: 'self / assisted']
+  recorded_by uuid [null, note: 'usuario que registró la aceptación']
+  school_id bigint [null]
+  accepted_at datetime [not null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    (person_id, accepted_at) [name: 'idx_terms_person_accepted']
+  }
+}
+
+Ref: guardian.minor_person_id > person.person_id
+Ref: terms_acceptance.person_id > person.person_id
+Ref: terms_acceptance.guardian_id > guardian.guardian_id
+
 Table user_session {
   session_id uuid [pk, not null]
   user_id uuid [not null]
