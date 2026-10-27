@@ -14,6 +14,9 @@ import { useRolePermissions } from "../../viewmodels/useRolePermissions";
 import AuthenticatedLayout from "./AuthenticatedLayout";
 import ForcePasswordChange from "./ForcePasswordChange";
 import PrivacyConsentGate from "./PrivacyConsentGate";
+import TermsGate from "./TermsGate";
+import MinorBlockedGate from "./MinorBlockedGate";
+import { TERMS_GATE } from "../../core/utils/termsGate";
 
 /**
  * AuthMiddleware - Higher Order Component para autenticación
@@ -76,7 +79,21 @@ export default function AuthMiddleware(ScreenComponent) {
             );
         }
 
-        // 5. Aviso de privacidad (Ley 1581) sin aceptar en su versión vigente:
+        // 5. Términos y condiciones. El menor no puede completar el registro desde la
+        // aplicación: queda bloqueado, con el paso pendiente, hasta que el administrador de
+        // la sede registre a su acudiente y la aceptación de este. El adulto los firma una vez.
+        if (user.termsGate === TERMS_GATE.BLOCKED || user.termsGate === TERMS_GATE.ACCEPT) {
+            const Gate = user.termsGate === TERMS_GATE.BLOCKED ? MinorBlockedGate : TermsGate;
+            return (
+                <SafeAreaProvider>
+                    <SafeAreaView style={{ flex: 1, backgroundColor: c.background.app }}>
+                        <Gate />
+                    </SafeAreaView>
+                </SafeAreaProvider>
+            );
+        }
+
+        // 6. Aviso de privacidad (Ley 1581) sin aceptar en su versión vigente:
         // se pide después del cambio de contraseña (el gateway no deja escribir antes).
         if (user.consentRequired) {
             return (
