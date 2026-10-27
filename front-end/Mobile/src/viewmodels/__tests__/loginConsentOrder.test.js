@@ -16,6 +16,10 @@ jest.mock('../../view/components/common/ThemeContext', () => ({useTheme: () => (
 jest.mock('../../view/components/common/languageByRole', () => ({restoreLanguageForRole: jest.fn()}));
 jest.mock('../../storage/TokenStorage', () => ({saveToken: jest.fn(async () => true), removeToken: jest.fn()}));
 jest.mock('../../services/consentService', () => ({ConsentService: {ensureAccepted: jest.fn(async () => {})}}));
+jest.mock('../../services/termsService', () => ({
+    ...jest.requireActual('../../services/termsService'),
+    TermsService: {gateFor: jest.fn(async () => ({gate: 'NONE', step: 'NONE', minor: false})), accept: jest.fn()},
+}));
 jest.mock('../../services/AuthService', () => ({
     AuthService: {login: jest.fn()},
     authError: (code, message) => Object.assign(new Error(message), {code}),
@@ -41,7 +45,6 @@ async function signIn(onLogin) {
     act(() => {
         vm.setEmail('a@sede.edu.co');
         vm.setPassword('Initial-Secret-1');
-        vm.setTerms(true);
     });
     await act(async () => {
         await vm.submit();
