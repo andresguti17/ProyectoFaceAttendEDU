@@ -343,7 +343,7 @@ class UserControllerTest {
         private static final String BODY = """
                 {"person":{"documentNumber":"1001","name":"Ana","lastName":"Rios","email":"ana@sede.edu.co"},
                  "username":"ana.rios","password":"Temporal-2026","sendCredentials":false,"roleName":"Aprendiz",
-                 "consent":{"policyVersion":"2026-10","biometricAccepted":true},
+                 "consent":{"policyVersion":"2026-11","biometricAccepted":true},
                  "academicActor":{"actorTypeId":1,"schoolId":4,"actorCode":"APR-1001","cohortId":9}}""";
 
         @org.junit.jupiter.api.Test

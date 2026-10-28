@@ -40,7 +40,7 @@ class OnboardingControllerTest {
         return """
                 {"school":{"code":"%s","name":"Colegio Nuevo","cityName":"Bogotá","address":"Calle 1","phone":"3000000000","email":"sede@colegio.edu"},
                  "admin":{"documentType":"%s","documentNumber":"123456","name":"Ana","lastName":"Pérez",
-                          "email":"ana@colegio.edu","phone":"3111111111","username":"ana.perez","password":"Secret123!","privacyPolicyVersion":"2026-10"}}
+                          "email":"ana@colegio.edu","phone":"3111111111","username":"ana.perez","password":"Secret123!","privacyPolicyVersion":"2026-11"}}
                 """.formatted(schoolCode, documentType);
     }
 
