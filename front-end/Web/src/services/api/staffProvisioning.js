@@ -325,13 +325,6 @@ export async function provisionStudent({
     };
 }
 
-// Contraseña de respaldo para altas masivas SIN envío de credenciales: la
-// plantilla CSV no trae una columna de contraseña (no tiene sentido pedirle a
-// un admin que escriba contraseñas en texto plano en un archivo). Con envío
-// de credenciales cada estudiante recibe en cambio una contraseña propia
-// generada al azar, y debe cambiarla al ingresar.
-const BULK_IMPORT_DEFAULT_PASSWORD = "Estudiante123!";
-
 // Errores conocidos de provisionStudent traducidos al usuario.
 function importErrorReason(e) {
     const msg = e?.message || "";
@@ -388,10 +381,10 @@ export async function importStudents(drafts, { sendCredentials = true, privacyAc
                 // "||" y no "??": el parser puede traer cadenas vacías, y una
                 // persona sin documento no existe en el modelo (NOT NULL).
                 documentNumber: String(draft?.documentNumber || code).trim(),
-                password: String(
-                    draft?.password ||
-                        (sendCredentials ? generateTemporaryPassword() : BULK_IMPORT_DEFAULT_PASSWORD)
-                ).trim(),
+                // La plantilla CSV no trae contraseña: cada estudiante recibe una
+                // aleatoria y propia (nunca una fija y conocida). Sin envío de
+                // credenciales la cuenta se activa con "Olvidé mi contraseña".
+                password: String(draft?.password || generateTemporaryPassword()).trim(),
                 sendCredentials,
                 courseCode: course,
                 // Par Curso+Ficha elegido en el modal (filas sin course o con

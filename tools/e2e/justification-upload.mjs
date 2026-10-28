@@ -17,7 +17,19 @@
 
 import { createHash } from "node:crypto";
 
-const API = (process.env.API_URL || "http://localhost:8000").replace(/\/+$/, "");
+// Sin regex: `/\/+$/` retrocede de forma super-lineal (Sonar S8786).
+function trimTrailingSlashes(url) {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === "/") end -= 1;
+  return url.slice(0, end);
+}
+
+const API = trimTrailingSlashes(process.env.API_URL || "http://localhost:8000");
+
+// IDs devueltos por el servidor: se codifican antes de ir en la ruta (S7044/S8476) y
+// se les quitan los saltos de línea antes de imprimirlos (S5145).
+const seg = (value) => encodeURIComponent(String(value));
+const clean = (value) => String(value).replaceAll("\r", " ").replaceAll("\n", " ");
 const required = ["APPRENTICE_IDENTIFIER", "APPRENTICE_PASSWORD", "REVIEWER_IDENTIFIER", "REVIEWER_PASSWORD"];
 for (const name of required) {
   if (!process.env[name]) {
@@ -83,25 +95,25 @@ async function main() {
     token: apprentice,
     json: { attendanceRecordId: recordId, justificationTypeId: types[0]?.justificationTypeId, reason: "e2e supporting document check" },
   });
-  console.log(`justification ${justification.justificationId} for record ${recordId}`);
+  console.log(`justification ${clean(justification.justificationId)} for record ${clean(recordId)}`);
 
   const pdf = samplePdf();
   const form = new FormData();
   form.append("file", new Blob([pdf], { type: "application/pdf" }), "soporte-e2e.pdf");
-  const doc = await call("POST", `/api/v1/justifications/${justification.justificationId}/documents`, { token: apprentice, form });
-  console.log(`uploaded document ${doc.supportingDocumentId} -> ${doc.storageUri} (${doc.sizeBytes} bytes)`);
+  const doc = await call("POST", `/api/v1/justifications/${seg(justification.justificationId)}/documents`, { token: apprentice, form });
+  console.log(`uploaded document ${clean(doc.supportingDocumentId)} -> ${clean(doc.storageUri)} (${clean(doc.sizeBytes)} bytes)`);
 
-  const listed = await call("GET", `/api/v1/justifications/${justification.justificationId}/documents`, { token: reviewer });
+  const listed = await call("GET", `/api/v1/justifications/${seg(justification.justificationId)}/documents`, { token: reviewer });
   if (!listed.some((d) => d.supportingDocumentId === doc.supportingDocumentId)) throw new Error("the reviewer does not see the document");
 
-  const res = await call("GET", `/api/v1/supporting-documents/${doc.supportingDocumentId}/content`, { token: reviewer, raw: true });
+  const res = await call("GET", `/api/v1/supporting-documents/${seg(doc.supportingDocumentId)}/content`, { token: reviewer, raw: true });
   if (!res.ok) throw new Error(`content download -> ${res.status}`);
   const downloaded = Buffer.from(await res.arrayBuffer());
   const same = sha256(downloaded) === sha256(pdf);
   console.log(`reviewer downloaded ${downloaded.length} bytes, content-type ${res.headers.get("content-type")}, sha256 ${same ? "matches" : "DIFFERS"}`);
   if (!same) process.exit(1);
 
-  const foreign = await call("GET", `/api/v1/supporting-documents/${doc.supportingDocumentId}/content`, { raw: true });
+  const foreign = await call("GET", `/api/v1/supporting-documents/${seg(doc.supportingDocumentId)}/content`, { raw: true });
   if (foreign.status !== 401) throw new Error(`content without a session should be 401, got ${foreign.status}`);
   console.log("OK: the document is stored in MinIO and the reviewer opens the same bytes");
 }

@@ -240,7 +240,7 @@ jobs:
         run: npm test
       - name: expo export --platform web
         working-directory: front-end/Web
-        run: npx expo export --platform web
+        run: ./node_modules/.bin/expo export --platform web
       - name: npm audit (informational)
         working-directory: front-end/Web
         run: npm audit --audit-level=high

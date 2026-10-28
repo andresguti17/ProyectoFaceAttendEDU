@@ -12,9 +12,11 @@
 // Usage: API_URL=http://localhost:8000 ADMIN_IDENTIFIER=... ADMIN_PASSWORD=... SCHOOL_ID=1 \
 //        node tools/e2e/user-provisioning-rollback.mjs
 
+import { randomBytes } from "node:crypto";
+
 const API = (process.env.API_URL || "http://localhost:8000").replace(/\/+$/, "");
 // Ley 1581: provisioning requires the holder's acceptance of the current privacy notice.
-const CONSENT = { policyVersion: process.env.PRIVACY_POLICY_VERSION || "2026-10", biometricAccepted: false };
+const CONSENT = { policyVersion: process.env.PRIVACY_POLICY_VERSION || "2026-11", biometricAccepted: false };
 for (const name of ["ADMIN_IDENTIFIER", "ADMIN_PASSWORD", "SCHOOL_ID"]) {
   if (!process.env[name]) {
     console.error(`${name} is required`);
@@ -36,6 +38,10 @@ async function call(method, path, token, json) {
 
 const items = (data) => (Array.isArray(data) ? data : data?.data ?? data?.items ?? data?.content ?? []);
 
+// Contraseña de las cuentas de prueba: aleatoria por ejecución, nunca un literal en el código.
+const TEST_PASSWORD = `Tmp-${randomBytes(9).toString("base64url")}-1!`;
+const clean = (value) => String(value).replaceAll("\r", " ").replaceAll("\n", " ");
+
 async function main() {
   const login = await call("POST", "/api/v1/auth/login", null, { identifier: process.env.ADMIN_IDENTIFIER, password: process.env.ADMIN_PASSWORD });
   const token = login.data?.sessionId;
@@ -46,12 +52,12 @@ async function main() {
   const failed = await call("POST", "/api/v1/users/provision", token, {
     person: { documentNumber: document, name: "Rollback", lastName: "Check", email: `rollback.${stamp}@e2e.local` },
     username: `rollback.${stamp}`,
-    password: "Temporal-2026!",
+    password: TEST_PASSWORD,
     roleName: "Aprendiz",
     consent: CONSENT,
     academicActor: { actorTypeId: 1, schoolId: Number(process.env.SCHOOL_ID), actorCode: document, cohortId: 999999999 },
   });
-  console.log(`invalid provisioning -> ${failed.status} ${JSON.stringify(failed.data).slice(0, 160)}`);
+  console.log(`invalid provisioning -> ${failed.status} ${clean(JSON.stringify(failed.data).slice(0, 160))}`);
   if (failed.status < 400) throw new Error("the provisioning with an unknown cohort should have failed");
 
   const persons = items((await call("GET", "/api/v1/persons?limit=500", token)).data);
@@ -64,7 +70,7 @@ async function main() {
   const ok = await call("POST", "/api/v1/users/provision", token, {
     person: { documentNumber: `${document}B`, name: "Provision", lastName: "Check", email: `provision.${stamp}@e2e.local` },
     username: `provision.${stamp}`,
-    password: "Temporal-2026!",
+    password: TEST_PASSWORD,
     roleName: "Administrador",
     consent: CONSENT,
   });

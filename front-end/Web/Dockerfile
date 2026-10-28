@@ -15,7 +15,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY . ./
 # El SDK DigitalPersona (huella) se copia a public/vendor y Expo lo incluye en dist/.
-RUN node scripts/copy-digitalpersona.mjs && npx expo export --platform web
+RUN node scripts/copy-digitalpersona.mjs && ./node_modules/.bin/expo export --platform web
 
 # Sin root: la imagen unprivileged corre nginx como usuario nginx (uid 101) en :8080.
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
