@@ -16,7 +16,7 @@ import { smtpConfigFromEnv, sendEmail } from './infrastructure/email/sender';
 import { runJustificationConsumer } from './infrastructure/messaging/justification.consumer';
 import { runClassSessionConsumer } from './infrastructure/messaging/classSession.consumer';
 import type { AlertDeps } from './application/attendanceAlerts/deps';
-import { HttpPeers, peerConfigFromEnv } from './infrastructure/peers/httpPeers';
+import { alertsOffReason, HttpPeers, peerConfigFromEnv } from './infrastructure/peers/httpPeers';
 import { startAttendanceSchedulers, type RiskScheduler } from './infrastructure/scheduler/riskScheduler';
 
 const app = Fastify({ logger: true });
@@ -95,7 +95,12 @@ async function start() {
     riskScheduler = startAttendanceSchedulers(deps);
     app.log.info('attendance alerts enabled (absence e-mails on class close, daily at-risk pass)');
   } else {
-    app.log.info('attendance alerts disabled: NOTIFICATION_SERVICE_USERNAME/PASSWORD not set');
+    if (alertsOffReason() === 'switched-off') {
+      app.log.info('attendance alerts disabled: ATTENDANCE_ALERTS_ENABLED=false');
+    } else {
+      // Without them no class ever gets its Absent records, and the attendance reports read high.
+      app.log.warn('attendance alerts disabled: NOTIFICATION_SERVICE_USERNAME/PASSWORD not set, so closed classes will not record absences');
+    }
   }
 
   app.addHook('onClose', async () => {
