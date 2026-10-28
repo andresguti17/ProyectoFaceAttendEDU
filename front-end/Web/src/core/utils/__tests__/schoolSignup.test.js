@@ -91,7 +91,7 @@ describe("buildOnboardingPayload", () => {
         expect(payload.admin.lastName).toBe("Pérez");
         expect(payload.admin.documentType).toBe("CC");
         expect(payload.admin.password).toBe("Str0ng!Passw0rd#");
-        expect(payload.admin.privacyPolicyVersion).toBe("2026-10");
+        expect(payload.admin.privacyPolicyVersion).toBe("2026-11");
         expect(payload.admin.biometricAccepted).toBe(false);
     });
 

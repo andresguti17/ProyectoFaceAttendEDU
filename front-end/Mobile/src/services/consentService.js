@@ -4,7 +4,7 @@
 import { request, GET, POST, DELETE } from '../api/apiClient';
 
 // Debe coincidir con faceattend.privacy.policy-version de ms-identity.
-export const PRIVACY_POLICY_VERSION = '2026-10';
+export const PRIVACY_POLICY_VERSION = '2026-11';
 
 export const ConsentService = {
   get: (personId) => request({ method: GET, url: `api/v1/persons/${personId}/consent` }),

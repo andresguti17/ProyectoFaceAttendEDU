@@ -55,7 +55,7 @@ class ProvisionUserUseCaseImplTest {
 
     @BeforeEach
     void identityRows() {
-        lenient().when(consent.currentPolicyVersion()).thenReturn("2026-10");
+        lenient().when(consent.currentPolicyVersion()).thenReturn("2026-11");
         lenient().when(createPerson.createPerson(any())).thenAnswer(call -> {
             Person p = call.getArgument(0);
             p.setPersonId(personId);
@@ -68,7 +68,7 @@ class ProvisionUserUseCaseImplTest {
         });
     }
 
-    private static final ProvisionUserUseCase.Consent CONSENT = new ProvisionUserUseCase.Consent("2026-10", true);
+    private static final ProvisionUserUseCase.Consent CONSENT = new ProvisionUserUseCase.Consent("2026-11", true);
     private static final UUID ADMIN = UUID.randomUUID();
 
     private static ProvisionUserUseCase.Command apprentice() {
@@ -184,7 +184,7 @@ class ProvisionUserUseCaseImplTest {
 
         useCase.provision(apprentice(), TOKEN, ADMIN);
 
-        verify(consent).recordAssisted(personId, "2026-10", true, ADMIN);
+        verify(consent).recordAssisted(personId, "2026-11", true, ADMIN);
     }
 
     @Test
