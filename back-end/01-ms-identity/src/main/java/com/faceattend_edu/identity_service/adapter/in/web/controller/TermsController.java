@@ -35,7 +35,7 @@ public class TermsController {
         private String termsVersion;
     }
 
-    /** pendingStep: NONE, GUARDIAN or TERMS, so the clients show which step is missing. */
+    /** pendingStep: NONE, GUARDIAN, DOCUMENT or TERMS, so the clients show which step is missing. */
     public record EnablementResponse(UUID personId, boolean minor, boolean guardianRegistered, boolean termsAccepted,
                                      boolean termsUpToDate, String acceptedVersion, LocalDateTime acceptedAt,
                                      String currentTermsVersion, String status, String pendingStep, boolean enabled) {
@@ -44,6 +44,7 @@ public class TermsController {
             String step = switch (e.status()) {
                 case ENABLED -> "NONE";
                 case GUARDIAN_PENDING -> "GUARDIAN";
+                case DOCUMENT_PENDING -> "DOCUMENT";
                 case TERMS_PENDING -> "TERMS";
             };
             return new EnablementResponse(e.personId(), e.minor(), e.guardianRegistered(), e.termsAccepted(),

@@ -1366,6 +1366,7 @@
     "title": "REGISTRATION PENDING",
     "body": "You are a minor: your guardian completes the registration at the SENA campus with the administrator.",
     "stepGuardian": "Pending step: register your guardian. They must come to the campus with their ID.",
+    "stepDocument": "Pending step: your guardian must sign the authorization at the campus and the administrator uploads the file.",
     "stepTerms": "Pending step: your guardian must accept the terms and conditions at the campus.",
     "restriction": "Until the registration is complete you cannot use the features that require accepted terms or facial verification.",
     "recheck": "We completed the registration, check again",

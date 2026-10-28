@@ -1,5 +1,6 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
+import com.faceattend_edu.identity_service.application.port.in.ManageGuardianDocumentUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ManageGuardianUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ManageTermsUseCase;
 import com.faceattend_edu.identity_service.domain.exception.DuplicateEntityException;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -27,8 +29,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -43,6 +48,7 @@ class TermsAndGuardianControllerTest {
     @Autowired MockMvc mockMvc;
     @MockitoBean ManageTermsUseCase termsUseCase;
     @MockitoBean ManageGuardianUseCase guardianUseCase;
+    @MockitoBean ManageGuardianDocumentUseCase documentUseCase;
 
     private final UUID personId = UUID.randomUUID();
     private final UUID caller = UUID.randomUUID();
@@ -178,5 +184,57 @@ class TermsAndGuardianControllerTest {
         g.setCreatedAt(LocalDateTime.now());
         g.setUpdatedAt(LocalDateTime.now());
         return g;
+    }
+
+    @Test
+    void aMinorWhoseGuardianHasNoSignedDocumentIsToldTheDocumentIsPending() throws Exception {
+        when(termsUseCase.enablement(eq(personId), any())).thenReturn(enablement(Enablement.Status.DOCUMENT_PENDING, true, true));
+
+        mockMvc.perform(get("/api/v1/persons/{id}/terms", personId).with(asAdmin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pendingStep").value("DOCUMENT"))
+                .andExpect(jsonPath("$.enabled").value(false));
+    }
+
+    @Test
+    void uploadingTheSignedDocumentAnswers201AndReportsItOnTheGuardian() throws Exception {
+        Guardian saved = new Guardian();
+        saved.setGuardianId(UUID.randomUUID());
+        saved.setMinorPersonId(personId);
+        saved.setConsentDocumentUri("guardian-documents/2026/10/a.pdf");
+        saved.setConsentDocumentName("autorizacion.pdf");
+        saved.setConsentDocumentUploadedAt(LocalDateTime.now());
+        byte[] pdf = "%PDF-1.4 signed".getBytes();
+        when(documentUseCase.upload(eq(personId), eq("autorizacion.pdf"), eq(pdf), any(), any())).thenReturn(saved);
+
+        mockMvc.perform(multipart("/api/v1/persons/{id}/guardian/document", personId)
+                        .file(new MockMultipartFile("file", "autorizacion.pdf", "application/pdf", pdf))
+                        .with(asAdmin()))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.documentRegistered").value(true))
+                .andExpect(jsonPath("$.documentName").value("autorizacion.pdf"));
+    }
+
+    @Test
+    void anEmptyFileIsRejectedBeforeTheUseCase() throws Exception {
+        mockMvc.perform(multipart("/api/v1/persons/{id}/guardian/document", personId)
+                        .file(new MockMultipartFile("file", "vacio.pdf", "application/pdf", new byte[0]))
+                        .with(asAdmin()))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(documentUseCase);
+    }
+
+    @Test
+    void theSignedDocumentIsDownloadedAsAnAttachmentWithoutSniffing() throws Exception {
+        byte[] pdf = "%PDF-1.4 signed".getBytes();
+        when(documentUseCase.download(eq(personId), any()))
+                .thenReturn(new ManageGuardianDocumentUseCase.Document("autorizacion.pdf", "application/pdf", pdf));
+
+        mockMvc.perform(get("/api/v1/persons/{id}/guardian/document", personId).with(asAdmin()))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.startsWith("attachment")))
+                .andExpect(content().bytes(pdf));
     }
 }

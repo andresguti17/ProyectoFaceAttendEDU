@@ -133,6 +133,8 @@ services:
       # El canal de correo (recuperación de contraseña) sale hacia notification.
       ms-notification:
         condition: service_started
+      minio:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: ${NEON_JDBC_URL:-jdbc:postgresql://postgres:5432/faceattend_db?stringtype=unspecified}
       SPRING_DATASOURCE_USERNAME: identity_app
@@ -145,6 +147,11 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_PROPERTIES_HIBERNATE_HBM2DDL_CREATE_NAMESPACES: "true"
       SPRING_JPA_PROPERTIES_HIBERNATE_GLOBALLY_QUOTED_IDENTIFIERS: "true"
+      # Signed authorization of a minor's guardian (MinIO, ADR-009).
+      FACEATTEND_STORAGE_ENDPOINT: http://minio:9000
+      FACEATTEND_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      FACEATTEND_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      FACEATTEND_STORAGE_BUCKET: guardian-documents
       FACEATTEND_AUTH_IDENTITY_URL: http://ms-identity:8081
       FACEATTEND_AUTH_AUTHORIZATION_URL: http://ms-authorization:8082
       # Alcance por rol de /persons: fichas (scheduling) y matrículas (academic).

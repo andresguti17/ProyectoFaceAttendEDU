@@ -39,6 +39,15 @@ services:
       - name: identity-nested-route
         paths: ["~/api/v1/users/.+/activate"]
         strip_path: false
+      # Signed guardian authorization: 5 MB file plus the multipart envelope (ms-identity enforces 5 MB).
+      - name: identity-guardian-document-route
+        paths: ["~/api/v1/persons/[^/]+/guardian/document$"]
+        strip_path: false
+        plugins:
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 6
+              size_unit: megabytes
     plugins:
       - name: cors
         config:

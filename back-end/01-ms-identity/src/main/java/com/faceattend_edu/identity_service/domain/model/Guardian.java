@@ -27,4 +27,14 @@ public class Guardian {
     private LocalDateTime updatedAt;
     private UUID createdBy;
     private UUID updatedBy;
+    /** Signed authorization of the guardian (MinIO): where it is and what it is. Null until uploaded. */
+    private String consentDocumentUri;
+    private String consentDocumentName;
+    private String consentDocumentMime;
+    private Long consentDocumentSize;
+    private LocalDateTime consentDocumentUploadedAt;
+
+    public boolean hasConsentDocument() {
+        return consentDocumentUri != null && !consentDocumentUri.isBlank();
+    }
 }

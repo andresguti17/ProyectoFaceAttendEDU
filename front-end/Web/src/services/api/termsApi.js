@@ -13,7 +13,8 @@ import { TERMS_VERSION } from "../../core/config/terms";
 export const termsApi = {
     /**
      * { minor, guardianRegistered, termsAccepted, termsUpToDate, currentTermsVersion,
-     *   status: ENABLED|TERMS_PENDING|GUARDIAN_PENDING, pendingStep: NONE|TERMS|GUARDIAN, enabled }
+     *   status: ENABLED|TERMS_PENDING|GUARDIAN_PENDING|DOCUMENT_PENDING,
+     *   pendingStep: NONE|TERMS|GUARDIAN|DOCUMENT, enabled }
      */
     get: (personId) => request(endpoints.identity.personTerms(personId), { method: "GET" }),
 
@@ -46,4 +47,11 @@ export const guardianApi = {
 
     update: (minorPersonId, data) =>
         request(endpoints.identity.personGuardian(minorPersonId), { method: "PUT", body: guardianBody(data) }),
+
+    /** Sube la autorización firmada del acudiente (PDF, JPG o PNG, máx. 5 MB) a MinIO a través de identity. */
+    uploadDocument: (minorPersonId, file, fileName) => {
+        const form = new FormData();
+        form.append("file", file, fileName);
+        return request(endpoints.identity.personGuardianDocument(minorPersonId), { method: "POST", body: form, timeoutMs: 60000 });
+    },
 };

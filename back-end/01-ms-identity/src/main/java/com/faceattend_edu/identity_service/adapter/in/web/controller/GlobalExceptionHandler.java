@@ -5,6 +5,7 @@ import com.faceattend_edu.identity_service.domain.exception.TooManyLoginAttempts
 import com.faceattend_edu.identity_service.domain.exception.DomainException;
 import com.faceattend_edu.identity_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.identity_service.domain.exception.EmailDeliveryException;
+import com.faceattend_edu.identity_service.application.port.out.GuardianDocumentStoragePort;
 import com.faceattend_edu.identity_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.identity_service.domain.exception.OnboardingUnavailableException;
 import com.faceattend_edu.identity_service.domain.exception.UnauthorizedException;
@@ -129,6 +130,13 @@ public class GlobalExceptionHandler {
             com.faceattend_edu.identity_service.domain.exception.DownstreamRejectedException ex, HttpServletRequest req) {
         HttpStatus status = HttpStatus.valueOf(ex.getStatus());
         return build(status, status.name(), ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(GuardianDocumentStoragePort.StorageUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> handleStorageUnavailable(GuardianDocumentStoragePort.StorageUnavailableException ex, HttpServletRequest req) {
+        log.warn("Guardian document storage unavailable: {}", ex.getMessage(), ex);
+        return build(HttpStatus.SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE",
+                "The document storage is not available right now", req);
     }
 
     @ExceptionHandler(OnboardingUnavailableException.class)

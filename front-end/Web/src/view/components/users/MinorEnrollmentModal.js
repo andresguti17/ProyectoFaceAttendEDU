@@ -10,10 +10,10 @@
 import React, { useState } from "react";
 import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Alert, BaseModal, Button, Checkbox, Select, TextInput } from "../common";
+import { Alert, BaseModal, Button, Checkbox, FileUpload, Select, TextInput } from "../common";
 import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
-import { GUARDIAN_DOCUMENT_TYPES, useMinorEnrollmentViewModel } from "../../../viewmodels/useMinorEnrollmentViewModel";
+import { GUARDIAN_DOCUMENT_TYPES, SIGNED_DOCUMENT_MAX_BYTES, useMinorEnrollmentViewModel } from "../../../viewmodels/useMinorEnrollmentViewModel";
 import TermsDocument from "../privacy/TermsDocument";
 
 function StepHeader({ done, label, c }) {
@@ -33,6 +33,7 @@ export default function MinorEnrollmentModal({ visible, student, onClose, onRead
     const [present, setPresent] = useState(false);
     const [biometric, setBiometric] = useState(false);
     const [message, setMessage] = useState(null);
+    const [signedFile, setSignedFile] = useState([]);
 
     if (!visible || !student?.personId) return null;
 
@@ -65,9 +66,11 @@ export default function MinorEnrollmentModal({ visible, student, onClose, onRead
                 {!vm.enabled && !vm.loading && !vm.error ? (
                     <Alert
                         type="warning"
-                        message={vm.guardianRegistered
-                            ? t("Paso pendiente: registrar la aceptación de los términos del acudiente.")
-                            : t("Paso pendiente: registrar al acudiente del aprendiz.")}
+                        message={!vm.guardianRegistered
+                            ? t("Paso pendiente: registrar al acudiente del aprendiz.")
+                            : !vm.documentRegistered
+                                ? t("Paso pendiente: subir la autorización firmada por el acudiente.")
+                                : t("Paso pendiente: registrar la aceptación de los términos del acudiente.")}
                     />
                 ) : null}
                 {message ? <Alert type={message.type} message={message.text} /> : null}
@@ -124,7 +127,36 @@ export default function MinorEnrollmentModal({ visible, student, onClose, onRead
                     {vm.guardian ? t("Actualizar acudiente") : t("Registrar y vincular acudiente")}
                 </Button>
 
-                <StepHeader done={vm.termsAccepted} label={t("2. Términos y condiciones")} c={c} />
+                <StepHeader done={vm.documentRegistered} label={t("2. Autorización firmada del acudiente")} c={c} />
+                {vm.guardianRegistered ? (
+                    <>
+                        {vm.documentRegistered ? (
+                            <Text style={{ fontSize: 13, color: c.text.secondary }}>
+                                {t("Archivo guardado:")} {vm.guardian?.documentName}
+                            </Text>
+                        ) : null}
+                        <FileUpload
+                            value={signedFile}
+                            onChange={setSignedFile}
+                            accept="*/*"
+                            maxSize={SIGNED_DOCUMENT_MAX_BYTES}
+                            label={t("Autorización firmada (PDF, JPG o PNG · máx. 5 MB)")}
+                        />
+                        <Button
+                            variant="primary"
+                            disabled={signedFile.length === 0 || vm.saving}
+                            onPress={() => run(async () => {
+                                const error = await vm.uploadDocument(signedFile[0]);
+                                if (!error) setSignedFile([]);
+                                return error;
+                            })}
+                        >
+                            {vm.documentRegistered ? t("Reemplazar autorización firmada") : t("Subir autorización firmada")}
+                        </Button>
+                    </>
+                ) : null}
+
+                <StepHeader done={vm.termsAccepted} label={t("3. Términos y condiciones")} c={c} />
                 {vm.guardianRegistered && !vm.termsAccepted ? (
                     <>
                         <TermsDocument />

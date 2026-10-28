@@ -54,6 +54,21 @@ public class GuardianJpaEntity {
     @Column(name = "school_id")
     private Long schoolId;
 
+    @Column(name = "consent_document_uri", length = 500)
+    private String consentDocumentUri;
+
+    @Column(name = "consent_document_name", length = 255)
+    private String consentDocumentName;
+
+    @Column(name = "consent_document_mime", length = 100)
+    private String consentDocumentMime;
+
+    @Column(name = "consent_document_size")
+    private Long consentDocumentSize;
+
+    @Column(name = "consent_document_uploaded_at")
+    private LocalDateTime consentDocumentUploadedAt;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

@@ -1,8 +1,10 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
+import com.faceattend_edu.identity_service.application.port.in.ManageGuardianDocumentUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ManageGuardianUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ManageGuardianUseCase.GuardianData;
 import com.faceattend_edu.identity_service.domain.exception.EntityNotFoundException;
+import com.faceattend_edu.identity_service.domain.exception.ValidationException;
 import com.faceattend_edu.identity_service.domain.model.Guardian;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -10,9 +12,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -27,6 +35,7 @@ import java.util.UUID;
 public class GuardianController {
 
     private final ManageGuardianUseCase guardianUseCase;
+    private final ManageGuardianDocumentUseCase documentUseCase;
 
     @Data
     public static class GuardianRequest {
@@ -50,12 +59,15 @@ public class GuardianController {
 
     public record GuardianResponse(UUID guardianId, UUID minorPersonId, String fullName, String documentType,
                                    String documentNumber, String email, String phone, String relationship,
-                                   Long schoolId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                                   Long schoolId, LocalDateTime createdAt, LocalDateTime updatedAt,
+                                   boolean documentRegistered, String documentName,
+                                   LocalDateTime documentUploadedAt) {
 
         static GuardianResponse of(Guardian g) {
             return new GuardianResponse(g.getGuardianId(), g.getMinorPersonId(), g.getFullName(), g.getDocumentType(),
                     g.getDocumentNumber(), g.getEmail(), g.getPhone(), g.getRelationship(), g.getSchoolId(),
-                    g.getCreatedAt(), g.getUpdatedAt());
+                    g.getCreatedAt(), g.getUpdatedAt(), g.hasConsentDocument(), g.getConsentDocumentName(),
+                    g.getConsentDocumentUploadedAt());
         }
     }
 
@@ -80,5 +92,27 @@ public class GuardianController {
         Guardian saved = guardianUseCase.update(minorId, body.toData(), TermsController.caller(http),
                 TermsController.roles(http), TermsController.bearer(http));
         return ResponseEntity.ok(GuardianResponse.of(saved));
+    }
+
+    /** The file the guardian signed at the school: PDF, JPG or PNG up to 5 MB. */
+    @PostMapping(path = "/document", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<GuardianResponse> uploadDocument(@PathVariable UUID minorId,
+                                                           @RequestParam("file") MultipartFile file,
+                                                           HttpServletRequest http) throws IOException {
+        if (file == null || file.isEmpty()) throw new ValidationException("file is required");
+        Guardian saved = documentUseCase.upload(minorId, file.getOriginalFilename(), file.getBytes(),
+                TermsController.caller(http), TermsController.roles(http));
+        return ResponseEntity.status(HttpStatus.CREATED).body(GuardianResponse.of(saved));
+    }
+
+    @GetMapping("/document")
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable UUID minorId, HttpServletRequest http) {
+        ManageGuardianDocumentUseCase.Document document = documentUseCase.download(minorId, TermsController.roles(http));
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(document.mimeType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(document.fileName()).build().toString())
+                .header("X-Content-Type-Options", "nosniff")
+                .body(document.content());
     }
 }

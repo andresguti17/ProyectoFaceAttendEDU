@@ -55,3 +55,15 @@ test("editing a guardian is a PUT on the same resource", async () => {
     expect(request.mock.calls[0][1].method).toBe("PUT");
     expect(request.mock.calls[0][0]).toContain("/persons/minor-1/guardian");
 });
+
+test("the signed authorization goes as multipart to the guardian document of the minor", async () => {
+    const blob = new Blob(["%PDF-1.4"], { type: "application/pdf" });
+
+    await guardianApi.uploadDocument("minor-1", blob, "autorizacion.pdf");
+
+    const [url, opts] = request.mock.calls[0];
+    expect(url).toContain("/persons/minor-1/guardian/document");
+    expect(opts.method).toBe("POST");
+    expect(opts.body).toBeInstanceOf(FormData);
+    expect(opts.body.get("file").name).toBe("autorizacion.pdf");
+});

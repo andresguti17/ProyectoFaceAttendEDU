@@ -343,10 +343,20 @@
             "format": "date-time",
             "type": "string"
           },
+          "documentName": {
+            "type": "string"
+          },
           "documentNumber": {
             "type": "string"
           },
+          "documentRegistered": {
+            "type": "boolean"
+          },
           "documentType": {
+            "type": "string"
+          },
+          "documentUploadedAt": {
+            "format": "date-time",
             "type": "string"
           },
           "email": {
@@ -1758,6 +1768,85 @@
             }
           },
           "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardianResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "guardian-controller"
+        ]
+      }
+    },
+    "/api/v1/persons/{minorId}/guardian/document": {
+      "get": {
+        "operationId": "downloadDocument",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "minorId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "format": "byte",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "guardian-controller"
+        ]
+      },
+      "post": {
+        "operationId": "uploadDocument",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "minorId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          }
         },
         "responses": {
           "200": {

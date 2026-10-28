@@ -28,6 +28,11 @@ describe("resolveTermsGate", () => {
             .toEqual({ gate: TERMS_GATE.BLOCKED, step: "GUARDIAN", minor: true });
     });
 
+    test("a minor whose guardian has no signed document is blocked on the document step", () => {
+        expect(resolveTermsGate(enablement({ minor: true, guardianRegistered: true, pendingStep: "DOCUMENT" })))
+            .toEqual({ gate: TERMS_GATE.BLOCKED, step: "DOCUMENT", minor: true });
+    });
+
     test("a minor with a guardian but pending terms is blocked on the terms step", () => {
         expect(resolveTermsGate(enablement({ minor: true, guardianRegistered: true, pendingStep: "TERMS" })))
             .toEqual({ gate: TERMS_GATE.BLOCKED, step: "TERMS", minor: true });

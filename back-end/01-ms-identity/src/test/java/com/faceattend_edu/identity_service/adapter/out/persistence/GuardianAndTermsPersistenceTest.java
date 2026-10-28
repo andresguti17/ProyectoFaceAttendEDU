@@ -60,6 +60,29 @@ class GuardianAndTermsPersistenceTest {
     }
 
     @Test
+    void theSignedDocumentIsKeptAndReadBack() {
+        LocalDateTime uploaded = LocalDateTime.now();
+        Guardian guardian = new Guardian();
+        guardian.setGuardianId(UUID.randomUUID());
+        guardian.setConsentDocumentUri("guardian-documents/2026/10/a.pdf");
+        guardian.setConsentDocumentName("autorizacion.pdf");
+        guardian.setConsentDocumentMime("application/pdf");
+        guardian.setConsentDocumentSize(1234L);
+        guardian.setConsentDocumentUploadedAt(uploaded);
+        when(guardianRepository.findById(guardian.getGuardianId())).thenReturn(Optional.empty());
+        when(guardianRepository.save(any())).thenAnswer(call -> call.getArgument(0));
+
+        Guardian saved = guardianAdapter.save(guardian);
+
+        assertThat(saved.hasConsentDocument()).isTrue();
+        assertThat(saved.getConsentDocumentName()).isEqualTo("autorizacion.pdf");
+        assertThat(saved.getConsentDocumentMime()).isEqualTo("application/pdf");
+        assertThat(saved.getConsentDocumentSize()).isEqualTo(1234L);
+        assertThat(saved.getConsentDocumentUploadedAt()).isEqualTo(uploaded);
+        assertThat(new Guardian().hasConsentDocument()).isFalse();
+    }
+
+    @Test
     void editingAGuardianKeepsTheOriginalCreator() {
         UUID creator = UUID.randomUUID();
         UUID editor = UUID.randomUUID();
