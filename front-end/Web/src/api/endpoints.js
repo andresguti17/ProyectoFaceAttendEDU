@@ -32,6 +32,7 @@ export const endpoints = {
         personConsentBiometric: (id) => `${API_V1}/persons/${id}/consent/biometric`,
         personTerms: (id) => `${API_V1}/persons/${id}/terms`,
         personGuardian: (id) => `${API_V1}/persons/${id}/guardian`,
+        personGuardianDocument: (id) => `${API_V1}/persons/${id}/guardian/document`,
         users: `${API_V1}/users`,
         usersProvision: `${API_V1}/users/provision`,
         userById: (id) => `${API_V1}/users/${id}`,

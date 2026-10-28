@@ -36,6 +36,10 @@ public class ManageTermsUseCaseImpl implements ManageTermsUseCase {
     private final LoadUserPort loadUserPort;
     private final PersonSchoolPort personSchoolPort;
 
+    /** A minor needs the guardian's signed authorization on file (Ley 1581 art. 7); off only to stage a rollout. */
+    @Value("${faceattend.guardian.document-required:true}")
+    private boolean documentRequired = true;
+
     @Value("${faceattend.terms.version:2026-10}")
     private String termsVersion = "2026-10";
 
@@ -103,6 +107,7 @@ public class ManageTermsUseCaseImpl implements ManageTermsUseCase {
 
         Enablement.Status status;
         if (minor && guardian.isEmpty()) status = Enablement.Status.GUARDIAN_PENDING;
+        else if (minor && documentRequired && !guardian.get().hasConsentDocument()) status = Enablement.Status.DOCUMENT_PENDING;
         else if (!upToDate) status = Enablement.Status.TERMS_PENDING;
         else status = Enablement.Status.ENABLED;
 

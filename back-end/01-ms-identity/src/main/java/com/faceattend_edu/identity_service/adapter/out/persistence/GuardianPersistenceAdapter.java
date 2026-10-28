@@ -36,6 +36,11 @@ public class GuardianPersistenceAdapter implements GuardianPort {
         entity.setPhone(guardian.getPhone());
         entity.setRelationship(guardian.getRelationship());
         entity.setSchoolId(guardian.getSchoolId());
+        entity.setConsentDocumentUri(guardian.getConsentDocumentUri());
+        entity.setConsentDocumentName(guardian.getConsentDocumentName());
+        entity.setConsentDocumentMime(guardian.getConsentDocumentMime());
+        entity.setConsentDocumentSize(guardian.getConsentDocumentSize());
+        entity.setConsentDocumentUploadedAt(guardian.getConsentDocumentUploadedAt());
         entity.setUpdatedBy(guardian.getUpdatedBy());
         entity.setUpdatedAt(now);
         return toDomain(repository.save(entity));
@@ -59,6 +64,8 @@ public class GuardianPersistenceAdapter implements GuardianPort {
     private static Guardian toDomain(GuardianJpaEntity e) {
         return new Guardian(e.getGuardianId(), e.getMinorPersonId(), e.getFullName(), e.getDocumentType(),
                 e.getDocumentNumber(), e.getEmail(), e.getPhone(), e.getRelationship(), e.getSchoolId(),
-                e.getCreatedAt(), e.getUpdatedAt(), e.getCreatedBy(), e.getUpdatedBy());
+                e.getCreatedAt(), e.getUpdatedAt(), e.getCreatedBy(), e.getUpdatedBy(),
+                e.getConsentDocumentUri(), e.getConsentDocumentName(), e.getConsentDocumentMime(),
+                e.getConsentDocumentSize(), e.getConsentDocumentUploadedAt());
     }
 }

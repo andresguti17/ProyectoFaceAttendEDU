@@ -1366,6 +1366,7 @@
     "title": "INSCRIPTION EN ATTENTE",
     "body": "Vous êtes mineur : votre représentant termine l'inscription au site du SENA avec l'administrateur.",
     "stepGuardian": "Étape en attente : enregistrer votre représentant. Il doit se présenter au site avec sa pièce d'identité.",
+    "stepDocument": "Étape en attente : votre représentant doit signer l'autorisation au site et l'administrateur téléverse le fichier.",
     "stepTerms": "Étape en attente : votre représentant doit accepter les conditions générales au site.",
     "restriction": "Tant que l'inscription n'est pas terminée, vous ne pouvez pas utiliser les fonctions qui exigent l'acceptation des conditions ni la vérification faciale.",
     "recheck": "L'inscription est terminée, vérifier",

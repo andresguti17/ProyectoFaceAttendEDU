@@ -2,8 +2,9 @@
 //  FaceAttend EDU — useMinorEnrollmentViewModel
 //  Registro de un aprendiz menor de edad por el administrador de la sede:
 //   1. registrar / editar al acudiente y vincularlo al menor,
-//   2. registrar la aceptación de los términos por el acudiente (presente en la sede),
-//   3. (el modal sigue con el ingreso de parámetros faciales, que reutiliza la captura biométrica).
+//   2. subir la autorización firmada por el acudiente (PDF, JPG o PNG, máx. 5 MB),
+//   3. registrar la aceptación de los términos por el acudiente (presente en la sede),
+//   4. (el modal sigue con el ingreso de parámetros faciales, que reutiliza la captura biométrica).
 //  Las funciones devuelven null si salió bien o el mensaje de error, como el resto de los VM.
 // ============================================================
 
@@ -12,6 +13,8 @@ import { termsApi, guardianApi } from "../services/api/termsApi";
 import { consentApi } from "../services/api/consentApi";
 
 export const GUARDIAN_DOCUMENT_TYPES = ["CC", "CE", "PP"];
+export const SIGNED_DOCUMENT_MAX_BYTES = 5 * 1024 * 1024;
+const SIGNED_DOCUMENT_MIME = ["application/pdf", "image/jpeg", "image/png"];
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 const EMPTY_FORM = {
@@ -108,6 +111,26 @@ export function useMinorEnrollmentViewModel(personId) {
         }
     }, [form, guardian, personId]);
 
+    /** Sube la autorización firmada; `file` es el elemento de FileUpload ({ file | uri, name, size, type }). */
+    const uploadDocument = useCallback(async (file) => {
+        if (!guardian) return "Registra primero al acudiente";
+        if (!file) return "Elige el archivo de la autorización firmada";
+        if (file.size > SIGNED_DOCUMENT_MAX_BYTES) return "El archivo supera los 5 MB";
+        if (file.type && !SIGNED_DOCUMENT_MIME.includes(file.type)) return "El archivo debe ser PDF, JPG o PNG";
+        setSaving(true);
+        try {
+            const blob = file.file ?? (await (await fetch(file.uri)).blob());
+            const saved = await guardianApi.uploadDocument(personId, blob, file.name);
+            setGuardian(saved);
+            setEnablement(await termsApi.get(personId));
+            return null;
+        } catch (err) {
+            return err?.message || "No se pudo subir la autorización firmada";
+        } finally {
+            setSaving(false);
+        }
+    }, [guardian, personId]);
+
     /**
      * Registra que el acudiente, presente en la sede, aceptó los términos. Con la autorización
      * de datos (aviso de privacidad) a nombre del menor, y la biométrica solo si el acudiente la da.
@@ -136,9 +159,11 @@ export function useMinorEnrollmentViewModel(personId) {
         error,
         setField,
         saveGuardian,
+        uploadDocument,
         recordTerms,
         reload,
         guardianRegistered: enablement?.guardianRegistered === true,
+        documentRegistered: guardian?.documentRegistered === true,
         termsAccepted: enablement?.termsUpToDate === true,
         enabled: enablement?.enabled === true,
     };

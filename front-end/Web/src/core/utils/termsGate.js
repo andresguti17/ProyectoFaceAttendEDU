@@ -9,11 +9,11 @@
 
 export const TERMS_GATE = { NONE: "NONE", ACCEPT: "ACCEPT", BLOCKED: "BLOCKED" };
 
-/** Paso pendiente para el menor: GUARDIAN (falta el acudiente) o TERMS (falta su aceptación). */
+/** Paso pendiente para el menor: GUARDIAN (falta el acudiente), DOCUMENT (falta su autorización firmada) o TERMS (falta su aceptación). */
 export function resolveTermsGate(enablement) {
     if (!enablement || enablement.enabled === true) return { gate: TERMS_GATE.NONE, step: "NONE", minor: false };
     const minor = enablement.minor === true;
-    const step = enablement.pendingStep === "GUARDIAN" ? "GUARDIAN" : "TERMS";
+    const step = ["GUARDIAN", "DOCUMENT"].includes(enablement.pendingStep) ? enablement.pendingStep : "TERMS";
     return { gate: minor ? TERMS_GATE.BLOCKED : TERMS_GATE.ACCEPT, step, minor };
 }
 

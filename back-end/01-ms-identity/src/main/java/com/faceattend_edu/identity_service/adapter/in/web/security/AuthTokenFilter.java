@@ -50,13 +50,13 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private static final Pattern PERSON_ITEM = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})$");
     private static final Pattern USER_ITEM = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})$");
     /** Persona y sus sub-recursos de escritura: PUT /persons/{id}, PATCH /persons/{id}/status. */
-    private static final Pattern PERSON_SCOPED = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})(?:/status|/consent(?:/biometric)?|/terms|/guardian)?$");
+    private static final Pattern PERSON_SCOPED = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})(?:/status|/consent(?:/biometric)?|/terms|/guardian(?:/document)?)?$");
     /** Data-processing authorization (Ley 1581): the holder or an administrator; the use case decides. */
     private static final Pattern PERSON_CONSENT = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})/consent(?:/biometric)?$");
     /** Terms and Conditions: every role acts on its own; the use case lets only the school administrator record a minor's. */
     private static final Pattern PERSON_TERMS = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})/terms$");
     /** Guardian of a minor: third-party data tied to a child, so even reading it needs person administration. */
-    private static final Pattern PERSON_GUARDIAN = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})/guardian$");
+    private static final Pattern PERSON_GUARDIAN = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})/guardian(?:/document)?$");
     /** Cuenta y sub-recursos de escritura: PUT /users/{id}, PATCH .../status, POST .../activate. */
     private static final Pattern USER_SCOPED = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})(?:/status|/activate)?$");
     private static final Pattern USER_SESSIONS = Pattern.compile("^/api/v1/sessions/user/([0-9a-fA-F-]{36})$");

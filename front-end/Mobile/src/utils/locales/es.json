@@ -1366,6 +1366,7 @@
     "title": "REGISTRO PENDIENTE",
     "body": "Eres menor de edad: tu acudiente completa el registro en la sede del SENA con el administrador.",
     "stepGuardian": "Paso pendiente: registrar a tu acudiente. Debe acudir a la sede con su documento de identidad.",
+    "stepDocument": "Paso pendiente: que tu acudiente firme la autorización en la sede y el administrador suba el archivo.",
     "stepTerms": "Paso pendiente: que tu acudiente acepte los términos y condiciones en la sede.",
     "restriction": "Mientras el registro no esté completo no puedes usar las funciones que requieren términos aceptados ni la verificación facial.",
     "recheck": "Ya completamos el registro, verificar",

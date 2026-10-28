@@ -11,14 +11,14 @@ export const TERMS_GATE = { NONE: 'NONE', ACCEPT: 'ACCEPT', BLOCKED: 'BLOCKED' }
 
 /**
  * Qué ve la persona al ingresar: NONE (habilitada), ACCEPT (adulto que debe firmar) o
- * BLOCKED (menor con el registro incompleto; step = GUARDIAN o TERMS).
+ * BLOCKED (menor con el registro incompleto; step = GUARDIAN, DOCUMENT o TERMS).
  */
 export function resolveTermsGate(enablement) {
   if (!enablement || enablement.enabled === true) {
     return { gate: TERMS_GATE.NONE, step: 'NONE', minor: enablement?.minor === true };
   }
   const minor = enablement.minor === true;
-  const step = enablement.pendingStep === 'GUARDIAN' ? 'GUARDIAN' : 'TERMS';
+  const step = ['GUARDIAN', 'DOCUMENT'].includes(enablement.pendingStep) ? enablement.pendingStep : 'TERMS';
   return { gate: minor ? TERMS_GATE.BLOCKED : TERMS_GATE.ACCEPT, step, minor };
 }
 

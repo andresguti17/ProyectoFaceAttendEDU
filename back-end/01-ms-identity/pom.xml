@@ -40,6 +40,12 @@
 				<artifactId>lz4-java</artifactId>
 				<version>1.11.4</version>
 			</dependency>
+			<!-- MinIO 8.6 still asks for bcprov 1.81 (GHSA-9pwp-9qqc-pr26, GHSA-qp49-qgx5-5m26). -->
+			<dependency>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcprov-jdk18on</artifactId>
+				<version>1.86</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -88,6 +94,18 @@
 			<version>3.1.0</version>
 		</dependency>
 
+		<!-- Signed authorization of a minor's guardian in MinIO (ADR-009), as in ms-attendance. -->
+		<dependency>
+			<groupId>io.minio</groupId>
+			<artifactId>minio</artifactId>
+			<version>8.6.0</version>
+		</dependency>
+		<!-- OkHttp 5 (used by the MinIO SDK) ships its JVM classes in okhttp-jvm; Maven does not pick it up on its own. -->
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp-jvm</artifactId>
+			<version>5.1.0</version>
+		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>

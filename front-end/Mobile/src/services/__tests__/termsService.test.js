@@ -22,6 +22,8 @@ test('an adult pending the terms must sign; a minor is blocked on the missing st
     .toEqual({ gate: TERMS_GATE.ACCEPT, step: 'TERMS', minor: false });
   expect(resolveTermsGate({ enabled: false, minor: true, pendingStep: 'GUARDIAN' }))
     .toEqual({ gate: TERMS_GATE.BLOCKED, step: 'GUARDIAN', minor: true });
+  expect(resolveTermsGate({ enabled: false, minor: true, pendingStep: 'DOCUMENT' }))
+    .toEqual({ gate: TERMS_GATE.BLOCKED, step: 'DOCUMENT', minor: true });
   expect(resolveTermsGate({ enabled: false, minor: true, pendingStep: 'TERMS' }))
     .toEqual({ gate: TERMS_GATE.BLOCKED, step: 'TERMS', minor: true });
   expect(resolveTermsGate({ enabled: true, minor: true, pendingStep: 'NONE' }).gate).toBe(TERMS_GATE.NONE);

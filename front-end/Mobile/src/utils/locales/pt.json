@@ -1366,6 +1366,7 @@
     "title": "CADASTRO PENDENTE",
     "body": "Você é menor de idade: seu responsável conclui o cadastro na sede do SENA com o administrador.",
     "stepGuardian": "Etapa pendente: cadastrar seu responsável. Ele deve comparecer à sede com seu documento de identidade.",
+    "stepDocument": "Etapa pendente: seu responsável deve assinar a autorização na sede e o administrador envia o arquivo.",
     "stepTerms": "Etapa pendente: seu responsável deve aceitar os termos e condições na sede.",
     "restriction": "Enquanto o cadastro não estiver completo, você não pode usar as funções que exigem termos aceitos nem a verificação facial.",
     "recheck": "Já concluímos o cadastro, verificar",

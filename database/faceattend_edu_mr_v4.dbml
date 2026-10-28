@@ -78,6 +78,12 @@ Table guardian {
   phone varchar [null, note: 'cifrado']
   relationship varchar [not null]
   school_id bigint [null, note: 'sede donde se registró (academic.school, sin FK)']
+  consent_document_uri varchar [null, note: 'autorización firmada del acudiente en MinIO (<bucket>/<clave>); obligatoria para habilitar al menor']
+  consent_document_name varchar [null, note: 'nombre de presentación del archivo (sin ruta)']
+  consent_document_mime varchar [null, note: 'application/pdf, image/jpeg o image/png (detectado por firma, no por extensión)']
+  consent_document_size bigint [null, note: 'bytes (máx. 5 MB)']
+  consent_document_uploaded_at datetime [null]
+
 
   created_at datetime [not null]
   updated_at datetime [not null]

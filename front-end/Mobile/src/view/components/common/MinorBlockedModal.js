@@ -22,7 +22,7 @@ export default function MinorBlockedModal({ isVisible, step, busy = false, onRec
                         <Text style={[styleAuth.paragraphTerminos, { color: colors.modalTextSecondary }]}>
                             {t('minorBlocked.body')} {"\n\n"}
                             <Text style={[styleAuth.subtitleTerminos, { color: colors.modalText }]}>
-                                {step === 'GUARDIAN' ? t('minorBlocked.stepGuardian') : t('minorBlocked.stepTerms')} {"\n\n"}
+                                {t(`minorBlocked.step${{ GUARDIAN: 'Guardian', DOCUMENT: 'Document' }[step] ?? 'Terms'}`)} {"\n\n"}
                             </Text>
                             {t('minorBlocked.restriction')}
                         </Text>

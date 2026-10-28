@@ -187,6 +187,38 @@ class ManageTermsUseCaseImplTest {
     }
 
     @Test
+    void aMinorWhoseGuardianHasNoSignedDocumentIsPendingTheDocumentBeforeTheTerms() {
+        withGuardian(false);
+
+        Enablement result = useCase.enablement(minorPerson, minorUser);
+
+        assertThat(result.guardianRegistered()).isTrue();
+        assertThat(result.status()).isEqualTo(Enablement.Status.DOCUMENT_PENDING);
+        assertThat(result.enabled()).isFalse();
+    }
+
+    @Test
+    void acceptedTermsDoNotEnableAMinorWithoutTheSignedDocument() {
+        withGuardian(false);
+        stored = acceptance(minorPerson, VERSION, guardianId, TermsAcceptance.MINOR);
+
+        assertThat(useCase.enablement(minorPerson, minorUser).status()).isEqualTo(Enablement.Status.DOCUMENT_PENDING);
+    }
+
+    @Test
+    void theDocumentRequirementCanBeSwitchedOffToStageARollout() {
+        withGuardian(false);
+        org.springframework.test.util.ReflectionTestUtils.setField(useCase, "documentRequired", false);
+
+        assertThat(useCase.enablement(minorPerson, minorUser).status()).isEqualTo(Enablement.Status.TERMS_PENDING);
+    }
+
+    @Test
+    void anAdultNeverNeedsAGuardianDocument() {
+        assertThat(useCase.enablement(adultPerson, adultUser).status()).isEqualTo(Enablement.Status.TERMS_PENDING);
+    }
+
+    @Test
     void onlyTheVersionInForceCanBeAccepted() {
         assertThatThrownBy(() -> useCase.accept(adultPerson, "1999-01", adultUser, LEARNER, "token"))
                 .isInstanceOf(ValidationException.class);
@@ -194,9 +226,14 @@ class ManageTermsUseCaseImplTest {
     }
 
     private void withGuardian() {
+        withGuardian(true);
+    }
+
+    private void withGuardian(boolean signedDocument) {
         Guardian guardian = new Guardian();
         guardian.setGuardianId(guardianId);
         guardian.setMinorPersonId(minorPerson);
+        if (signedDocument) guardian.setConsentDocumentUri("guardian-documents/2026/10/a.pdf");
         lenient().when(guardianPort.findActiveByMinor(minorPerson)).thenReturn(Optional.of(guardian));
     }
 

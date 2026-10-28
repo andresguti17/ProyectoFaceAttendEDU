@@ -6,7 +6,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 jest.mock("../../services/api/termsApi", () => ({
     termsApi: { get: jest.fn(), accept: jest.fn() },
-    guardianApi: { get: jest.fn(), register: jest.fn(), update: jest.fn() },
+    guardianApi: { get: jest.fn(), register: jest.fn(), update: jest.fn(), uploadDocument: jest.fn() },
 }));
 jest.mock("../../services/api/consentApi", () => ({ consentApi: { accept: jest.fn() } }));
 
@@ -172,5 +172,56 @@ describe("validateGuardian", () => {
         [{ email: "no-es-correo" }, /no es válido/],
     ])("refuses %j", (patch, message) => {
         expect(validateGuardian({ ...FORM, ...patch })).toMatch(message);
+    });
+});
+
+describe("signed authorization of the guardian", () => {
+    const DOCUMENT_PENDING = { enabled: false, minor: true, guardianRegistered: true, termsUpToDate: false, pendingStep: "DOCUMENT" };
+    const pdf = { file: new Blob(["%PDF"]), name: "autorizacion.pdf", size: 1024, type: "application/pdf" };
+
+    async function withGuardian() {
+        termsApi.get.mockResolvedValue(DOCUMENT_PENDING);
+        guardianApi.get.mockResolvedValue({ guardianId: "g-1", ...FORM, documentRegistered: false });
+        return renderVm();
+    }
+
+    test("uploading the file refreshes the guardian and the enablement", async () => {
+        const vm = await withGuardian();
+        guardianApi.uploadDocument.mockResolvedValue({ guardianId: "g-1", documentRegistered: true, documentName: "autorizacion.pdf" });
+        termsApi.get.mockResolvedValue(TERMS_PENDING);
+
+        let result;
+        await act(async () => {
+            result = await vm().uploadDocument(pdf);
+        });
+
+        expect(result).toBeNull();
+        expect(guardianApi.uploadDocument).toHaveBeenCalledWith("minor-1", pdf.file, "autorizacion.pdf");
+        expect(vm().documentRegistered).toBe(true);
+    });
+
+    test("a missing guardian, a missing file, a big file or a wrong type are refused before the request", async () => {
+        termsApi.get.mockResolvedValue(GUARDIAN_PENDING);
+        guardianApi.get.mockRejectedValue(NOT_FOUND);
+        const noGuardian = await renderVm();
+        expect(await noGuardian().uploadDocument(pdf)).toMatch(/acudiente/);
+
+        const vm = await withGuardian();
+        expect(await vm().uploadDocument(null)).toMatch(/archivo/);
+        expect(await vm().uploadDocument({ ...pdf, size: 6 * 1024 * 1024 })).toMatch(/5 MB/);
+        expect(await vm().uploadDocument({ ...pdf, type: "application/zip" })).toMatch(/PDF, JPG o PNG/);
+        expect(guardianApi.uploadDocument).not.toHaveBeenCalled();
+    });
+
+    test("a server error is returned as the message", async () => {
+        const vm = await withGuardian();
+        guardianApi.uploadDocument.mockRejectedValue(new Error("storage down"));
+
+        let result;
+        await act(async () => {
+            result = await vm().uploadDocument(pdf);
+        });
+
+        expect(result).toBe("storage down");
     });
 });
