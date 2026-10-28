@@ -610,6 +610,8 @@
   "El programa/departamento es requerido": "The program/department is required",
   "El registro de sedes no está disponible por ahora. Inténtalo más tarde.": "Campus registration is not available right now. Try again later.",
   "El registro pasará a Tarde (captura MANUAL). ¿Continuar?": "The record will change to Late (MANUAL capture). Continue?",
+  "Registrar asistencia manual": "Record attendance manually",
+  "Se registrará la asistencia del aprendiz sin biometría (captura MANUAL). ¿Continuar?": "The learner's attendance will be recorded without biometrics (MANUAL capture). Continue?",
   "El rol es requerido": "The role is required",
   "El rol no existe en el backend": "The role does not exist in the backend",
   "El servicio biométrico no responde. Puedes omitir este paso y completarlo luego desde Biometría.": "The biometric service is not responding. You can skip this step and complete it later from Biometrics.",
