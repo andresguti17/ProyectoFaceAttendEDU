@@ -9,7 +9,7 @@ services:
   # ADR-003 MongoDB, ADR-006 Kafka, ADR-015 Redis, DB per service
   # ──────────────────────────────────────────────────────────────
   mongodb:
-    image: mongo:7
+    image: mongo:7@sha256:8bb4442761a63a8dda452744082cdac9644b429807eb977b42324a63cef59ca4
     container_name: faceattend-mongo
     # Was 768m: it now also hosts ms-biometric's facial/fingerprint
     # templates + match logs + the merged face-auth collections, and was
@@ -60,7 +60,7 @@ services:
       - faceattend-data
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:6ba19c50b56777f5c11c58eff8ddb69d0d5f27ba131cffb63f180ccfd43c66af
     container_name: faceattend-redis
     mem_limit: 128m
     cpus: "0.5"
@@ -79,7 +79,7 @@ services:
 
   # Kafka KRaft (sin Zookeeper) — apache/kafka reemplaza bitnami/kafka:3.7 (imagen eliminada de Docker Hub)
   kafka:
-    image: apache/kafka:3.8.0
+    image: apache/kafka:3.8.0@sha256:c89f315cff967322c5d2021434b32271393cb193aa7ec1d43e97341924e57069
     container_name: faceattend-kafka
     mem_limit: 1g
     cpus: "1.0"
@@ -566,7 +566,7 @@ services:
   # 99 gateway 8000 proxy / 8001 admin
   # ──────────────────────────────────────────────────────────────
   kong-gateway:
-    image: kong:3.6
+    image: kong:3.6@sha256:a42d2b4503e7b6674ca7914883bdb0d2274b806b0e397a6af28d1dd57aafce4e
     container_name: faceattend-kong
     mem_limit: 2g
     cpus: "1.0"
