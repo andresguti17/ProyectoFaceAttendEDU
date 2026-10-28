@@ -7,7 +7,6 @@ identity/authorization/academic are in-process fakes (same approach as test_secu
 from __future__ import annotations
 
 import asyncio
-from urllib.parse import unquote
 
 import pytest
 from fastapi.testclient import TestClient
@@ -23,41 +22,11 @@ from infrastructure.config.dependencies import (
 from infrastructure.config.settings import get_settings
 from infrastructure.web import security
 from main import app
+from tests.support import school_auth
 from tests.support.in_memory_repositories import InMemoryBiometricRepository, InMemoryMatchLogRepository
+from tests.support.school_auth import ADMIN_A, NO_ACTOR, SUPER_ADMIN
 
-ADMIN_A = "aaaaaaaa-0000-4000-8000-00000000000a"
-ADMIN_B = "bbbbbbbb-0000-4000-8000-00000000000a"
-SUPER_ADMIN = "cccccccc-0000-4000-8000-00000000000a"
-NO_ACTOR = "dddddddd-0000-4000-8000-00000000000a"
-_USERS = {  # session token -> (user id, own person id, roles)
-    ADMIN_A: ("user-a", "person-admin-a", ["Administrador"]),
-    ADMIN_B: ("user-b", "person-admin-b", ["Administrador"]),
-    SUPER_ADMIN: ("user-sa", "person-sa", ["Super Administrador"]),
-    NO_ACTOR: ("user-na", "person-na", ["Administrador"]),
-}
-_PERSON_SCHOOL = {"person-admin-a": 100, "person-admin-b": 200, "person-in-a": 100, "person-in-b": 200}
 VECTOR = [0.125, 0.5, 0.25, 0.0625]
-
-
-async def _get_json(url: str, token: str):
-    if "/api/v1/sessions/" in url:
-        user = _USERS.get(url.rsplit("/", 1)[1])
-        return (200, {"sessionStatus": "Active", "userId": user[0]}) if user else (404, None)
-    if "/auth/evaluate" in url:
-        return 200, {"allowed": True}  # every caller holds the staff permission
-    user_id = url.rsplit("/", 1)[1]  # identity: GET /api/v1/users/{id}
-    person = next((u[1] for u in _USERS.values() if u[0] == user_id), None)
-    return (200, {"personId": person}) if person else (404, None)
-
-
-async def _get_list(url: str, token: str):
-    if "/roles" in url:
-        user_id = url.split("/users/")[1].split("/")[0]
-        return [{"roleName": r} for u in _USERS.values() if u[0] == user_id for r in u[2]]
-    if "/academic-actors?personId=" in url:
-        school = _PERSON_SCHOOL.get(unquote(url.split("personId=")[1]))
-        return [{"academicActorId": 1, "schoolId": school}] if school else []
-    return []
 
 
 @pytest.fixture
@@ -84,8 +53,7 @@ def client(monkeypatch, stores):
     security._session_cache.clear()
     security._eval_cache.clear()
     security._caller_school_cache.clear()
-    monkeypatch.setattr(security, "_get_json", _get_json)
-    monkeypatch.setattr(security, "_get_list", _get_list)
+    school_auth.install(monkeypatch)
     app.dependency_overrides[get_facial_repository] = lambda: stores["facial"]
     app.dependency_overrides[get_fingerprint_repository] = lambda: stores["fingerprint"]
     app.dependency_overrides[get_match_log_repository] = lambda: InMemoryMatchLogRepository()
