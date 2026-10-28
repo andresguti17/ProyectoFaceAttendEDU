@@ -15,7 +15,16 @@ import { consentApi } from "../services/api/consentApi";
 export const GUARDIAN_DOCUMENT_TYPES = ["CC", "CE", "PP"];
 export const SIGNED_DOCUMENT_MAX_BYTES = 5 * 1024 * 1024;
 const SIGNED_DOCUMENT_MIME = ["application/pdf", "image/jpeg", "image/png"];
-const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/** Valida un correo sin una expresión regular con retroceso ambiguo. */
+function isValidEmail(value) {
+    const parts = value.split("@");
+    if (parts.length !== 2 || /\s/.test(value)) return false;
+    const [local, domain] = parts;
+    if (!local || !domain) return false;
+    const labels = domain.split(".");
+    return labels.length >= 2 && labels.every((label) => label.length > 0);
+}
 
 const EMPTY_FORM = {
     fullName: "",
@@ -35,7 +44,7 @@ export function validateGuardian(form) {
     const email = String(form.email ?? "").trim();
     const phone = String(form.phone ?? "").trim();
     if (!email && !phone) return "Escribe un correo o un teléfono de contacto del acudiente";
-    if (email && !EMAIL.test(email)) return "El correo del acudiente no es válido";
+    if (email && !isValidEmail(email)) return "El correo del acudiente no es válido";
     return null;
 }
 
@@ -78,7 +87,11 @@ export function useMinorEnrollmentViewModel(personId) {
 
     useEffect(() => {
         let alive = true;
-        Promise.resolve().then(() => alive && fetchState());
+        const load = async () => {
+            await Promise.resolve();
+            if (alive) await fetchState();
+        };
+        void load();
         return () => {
             alive = false;
         };
