@@ -13,7 +13,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { biometricCaptureApi } from "../services/api/biometricCaptureApi";
 import { consentApi } from "../services/api/consentApi";
+import { termsApi } from "../services/api/termsApi";
+import { resolveTermsGate, TERMS_GATE } from "../core/utils/termsGate";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
+
+// ms-biometric rechaza (403) a quien aún no aceptó los términos / no tiene acudiente.
+const PERSON_NOT_ENABLED = "PERSON_NOT_ENABLED";
 
 export const BIOMETRIC_SECTIONS = ["face-register", "face-login", "fingerprint"];
 export const DEFAULT_BIOMETRIC_SECTION = "face-register";
@@ -38,6 +43,10 @@ export function useBiometricsViewModel() {
     const [summary, setSummary] = useState(null); // { has_face, has_fingerprint } | null
     // Ley 1581: autorización biométrica de la persona elegida (null = aún no se sabe).
     const [biometricAuthorized, setBiometricAuthorized] = useState(null);
+    // Términos/acudiente de la persona elegida: { gate, step, minor } | null (aún no se sabe).
+    // La captura exige que identity la dé por habilitada; si no, se explica el paso pendiente
+    // en lugar de dejar capturar para recibir un 403.
+    const [termsPending, setTermsPending] = useState(null);
     const mounted = useRef(true);
 
     useEffect(() => {
@@ -106,6 +115,27 @@ export function useBiometricsViewModel() {
         refreshConsent();
     }, [refreshConsent]);
 
+    const refreshTermsPending = useCallback(async () => {
+        if (!person?.personId) {
+            setTermsPending(null);
+            return null;
+        }
+        try {
+            const resolved = resolveTermsGate(await termsApi.get(person.personId));
+            const pending = resolved.gate === TERMS_GATE.NONE ? null : resolved;
+            if (mounted.current) setTermsPending(pending);
+            return pending;
+        } catch {
+            // Sin respuesta no se bloquea la UI: el servidor sigue siendo quien decide (403/503).
+            if (mounted.current) setTermsPending(null);
+            return null;
+        }
+    }, [person]);
+
+    useEffect(() => {
+        refreshTermsPending();
+    }, [refreshTermsPending]);
+
     const setPerson = useCallback((selected) => {
         setPersonState(selected ?? null);
     }, []);
@@ -118,12 +148,18 @@ export function useBiometricsViewModel() {
             try {
                 await operation();
             } catch (e) {
-                setStatus(e?.message || t("Error de solicitud"), "error");
+                if (e?.code === PERSON_NOT_ENABLED) {
+                    // Los términos cambiaron desde que se abrió el modal: se muestra el paso pendiente.
+                    setStatus(t("La persona aún no está habilitada para usar la biometría."), "error");
+                    await refreshTermsPending();
+                } else {
+                    setStatus(e?.message || t("Error de solicitud"), "error");
+                }
             } finally {
                 if (mounted.current) setBusy(false);
             }
         },
-        [busy, setStatus, t]
+        [busy, setStatus, t, refreshTermsPending]
     );
 
     const requirePersonId = useCallback(() => {
@@ -200,5 +236,7 @@ export function useBiometricsViewModel() {
         biometricAuthorized,
         refreshConsent,
         authorizeBiometrics,
+        termsPending,
+        refreshTermsPending,
     };
 }
