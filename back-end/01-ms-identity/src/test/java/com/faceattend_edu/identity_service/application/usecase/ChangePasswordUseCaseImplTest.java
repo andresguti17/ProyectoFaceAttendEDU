@@ -24,6 +24,8 @@ class ChangePasswordUseCaseImplTest {
     private User saved;
     private UserSession current;
     private UserSession other;
+    /** Token que presenta el cliente: distinto del id almacenado (huella), como en producción. */
+    private UUID currentToken;
     private final List<UserSession> closed = new ArrayList<>();
     private ChangePasswordUseCaseImpl useCase;
 
@@ -37,6 +39,7 @@ class ChangePasswordUseCaseImplTest {
         user.setMustChangePassword(true);
         current = session();
         other = session();
+        currentToken = UUID.randomUUID();
 
         HashPasswordPort hash = new HashPasswordPort() {
             @Override
@@ -69,6 +72,7 @@ class ChangePasswordUseCaseImplTest {
 
         useCase = new ChangePasswordUseCaseImpl(
                 id -> user, u -> saved = u, hash, () -> List.of(policy),
+                token -> token.equals(currentToken) ? current : null,
                 id -> List.of(current, other), sessionUpdate, new DomainEventPublisher(null));
     }
 
@@ -82,8 +86,9 @@ class ChangePasswordUseCaseImplTest {
 
     @Test
     void changesPasswordAndClosesOnlyTheOtherSessions() {
-        useCase.changePassword(user.getUserId(), current.getSessionId(), "Old1234!", "New1234!");
+        useCase.changePassword(user.getUserId(), currentToken, "Old1234!", "New1234!");
 
+        assertThat(currentToken).isNotEqualTo(current.getSessionId());
         assertThat(saved.getPasswordHash()).isEqualTo("hash:New1234!");
         assertThat(saved.isMustChangePassword()).isFalse();
         assertThat(current.isActive()).isTrue();
@@ -93,16 +98,16 @@ class ChangePasswordUseCaseImplTest {
 
     @Test
     void rejectsAWrongCurrentPassword() {
-        assertThatThrownBy(() -> useCase.changePassword(user.getUserId(), current.getSessionId(), "Nope1234!", "New1234!"))
+        assertThatThrownBy(() -> useCase.changePassword(user.getUserId(), currentToken, "Nope1234!", "New1234!"))
                 .isInstanceOf(ValidationException.class);
         assertThat(saved).isNull();
     }
 
     @Test
     void enforcesThePolicyAndRejectsReuse() {
-        assertThatThrownBy(() -> useCase.changePassword(user.getUserId(), current.getSessionId(), "Old1234!", "weak"))
+        assertThatThrownBy(() -> useCase.changePassword(user.getUserId(), currentToken, "Old1234!", "weak"))
                 .isInstanceOf(ValidationException.class);
-        assertThatThrownBy(() -> useCase.changePassword(user.getUserId(), current.getSessionId(), "Old1234!", "Old1234!"))
+        assertThatThrownBy(() -> useCase.changePassword(user.getUserId(), currentToken, "Old1234!", "Old1234!"))
                 .isInstanceOf(ValidationException.class);
         assertThat(saved).isNull();
     }

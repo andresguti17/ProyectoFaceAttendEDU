@@ -29,3 +29,21 @@ os.environ.setdefault("BIOMETRIC_CONSENT_CHECK_ENABLED", "false")
 # Terms/guardian enablement is also read from identity: off here, on in tests/unit/web/test_enablement.py.
 os.environ.setdefault("BIOMETRIC_ENABLEMENT_CHECK_ENABLED", "false")
 os.environ.setdefault("BIOMETRIC_ENCRYPTION_KEY", "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=")
+
+
+import pytest  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _clear_process_caches():
+    """The auth and school caches are per process: a test must not inherit another's answers."""
+    from infrastructure.web import match_scope, security
+
+    for cache in (
+        security._session_cache,
+        security._eval_cache,
+        security._caller_school_cache,
+        match_scope._match_allow_cache,
+    ):
+        cache.clear()
+    yield

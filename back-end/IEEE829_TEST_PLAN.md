@@ -21,7 +21,7 @@
 | 05-ms-attendance | Java Spring Boot | 8085 | attendance-records, justifications, justification-types, supporting-documents | Crítica |
 | 06-ms-biometric | Python FastAPI | 8086 | facial, fingerprint embeddings | Media |
 | 07-ms-configuration | TypeScript Fastify | 8087 | academic-config, security-config, biometric-update-cases | Baja |
-| 08-ms-notification | Go Gin | 8088 | alert-types, alerts | Media |
+| 08-ms-notification | TypeScript Fastify | 8088 | alert-types, alerts | Media |
 | 99-api-gateway | Kong OSS | 8080 | Rutas aggregadas | Alta |
 
 ### 1.3 Tipos de Prueba
@@ -236,14 +236,14 @@ curl -X POST http://localhost:8086/api/v1/...
 pytest --integration
 ```
 
-#### Go Service (08)
+#### Node Service (08)
 ```bash
 cd back-end/08-ms-notification
-go test ./...
-go run cmd/server/main.go &
+npm ci
+npm test
+npm run dev &
 # Esperar 5 segundos
 curl -X POST http://localhost:8088/api/v1/...
-go test -integration ./...
 ```
 
 ---

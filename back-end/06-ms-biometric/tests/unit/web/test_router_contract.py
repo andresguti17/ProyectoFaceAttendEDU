@@ -149,7 +149,7 @@ class TestFacialEndpoints:
         assert response.status_code == 201
         body = response.json()
         assert body["person_id"] == PERSON
-        assert body["encoding"] == UNIT_VECTOR
+        assert "encoding" not in body  # the biometric itself never leaves through the API
         assert body["model_version"] == "facenet-v1"
         assert body["is_active"] is True
         assert body["template_version"] == 1

@@ -38,7 +38,7 @@ describe('createAccount', () => {
       username: 'ana.ruiz',
       password: 'Secret1!x',
       roleName: 'Aprendiz',
-      consent: { policyVersion: '2026-10', biometricAccepted: true },
+      consent: { policyVersion: '2026-11', biometricAccepted: true },
       academicActor: { actorTypeId: 1, schoolId: 3, actorCode: '1001' },
     });
   });

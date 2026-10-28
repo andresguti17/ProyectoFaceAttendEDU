@@ -9,6 +9,8 @@ import { Draft, ICrudRepository } from './ICrudRepository';
 /** `GET /alerts` query shape — mirrors the Go `port.AlertFilter` / `ListAlertsQuery`. */
 export interface AlertFilter {
   actorId?: number;
+  /** Actors the caller may see, pushed into the SQL WHERE so the page is cut after the scope is applied. Empty = no rows. */
+  actorIds?: number[];
   typeId?: number;
   /** `true` = only resolved (`resolved_at IS NOT NULL`), `false` = only open (`IS NULL`). */
   resolved?: boolean;
@@ -24,7 +26,8 @@ export interface IAlertRepository
    * combined with `LIMIT`/`OFFSET`, matching the Go `AlertRepository.FindAll`
    * (`internal/infrastructure/postgres/alert_repository.go:56-104`): those
    * three filters narrow the result set *before* the page is cut. Only the
-   * caller's actor-scope check stays a post-pagination, in-memory step.
+   * caller's actor scope (`actorIds`) is pushed into the query too, so a page never comes back
+   * short because other schools' alerts took its slots.
    */
   findFiltered(filter: AlertFilter): Promise<AlertRecord[]>;
 }

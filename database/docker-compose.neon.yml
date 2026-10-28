@@ -4,7 +4,7 @@
 
 services:
   identity-liquibase:
-    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0@sha256:cfffa8fe6e2fa01416888cb4d783250c6a100b4c96f32d23dec3b1ff6c8c3b2d}
     container_name: faceattend-identity-liquibase
     mem_limit: 256m
     cpus: "0.5"
@@ -28,7 +28,7 @@ services:
       - faceattend-data
 
   authorization-liquibase:
-    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0@sha256:cfffa8fe6e2fa01416888cb4d783250c6a100b4c96f32d23dec3b1ff6c8c3b2d}
     container_name: faceattend-authorization-liquibase
     mem_limit: 256m
     cpus: "0.5"
@@ -54,7 +54,7 @@ services:
       - faceattend-data
 
   academic-liquibase:
-    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0@sha256:cfffa8fe6e2fa01416888cb4d783250c6a100b4c96f32d23dec3b1ff6c8c3b2d}
     container_name: faceattend-academic-liquibase
     mem_limit: 256m
     cpus: "0.5"
@@ -80,7 +80,7 @@ services:
       - faceattend-data
 
   scheduling-liquibase:
-    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0@sha256:cfffa8fe6e2fa01416888cb4d783250c6a100b4c96f32d23dec3b1ff6c8c3b2d}
     container_name: faceattend-scheduling-liquibase
     mem_limit: 256m
     cpus: "0.5"
@@ -106,7 +106,7 @@ services:
       - faceattend-data
 
   attendance-liquibase:
-    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0@sha256:cfffa8fe6e2fa01416888cb4d783250c6a100b4c96f32d23dec3b1ff6c8c3b2d}
     container_name: faceattend-attendance-liquibase
     mem_limit: 256m
     cpus: "0.5"
@@ -132,7 +132,7 @@ services:
       - faceattend-data
 
   biometric-liquibase:
-    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0@sha256:cfffa8fe6e2fa01416888cb4d783250c6a100b4c96f32d23dec3b1ff6c8c3b2d}
     container_name: faceattend-biometric-liquibase
     mem_limit: 256m
     cpus: "0.5"
@@ -158,7 +158,7 @@ services:
       - faceattend-data
 
   configuration-liquibase:
-    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0@sha256:cfffa8fe6e2fa01416888cb4d783250c6a100b4c96f32d23dec3b1ff6c8c3b2d}
     container_name: faceattend-configuration-liquibase
     mem_limit: 256m
     cpus: "0.5"
@@ -184,7 +184,7 @@ services:
       - faceattend-data
 
   notification-liquibase:
-    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0}
+    image: ${FACEATTEND_LIQUIBASE_IMAGE:-liquibase/liquibase:4.29.0@sha256:cfffa8fe6e2fa01416888cb4d783250c6a100b4c96f32d23dec3b1ff6c8c3b2d}
     container_name: faceattend-notification-liquibase
     mem_limit: 256m
     cpus: "0.5"

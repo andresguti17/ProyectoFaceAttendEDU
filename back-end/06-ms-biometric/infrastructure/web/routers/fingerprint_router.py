@@ -44,7 +44,8 @@ from infrastructure.web.schemas.responses import template_response
 # Templates are sensitive: only roles that capture attendance (admin, instructor).
 logger = logging.getLogger(__name__)
 
-from infrastructure.web.security import bearer_or_none, ensure_biometric_consent
+from infrastructure.web.match_scope import MatchScope, best_allowed, get_match_scope
+from infrastructure.web.security import bearer_or_none, ensure_biometric_consent, ensure_staff_scope
 
 router = APIRouter(
     prefix="/api/v1/biometric/fingerprint",
@@ -140,8 +141,10 @@ async def enroll_fingerprint(
 @router.get("/{person_id}")
 async def list_fingerprints(
     person_id: str,
+    request: Request,
     repository: BiometricRepositoryPort = Depends(get_fingerprint_repository),
 ):
+    await ensure_staff_scope(request, person_id)
     templates = await repository.list_active(person_id)
     return {"templates": [template_response(template) for template in templates]}
 
@@ -150,8 +153,10 @@ async def list_fingerprints(
 async def get_fingerprint(
     person_id: str,
     finger: int,
+    request: Request,
     repository: BiometricRepositoryPort = Depends(get_fingerprint_repository),
 ):
+    await ensure_staff_scope(request, person_id)
     active = await repository.find_active(person_id, finger)
     if active is None:
         raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
@@ -166,6 +171,7 @@ async def delete_fingerprint(
     repository: BiometricRepositoryPort = Depends(get_fingerprint_repository),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
 ):
+    await ensure_staff_scope(request, person_id)
     # Soft delete: the document stays, is_active goes false and deleted_at is set.
     if not await repository.deactivate(person_id, finger):
         raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
@@ -192,7 +198,11 @@ async def verify_fingerprint(
     repository: BiometricRepositoryPort = Depends(get_fingerprint_repository),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
     threshold: float = Depends(get_similarity_threshold),
+    match_scope: MatchScope = Depends(get_match_scope),
 ):
+    # A person of another school answers like one without a template: no existence oracle.
+    if not await match_scope.allows(req.person_id):
+        raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
     active = await repository.find_active(req.person_id, req.finger_number)
     if active is None:
         raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
@@ -224,9 +234,9 @@ async def identify_fingerprint(
     repository: BiometricRepositoryPort = Depends(get_fingerprint_repository),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
     threshold: float = Depends(get_similarity_threshold),
+    match_scope: MatchScope = Depends(get_match_scope),
 ):
-    best: FingerprintEmbedding | None = None
-    best_score = 0.0
+    scored: list[tuple[float, FingerprintEmbedding]] = []
     # One active template per (person, finger) is guaranteed by the unique
     # partial index; the guard keeps the result deterministic if it is missing.
     seen: set[tuple[str, int]] = set()
@@ -235,12 +245,12 @@ async def identify_fingerprint(
         if key in seen:
             continue
         seen.add(key)
-        score = cosine(req.encoding, list(template.encoding))
-        if score > best_score:
-            best_score = score
-            best = template
+        scored.append((cosine(req.encoding, list(template.encoding)), template))
+    # Only a person the caller's scope allows can match (see `match_scope`).
+    best, best_score = await best_allowed(scored, threshold, match_scope)
+    best_score = max(best_score, 0.0)
 
-    matched = best is not None and best_score >= threshold
+    matched = best is not None
     await record_match(
         match_logs,
         BiometricMatchLog(
@@ -354,6 +364,7 @@ async def identify_fingerprint_sample(
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
     fp_threshold: int = Depends(get_fingerprint_match_threshold),
     settings: Settings = Depends(get_settings),
+    match_scope: MatchScope = Depends(get_match_scope),
 ):
     try:
         query_image = decode_fingerprint(
@@ -362,8 +373,7 @@ async def identify_fingerprint_sample(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    best: FingerprintEmbedding | None = None
-    best_score = 0
+    scored: list[tuple[int, FingerprintEmbedding]] = []
     candidates = _raw_sample_candidates(await repository.list_active(finger_number=req.finger_number))
     for candidate in candidates:
         try:
@@ -372,12 +382,11 @@ async def identify_fingerprint_sample(
             )
         except ValueError:
             continue
-        score = fingerprint_keypoint_score(query_image, stored_image)
-        if score > best_score:
-            best_score = score
-            best = candidate
+        scored.append((fingerprint_keypoint_score(query_image, stored_image), candidate))
+    # Only a person the caller's scope allows can match (see `match_scope`).
+    best, best_score = await best_allowed(scored, fp_threshold, match_scope)
 
-    matched = best is not None and best_score >= fp_threshold
+    matched = best is not None
     await record_match(
         match_logs,
         BiometricMatchLog(

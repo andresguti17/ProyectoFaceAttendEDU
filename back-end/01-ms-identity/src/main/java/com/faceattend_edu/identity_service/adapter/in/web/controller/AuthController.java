@@ -125,10 +125,28 @@ public class AuthController {
         return realIp != null && !realIp.isBlank() ? realIp.trim() : request.getRemoteAddr();
     }
 
+    /**
+     * The session to close travels as the bearer: a query string ends up in the gateway and proxy
+     * access logs, and a session id is a credential. `?sessionId=` is still read for the mobile
+     * builds already installed; the header wins when both come.
+     */
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestParam UUID sessionId) {
+    public ResponseEntity<Void> logout(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                       @RequestParam(value = "sessionId", required = false) UUID legacySessionId) {
+        UUID sessionId = bearerSessionId(authorization);
+        if (sessionId == null) sessionId = legacySessionId;
+        if (sessionId == null) return ResponseEntity.badRequest().build();
         closeUserSessionUseCase.closeSession(sessionId);
         return ResponseEntity.noContent().build();
+    }
+
+    private static UUID bearerSessionId(String authorization) {
+        if (authorization == null || !authorization.regionMatches(true, 0, "Bearer ", 0, 7)) return null;
+        try {
+            return UUID.fromString(authorization.substring(7).trim());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /**

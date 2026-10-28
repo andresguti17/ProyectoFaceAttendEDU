@@ -175,7 +175,7 @@ class TestEnrollImage:
             json={"person_id": PERSON, "image_base64": FAKE_IMAGE, "challenge_token": token},
         )
         assert response.status_code == 201
-        assert response.json()["encoding"] == [1.0, 0.0, 0.0, 0.0]
+        assert "encoding" not in response.json()
 
     def test_enroll_image_rejects_a_face_already_enrolled_elsewhere(self, client, monkeypatch):
         token = self._consume_challenge(client, monkeypatch, [1.0, 0.0, 0.0, 0.0])

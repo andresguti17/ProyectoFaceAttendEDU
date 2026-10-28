@@ -166,7 +166,7 @@ arrancar — no lo hace Compose, lo hace cada servicio:
 | Servicio | Mecanismo |
 |---|---|
 | `01-ms-identity`, `02-ms-authorization`, `04-ms-scheduling`, `05-ms-attendance` | `spring.config.import` con rutas `optional:file:${user.dir}/…` |
-| `03-ms-academic`, `09-ms-quality` | `process.loadEnvFile('../../.env')` al cargar su módulo de BD (y `drizzle.config.ts`) |
+| `03-ms-academic`, `09-ms-quality` | `process.loadEnvFile('../../.env')` al cargar su módulo de BD |
 | `06-ms-biometric` | `_load_root_env()` en `settings.py` (sin dependencias; nunca pisa el entorno real) |
 
 Las rutas parten del **directorio de trabajo**: el del servicio
@@ -229,6 +229,18 @@ cd database/01-ms-identity-db && docker compose up liquibase   # un contexto
 | Biometría: «Runtime DigitalPersona no detectado» | falta el runtime del lector **en el equipo del usuario** (§9); no es un fallo del stack |
 | Cambié `kong.yml` y no surte efecto | Kong DB-less lee el archivo al arrancar: `docker compose restart kong-gateway` |
 | Redes duplicadas viejas (`back-end_*`, `full_*`) | proyectos abandonados; `docker compose down` en cada carpeta y `docker network rm <red>` (los volúmenes quedan intactos) |
+
+### Imágenes de terceros fijadas por digest
+
+Las imágenes de terceros (`mongo`, `redis`, `kong`, `apache/kafka`, `postgres`, `liquibase`, `caddy`, `portainer-ce`) van como `etiqueta@sha256:…` en `back-end/docker-compose.yml`, `database/docker-compose*.yml`, `docker-compose.prod.yml` y `docker-compose.tls.yml`, igual que `minio`. Así un `pull` no cambia de versión sin que se note. El costo es que **ya no reciben parches solos** (y Dependabot está pausado): hay que revisarlas a mano.
+
+Para actualizar una, obtén el digest actual de su etiqueta y cámbialo en todos los archivos donde aparece:
+
+```bash
+docker buildx imagetools inspect redis:7-alpine   # línea "Digest: sha256:…"
+```
+
+Las imágenes propias (`faceattend/*:latest`) y las de los `Dockerfile` (`node`, `eclipse-temurin`, `maven`, `python`, `nginx`) siguen sin fijar.
 
 ---
 
@@ -303,3 +315,16 @@ bases (`faceattend_db`, MongoDB) a `database/backups/<timestamp>/`
 (gitignored); `database/scripts/restore.sh <carpeta>` las restaura. Ninguno de
 los dos programa nada — hoy es manual; en un despliegue real, llama a
 `backup.sh` desde un cron del host o del orquestador.
+
+- **Cifrado:** con `BACKUP_PASSPHRASE` definida, `backup.sh` cifra los dos volcados (AES-256, PBKDF2) y deja
+  `faceattend_db.dump.enc` y `mongo.archive.gz.enc`; `restore.sh` los descifra con la misma variable. La
+  passphrase se guarda **aparte** del backup: sin ella no se puede restaurar. Los objetos de MinIO ya van
+  cifrados por MinIO y necesitan el mismo `MINIO_KMS_SECRET_KEY`.
+- **Contenedores:** por defecto `faceattend-postgres` y `faceattend-mongo`; se cambian con `PG_CONTAINER` y
+  `MONGO_CONTAINER`.
+- **Probar que un backup se restaura:** `./database/scripts/verify-restore.sh` levanta Postgres y MongoDB
+  desechables (`fae-vr-*`, sin puertos), carga datos, hace un backup cifrado, lo restaura en otro par vacío y
+  compara filas, documentos y un hash del contenido; también comprueba que una passphrase equivocada se
+  rechaza sin tocar los datos. No toca el stack del proyecto. Requiere docker y openssl. Pruébalo con el
+  procedimiento real de producción (Neon para Postgres) antes de depender de él: este script cubre el flujo
+  del stack local.

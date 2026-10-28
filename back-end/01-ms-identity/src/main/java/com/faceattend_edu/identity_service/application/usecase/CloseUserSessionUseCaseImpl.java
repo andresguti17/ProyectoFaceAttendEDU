@@ -21,6 +21,10 @@ public class CloseUserSessionUseCaseImpl implements CloseUserSessionUseCase {
     public void closeSession(UUID sessionId) {
         UserSession session = loadUserSessionPort.loadUserSession(sessionId);
         if (session == null) {
+            // Administración cierra por el id que listan las rutas de sesiones, que no es el token.
+            session = loadUserSessionPort.loadUserSessionByStoredId(sessionId);
+        }
+        if (session == null) {
             throw new EntityNotFoundException("UserSession", sessionId);
         }
         session.end();

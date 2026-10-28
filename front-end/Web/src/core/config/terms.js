@@ -27,7 +27,7 @@ export const TERMS_AND_CONDITIONS = [
     },
     {
         title: "4. Datos que se tratan",
-        body: "Tratamos datos de identificación y contacto (nombre, documento, correo, teléfono, dirección, fecha de nacimiento), datos de cuenta y seguridad (usuario, contraseña cifrada, IP y fechas de sesión, verificación en dos pasos), datos de asistencia y justificaciones con sus soportes, alertas y tokens de notificaciones push, y, solo si lo autorizas, datos biométricos (plantillas de rostro y huella). El grupo sanguíneo es un dato de salud.",
+        body: "Tratamos datos de identificación y contacto (nombre, documento, correo, teléfono, dirección, fecha de nacimiento), datos de cuenta y seguridad (usuario, contraseña cifrada, IP y fechas de sesión, verificación en dos pasos), datos de asistencia y justificaciones con sus soportes, alertas y tokens de notificaciones push, y, solo si lo autorizas, datos biométricos (plantillas de rostro y huella). El grupo sanguíneo es un dato de salud facultativo: si lo indicas, la aplicación móvil puede usarlo como pregunta de verificación de identidad cuando falla el reconocimiento facial. Las justificaciones y sus soportes también pueden contener datos de salud que decides aportar.",
     },
     {
         title: "5. Finalidades",
@@ -47,11 +47,11 @@ export const TERMS_AND_CONDITIONS = [
     },
     {
         title: "9. Terceros y transferencias",
-        body: "Para operar usamos proveedores de alojamiento, correo y notificaciones que pueden procesar datos fuera de Colombia (por ejemplo, en Brasil o Estados Unidos), bajo contratos que exigen una protección adecuada. Solo entregamos datos a autoridades que los requieran legalmente.",
+        body: "Para operar, la institución usa proveedores que tratan los datos solo por su encargo: alojamiento y base de datos (Neon y AWS), la aplicación web (Vercel), las notificaciones del celular (Expo) y el correo (Gmail). Algunos pueden procesar datos fuera de Colombia (por ejemplo, en Brasil o Estados Unidos), bajo contratos que exigen una protección adecuada. Solo entregamos datos a autoridades que los requieran legalmente.",
     },
     {
         title: "10. Seguridad y conservación",
-        body: "Aplicamos cifrado en tránsito y en reposo para los datos de identificación, las plantillas biométricas y los soportes, control de acceso por rol y registros de auditoría. Conservamos los datos mientras exista vínculo con la institución y el tiempo que la ley exija; los registros de verificación biométrica se eliminan a los 90 días. Ningún sistema es infalible: si ocurre un incidente que afecte tus datos, la institución lo gestionará e informará a la autoridad y a los titulares según la ley.",
+        body: "Aplicamos cifrado en tránsito y, en reposo, para el documento, el correo, el teléfono, el grupo sanguíneo, las plantillas biométricas y los soportes de las justificaciones, control de acceso por rol y registros de auditoría. Conservamos los datos mientras exista vínculo con la institución y el tiempo que la ley exija; los registros de verificación biométrica se eliminan a los 90 días. Ningún sistema es infalible: si ocurre un incidente que afecte tus datos, la institución lo gestionará e informará a la autoridad y a los titulares según la ley.",
     },
     {
         title: "11. Uso adecuado",

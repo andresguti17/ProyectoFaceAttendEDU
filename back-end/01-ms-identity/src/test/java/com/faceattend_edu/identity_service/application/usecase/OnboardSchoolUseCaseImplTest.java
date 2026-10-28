@@ -44,7 +44,7 @@ class OnboardSchoolUseCaseImplTest {
     private static final OnboardSchoolUseCase.School SCHOOL =
             new OnboardSchoolUseCase.School("CIES-009", "Colegio Nuevo", "Bogotá", "Calle 1", "3000000000", "sede@colegio.edu");
     private static final OnboardSchoolUseCase.Admin ADMIN =
-            new OnboardSchoolUseCase.Admin("CC", "123456", "Ana", "Pérez", "ana@colegio.edu", "3111111111", "ana.perez", "Secret123!", "2026-10", false);
+            new OnboardSchoolUseCase.Admin("CC", "123456", "Ana", "Pérez", "ana@colegio.edu", "3111111111", "ana.perez", "Secret123!", "2026-11", false);
 
     @Mock CreateUserSessionUseCase createUserSessionUseCase;
     @Mock CloseUserSessionUseCase closeUserSessionUseCase;
@@ -70,7 +70,7 @@ class OnboardSchoolUseCaseImplTest {
         properties.setServiceUserId(serviceUserId.toString());
         useCase = new OnboardSchoolUseCaseImpl(properties, createUserSessionUseCase, closeUserSessionUseCase,
                 createPersonUseCase, createUserUseCase, changeUserStatusUseCase, loadUserByUsernamePort, provisioning, consentUseCase);
-        org.mockito.Mockito.lenient().when(consentUseCase.currentPolicyVersion()).thenReturn("2026-10");
+        org.mockito.Mockito.lenient().when(consentUseCase.currentPolicyVersion()).thenReturn("2026-11");
 
         session = new UserSession();
         session.setSessionId(UUID.randomUUID());

@@ -55,17 +55,17 @@ class ManageConsentUseCaseImplTest {
 
     @Test
     void theHolderAcceptsForThemselfWithDateAndVersion() {
-        DataProcessingConsent saved = useCase.accept(holderPerson, "2026-10", true, holderUser, List.of("Aprendiz"));
+        DataProcessingConsent saved = useCase.accept(holderPerson, "2026-11", true, holderUser, List.of("Aprendiz"));
 
         assertThat(saved.getChannel()).isEqualTo(DataProcessingConsent.SELF);
-        assertThat(saved.getPolicyVersion()).isEqualTo("2026-10");
+        assertThat(saved.getPolicyVersion()).isEqualTo("2026-11");
         assertThat(saved.getAcceptedAt()).isNotNull();
         assertThat(saved.biometricAuthorized()).isTrue();
     }
 
     @Test
     void anAdministratorRecordsItAsAssisted() {
-        DataProcessingConsent saved = useCase.accept(holderPerson, "2026-10", false, otherUser, List.of("Administrador"));
+        DataProcessingConsent saved = useCase.accept(holderPerson, "2026-11", false, otherUser, List.of("Administrador"));
 
         assertThat(saved.getChannel()).isEqualTo(DataProcessingConsent.ASSISTED);
         assertThat(saved.getRecordedBy()).isEqualTo(otherUser);
@@ -74,7 +74,7 @@ class ManageConsentUseCaseImplTest {
 
     @Test
     void someoneElseWithoutAdministrationIsRefused() {
-        assertThatThrownBy(() -> useCase.accept(holderPerson, "2026-10", true, otherUser, List.of("Instructor")))
+        assertThatThrownBy(() -> useCase.accept(holderPerson, "2026-11", true, otherUser, List.of("Instructor")))
                 .isInstanceOf(ForbiddenException.class);
         verify(consentPort, never()).save(any());
     }
@@ -87,7 +87,7 @@ class ManageConsentUseCaseImplTest {
 
     @Test
     void revokingTheBiometricPartKeepsTheRestAndIsIdempotent() {
-        DataProcessingConsent current = new DataProcessingConsent(UUID.randomUUID(), holderPerson, "2026-10",
+        DataProcessingConsent current = new DataProcessingConsent(UUID.randomUUID(), holderPerson, "2026-11",
                 LocalDateTime.now().minusDays(1), true, null, DataProcessingConsent.SELF, holderUser);
         when(consentPort.findCurrent(holderPerson)).thenReturn(Optional.of(current));
 
@@ -96,7 +96,7 @@ class ManageConsentUseCaseImplTest {
         useCase.revokeBiometric(holderPerson, holderUser, List.of());
 
         assertThat(revoked.biometricAuthorized()).isFalse();
-        assertThat(revoked.getPolicyVersion()).isEqualTo("2026-10");
+        assertThat(revoked.getPolicyVersion()).isEqualTo("2026-11");
         ArgumentCaptor<DataProcessingConsent> saved = ArgumentCaptor.forClass(DataProcessingConsent.class);
         verify(consentPort).save(saved.capture());
         assertThat(saved.getValue().getBiometricRevokedAt()).isEqualTo(first);

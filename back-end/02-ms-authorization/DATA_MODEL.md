@@ -2,7 +2,7 @@
 
 > **Servicio:** `02-ms-authorization` · **Schema:** `authorization` · **Puerto ADR-005:** `8082`
 > **Fuente canónica:** `../database/02-ms-authorization-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/02-authorization.md`
-> **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **Stack:** `Java 21 + Spring Boot 4.1.1` → `../../fae-docs/_stacks/java-spring.md`
+> **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **Stack:** `Java 21 + Spring Boot 4.1.2` → `../../fae-docs/_stacks/java-spring.md`
 
 ## Responsabilidad
 

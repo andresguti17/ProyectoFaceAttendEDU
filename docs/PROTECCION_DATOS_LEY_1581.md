@@ -81,5 +81,5 @@ rechaza (`PERSON_NOT_ENABLED`). Los datos del acudiente se guardan cifrados. Det
 
 ## 7. Fuera de alcance
 
-- Las respuestas de algunos endpoints biométricos de staff siguen devolviendo el vector descifrado (`template_response`); limitar esa exposición es un cambio de API aparte.
+- Ninguna respuesta de la API devuelve ya el vector descifrado ni la muestra cruda de huella: `template_response` entrega solo metadatos (id, persona, versión, fecha, dedo). Las rutas de personal por `person_id` (leer, historial, borrar, resumen) están limitadas a la sede de quien llama; el Super Administrador ve todas. La identificación 1:N (`/identify`, `/identify-image`, `/identify-sample`) y la verificación (`/verify`), por REST y por WebSocket, solo devuelven personas de la sede de quien llama (el Super Administrador ve todas): una cara o huella de otra sede responde "sin coincidencia", igual que una nunca inscrita.
 - Los respaldos de PostgreSQL y MongoDB contienen los datos ya cifrados, pero el archivo de respaldo en sí no se cifra.

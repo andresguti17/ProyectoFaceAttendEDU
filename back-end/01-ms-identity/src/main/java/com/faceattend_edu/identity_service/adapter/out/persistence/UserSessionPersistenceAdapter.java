@@ -1,5 +1,7 @@
 package com.faceattend_edu.identity_service.adapter.out.persistence;
 
+import com.faceattend_edu.identity_service.adapter.out.persistence.crypto.SessionTokenHasher;
+import com.faceattend_edu.identity_service.adapter.out.persistence.entity.UserSessionJpaEntity;
 import com.faceattend_edu.identity_service.adapter.out.persistence.mapper.UserSessionPersistenceMapper;
 import com.faceattend_edu.identity_service.adapter.out.persistence.repository.UserSessionJpaRepository;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserSessionPort;
@@ -25,7 +27,12 @@ public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadU
 
     @Override
     public UserSession loadUserSession(UUID sessionId) {
-        return mapper.toDomain(repository.findById(sessionId).orElse(null));
+        return mapper.toDomain(repository.findById(SessionTokenHasher.hash(sessionId)).orElse(null));
+    }
+
+    @Override
+    public UserSession loadUserSessionByStoredId(UUID storedId) {
+        return mapper.toDomain(repository.findById(storedId).orElse(null));
     }
 
     @Override
@@ -42,7 +49,13 @@ public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadU
 
     @Override
     public UserSession saveUserSession(UserSession session) {
-        return mapper.toDomain(repository.save(mapper.toEntity(session)));
+        // El token nace aquí y solo se devuelve a quien abre la sesión; la tabla guarda su resumen.
+        UUID token = UUID.randomUUID();
+        UserSessionJpaEntity entity = mapper.toEntity(session);
+        entity.setSessionId(SessionTokenHasher.hash(token));
+        UserSession saved = mapper.toDomain(repository.save(entity));
+        saved.setSessionId(token);
+        return saved;
     }
 
     @Override
@@ -52,7 +65,7 @@ public class UserSessionPersistenceAdapter implements LoadUserSessionPort, LoadU
 
     @Override
     public int closeSessionIfActive(UUID sessionId, LocalDateTime closedAt) {
-        return repository.closeIfActive(sessionId, closedAt,
+        return repository.closeIfActive(SessionTokenHasher.hash(sessionId), closedAt,
                 UserSession.STATUS_ACTIVE, UserSession.STATUS_CLOSED);
     }
 }

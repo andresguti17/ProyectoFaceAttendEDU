@@ -63,7 +63,9 @@ def _fresh_auth_cache():
     # heredar la sesión que validó otra (p. ej. identity caído debe dar 503).
     security._session_cache.clear()
     security._eval_cache.clear()
+    security._caller_school_cache.clear()
     yield
+    security._caller_school_cache.clear()
 
 
 @pytest.fixture
@@ -112,7 +114,13 @@ def test_student_cannot_read_templates(client):
     assert response.json()["error"] == "Forbidden"
 
 
-def test_admin_passes_the_guard_on_templates(client):
+def test_admin_passes_the_guard_on_templates(client, monkeypatch):
+    # The school scope of the person is checked too: this admin is a Super Administrador.
+    async def get_list(url: str, token: str):
+        return [{"roleName": "Super Administrador"}] if "/roles" in url else []
+
+    monkeypatch.setattr(security, "_get_list", get_list)
+    security._caller_school_cache.clear()
     # 404 = the guard let the request through and the template simply does not exist.
     assert client.get("/api/v1/biometric/facial/person-1", headers=_auth(ADMIN)).status_code == 404
 

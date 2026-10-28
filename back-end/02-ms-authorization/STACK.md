@@ -1,12 +1,12 @@
 # STACK — 02-ms-authorization
 
-> **Stack ADR-005:** `Java 21 + Spring Boot 4.1.1` · **Guía:** `../../fae-docs/_stacks/java-spring.md`
+> **Stack ADR-005:** `Java 21 + Spring Boot 4.1.2` · **Guía:** `../../fae-docs/_stacks/java-spring.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
 > **Database:** `../database/02-ms-authorization-db` (schema `authorization`) · **Puerto:** `8082` · **Dominio:** `06-data/domains/02-authorization.md`
 
 ## Decisión (ADR-005 §2)
 
-**Best option: Java 21 + Spring Boot 4.1.1 (19/25)** — RBAC read-heavy, permission checks embedded in JWT claims per ADR-008.
+**Best option: Java 21 + Spring Boot 4.1.2 (19/25)** — RBAC read-heavy, permission checks embedded in JWT claims per ADR-008.
 
 | # | Option | Perf | Eco | Learn | Lib | Ops | Total | Notes |
 |---|--------|:----:|:---:|:-----:|:---:|:---:|-------|-------|
@@ -34,7 +34,7 @@ src/main/java/com/faceattend_edu/authorization_service/
 
 ## Dependencias (pom.xml)
 
-Spring Boot 4.1.1, `webmvc`, `data-jpa`, `security`, `validation`, `liquibase`, `postgresql`, `lombok`, `springdoc`, `kafka`.
+Spring Boot 4.1.2, `webmvc`, `data-jpa`, `security`, `validation`, `liquibase`, `postgresql`, `lombok`, `springdoc`, `kafka`.
 
 ## Ejecución
 

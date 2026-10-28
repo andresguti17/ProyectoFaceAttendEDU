@@ -71,7 +71,7 @@ La implementación fue **no invasiva**: se agregaron middlewares, interceptores 
 | `02-ms-authorization/.../QualityHealthController.java` | Java | Endpoint de salud de calidad para Authorization |
 | `03-ms-academic/.../qualityMiddleware.ts` | TypeScript | Middleware Fastify de calidad para Academic |
 | `07-ms-configuration/.../qualityMiddleware.ts` | TypeScript | Middleware Fastify de calidad para Configuration |
-| `08-ms-notification/.../quality_middleware.go` | Go | Middleware Gin de calidad para Notification |
+| `08-ms-notification/.../qualityMiddleware.ts` | TypeScript | Middleware Fastify de calidad para Notification |
 | `06-ms-biometric/quality_middleware.py` | Python | Middleware FastAPI de calidad para Biometric |
 
 ### 3.2 Archivos Modificados (5 archivos)
@@ -82,7 +82,7 @@ La implementación fue **no invasiva**: se agregaron middlewares, interceptores 
 | `02-ms-authorization/.../GlobalExceptionHandler.java` | Enhanced con códigos ISO 9001 y correlationId |
 | `03-ms-academic/src/main.ts` | Integración de quality middleware + health endpoint |
 | `07-ms-configuration/src/main.ts` | Integración de quality middleware + health endpoint |
-| `08-ms-notification/cmd/server/main.go` | Integración de quality middleware + health endpoint |
+| `08-ms-notification/src/main.ts` | Integración de quality middleware + health endpoint |
 | `99-api-gateway/kong/kong.yml` | Rutas para /health/quality y /api/v1/quality/report |
 
 ---
@@ -193,7 +193,7 @@ Cada operación CRUD genera un registro estructurado:
 | 05-ms-attendance | Java Spring Boot | Interceptor + Controller | GlobalExceptionHandler | ✅ Integrado |
 | 06-ms-biometric | Python FastAPI | quality_middleware.py | — | ✅ Listo para integrar |
 | 07-ms-configuration | TypeScript Fastify | qualityMiddleware.ts | main.ts | ✅ Integrado |
-| 08-ms-notification | Go Gin | quality_middleware.go | main.go | ✅ Integrado |
+| 08-ms-notification | TypeScript Fastify | qualityMiddleware.ts | main.ts | ✅ Integrado |
 | 99-api-gateway | Kong OSS | — | kong.yml | ✅ Integrado |
 
 ---

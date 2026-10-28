@@ -1,5 +1,6 @@
 package com.faceattend_edu.identity_service.application.usecase;
 
+import com.faceattend_edu.identity_service.application.support.LogMask;
 import com.faceattend_edu.identity_service.application.port.out.RecoveryCodePort;
 import com.faceattend_edu.identity_service.application.port.out.RecoveryCodePort.IssuedCode;
 import com.faceattend_edu.identity_service.application.port.out.SendLoginCodePort;
@@ -61,8 +62,6 @@ public class TwoFactorChallenge {
 
     /** "ana.perez@example.com" becomes "a***@example.com". */
     static String mask(String email) {
-        int at = email.indexOf('@');
-        if (at <= 0) return "***";
-        return email.charAt(0) + "***" + email.substring(at);
+        return LogMask.email(email);
     }
 }

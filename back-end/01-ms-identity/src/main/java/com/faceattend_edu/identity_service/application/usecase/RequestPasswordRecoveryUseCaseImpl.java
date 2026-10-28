@@ -1,5 +1,6 @@
 package com.faceattend_edu.identity_service.application.usecase;
 
+import com.faceattend_edu.identity_service.application.support.LogMask;
 import com.faceattend_edu.identity_service.application.port.in.RequestPasswordRecoveryUseCase;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserByIdentifierPort;
 import com.faceattend_edu.identity_service.application.port.out.RecoveryCodePort;
@@ -52,7 +53,7 @@ public class RequestPasswordRecoveryUseCaseImpl implements RequestPasswordRecove
         if (!sendRecoveryEmailPort.sendRecoveryCode(issued.email(), issued.code(), ttl)) {
             // El código sigue vivo en memoria: si notification se recupera el
             // usuario puede pedir otro reenvío cuando venza la ventana de espera.
-            log.warn("Recovery code generated but not delivered to {}", issued.email());
+            log.warn("Recovery code generated but not delivered to {}", LogMask.email(issued.email()));
         }
     }
 }
