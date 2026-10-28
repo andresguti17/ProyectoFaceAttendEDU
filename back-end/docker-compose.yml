@@ -121,7 +121,7 @@ services:
     build:
       context: .
       dockerfile: 01-ms-identity/Dockerfile
-    image: faceattend/ms-identity:latest
+    image: faceattend/ms-identity:${FACEATTEND_IMAGE_TAG:-latest}
     container_name: faceattend-ms-identity
     mem_limit: 1g
     cpus: "1.0"
@@ -180,7 +180,7 @@ services:
     build:
       context: .
       dockerfile: 02-ms-authorization/Dockerfile
-    image: faceattend/ms-authorization:latest
+    image: faceattend/ms-authorization:${FACEATTEND_IMAGE_TAG:-latest}
     container_name: faceattend-ms-authorization
     mem_limit: 1g
     cpus: "1.0"
@@ -221,7 +221,7 @@ services:
     build:
       context: .
       dockerfile: 04-ms-scheduling/Dockerfile
-    image: faceattend/ms-scheduling:latest
+    image: faceattend/ms-scheduling:${FACEATTEND_IMAGE_TAG:-latest}
     container_name: faceattend-ms-scheduling
     mem_limit: 1g
     cpus: "1.0"
@@ -259,7 +259,7 @@ services:
     build:
       context: .
       dockerfile: 05-ms-attendance/Dockerfile
-    image: faceattend/ms-attendance:latest
+    image: faceattend/ms-attendance:${FACEATTEND_IMAGE_TAG:-latest}
     container_name: faceattend-ms-attendance
     mem_limit: 1g
     cpus: "1.0"
@@ -316,7 +316,7 @@ services:
     build:
       context: .
       dockerfile: 03-ms-academic/Dockerfile
-    image: faceattend/ms-academic:latest
+    image: faceattend/ms-academic:${FACEATTEND_IMAGE_TAG:-latest}
     container_name: faceattend-ms-academic
     mem_limit: 256m
     cpus: "0.5"
@@ -351,7 +351,7 @@ services:
     build:
       context: .
       dockerfile: 07-ms-configuration/Dockerfile
-    image: faceattend/ms-configuration:latest
+    image: faceattend/ms-configuration:${FACEATTEND_IMAGE_TAG:-latest}
     container_name: faceattend-ms-configuration
     mem_limit: 256m
     cpus: "0.5"
@@ -395,7 +395,7 @@ services:
     build:
       context: ./06-ms-biometric
       dockerfile: Dockerfile
-    image: faceattend/ms-biometric:latest
+    image: faceattend/ms-biometric:${FACEATTEND_IMAGE_TAG:-latest}
     container_name: faceattend-ms-biometric
     mem_limit: 1g
     cpus: "1.0"
@@ -453,7 +453,7 @@ services:
     build:
       context: .
       dockerfile: 08-ms-notification/Dockerfile
-    image: faceattend/ms-notification:latest
+    image: faceattend/ms-notification:${FACEATTEND_IMAGE_TAG:-latest}
     container_name: faceattend-ms-notification
     mem_limit: 128m
     cpus: "0.5"
@@ -530,7 +530,7 @@ services:
     build:
       context: .
       dockerfile: 09-ms-quality/Dockerfile
-    image: faceattend/ms-quality:latest
+    image: faceattend/ms-quality:${FACEATTEND_IMAGE_TAG:-latest}
     container_name: faceattend-ms-quality
     mem_limit: 256m
     cpus: "0.5"
