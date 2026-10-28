@@ -25,7 +25,7 @@ Traducir la estructura academica en horarios recurrentes y sesiones de clase con
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
 | Lenguaje | **Java 21** | Consistencia con el proyecto |
-| Framework | **Spring Boot 4.1.1** | Ecosistema unificado |
+| Framework | **Spring Boot 4.1.2** | Ecosistema unificado |
 | Arquitectura | **Hexagonal** | Misma estructura |
 
 ### 3.2 Dependencias Principales

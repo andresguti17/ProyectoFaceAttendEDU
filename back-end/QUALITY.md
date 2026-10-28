@@ -79,8 +79,8 @@ back-end/
 ├── 07-ms-configuration/              ← TypeScript Fastify
 │   └── qualityMiddleware.ts          ← Middleware Fastify de calidad
 │
-├── 08-ms-notification/               ← Go Gin
-│   └── quality_middleware.go         ← Middleware Gin de calidad
+├── 08-ms-notification/               ← TypeScript Fastify
+│   └── qualityMiddleware.ts          ← Middleware Fastify de calidad
 │
 └── 99-api-gateway/                   ← Kong
     └── kong.yml                      ← Plugin de calidad en gateway

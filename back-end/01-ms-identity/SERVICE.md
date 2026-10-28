@@ -20,7 +20,7 @@ Gestionar la identidad de personas, credenciales de acceso, sesiones de usuario 
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
 | Lenguaje | **Java 21** | LTS, records, sealed classes, pattern matching |
-| Framework | **Spring Boot 4.1.1** | Madurez, ecosistema, compatibilidad con el proyecto |
+| Framework | **Spring Boot 4.1.2** | Madurez, ecosistema, compatibilidad con el proyecto |
 | Arquitectura | **Hexagonal** | Separacion de concerns, testabilidad |
 
 ### 3.2 Dependencias Principales
@@ -345,7 +345,7 @@ alimenta `FACEATTEND_ONBOARDING_SERVICE_USER_ID`.
 
 ## 9. Stack Actual
 
-Identity esta implementado en **Java 21 + Spring Boot 4.1.1** con arquitectura hexagonal.
+Identity esta implementado en **Java 21 + Spring Boot 4.1.2** con arquitectura hexagonal.
 
 ### Justificacion
 
