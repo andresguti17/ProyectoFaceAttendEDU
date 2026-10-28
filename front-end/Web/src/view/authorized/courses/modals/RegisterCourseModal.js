@@ -277,18 +277,23 @@ export default function RegisterCourseModal({ visible, onClose, onSubmit }) {
                         leftIcon={<Feather name="book-open" size={16} color={c.text.tertiary} />}
                     />
                 </View>
-                <View style={{ width: isSmall ? "100%" : 160 }}>
-                    <TextInput
-                        label={t("Código") + " *"}
-                        value={form.code}
-                        onChangeText={v => setField("code", v)}
-                        placeholder={t("Se genera automáticamente")}
-                        disabled={true}
-                        error={isEmpty(form.code)}
-                        errorMessage={isEmpty(form.code) ? t("Selecciona nombre y programa") : ""}
-                        leftIcon={<Feather name="hash" size={16} color={c.text.tertiary} />}
-                        style={{ paddingRight: 8 }}
-                    />
+                {/* El código lo asigna el sistema (generateCourseCode): sin entrada manual. */}
+                <View style={{ width: isSmall ? "100%" : 160, marginBottom: 16 }}>
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: isEmpty(form.code) ? c.status.error : c.text.secondary, marginBottom: 6 }}>
+                        {t("Código")}
+                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48 }}>
+                        <Feather name="hash" size={16} color={c.text.tertiary} />
+                        <Text
+                            accessibilityLabel={t("Código del curso")}
+                            style={{ fontSize: 14, fontWeight: "600", color: form.code ? c.text.primary : c.text.tertiary }}
+                        >
+                            {form.code || t("Se genera automáticamente")}
+                        </Text>
+                    </View>
+                    {isEmpty(form.code) && (
+                        <Text style={{ fontSize: 12, color: c.status.error }}>{t("Selecciona nombre y programa")}</Text>
+                    )}
                 </View>
                 <View style={{ width: isSmall ? "100%" : 120 }}>
                     <TextInput

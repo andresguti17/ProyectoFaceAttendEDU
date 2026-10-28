@@ -21,9 +21,9 @@ import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { authApi } from "../services/api/authApi";
 import { authorizationApi } from "../services/api/authorizationApi";
-import { provisionStaff, provisionStudent, credentialsNotice, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails, findExistingStudents } from "../services/api/staffProvisioning";
+import { provisionStaff, provisionStudent, credentialsNotice, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails, findExistingStudents, documentTypesForRole } from "../services/api/staffProvisioning";
 import { userByPersonMap } from "../services/api/referenceData";
-import { isValidEmail } from "../core/utils/validation";
+import { birthDateError, isValidEmail } from "../core/utils/validation";
 import { isMinorPerson } from "../core/utils/termsGate";
 
 // Alta exitosa: aviso del correo de credenciales + a quién capturarle la
@@ -635,6 +635,12 @@ export function useUsersViewModel(
             if (!String(form?.documentNumber ?? "").trim()) return "El documento es requerido";
             if (!String(form?.email ?? "").trim()) return "El correo es requerido";
             if (!String(form?.username ?? "").trim()) return "El usuario es requerido";
+            const birthError = birthDateError(form?.birthDate);
+            if (birthError) return birthError;
+            const role = target?.userType || USER_TYPES.STUDENT;
+            if (form?.documentType && !documentTypesForRole(role).includes(form.documentType)) {
+                return "Tipo de documento no válido para este rol";
+            }
 
             const nextActive = (form?.status ?? "active") === "active";
             const wasActive = (target?.status ?? "active") === "active";
