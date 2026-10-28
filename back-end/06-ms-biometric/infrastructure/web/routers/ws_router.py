@@ -122,6 +122,8 @@ from infrastructure.web.security import (
     resolve_person_school,
     ws_bearer_subprotocol,
 )
+from infrastructure.web.match_scope import MatchScope
+from infrastructure.web.match_scope import UNRESTRICTED as UNRESTRICTED_MATCH
 from infrastructure.web.ws.connection_manager import UNRESTRICTED, ConnectionManager, Scope
 from infrastructure.web.ws.idempotency import IdempotencyCache
 
@@ -226,6 +228,7 @@ async def _dispatch(
     secret: str,
     settings: Settings,
     correlation_id: str,
+    match_scope: MatchScope,
     token: str | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any] | None]:
     """Validate `raw_payload` and call the matching REST route handler directly.
@@ -257,15 +260,15 @@ async def _dispatch(
 
     if message_type in (FACIAL_VERIFY, FINGERPRINT_VERIFY):
         result = (
-            await verify_fingerprint(data, fake_request, fingerprint_repo, match_logs, threshold)
+            await verify_fingerprint(data, fake_request, fingerprint_repo, match_logs, threshold, match_scope=match_scope)
             if is_fingerprint
-            else await verify_facial(data, fake_request, facial_repo, match_logs, face_threshold)
+            else await verify_facial(data, fake_request, facial_repo, match_logs, face_threshold, match_scope=match_scope)
         )
         return result, None
 
     if message_type == FACIAL_IDENTIFY_IMAGE:
         result = await identify_facial_image(
-            data, fake_request, facial_repo, match_logs, face_threshold, secret, settings
+            data, fake_request, facial_repo, match_logs, face_threshold, secret, settings, match_scope=match_scope
         )
         event = {
             "event_type": direction,
@@ -280,7 +283,7 @@ async def _dispatch(
 
     if message_type == FINGERPRINT_IDENTIFY_SAMPLE:
         result = await identify_fingerprint_sample(
-            data, fake_request, fingerprint_repo, match_logs, fp_threshold, settings
+            data, fake_request, fingerprint_repo, match_logs, fp_threshold, settings, match_scope=match_scope
         )
         event = {
             "event_type": direction,
@@ -295,9 +298,9 @@ async def _dispatch(
 
     # facial.identify / fingerprint.identify
     result = (
-        await identify_fingerprint(data, fake_request, fingerprint_repo, match_logs, threshold)
+        await identify_fingerprint(data, fake_request, fingerprint_repo, match_logs, threshold, match_scope=match_scope)
         if is_fingerprint
-        else await identify_facial(data, fake_request, facial_repo, match_logs, face_threshold)
+        else await identify_facial(data, fake_request, facial_repo, match_logs, face_threshold, match_scope=match_scope)
     )
     event = {
         "event_type": direction,
@@ -338,6 +341,7 @@ async def _handle_frame(
     manager: ConnectionManager,
     secret: str,
     settings: Settings,
+    match_scope: MatchScope,
 ) -> None:
     try:
         envelope = WsEnvelope.model_validate_json(raw)
@@ -377,6 +381,7 @@ async def _handle_frame(
             secret=secret,
             settings=settings,
             correlation_id=str(uuid4()),
+            match_scope=match_scope,
             token=extract_ws_token(websocket),
         )
     except ValidationError:
@@ -440,6 +445,11 @@ async def biometric_ws(
             await websocket.close(code=WS_CLOSE_SERVICE_UNAVAILABLE, reason="cannot resolve the caller's school")
             return
 
+    # What this connection may identify or verify: the same school scope it receives events for.
+    match_scope = (
+        UNRESTRICTED_MATCH if user_id is None else MatchScope(scope[0], scope[1], extract_ws_token(websocket))
+    )
+
     manager: ConnectionManager = websocket.app.state.ws_connection_manager
     idempotency: IdempotencyCache = websocket.app.state.ws_idempotency_cache
     if not await manager.connect(websocket, user_id, settings.ws_max_connections_per_user, scope):
@@ -478,6 +488,7 @@ async def biometric_ws(
                 manager=manager,
                 secret=secret,
                 settings=settings,
+                match_scope=match_scope,
             )
     except WebSocketDisconnect:
         logger.info("biometric ws disconnected user=%s", user_id)

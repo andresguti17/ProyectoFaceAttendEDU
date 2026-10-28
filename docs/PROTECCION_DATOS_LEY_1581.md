@@ -73,5 +73,5 @@ Genérelas con `openssl rand -base64 32` (MinIO: `nombre:$(openssl rand -base64 
 
 ## 7. Fuera de alcance
 
-- Ninguna respuesta de la API devuelve ya el vector descifrado ni la muestra cruda de huella: `template_response` entrega solo metadatos (id, persona, versión, fecha, dedo). Las rutas de personal por `person_id` (leer, historial, borrar, resumen) están limitadas a la sede de quien llama; el Super Administrador ve todas. Pendiente: la identificación 1:N (`/identify`) y la verificación comparan contra las plantillas de todas las sedes.
+- Ninguna respuesta de la API devuelve ya el vector descifrado ni la muestra cruda de huella: `template_response` entrega solo metadatos (id, persona, versión, fecha, dedo). Las rutas de personal por `person_id` (leer, historial, borrar, resumen) están limitadas a la sede de quien llama; el Super Administrador ve todas. La identificación 1:N (`/identify`, `/identify-image`, `/identify-sample`) y la verificación (`/verify`), por REST y por WebSocket, solo devuelven personas de la sede de quien llama (el Super Administrador ve todas): una cara o huella de otra sede responde "sin coincidencia", igual que una nunca inscrita.
 - Los respaldos de PostgreSQL y MongoDB contienen los datos ya cifrados, pero el archivo de respaldo en sí no se cifra.
