@@ -29,9 +29,21 @@ test('an adult pending the terms must sign; a minor is blocked on the missing st
   expect(resolveTermsGate({ enabled: true, minor: true, pendingStep: 'NONE' }).gate).toBe(TERMS_GATE.NONE);
 });
 
-test('if identity does not answer the login is not blocked by the app', async () => {
+// Antes fallaba abierto (NONE) y la persona entraba sin ver el aviso: un vacío legal.
+test('if the terms status cannot be verified the gate fails closed', async () => {
   request.mockRejectedValueOnce(new Error('offline'));
+  await expect(TermsService.gateFor('p-1')).rejects.toMatchObject({ code: 'TERMS_UNAVAILABLE' });
 
+  await expect(TermsService.gateFor(null)).rejects.toMatchObject({ code: 'TERMS_UNAVAILABLE' });
+
+  request.mockResolvedValueOnce({});
+  await expect(TermsService.gateFor('p-1')).rejects.toMatchObject({ code: 'TERMS_UNAVAILABLE' });
+});
+
+test('a reachable identity decides the gate', async () => {
+  request.mockResolvedValueOnce({ enabled: false, minor: false, pendingStep: 'TERMS' });
+  expect((await TermsService.gateFor('p-1')).gate).toBe(TERMS_GATE.ACCEPT);
+
+  request.mockResolvedValueOnce({ enabled: true, minor: false, pendingStep: 'NONE' });
   expect((await TermsService.gateFor('p-1')).gate).toBe(TERMS_GATE.NONE);
-  expect((await TermsService.gateFor(null)).gate).toBe(TERMS_GATE.NONE);
 });

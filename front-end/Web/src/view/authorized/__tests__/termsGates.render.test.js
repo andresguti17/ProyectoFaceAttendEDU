@@ -59,6 +59,16 @@ test("an adult on the first login signs the terms before reaching the screen", (
     expect(text).not.toContain("THE_SCREEN");
 });
 
+test("the web terms alert mirrors the mobile modal: sign or leave, no extra checkbox", () => {
+    const text = renderFor({ termsGate: "ACCEPT", termsStep: "TERMS", isMinor: false });
+
+    expect(text).toContain("Términos y Condiciones");
+    expect(text).toContain("1. Aceptación y objeto");
+    expect(text).toContain("Firmar y continuar");
+    expect(text).toContain("Salir sin firmar");
+    expect(text).not.toContain("He leído y acepto");
+});
+
 test("a minor without a guardian sees the blocking alert with the guardian step", () => {
     const text = renderFor({ termsGate: "BLOCKED", termsStep: "GUARDIAN", isMinor: true });
 

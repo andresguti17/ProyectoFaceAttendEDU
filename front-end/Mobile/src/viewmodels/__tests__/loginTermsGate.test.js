@@ -158,6 +158,41 @@ test('a fully enabled minor enters without accepting anything for themself', asy
     expect(ConsentService.ensureAccepted).not.toHaveBeenCalled();
 });
 
+test('first login shows the terms once; a later login enters without them', async () => {
+    // identity con estado: pide los términos hasta que la persona los firma.
+    let signed = false;
+    TermsService.gateFor.mockImplementation(async () => (signed ? ENABLED : ADULT_FIRST_LOGIN));
+    TermsService.accept.mockImplementation(async () => {
+        signed = true;
+    });
+
+    const firstLogin = jest.fn();
+    const first = await signIn(firstLogin);
+    expect(first().termsGate).toMatchObject({gate: 'ACCEPT'});
+    expect(firstLogin).not.toHaveBeenCalled();
+    await act(async () => {
+        await first().acceptTerms();
+    });
+    expect(firstLogin).toHaveBeenCalledWith('Aprendiz', 's-1');
+
+    const laterLogin = jest.fn();
+    const later = await signIn(laterLogin);
+    expect(later().termsGate).toBeNull();
+    expect(laterLogin).toHaveBeenCalledWith('Aprendiz', 's-1');
+    expect(TermsService.accept).toHaveBeenCalledTimes(1);
+});
+
+test('if the terms cannot be verified the person does not enter and the session is discarded', async () => {
+    TermsService.gateFor.mockRejectedValue(Object.assign(new Error('offline'), {code: 'TERMS_UNAVAILABLE'}));
+    const onLogin = jest.fn();
+    const vm = await signIn(onLogin);
+
+    expect(onLogin).not.toHaveBeenCalled();
+    expect(vm().termsGate).toBeNull();
+    expect(vm().error).toBe('termsGate.unavailable');
+    expect(removeToken).toHaveBeenCalled();
+});
+
 test('leaving the gate discards the session saved to sign', async () => {
     TermsService.gateFor.mockResolvedValue(MINOR_NO_GUARDIAN);
     const vm = await signIn(jest.fn());

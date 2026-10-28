@@ -1360,7 +1360,8 @@
   "termsGate": {
     "sign": "Signer et continuer",
     "signing": "Signature...",
-    "leave": "Quitter sans signer"
+    "leave": "Quitter sans signer",
+    "unavailable": "Impossible de vérifier votre acceptation des conditions générales. Vérifiez votre connexion et réessayez de vous connecter."
   },
   "minorBlocked": {
     "title": "INSCRIPTION EN ATTENTE",
