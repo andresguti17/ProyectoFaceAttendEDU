@@ -166,7 +166,7 @@ arrancar — no lo hace Compose, lo hace cada servicio:
 | Servicio | Mecanismo |
 |---|---|
 | `01-ms-identity`, `02-ms-authorization`, `04-ms-scheduling`, `05-ms-attendance` | `spring.config.import` con rutas `optional:file:${user.dir}/…` |
-| `03-ms-academic`, `09-ms-quality` | `process.loadEnvFile('../../.env')` al cargar su módulo de BD (y `drizzle.config.ts`) |
+| `03-ms-academic`, `09-ms-quality` | `process.loadEnvFile('../../.env')` al cargar su módulo de BD |
 | `06-ms-biometric` | `_load_root_env()` en `settings.py` (sin dependencias; nunca pisa el entorno real) |
 
 Las rutas parten del **directorio de trabajo**: el del servicio

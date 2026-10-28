@@ -2,7 +2,7 @@
 
 > **Servicio:** `03-ms-academic` · **Schema:** `academic` · **Puerto ADR-005:** `8083`
 > **Fuente canónica:** `../database/03-ms-academic-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/03-academic.md`
-> **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **Stack:** `TypeScript + Fastify + Drizzle` → `../../fae-docs/_stacks/node-typescript.md`
+> **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **Stack:** `TypeScript + Fastify + pg` → `../../fae-docs/_stacks/node-typescript.md`
 
 ## Responsabilidad
 

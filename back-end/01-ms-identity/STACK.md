@@ -1,12 +1,12 @@
 # STACK — 01-ms-identity
 
-> **Stack ADR-005:** `Java 21 + Spring Boot 4.1.1` · **Guía:** `../../fae-docs/_stacks/java-spring.md`
+> **Stack ADR-005:** `Java 21 + Spring Boot 4.1.2` · **Guía:** `../../fae-docs/_stacks/java-spring.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
 > **Database:** `../database/01-ms-identity-db` (schema `identity`) · **Puerto:** `8081` · **Dominio:** `06-data/domains/01-identity.md`
 
 ## Decisión (ADR-005 §1)
 
-**Best option: Java 21 + Spring Boot 4.1.1 (19/25)** — auth merged (JWT issuance, refresh, Redis session) handled by Spring Security out-of-the-box.
+**Best option: Java 21 + Spring Boot 4.1.2 (19/25)** — auth merged (JWT issuance, refresh, Redis session) handled by Spring Security out-of-the-box.
 
 | # | Option | Perf | Eco | Learn | Lib | Ops | Total | Notes |
 |---|--------|:----:|:---:|:-----:|:---:|:---:|-------|-------|
@@ -38,7 +38,7 @@ Regla: `domain` no importa `org.springframework.*`. Ver `SERVICE.md:148` para la
 
 ## Dependencias (pom.xml:32)
 
-Spring Boot 4.1.1 parent, `spring-boot-starter-webmvc`, `data-jpa`, `security`, `validation`, `actuator`, `kafka`, `liquibase`, `postgresql` runtime, `lombok`, `springdoc-openapi`, test starters.
+Spring Boot 4.1.2 parent, `spring-boot-starter-webmvc`, `data-jpa`, `security`, `validation`, `actuator`, `kafka`, `liquibase`, `postgresql` runtime, `lombok`, `springdoc-openapi`, test starters.
 
 ## Ejecución
 

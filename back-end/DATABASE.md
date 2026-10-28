@@ -3,17 +3,17 @@
 > **Fuente canónica de esquema:** ../database/ (8 bounded contexts, 1 BD faceattend_db + 8 schemas, Liquibase)
 > **Modelo lógico:** ../../fae-docs/06-data/domains/ (01-identity ... 08-configuration, 07-notification)
 > **Arquitectura:** ../../fae-docs/05-architecture/ (hexagonal-architecture.md, overview.md, ADR-005, ADR-007)
-> **Guías por stack:** ../../fae-docs/_stacks/ (java-spring.md, node-typescript.md, python-fastapi.md, go.md)
+> **Guías por stack:** ../../fae-docs/_stacks/ (java-spring.md, node-typescript.md, python-fastapi.md)
 
 ## 1. Mapa de acople (esta carpeta back-end/ ↔ database/)
 
 | # | Back-end (esta carpeta) | Database (../database) | Schema | Tablas / Colecciones (06-data/domains) | Dominio fae-docs | Stack ADR-005/007 | Guía _stacks |
 |---|--------------------------|---------------------------|--------|----------------------------------------|------------------|---------------|--------------|
-| 01 | 01-ms-identity/ | 01-ms-identity-db/ | identity | person, app_user, user_session, password_policy | 06-data/domains/01-identity.md | Java 21 + Spring Boot 4.1.1 | java-spring.md |
-| 02 | 02-ms-authorization/ | 02-ms-authorization-db/ | authorization | role, permission, role_permission, user_role | 06-data/domains/02-authorization.md | Java 21 + Spring Boot 4.1.1 | java-spring.md |
+| 01 | 01-ms-identity/ | 01-ms-identity-db/ | identity | person, app_user, user_session, password_policy | 06-data/domains/01-identity.md | Java 21 + Spring Boot 4.1.2 | java-spring.md |
+| 02 | 02-ms-authorization/ | 02-ms-authorization-db/ | authorization | role, permission, role_permission, user_role | 06-data/domains/02-authorization.md | Java 21 + Spring Boot 4.1.2 | java-spring.md |
 | 03 | 03-ms-academic/ | 03-ms-academic-db/ | academic | school, program, academic_period, cohort, course, academic_actor_type, academic_actor, enrollment | 06-data/domains/03-academic.md | TypeScript + Fastify + Drizzle | node-typescript.md |
-| 04 | 04-ms-scheduling/ | 04-ms-scheduling-db/ | scheduling | environment, schedule_block, class_session | 06-data/domains/04-scheduling.md | Java 21 + Spring Boot 4.1.1 | java-spring.md |
-| 05 | 05-ms-attendance/ | 05-ms-attendance-db/ | attendance | attendance_record, justification_type, justification, supporting_document (+ attendance_report) | 06-data/domains/05-attendance.md | Java 21 + Spring Boot 4.1.1 | java-spring.md |
+| 04 | 04-ms-scheduling/ | 04-ms-scheduling-db/ | scheduling | environment, schedule_block, class_session | 06-data/domains/04-scheduling.md | Java 21 + Spring Boot 4.1.2 | java-spring.md |
+| 05 | 05-ms-attendance/ | 05-ms-attendance-db/ | attendance | attendance_record, justification_type, justification, supporting_document (+ attendance_report) | 06-data/domains/05-attendance.md | Java 21 + Spring Boot 4.1.2 | java-spring.md |
 | 06 | 06-ms-biometric/ | 06-ms-biometric-db/ | biometric (vacío) + MongoDB | SQL: (schema vacío) · NoSQL: facial_embeddings, fingerprint_embeddings · caso en configuration.biometric_update_case | 06-data/domains/06-biometric.md | Python 3.12 + FastAPI | python-fastapi.md |
 | 07 | 07-ms-configuration/ | 07-ms-configuration-db/ | configuration | academic_configuration, security_configuration, biometric_update_case | 06-data/domains/08-configuration.md | TypeScript + Fastify | node-typescript.md |
 | 08 | 08-ms-notification/ | 08-ms-notification-db/ | notification | alert_type, alert, notification_log, device_token | 06-data/domains/07-notification.md | TypeScript + Fastify | node-typescript.md |

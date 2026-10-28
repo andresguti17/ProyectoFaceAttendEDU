@@ -26,7 +26,7 @@ Registro de asistencia con multiples fuentes (reconocimiento facial, manual, hue
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
 | Lenguaje | **Java 21** | Consistencia con el proyecto |
-| Framework | **Spring Boot 4.1.1** | Ecosistema unificado |
+| Framework | **Spring Boot 4.1.2** | Ecosistema unificado |
 | Arquitectura | **Hexagonal** | Misma estructura |
 | API alternativa | **Spring WebFlux** (opcional) | Endpoint reactivo para registro en tiempo real |
 

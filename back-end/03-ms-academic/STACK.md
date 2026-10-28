@@ -1,6 +1,6 @@
 # STACK — 03-ms-academic
 
-> **Stack ADR-005:** `TypeScript + Fastify + Drizzle ORM` · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
+> **Stack ADR-005:** `TypeScript + Fastify + Drizzle ORM` (decisión original; Drizzle se retiró y hoy se usa `pg`, ver más abajo) · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
 > **Database:** `../database/03-ms-academic-db` (schema `academic`) · **Puerto:** `8083` · **Dominio:** `06-data/domains/03-academic.md`
 

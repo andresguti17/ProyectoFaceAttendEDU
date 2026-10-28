@@ -2,7 +2,7 @@
 
 > **Servicio:** `01-ms-identity` · **Schema:** `identity` · **Puerto ADR-005:** `8081`
 > **Fuente canónica:** `../database/01-ms-identity-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/01-identity.md`
-> **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **Stack:** `Java 21 + Spring Boot 4.1.1` → `../../fae-docs/_stacks/java-spring.md`
+> **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **Stack:** `Java 21 + Spring Boot 4.1.2` → `../../fae-docs/_stacks/java-spring.md`
 
 ## Responsabilidad
 
