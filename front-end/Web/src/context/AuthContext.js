@@ -513,7 +513,7 @@ export function AuthProvider({ children }) {
         setUser((prev) => {
             if (!prev) return prev;
             const next = { ...prev, mustChangePassword: false };
-            sessionSet(JSON.stringify(next));
+            void sessionSet(JSON.stringify(next));
             return next;
         });
         return null;
@@ -531,7 +531,7 @@ export function AuthProvider({ children }) {
         setUser((prev) => {
             if (!prev) return prev;
             const next = { ...prev, consentRequired: false };
-            sessionSet(JSON.stringify(next));
+            void sessionSet(JSON.stringify(next));
             return next;
         });
         return null;
@@ -549,7 +549,7 @@ export function AuthProvider({ children }) {
         setUser((prev) => {
             if (!prev) return prev;
             const next = { ...prev, termsGate: TERMS_GATE.NONE, termsStep: "NONE" };
-            sessionSet(JSON.stringify(next));
+            void sessionSet(JSON.stringify(next));
             return next;
         });
         return null;
@@ -563,7 +563,7 @@ export function AuthProvider({ children }) {
             setUser((prev) => {
                 if (!prev) return prev;
                 const next = { ...prev, termsGate: gate.gate, termsStep: gate.step, isMinor: gate.minor };
-                sessionSet(JSON.stringify(next));
+                void sessionSet(JSON.stringify(next));
                 return next;
             });
             return null;
@@ -578,7 +578,7 @@ export function AuthProvider({ children }) {
         setUser((prev) => {
             if (!prev) return prev;
             const next = { ...prev, ...patch };
-            sessionSet(JSON.stringify(next));
+            void sessionSet(JSON.stringify(next));
             return next;
         });
     }, []);

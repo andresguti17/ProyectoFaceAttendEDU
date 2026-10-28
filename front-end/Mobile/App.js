@@ -31,7 +31,7 @@ async function applyPendingUpdate() {
 function AppContent() {
 
     useEffect(() => {
-        applyPendingUpdate();
+        void applyPendingUpdate();
     }, []);
 
     useEffect(() => {
