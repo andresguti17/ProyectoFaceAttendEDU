@@ -110,9 +110,6 @@ decide quién puede firmar.
 
 ## 6. Pendientes y riesgos
 
-- **Contrato OpenAPI de identity**: hay que regenerarlo (`tools/openapi/generate.sh 01-ms-identity`,
-  requiere Docker). El CI falla mientras `docs/openapi/01-ms-identity.json` no incluya los
-  endpoints nuevos.
 - Asistencia y justificaciones **no validan en el servidor** que el menor esté habilitado; hoy lo
   impiden las pantallas de bloqueo y que no tenga plantillas biométricas. Si se necesita defensa en
   profundidad, añadir la comprobación en los casos de uso de `05-ms-attendance`.
