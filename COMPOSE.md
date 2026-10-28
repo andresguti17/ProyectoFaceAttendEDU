@@ -230,6 +230,18 @@ cd database/01-ms-identity-db && docker compose up liquibase   # un contexto
 | Cambié `kong.yml` y no surte efecto | Kong DB-less lee el archivo al arrancar: `docker compose restart kong-gateway` |
 | Redes duplicadas viejas (`back-end_*`, `full_*`) | proyectos abandonados; `docker compose down` en cada carpeta y `docker network rm <red>` (los volúmenes quedan intactos) |
 
+### Imágenes de terceros fijadas por digest
+
+Las imágenes de terceros (`mongo`, `redis`, `kong`, `apache/kafka`, `postgres`, `liquibase`, `caddy`, `portainer-ce`) van como `etiqueta@sha256:…` en `back-end/docker-compose.yml`, `database/docker-compose*.yml`, `docker-compose.prod.yml` y `docker-compose.tls.yml`, igual que `minio`. Así un `pull` no cambia de versión sin que se note. El costo es que **ya no reciben parches solos** (y Dependabot está pausado): hay que revisarlas a mano.
+
+Para actualizar una, obtén el digest actual de su etiqueta y cámbialo en todos los archivos donde aparece:
+
+```bash
+docker buildx imagetools inspect redis:7-alpine   # línea "Digest: sha256:…"
+```
+
+Las imágenes propias (`faceattend/*:latest`) y las de los `Dockerfile` (`node`, `eclipse-temurin`, `maven`, `python`, `nginx`) siguen sin fijar.
+
 ---
 
 ## 9. Biometría web (rostro + huella)

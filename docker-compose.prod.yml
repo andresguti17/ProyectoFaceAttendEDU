@@ -14,7 +14,7 @@ include:
 services:
   # Portainer CE — accesible solo por túnel SSH (:9443)
   portainer:
-    image: portainer/portainer-ce:lts
+    image: portainer/portainer-ce:lts@sha256:3609c307943bca8e5c492f69ddd6965df177208b50678a4cff28391c8dd4e96e
     container_name: faceattend-portainer
     mem_limit: 512m
     cpus: "0.5"
@@ -30,7 +30,7 @@ services:
 
   # Caddy — TLS (Let's Encrypt) delante de Kong. Sirve https://$API_DOMAIN.
   caddy:
-    image: caddy:2-alpine
+    image: caddy:2-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f
     container_name: faceattend-caddy
     mem_limit: 128m
     cpus: "0.25"
