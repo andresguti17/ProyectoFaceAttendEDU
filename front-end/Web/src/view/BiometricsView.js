@@ -18,6 +18,7 @@ import { Feather } from "@expo/vector-icons";
 import { PageHeader, Card, Alert, Button, Badge } from "./components/common";
 import { FaceModule, FingerprintModule, BiometricDirectory, PersonAutocomplete } from "./components/biometrics";
 import BiometricConsentPrompt from "./components/privacy/BiometricConsentPrompt";
+import TermsPendingNotice from "./components/privacy/TermsPendingNotice";
 import { useTheme } from "./components/hooks/useTheme";
 import { useResponsive } from "./components/hooks/useResponsive";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
@@ -197,7 +198,14 @@ export default function BiometricsView({ section: sectionParam, onSectionChange 
                                 )}
 
                                 {/* Ley 1581: registrar exige la autorización biométrica de la persona elegida. */}
-                                {section !== "face-login" && vm.person && vm.biometricAuthorized === false ? (
+                                {section !== "face-login" && vm.person && vm.termsPending ? (
+                                    <TermsPendingNotice
+                                        personName={vm.person.name}
+                                        pending={vm.termsPending}
+                                        onRetry={vm.refreshTermsPending}
+                                        busy={vm.busy}
+                                    />
+                                ) : section !== "face-login" && vm.person && vm.biometricAuthorized === false ? (
                                     <BiometricConsentPrompt
                                         personName={vm.person.name}
                                         onAuthorize={vm.authorizeBiometrics}

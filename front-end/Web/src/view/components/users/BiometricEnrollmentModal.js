@@ -17,6 +17,7 @@ import { useTheme } from "../hooks/useTheme";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useBiometricsViewModel } from "../../../viewmodels/useBiometricsViewModel";
 import BiometricConsentPrompt from "../privacy/BiometricConsentPrompt";
+import TermsPendingNotice from "../privacy/TermsPendingNotice";
 
 const STATUS_ALERT_TYPE = { info: "info", ok: "success", error: "error" };
 
@@ -109,11 +110,23 @@ function EnrollmentBody({ person, wantFace, wantFingerprint, onClose, onFinished
                     />
                 )}
 
-                {vm.biometricAuthorized === false && (
+                {vm.termsPending && (
+                    <TermsPendingNotice
+                        personName={person.name}
+                        pending={vm.termsPending}
+                        onRetry={vm.refreshTermsPending}
+                        busy={vm.busy}
+                    />
+                )}
+                {!vm.termsPending && vm.biometricAuthorized === false && (
                     <BiometricConsentPrompt personName={person.name} onAuthorize={vm.authorizeBiometrics} busy={vm.busy} />
                 )}
-                {vm.biometricAuthorized === true && section === "face" && <FaceModule vm={vm} mode="register" />}
-                {vm.biometricAuthorized === true && section === "fingerprint" && <FingerprintModule vm={vm} enrollOnly />}
+                {!vm.termsPending && vm.biometricAuthorized === true && section === "face" && (
+                    <FaceModule vm={vm} mode="register" />
+                )}
+                {!vm.termsPending && vm.biometricAuthorized === true && section === "fingerprint" && (
+                    <FingerprintModule vm={vm} enrollOnly />
+                )}
 
                 <Alert type={STATUS_ALERT_TYPE[vm.status.tone] || "info"} message={vm.status.text} />
             </View>
