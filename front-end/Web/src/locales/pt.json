@@ -1960,5 +1960,15 @@
   "Para elegir otro rol, cierra y vuelve a abrir el formulario.": "Para escolher outra função, feche e abra o formulário novamente.",
   "La fecha de nacimiento no puede ser futura": "A data de nascimento não pode ser futura",
   "La fecha de nacimiento no puede ser anterior a 1900": "A data de nascimento não pode ser anterior a 1900",
-  "Tipo de documento no válido para este rol": "Tipo de documento não válido para esta função"
+  "Tipo de documento no válido para este rol": "Tipo de documento não válido para esta função",
+  "La persona aún no está habilitada para usar la biometría.": "A pessoa ainda não está habilitada para usar a biometria.",
+  "Faltan los términos y condiciones": "Faltam os termos e condições",
+  "debe iniciar sesión con su propia cuenta y aceptar los términos y condiciones. Un adulto los acepta personalmente; un administrador no puede hacerlo por él. Después podrás registrar su biometría.": "deve entrar com a própria conta e aceitar os termos e condições. Um adulto os aceita pessoalmente; um administrador não pode fazê-lo por ele. Depois você poderá registrar a biometria.",
+  "Falta registrar al acudiente": "É necessário registrar o responsável",
+  "Registra al acudiente del menor desde el detalle del estudiante antes de capturar su biometría.": "Registre o responsável do menor a partir do detalhe do estudante antes de capturar a biometria.",
+  "Falta la autorización firmada del acudiente": "Falta a autorização assinada do responsável",
+  "Carga la autorización firmada del acudiente desde el detalle del estudiante antes de capturar su biometría.": "Envie a autorização assinada do responsável a partir do detalhe do estudante antes de capturar a biometria.",
+  "Los términos de un menor los registra el administrador de la sede con el acudiente presente, desde el detalle del estudiante.": "Os termos de um menor são registrados pelo administrador da sede com o responsável presente, a partir do detalhe do estudante.",
+  "Registro previo pendiente": "Cadastro prévio pendente",
+  "Verificar de nuevo": "Verificar novamente"
 }

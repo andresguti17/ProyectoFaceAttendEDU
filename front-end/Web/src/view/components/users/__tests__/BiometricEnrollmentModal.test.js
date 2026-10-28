@@ -18,6 +18,11 @@ jest.mock("../../common", () => {
         Checkbox: ({ label }) => React.createElement(Text, null, label),
     };
 });
+jest.mock("../../privacy/TermsPendingNotice", () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+    return ({ pending }) => React.createElement(Text, null, `PENDING:${pending.step}`);
+});
 jest.mock("../../privacy/BiometricConsentPrompt", () => {
     const React = require("react");
     const { Text } = require("react-native");
@@ -43,6 +48,7 @@ jest.mock("../../../../core/utils/i18n/hooks/useTranslation", () => ({
 const mockSetPerson = jest.fn();
 let mockSummary = null;
 let mockAuthorized = true;
+let mockTermsPending = null;
 jest.mock("../../../../viewmodels/useBiometricsViewModel", () => ({
     useBiometricsViewModel: () => ({
         setPerson: mockSetPerson,
@@ -52,6 +58,8 @@ jest.mock("../../../../viewmodels/useBiometricsViewModel", () => ({
         status: { text: "estado", tone: "info" },
         biometricAuthorized: mockAuthorized,
         authorizeBiometrics: jest.fn(),
+        termsPending: mockTermsPending,
+        refreshTermsPending: jest.fn(),
     }),
 }));
 
@@ -127,4 +135,14 @@ test("without biometric authorization the camera is not offered, the consent pro
     expect(text(tree)).toContain("CONSENT:Ana García");
     expect(text(tree)).not.toContain("FACE:register");
     expect(text(tree)).not.toContain("FINGER:true");
+});
+
+test("while terms or guardian are pending the capture is not offered, the pending step is", () => {
+    mockTermsPending = { gate: "ACCEPT", step: "TERMS", minor: false };
+    const tree = render({ wantFace: true, wantFingerprint: true });
+    mockTermsPending = null;
+
+    expect(text(tree)).toContain("PENDING:TERMS");
+    expect(text(tree)).not.toContain("FACE:register");
+    expect(text(tree)).not.toContain("CONSENT:");
 });

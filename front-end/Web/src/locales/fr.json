@@ -1960,5 +1960,15 @@
   "Para elegir otro rol, cierra y vuelve a abrir el formulario.": "Pour choisir un autre rôle, fermez puis rouvrez le formulaire.",
   "La fecha de nacimiento no puede ser futura": "La date de naissance ne peut pas être dans le futur",
   "La fecha de nacimiento no puede ser anterior a 1900": "La date de naissance ne peut pas être antérieure à 1900",
-  "Tipo de documento no válido para este rol": "Type de document non valide pour ce rôle"
+  "Tipo de documento no válido para este rol": "Type de document non valide pour ce rôle",
+  "La persona aún no está habilitada para usar la biometría.": "La personne n'est pas encore habilitée à utiliser la biométrie.",
+  "Faltan los términos y condiciones": "Les conditions générales sont manquantes",
+  "debe iniciar sesión con su propia cuenta y aceptar los términos y condiciones. Un adulto los acepta personalmente; un administrador no puede hacerlo por él. Después podrás registrar su biometría.": "doit se connecter avec son propre compte et accepter les conditions générales. Un adulte les accepte personnellement ; un administrateur ne peut pas le faire à sa place. Vous pourrez ensuite enregistrer sa biométrie.",
+  "Falta registrar al acudiente": "Le tuteur doit être enregistré",
+  "Registra al acudiente del menor desde el detalle del estudiante antes de capturar su biometría.": "Enregistrez le tuteur du mineur depuis le détail de l'étudiant avant de capturer sa biométrie.",
+  "Falta la autorización firmada del acudiente": "L'autorisation signée du tuteur est manquante",
+  "Carga la autorización firmada del acudiente desde el detalle del estudiante antes de capturar su biometría.": "Téléversez l'autorisation signée du tuteur depuis le détail de l'étudiant avant de capturer sa biométrie.",
+  "Los términos de un menor los registra el administrador de la sede con el acudiente presente, desde el detalle del estudiante.": "Les conditions d'un mineur sont enregistrées par l'administrateur du site en présence du tuteur, depuis le détail de l'étudiant.",
+  "Registro previo pendiente": "Inscription préalable en attente",
+  "Verificar de nuevo": "Vérifier à nouveau"
 }

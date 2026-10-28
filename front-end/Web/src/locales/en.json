@@ -1960,5 +1960,15 @@
   "Para elegir otro rol, cierra y vuelve a abrir el formulario.": "To choose another role, close and reopen the form.",
   "La fecha de nacimiento no puede ser futura": "The date of birth cannot be in the future",
   "La fecha de nacimiento no puede ser anterior a 1900": "The date of birth cannot be before 1900",
-  "Tipo de documento no válido para este rol": "Document type not valid for this role"
+  "Tipo de documento no válido para este rol": "Document type not valid for this role",
+  "La persona aún no está habilitada para usar la biometría.": "The person is not yet enabled to use biometrics.",
+  "Faltan los términos y condiciones": "Terms and conditions are missing",
+  "debe iniciar sesión con su propia cuenta y aceptar los términos y condiciones. Un adulto los acepta personalmente; un administrador no puede hacerlo por él. Después podrás registrar su biometría.": "must sign in with their own account and accept the terms and conditions. An adult accepts them personally; an administrator cannot do it for them. Afterwards you will be able to register their biometrics.",
+  "Falta registrar al acudiente": "The guardian must be registered",
+  "Registra al acudiente del menor desde el detalle del estudiante antes de capturar su biometría.": "Register the minor's guardian from the student detail before capturing their biometrics.",
+  "Falta la autorización firmada del acudiente": "The guardian's signed authorization is missing",
+  "Carga la autorización firmada del acudiente desde el detalle del estudiante antes de capturar su biometría.": "Upload the guardian's signed authorization from the student detail before capturing their biometrics.",
+  "Los términos de un menor los registra el administrador de la sede con el acudiente presente, desde el detalle del estudiante.": "A minor's terms are recorded by the campus administrator with the guardian present, from the student detail.",
+  "Registro previo pendiente": "Prior registration pending",
+  "Verificar de nuevo": "Check again"
 }
