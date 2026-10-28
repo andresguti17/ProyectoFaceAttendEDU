@@ -148,12 +148,13 @@ export async function registerNotificationRoutes(
       const typeId = query?.typeId !== undefined ? Number(query.typeId) : undefined;
       const resolved = resolvedFilterFrom(query);
 
-      // actorId/typeId/resolved narrow the SQL query itself, combined with
-      // limit/offset — matching the Go `AlertRepository.FindAll`. Only the
-      // caller's actor scope is filtered afterward, in memory, because it is
-      // derived at request time and not a column the repository can push
-      // into its own WHERE clause (same as the Go handler's `actorAllowed`).
-      const page = await repos.alerts.findFiltered({ actorId, typeId, resolved, limit, offset });
+      // actorId/typeId/resolved and the caller's actor scope narrow the SQL query itself,
+      // combined with limit/offset, so the page is cut after the scope is applied. The
+      // in-memory check stays as a second barrier.
+      const page = await repos.alerts.findFiltered({
+        actorId, typeId, resolved, limit, offset,
+        actorIds: scope === null ? undefined : [...scope],
+      });
       const visible = page.filter((a) => actorAllowed(scope, a.academicActorId));
       return reply.send({ alerts: visible });
     });
