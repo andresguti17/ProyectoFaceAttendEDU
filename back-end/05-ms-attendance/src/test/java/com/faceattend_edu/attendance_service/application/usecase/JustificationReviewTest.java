@@ -282,4 +282,36 @@ class JustificationReviewTest {
         assertThrows(ValidationException.class, () -> review.review(ID, "Rejected", UUID.randomUUID(), null));
         verify(eventPublisher, never()).publishAfterCommit(anyString(), anyString(), anyString());
     }
+
+    @Test
+    void approvingTurnsTheAttendanceRecordIntoJustified() {
+        when(repository.findById(ID)).thenReturn(Optional.of(pending()));
+        when(typeRepository.findById(1)).thenReturn(Optional.empty());
+        ArgumentCaptor<AttendanceRecord> saved = ArgumentCaptor.forClass(AttendanceRecord.class);
+
+        review.review(ID, "Approved", UUID.randomUUID(), "ok");
+
+        verify(recordRepository).save(saved.capture());
+        assertEquals("Justified", saved.getValue().getAttendanceStatus());
+        assertEquals(RECORD, saved.getValue().getAttendanceRecordId());
+    }
+
+    @Test
+    void rejectingLeavesTheAttendanceRecordAsItWas() {
+        when(repository.findById(ID)).thenReturn(Optional.of(pending()));
+
+        review.review(ID, "Rejected", UUID.randomUUID(), "not valid");
+
+        verify(recordRepository, never()).save(any(AttendanceRecord.class));
+    }
+
+    @Test
+    void approvingAJustificationWhoseRecordIsGoneFailsInsteadOfApprovingHalfway() {
+        when(repository.findById(ID)).thenReturn(Optional.of(pending()));
+        when(typeRepository.findById(1)).thenReturn(Optional.empty());
+        when(recordRepository.findById(RECORD)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> review.review(ID, "Approved", UUID.randomUUID(), "ok"));
+        verify(eventPublisher, never()).publishAfterCommit(anyString(), anyString(), anyString());
+    }
 }
