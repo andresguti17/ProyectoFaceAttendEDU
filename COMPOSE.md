@@ -315,3 +315,16 @@ bases (`faceattend_db`, MongoDB) a `database/backups/<timestamp>/`
 (gitignored); `database/scripts/restore.sh <carpeta>` las restaura. Ninguno de
 los dos programa nada — hoy es manual; en un despliegue real, llama a
 `backup.sh` desde un cron del host o del orquestador.
+
+- **Cifrado:** con `BACKUP_PASSPHRASE` definida, `backup.sh` cifra los dos volcados (AES-256, PBKDF2) y deja
+  `faceattend_db.dump.enc` y `mongo.archive.gz.enc`; `restore.sh` los descifra con la misma variable. La
+  passphrase se guarda **aparte** del backup: sin ella no se puede restaurar. Los objetos de MinIO ya van
+  cifrados por MinIO y necesitan el mismo `MINIO_KMS_SECRET_KEY`.
+- **Contenedores:** por defecto `faceattend-postgres` y `faceattend-mongo`; se cambian con `PG_CONTAINER` y
+  `MONGO_CONTAINER`.
+- **Probar que un backup se restaura:** `./database/scripts/verify-restore.sh` levanta Postgres y MongoDB
+  desechables (`fae-vr-*`, sin puertos), carga datos, hace un backup cifrado, lo restaura en otro par vacío y
+  compara filas, documentos y un hash del contenido; también comprueba que una passphrase equivocada se
+  rechaza sin tocar los datos. No toca el stack del proyecto. Requiere docker y openssl. Pruébalo con el
+  procedimiento real de producción (Neon para Postgres) antes de depender de él: este script cubre el flujo
+  del stack local.
