@@ -36,8 +36,11 @@ start_pair() { # $1 = src|dst
 wait_ready() { # $1 = src|dst
   for _ in $(seq 1 60); do
     # pg_isready también responde durante el arranque temporal de initdb; una consulta real lo descarta.
+    # MongoDB hace lo mismo: el entrypoint arranca un mongod temporal para crear el usuario root, lo apaga
+    # y lo reinicia, así que un ping no basta; hay que esperar a que el log diga que el init terminó.
     if docker exec "$RUN-pg-$1" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc 'select 1' >/dev/null 2>&1 &&
-       docker exec "$RUN-mongo-$1" mongosh --quiet -u "$MONGO_USER" -p "$MONGO_PASSWORD" --authenticationDatabase admin --eval 'db.runCommand({ping:1}).ok' >/dev/null 2>&1; then
+       docker exec "$RUN-mongo-$1" mongosh --quiet -u "$MONGO_USER" -p "$MONGO_PASSWORD" --authenticationDatabase admin --eval 'db.runCommand({ping:1}).ok' >/dev/null 2>&1 &&
+       [[ "$(docker logs "$RUN-mongo-$1" 2>&1)" == *"init process complete"* ]]; then
       return 0
     fi
     sleep 2
