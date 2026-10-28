@@ -6,9 +6,14 @@
 # tocar su esquema; los crea database/scripts/create-service-logins.sh.
 # Requiere NEON_HOST: host completo de Neon, con region (p. ej.
 # ep-xxxx-pooler.c-2.sa-east-1.aws.neon.tech). Sin la region el nombre no resuelve.
+#
+# Los microservicios NO publican puertos en el host en producción (hallazgo S-04): Caddy -> Kong
+# los alcanza por la red Docker y el health gate del despliegue usa `docker inspect` y Kong :8000.
+# Así un BIND_IP=0.0.0.0 en .env.prod ya no los expone. Para depurar: `docker exec` o un túnel SSH a Kong.
 
 services:
   ms-identity:
+    ports: !reset []
     depends_on: !override
       # Quitamos: postgres (service_healthy)
       redis:
@@ -28,6 +33,7 @@ services:
       SPRINGDOC_SWAGGER_UI_ENABLED: "false"
 
   ms-authorization:
+    ports: !reset []
     depends_on: !override
       redis:
         condition: service_healthy
@@ -43,6 +49,7 @@ services:
       SPRINGDOC_SWAGGER_UI_ENABLED: "false"
 
   ms-scheduling:
+    ports: !reset []
     depends_on: !override
       kafka:
         condition: service_healthy
@@ -56,6 +63,7 @@ services:
       SPRINGDOC_SWAGGER_UI_ENABLED: "false"
 
   ms-attendance:
+    ports: !reset []
     depends_on: !override
       mongodb:
         condition: service_healthy
@@ -73,6 +81,7 @@ services:
       SPRINGDOC_SWAGGER_UI_ENABLED: "false"
 
   ms-biometric:
+    ports: !reset []
     depends_on: !override
       mongodb:
         condition: service_healthy
@@ -84,6 +93,7 @@ services:
 
   # ── Node/TypeScript services ──
   ms-academic:
+    ports: !reset []
     depends_on: !override
       kafka:
         condition: service_healthy
@@ -91,6 +101,7 @@ services:
       DATABASE_URL: postgresql://${ACADEMIC_DB_USER:-academic_app}:${ACADEMIC_DB_PASSWORD:?ACADEMIC_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=academic&sslmode=require
 
   ms-configuration:
+    ports: !reset []
     depends_on: !override
       kafka:
         condition: service_healthy
@@ -98,6 +109,7 @@ services:
       DATABASE_URL: postgresql://${CONFIGURATION_DB_USER:-configuration_app}:${CONFIGURATION_DB_PASSWORD:?CONFIGURATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=configuration&sslmode=require
 
   ms-quality:
+    ports: !reset []
     depends_on: !override
       kafka:
         condition: service_healthy
@@ -106,6 +118,7 @@ services:
 
   # ── Go — ms-notification ──
   ms-notification:
+    ports: !reset []
     depends_on: !override
       kafka:
         condition: service_healthy
@@ -114,6 +127,9 @@ services:
 
   # ── Gateway ──
   kong-gateway:
+    # Caddy termina TLS y llega a Kong por la red Docker: el proxy sin TLS no se publica fuera del host.
+    ports: !override
+      - "127.0.0.1:${KONG_PROXY_PORT:-8000}:8000"
     environment:
       # Real web origins only (e.g. the Vercel domain). No default in production.
       KONG_CORS_ORIGINS: ${KONG_CORS_ORIGINS:?KONG_CORS_ORIGINS is required (comma-separated https origins of the web app)}
