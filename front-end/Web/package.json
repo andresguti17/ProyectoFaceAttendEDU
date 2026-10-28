@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "vendor:digitalpersona": "node scripts/copy-digitalpersona.mjs",
+    "postinstall": "npm run vendor:digitalpersona",
     "prestart": "npm run vendor:digitalpersona",
     "preweb": "npm run vendor:digitalpersona",
     "build": "expo export --platform web",

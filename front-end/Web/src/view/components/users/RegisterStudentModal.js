@@ -19,6 +19,9 @@ import { useAppData }             from "../../../context/AppDataContext";
 import { useAuth }                from "../../../context/AuthContext";
 import { academicApi }            from "../../../services/api/academicApi";
 import { listActors }             from "../../../services/api/referenceData";
+import { documentTypesForRole }   from "../../../services/api/staffProvisioning";
+import { birthDateError }         from "../../../core/utils/validation";
+import { ACTOR_CODE_BY_ROLE, nextActorCode } from "../../../core/utils/actorCodes";
 import BiometricEnrollmentModal    from "./BiometricEnrollmentModal";
 import {
     EMPTY_FORM,
@@ -32,21 +35,6 @@ const ROLE_ITEMS = [
     { value: "teacher", label: "Docente",       description: "Teacher",  icon: "book-open" },
     { value: "student", label: "Estudiante",    description: "Student",  icon: "user"      },
 ];
-
-// ── Autogeneración de código de docente ──────────────────
-// Correlativo "DOC-{sede}-NNN" (p. ej. DOC-ICT-041) a partir de los códigos
-// ya existentes de la sede. El campo queda deshabilitado en el formulario.
-function nextTeacherCode(actors, schoolShort) {
-    const prefix = `DOC-${schoolShort}-`;
-    let max = 0;
-    for (const a of actors) {
-        const code = String(a?.actorCode ?? "");
-        if (!code.startsWith(prefix)) continue;
-        const n = Number.parseInt(code.slice(prefix.length), 10);
-        if (!Number.isNaN(n) && n > max) max = n;
-    }
-    return `${prefix}${String(max + 1).padStart(3, "0")}`;
-}
 
 // ── Componente principal ─────────────────────────────────
 
@@ -69,7 +57,10 @@ export default function RegisterStudentModal({
     const isScopedAdmin = user?.schoolId != null;
 
     const [form,          setForm]          = useState({ ...EMPTY_FORM, role: initialRole || "" });
-    const [error,         setError]         = useState(null);
+    // Docente y administrador reciben código de sede; el estudiante, de su ficha.
+    const hasAutoActorCode = Object.hasOwn(ACTOR_CODE_BY_ROLE, form.role);
+    const isCodeAuto = form.role === "student" || hasAutoActorCode;
+    const [error,        setError]         = useState(null);
     const [saving,        setSaving]        = useState(false);
     const [showErrors,    setShowErrors]    = useState(false);
     const [success,       setSuccess]       = useState(false);
@@ -177,23 +168,21 @@ export default function RegisterStudentModal({
         };
     }, [visible]);
 
-    // Autogenerar el código del docente según su sede. El campo queda
-    // deshabilitado: el sistema asigna el correlativo DOC-{sede}-NNN.
+    // Autogenerar el código del docente/administrador según su sede. El campo
+    // queda deshabilitado: el sistema asigna DOC-{sede}-NNN / ADM-{sede}-NNN.
     React.useEffect(() => {
-        if (!visible || form.role !== "teacher") return;
+        if (!visible || !hasAutoActorCode) return;
         const schoolId = String(form.schoolId ?? "");
         if (!schoolId) return;
         let cancelled = false;
+        const role = form.role;
         listActors().then(
             (actors) => {
                 if (cancelled) return;
                 const school = schoolItems.find((s) => s.value === schoolId);
                 const schoolShort = String(school?.description ?? "").split("-")[0] || "SED";
-                const instructors = (Array.isArray(actors) ? actors : []).filter(
-                    (a) => Number(a?.actorTypeId ?? a?.actor_type_id) === 2
-                        && String(a?.schoolId ?? a?.school_id) === schoolId
-                );
-                setForm((prev) => ({ ...prev, code: nextTeacherCode(instructors, schoolShort) }));
+                const code = nextActorCode(Array.isArray(actors) ? actors : [], { role, schoolId, schoolShort });
+                setForm((prev) => (prev.role === role ? { ...prev, code } : prev));
             },
             () => {}
         );
@@ -243,15 +232,24 @@ export default function RegisterStudentModal({
     const setField = (key, value) => {
         setForm((prev) => {
             const updated = { ...prev, [key]: value };
-             
+
+            // Cambio de rol: el código autogenerado y la matrícula son del rol
+            // anterior; el administrador no lleva ficha ni curso.
+            if (key === "role" && value !== prev.role) {
+                updated.code = "";
+                if (value === "admin") {
+                    updated.course = "";
+                    updated.cohortId = "";
+                }
+                if (!documentTypesForRole(value).includes(updated.documentType)) updated.documentType = "";
+            }
+
             // Auto-generar código estudiantil en dos casos:
             // 1. Cuando se selecciona una ficha/curso Y el rol es "student"
             // 2. Cuando se cambia el rol a "student" Y ya hay una ficha seleccionada
-            // Solo completa si el campo está vacío: el código que el
-            // administrador escribió a mano nunca se sobreescribe.
-            const shouldGenerateCode = 
-                (key === "course" && value && updated.role === "student" && !String(prev.code ?? "").trim()) ||
-                (key === "role" && value === "student" && updated.course && !String(prev.code ?? "").trim());
+            const shouldGenerateCode =
+                (key === "course" && value && updated.role === "student" && !String(updated.code ?? "").trim()) ||
+                (key === "role" && value === "student" && updated.course && !String(updated.code ?? "").trim());
              
             if (shouldGenerateCode) {
                 const fichaCode = key === "course" ? value : updated.course;
@@ -383,7 +381,7 @@ export default function RegisterStudentModal({
             buttonLabel: t("Registrar administrador"),
             successMessage: t("Administrador registrado correctamente"),
             codeLabel: t("Código de administrador"),
-            codePlaceholder: t("Ej: ADMIN001"),
+            codePlaceholder: t("Se genera automáticamente"),
             programLabel: t("Área"),
             programPlaceholder: t("Ej: Administración General"),
             showProgram: false,
@@ -478,10 +476,10 @@ export default function RegisterStudentModal({
                             value={form.code}
                             onChangeText={v => setField("code", v)}
                             placeholder={config.codePlaceholder}
-                            disabled={form.role === "student" || form.role === "teacher"}
+                            disabled={isCodeAuto}
                             error={isEmpty(form.code)}
                             errorMessage={isEmpty(form.code) ? t("Campo requerido") : ""}
-                            helperText={(form.role === "student" || form.role === "teacher") ? t("Se genera automáticamente") : ""}
+                            helperText={isCodeAuto ? t("Se genera automáticamente") : ""}
                         />
                     </View>
                 </View>
@@ -576,7 +574,7 @@ export default function RegisterStudentModal({
                                     {t("Tipo de documento")}
                                 </Text>
                                 <AnimatedDropdown
-                                    items={["CC", "TI", "CE", "PP"].map((d) => ({ value: d, label: d, icon: "credit-card" }))}
+                                    items={documentTypesForRole(form.role).map((d) => ({ value: d, label: d, icon: "credit-card" }))}
                                     value={form.documentType}
                                     onSelect={v => setField("documentType", v)}
                                     placeholder={t("Seleccionar tipo")}
@@ -616,8 +614,8 @@ export default function RegisterStudentModal({
                                     label={t("Nacimiento")}
                                     value={form.birthDate}
                                     onChangeText={v => setField("birthDate", v)}
-                                    error={showErrors && !!String(form.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form.birthDate).trim())}
-                                    errorMessage={t("Fecha incompleta o inválida")}
+                                    error={showErrors && !!birthDateError(form.birthDate)}
+                                    errorMessage={t(birthDateError(form.birthDate) ?? "")}
                                 />
                             </View>
                         </View>
@@ -736,8 +734,16 @@ export default function RegisterStudentModal({
                             onSelect={v => setField("role", v)}
                             placeholder={config.rolePlaceholder || t("Seleccionar rol")}
                             error={showErrors && !form.role}
+                            // Con Administrador elegido el rol queda fijo: evita mezclar
+                            // datos de administrador con ficha/curso de otro rol.
+                            disabled={form.role === "admin"}
                             triggerHeight={48}
                         />
+                        {form.role === "admin" && (
+                            <Text style={{ fontSize: 12, color: c.text.secondary, marginTop: 4 }}>
+                                {t("Para elegir otro rol, cierra y vuelve a abrir el formulario.")}
+                            </Text>
+                        )}
                     </View>
                 </View>
 

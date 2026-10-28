@@ -54,13 +54,14 @@ function validateDateComponent(value, type, month = null, year = null) {
         if (num > maxDays) {
             return String(maxDays).padStart(2, '0');
         }
-        if (num < 1) return '01';
+        // Un "0" suelto es el inicio de 01..09: solo "00" se corrige.
+        if (num < 1 && value.length === 2) return '01';
         return value;
     }
-    
+
     if (type === 'month') {
         if (num > 12) return '12';
-        if (num < 1) return '01';
+        if (num < 1 && value.length === 2) return '01';
         return value;
     }
     
@@ -78,7 +79,7 @@ function validateDateComponent(value, type, month = null, year = null) {
  * @param {string} format - Formato: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD'
  * @returns {string} Valor formateado con separadores y validado
  */
-function formatDateValue(value, format) {
+export function formatDateValue(value, format) {
     // Eliminar todo excepto números
     const numbers = value.replace(/\D/g, '');
     
@@ -167,7 +168,7 @@ function formatDateValue(value, format) {
  * @param {string} format - Formato: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD'
  * @returns {string} Fecha en formato YYYY-MM-DD o vacío si inválida
  */
-function toInternalFormat(formatted, format) {
+export function toInternalFormat(formatted, format) {
     if (!formatted) return '';
     
     // Extraer solo números
@@ -204,7 +205,7 @@ function toInternalFormat(formatted, format) {
  * @param {string} format - Formato: 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD'
  * @returns {string} Fecha formateada según settings
  */
-function fromInternalFormat(internal, format) {
+export function fromInternalFormat(internal, format) {
     if (!internal || internal.length !== 10) return '';
     
     const [year, month, day] = internal.split('-');

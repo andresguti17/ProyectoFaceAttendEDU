@@ -149,6 +149,27 @@ export function isValidDate(dateString) {
 }
 
 /**
+ * Fecha de nacimiento (YYYY-MM-DD, opcional): fecha real del calendario, no
+ * futura y no anterior a 1900. Mismo rango que valida identity (Person).
+ * @returns {string|null} mensaje de error o null si es válida o está vacía
+ */
+export function birthDateError(value, today = new Date()) {
+  const text = String(value ?? "").trim();
+  if (!text) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+  if (!m) return "La fecha de nacimiento está incompleta o no es válida";
+  const [year, month, day] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return "La fecha de nacimiento está incompleta o no es válida";
+  }
+  if (year < 1900) return "La fecha de nacimiento no puede ser anterior a 1900";
+  const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  if (date > endOfToday) return "La fecha de nacimiento no puede ser futura";
+  return null;
+}
+
+/**
  * Valida que una persona sea mayor de edad (18+)
  * @param {string|Date} birthDate - Fecha de nacimiento
  * @returns {boolean} true si es mayor de 18 años

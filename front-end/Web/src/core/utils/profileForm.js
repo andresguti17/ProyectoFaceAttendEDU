@@ -6,11 +6,10 @@
 //  documento, usuario, rol y sede los cambia la administración.
 // ============================================================
 
-import { isValidEmail, isValidPhone } from "./validation";
+import { birthDateError, isValidEmail, isValidPhone } from "./validation";
 
 export const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const trimmed = (v) => String(v ?? "").trim();
 
 /** Valores iniciales del formulario a partir de la persona del backend. */
@@ -37,22 +36,14 @@ export function hasProfileChanges(values, original) {
         || emailChanged(values, original);
 }
 
-function isRealPastDate(value) {
-    if (!DATE_RE.test(value)) return false;
-    const date = new Date(`${value}T00:00:00`);
-    if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) return false;
-    return date.getTime() <= Date.now();
-}
-
 /** Errores por campo; vacío = válido. `original` es la persona cargada del backend. */
 export function validateProfile(values, original, t = (s) => s) {
     const e = {};
     if (trimmed(values.phone) && !isValidPhone(trimmed(values.phone))) e.phone = t("El teléfono no es válido");
     if (trimmed(values.address).length > 255) e.address = t("La dirección no puede superar 255 caracteres");
 
-    const birth = trimmed(values.birthDate);
-    if (birth && !DATE_RE.test(birth)) e.birthDate = t("Fecha incompleta o inválida");
-    else if (birth && !isRealPastDate(birth)) e.birthDate = t("La fecha de nacimiento no es válida");
+    const birthError = birthDateError(values.birthDate);
+    if (birthError) e.birthDate = t(birthError);
 
     if (trimmed(values.bloodType) && !BLOOD_TYPES.includes(trimmed(values.bloodType))) {
         e.bloodType = t("Selecciona un tipo de sangre válido");

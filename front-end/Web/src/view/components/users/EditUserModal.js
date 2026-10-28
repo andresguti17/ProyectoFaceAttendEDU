@@ -16,6 +16,8 @@ import { useTheme } from "../hooks/useTheme";
 import { useResponsive } from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { academicApi } from "../../../services/api/academicApi";
+import { documentTypesForRole } from "../../../services/api/staffProvisioning";
+import { birthDateError } from "../../../core/utils/validation";
 
 const ROLE_TITLES = {
     student: "Editar estudiante",
@@ -180,7 +182,7 @@ export default function EditUserModal({ visible, onClose, onSubmit, user, canCha
                         {t("Tipo de documento")}
                     </Text>
                     <AnimatedDropdown
-                        items={["CC", "TI", "CE", "PP"].map((d) => ({ value: d, label: d, icon: "credit-card" }))}
+                        items={documentTypesForRole(form?.role).map((d) => ({ value: d, label: d, icon: "credit-card" }))}
                         value={form?.documentType ?? ""}
                         onSelect={v => setField("documentType", v)}
                         placeholder={t("Seleccionar tipo")}
@@ -207,8 +209,8 @@ export default function EditUserModal({ visible, onClose, onSubmit, user, canCha
                         label={t("Nacimiento")}
                         value={form?.birthDate ?? ""}
                         onChangeText={v => setField("birthDate", v)}
-                        error={showErrors && !!String(form?.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form?.birthDate).trim())}
-                        errorMessage={t("Fecha incompleta o inválida")}
+                        error={showErrors && !!birthDateError(form?.birthDate)}
+                        errorMessage={t(birthDateError(form?.birthDate) ?? "")}
                     />
                 </View>
                 <View style={{ flex: 1 }}>

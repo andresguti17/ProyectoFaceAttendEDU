@@ -19,8 +19,23 @@ jest.mock("../referenceData", () => ({
 
 import { authApi } from "../authApi";
 import { academicApi } from "../academicApi";
-import { listBlocks, listCohorts, listCourses, listPrograms, personMap } from "../referenceData";
-import { assertPersonUnique, cohortsForCourseCode, credentialsNotice, findExistingStudents, importStudents, markExistingStudents, provisionStaff, provisionStudent } from "../staffProvisioning";
+import { listBlocks, listCohorts, listCourses, listPrograms, personMap, resetReferenceData } from "../referenceData";
+import { assertPersonUnique, cohortsForCourseCode, credentialsNotice, documentTypesForRole, findExistingStudents, importStudents, markExistingStudents, personDetails, provisionStaff, provisionStudent } from "../staffProvisioning";
+
+describe("document types by role", () => {
+    test("TI is only offered to students", () => {
+        expect(documentTypesForRole("student")).toContain("TI");
+        expect(documentTypesForRole("teacher")).not.toContain("TI");
+        expect(documentTypesForRole("admin")).not.toContain("TI");
+    });
+
+    test("personDetails drops TI for staff and keeps it for students", () => {
+        expect(personDetails({ documentType: "ti" }, "admin").documentType).toBeUndefined();
+        expect(personDetails({ documentType: "CC" }, "teacher").documentType).toBe("CC");
+        expect(personDetails({ documentType: "TI" }, "student").documentType).toBe("TI");
+        expect(personDetails({ documentType: "TI" }).documentType).toBe("TI");
+    });
+});
 
 const base = {
     name: "Ana García López",
@@ -256,6 +271,26 @@ describe("credentials email", () => {
             await jest.runAllTimersAsync();
             return promise;
         }
+
+        test("invalidates the reference cache once after creating students, so the list reload sees them", async () => {
+            resetReferenceData.mockClear();
+            authApi.provisionUser.mockResolvedValue({ userId: "u1", credentialsEmail: "SENT" });
+
+            await run();
+
+            // Per-row resets are off (resetCache=false); one reset at the end of the batch.
+            expect(resetReferenceData).toHaveBeenCalledTimes(1);
+        });
+
+        test("does not invalidate the cache when nothing was created", async () => {
+            resetReferenceData.mockClear();
+            authApi.provisionUser.mockRejectedValue(new Error("rejected"));
+
+            const result = await run();
+
+            expect(result.success).toBe(0);
+            expect(resetReferenceData).not.toHaveBeenCalled();
+        });
 
         test("sends a different random password per student and tallies who got the email", async () => {
             authApi.provisionUser
