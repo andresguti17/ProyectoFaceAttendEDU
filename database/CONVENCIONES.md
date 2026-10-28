@@ -44,20 +44,20 @@ Un **esquema PostgreSQL por dominio** (bounded context). `biometric` es un schem
 
 | Dominio | Esquema | Notas |
 |---|---|
-| Identity | `identity` | 4 tablas |
+| Identity | `identity` | 5 tablas |
 | Authorization | `authorization` | 4 tablas |
 | Academic | `academic` | 8 tablas |
 | Scheduling | `scheduling` | 3 tablas |
 | Attendance | `attendance` | 5 tablas |
 | Biometric | `biometric` | Solo schema, sin tablas (NoSQL en MongoDB) |
 | Configuration | `configuration` | 3 tablas (incluye `biometric_update_case`) |
-| Notification | `notification` | 2 tablas |
+| Notification | `notification` | 4 tablas (`device_token` sin bloque de auditoría completo) |
 
 ---
 
 ## 2. Convenciones de auditoría
 
-Todas las tablas incluyen este bloque de columnas **sin excepción**:
+Todas las tablas incluyen este bloque de columnas, con una excepción documentada (`notification.device_token`: solo `created_at`/`updated_at` y `revoked_at`; ver `MODELO.md` §10):
 
 ```yaml
 - column: { name: created_at,    type: TIMESTAMP, nullable: false }
