@@ -1,16 +1,16 @@
 # FaceAttend EDU
 
 Plataforma de gestión de asistencia mediante reconocimiento biométrico (rostro y
-huella) para instituciones educativas. Backend polyglot de 10 microservicios +
+huella) para instituciones educativas. Backend polyglot de 9 microservicios +
 API Gateway, frontend Web (Expo/React Native Web) y app Mobile (Expo/React Native).
 
 ## Arquitectura
 
 | Capa | Tecnología | Detalle |
 |---|---|---|
-| Backend | Java 21/Spring Boot, TypeScript/Fastify, Python/FastAPI, Go/Gin | [back-end/SERVICES.md](back-end/SERVICES.md) |
+| Backend | Java 21/Spring Boot, TypeScript/Fastify, Python/FastAPI | [back-end/SERVICES.md](back-end/SERVICES.md) |
 | Gateway | Kong OSS (DB-less) + Redis | [back-end/99-api-gateway](back-end/99-api-gateway) |
-| Base de datos | PostgreSQL 17 (1 instancia, 8 schemas) + MongoDB (embeddings) | [database/MODELO.md](database/MODELO.md), [database/faceattend_edu_mr_v4.dbml](database/faceattend_edu_mr_v4.dbml) |
+| Base de datos | PostgreSQL 17 (1 instancia, un schema por bounded context: 8, más `quality`) + MongoDB (embeddings) | [database/MODELO.md](database/MODELO.md), [database/faceattend_edu_mr_v4.dbml](database/faceattend_edu_mr_v4.dbml) |
 | Frontend Web | Expo / React Native Web | [front-end/Web](front-end/Web) |
 | Frontend Mobile | Expo / React Native | [front-end/Mobile](front-end/Mobile) |
 
@@ -26,7 +26,7 @@ docker compose up -d --build
 ```
 
 Esto levanta Postgres, Mongo, Redis, Kafka, las migraciones Liquibase de los 8
-schemas, los 10 microservicios, Kong y el frontend web. Ver
+schemas, los 9 microservicios, Kong y el frontend web. Ver
 [COMPOSE.md](COMPOSE.md) para el detalle de redes, puertos, orden de arranque y
 problemas conocidos.
 
@@ -76,7 +76,7 @@ Administrador los active. El endpoint tiene un límite estricto por IP en Kong.
 ## Desarrollo
 
 - Backend: cada servicio en `back-end/0N-ms-*` es independiente (su propio
-  `pom.xml`/`package.json`/`pyproject.toml`/`go.mod`). Ver `SERVICE.md` dentro
+  `pom.xml`/`package.json`/`pyproject.toml`). Ver `SERVICE.md` dentro
   de cada carpeta.
 - Mobile: `cd front-end/Mobile && npm install && npm start`.
 - Web: `cd front-end/Web && npm install && npm run web`.
