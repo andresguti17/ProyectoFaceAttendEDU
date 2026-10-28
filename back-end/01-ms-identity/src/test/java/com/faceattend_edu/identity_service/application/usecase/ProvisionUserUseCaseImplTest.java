@@ -165,6 +165,26 @@ class ProvisionUserUseCaseImplTest {
     }
 
     @Test
+    @DisplayName("A TI (minor's document) is rejected for instructors and admins, accepted for apprentices")
+    void tiOnlyForApprentices() {
+        Person minorDoc = apprentice().person();
+        minorDoc.setDocumentType("TI");
+        ProvisionUserUseCase.Command instructor = new ProvisionUserUseCase.Command(minorDoc, "x", "Temporal-2026",
+                false, "Instructor", new ProvisionUserUseCase.Actor(2, 4L, "DOC-ICT-001", null), CONSENT);
+        ProvisionUserUseCase.Command admin = new ProvisionUserUseCase.Command(minorDoc, "y", "Temporal-2026",
+                false, "Administrador", new ProvisionUserUseCase.Actor(3, 4L, "ADM-ICT-001", null), CONSENT);
+
+        assertThatThrownBy(() -> useCase.provision(instructor, TOKEN, ADMIN)).isInstanceOf(ValidationException.class);
+        assertThatThrownBy(() -> useCase.provision(admin, TOKEN, ADMIN)).isInstanceOf(ValidationException.class);
+        verifyNoInteractions(createPerson, provisioning, removeIdentity);
+
+        ProvisionUserUseCase.Command apprentice = apprentice();
+        apprentice.person().setDocumentType("TI");
+        when(provisioning.createActor(TOKEN, personId, 1, 4L, "APR-1001")).thenReturn(30L);
+        assertThat(useCase.provision(apprentice, TOKEN, ADMIN).userId()).isEqualTo(userId);
+    }
+
+    @Test
     @DisplayName("Without an academic actor only identity and the role are created")
     void accountWithoutActor() {
         ProvisionUserUseCase.Command admin = new ProvisionUserUseCase.Command(apprentice().person(), "admin.sede", "Temporal-2026",

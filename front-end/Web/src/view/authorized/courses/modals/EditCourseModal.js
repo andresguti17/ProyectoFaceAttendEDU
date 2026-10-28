@@ -158,15 +158,17 @@ export default function EditCourseModal({ course, onClose, onSubmit }) {
                         leftIcon={<Feather name="book-open" size={16} color={c.text.tertiary} />}
                     />
                 </View>
-                <View style={{ width: isSmall ? "100%" : 160 }}>
-                    <TextInput
-                        label={t("Código")}
-                        value={form.code}
-                        onChangeText={v => setField("code", v)}
-                        error={isEmpty(form.code)}
-                        errorMessage={isEmpty(form.code) ? t("Campo requerido") : ""}
-                        leftIcon={<Feather name="hash" size={16} color={c.text.tertiary} />}
-                    />
+                {/* El código lo asignó el sistema al crear el curso: no se edita a mano. */}
+                <View style={{ width: isSmall ? "100%" : 160, marginBottom: 16 }}>
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: c.text.secondary, marginBottom: 6 }}>
+                        {t("Código")}
+                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48 }}>
+                        <Feather name="hash" size={16} color={c.text.tertiary} />
+                        <Text accessibilityLabel={t("Código del curso")} style={{ fontSize: 14, fontWeight: "600", color: c.text.primary }}>
+                            {form.code}
+                        </Text>
+                    </View>
                 </View>
                 <View style={{ width: isSmall ? "100%" : 120 }}>
                     <TextInput

@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAppData } from "../context/AppDataContext";
-import { provisionStudent, credentialsNotice } from "../services/api/staffProvisioning";
-import { isValidEmail } from "../core/utils/validation";
+import { provisionStudent, credentialsNotice, documentTypesForRole } from "../services/api/staffProvisioning";
+import { birthDateError, isValidEmail } from "../core/utils/validation";
 
 // ── Tipos de formulario ───────────────────────────────────
 
@@ -37,8 +37,11 @@ export function validateStudentForm(form) {
     // documentNumber, POST /users exige password de 8-100 chars).
     if (!String(form.documentNumber ?? "").trim()) return "Completa todos los campos";
     if (String(form.password ?? "").length < 8) return "La contraseña debe tener al menos 8 caracteres";
-    if (String(form.birthDate ?? "").trim() && !/^\d{4}-\d{2}-\d{2}$/.test(String(form.birthDate).trim())) {
-        return "La fecha de nacimiento está incompleta o no es válida";
+    const birthError = birthDateError(form.birthDate);
+    if (birthError) return birthError;
+    // La tarjeta de identidad es de menores: no aplica a docentes ni administradores.
+    if (form.documentType && !documentTypesForRole(form.role).includes(form.documentType)) {
+        return "Tipo de documento no válido para este rol";
     }
     // El programa/ficha solo aplica a estudiantes (el formulario de
     // docente/administrador ni siquiera lo muestra).

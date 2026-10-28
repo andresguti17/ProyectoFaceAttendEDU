@@ -42,14 +42,24 @@ function usernameFromEmail(email) {
 export const DOCUMENT_TYPES = ["CC", "TI", "CE", "PP"];
 export const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
+// La tarjeta de identidad (TI) es de menores de edad: solo la usa un aprendiz.
+// identity aplica la misma regla en POST /users/provision.
+export const STAFF_DOCUMENT_TYPES = ["CC", "CE", "PP"];
+
+/** Tipos de documento que admite un rol ("admin" | "teacher" | "student"). */
+export function documentTypesForRole(role) {
+    return role === "admin" || role === "teacher" ? STAFF_DOCUMENT_TYPES : DOCUMENT_TYPES;
+}
+
 /**
  * Campos opcionales de persona (PersonDto): solo los valores válidos
- * y no vacíos se incluyen en el cuerpo.
+ * y no vacíos se incluyen en el cuerpo. Con `role`, el tipo de documento
+ * se limita a los que admite ese rol.
  */
-export function personDetails(details = {}) {
+export function personDetails(details = {}, role = null) {
     const out = {};
     const documentType = String(details.documentType ?? "").trim().toUpperCase();
-    if (DOCUMENT_TYPES.includes(documentType)) out.documentType = documentType;
+    if (documentTypesForRole(role).includes(documentType)) out.documentType = documentType;
     const bloodType = String(details.bloodType ?? "").trim().toUpperCase();
     if (BLOOD_TYPES.includes(bloodType)) out.bloodType = bloodType;
     const birthDate = String(details.birthDate ?? "").trim();
@@ -224,7 +234,7 @@ export async function provisionStaff({
             lastName,
             email: String(email).trim().toLowerCase(),
             status: true,
-            ...personDetails(details),
+            ...personDetails(details, role),
         },
         username: requestedUsername,
         password,
@@ -406,5 +416,9 @@ export async function importStudents(drafts, { sendCredentials = true, privacyAc
         // quedan altas a medias: el servidor deshace una fila que falla.
         if (i < rows.length - 1) await new Promise((r) => setTimeout(r, 2600));
     }
+    // Las filas no invalidaron la caché (resetCache=false): se hace una vez al
+    // final para que reloadStudents() traiga a los recién creados y no la lista
+    // memorizada de antes de importar.
+    if (success > 0) resetReferenceData();
     return { success, errors, credentials };
 }

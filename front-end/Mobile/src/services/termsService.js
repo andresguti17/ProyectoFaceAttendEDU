@@ -31,13 +31,27 @@ export const TermsService = {
     data: { termsVersion: TERMS_VERSION },
   }),
 
-  /** Estado de la persona tras el login. Si identity no responde no se bloquea el ingreso. */
+  /**
+   * Estado de la persona tras el login. Falla cerrado: sin persona o sin respuesta de identity
+   * no se sabe si ya firmó, y dejarla entrar sin términos es un vacío legal. Lanza un error con
+   * code TERMS_UNAVAILABLE y quien llama no abre la sesión.
+   */
   gateFor: async (personId) => {
-    if (!personId) return { gate: TERMS_GATE.NONE, step: 'NONE', minor: false };
+    if (!personId) throw termsUnavailable();
+    let enablement;
     try {
-      return resolveTermsGate(await TermsService.get(personId));
-    } catch {
-      return { gate: TERMS_GATE.NONE, step: 'NONE', minor: false };
+      enablement = await TermsService.get(personId);
+    } catch (cause) {
+      throw termsUnavailable(cause);
     }
+    if (!enablement || typeof enablement.enabled !== 'boolean') throw termsUnavailable();
+    return resolveTermsGate(enablement);
   },
 };
+
+function termsUnavailable(cause) {
+  const error = new Error('No se pudo verificar la aceptación de los términos');
+  error.code = 'TERMS_UNAVAILABLE';
+  error.cause = cause;
+  return error;
+}

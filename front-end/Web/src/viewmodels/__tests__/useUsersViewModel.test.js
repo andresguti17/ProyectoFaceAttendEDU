@@ -5,6 +5,8 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const mockPatchStaff = jest.fn();
 const mockAddStudent = jest.fn();
+const mockReloadStudents = jest.fn();
+const mockBulkImport = jest.fn();
 
 jest.mock("../../context/AppDataContext", () => ({
     useAppData: () => ({
@@ -15,9 +17,15 @@ jest.mock("../../context/AppDataContext", () => ({
         isLoading: false,
         addStudent: mockAddStudent,
         importStudents: jest.fn(),
+        reloadStudents: mockReloadStudents,
         addUser: jest.fn(),
         patchStaff: mockPatchStaff,
     }),
+}));
+
+jest.mock("../../services/api/staffProvisioning", () => ({
+    ...jest.requireActual("../../services/api/staffProvisioning"),
+    importStudents: (...args) => mockBulkImport(...args),
 }));
 
 jest.mock("../../context/AuthContext", () => ({
@@ -188,4 +196,58 @@ describe("bulkUpdateUsers", () => {
         expect(authApi.setUserStatus).toHaveBeenCalledTimes(1);
         expect(authApi.setUserStatus).toHaveBeenCalledWith("u-2", false);
     });
+});
+
+describe("importUsers — la lista se actualiza sin recargar la página", () => {
+    const drafts = [{ name: "Ana", code: "A1", email: "a@u.edu", course: "MAT" }];
+
+    test("tras importar estudiantes con éxito recarga la lista desde el backend", async () => {
+        mockBulkImport.mockResolvedValue({ success: 1, errors: [], credentials: { sent: 1, notSent: [] } });
+        mockReloadStudents.mockResolvedValue(undefined);
+        const getVm = renderVm();
+        let result;
+        await act(async () => {
+            result = await getVm().importUsers(drafts, { privacyAccepted: true });
+        });
+
+        expect(mockBulkImport).toHaveBeenCalledWith(drafts, { privacyAccepted: true });
+        expect(mockReloadStudents).toHaveBeenCalledTimes(1);
+        expect(result.success).toBe(1);
+    });
+
+    test("si no se creó nadie no recarga", async () => {
+        mockBulkImport.mockResolvedValue({ success: 0, errors: [{ student: "Ana", reason: "x" }] });
+        const getVm = renderVm();
+        await act(async () => {
+            await getVm().importUsers(drafts, { privacyAccepted: true });
+        });
+
+        expect(mockReloadStudents).not.toHaveBeenCalled();
+    });
+
+    test("un fallo al recargar no oculta el resultado de la importación", async () => {
+        mockBulkImport.mockResolvedValue({ success: 2, errors: [] });
+        mockReloadStudents.mockRejectedValue(new Error("429"));
+        const getVm = renderVm();
+        let result;
+        await act(async () => {
+            result = await getVm().importUsers(drafts, { privacyAccepted: true });
+        });
+
+        expect(result.success).toBe(2);
+    });
+});
+
+test("rejects a TI document and a future birth date for staff edits", async () => {
+    const getVm = renderVm();
+    let tiErr;
+    let dateErr;
+    await act(async () => {
+        tiErr = await getVm().updateUserDetails(target, { ...form, documentType: "TI" });
+        dateErr = await getVm().updateUserDetails(target, { ...form, birthDate: "2999-01-01" });
+    });
+
+    expect(tiErr).toMatch(/Tipo de documento/);
+    expect(dateErr).toMatch(/futura/);
+    expect(authApi.updatePerson).not.toHaveBeenCalled();
 });

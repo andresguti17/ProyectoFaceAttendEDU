@@ -37,6 +37,8 @@ public class Person {
     /** chk_person_document_type (AGENTS.md 2.5). */
     public static final java.util.Set<String> DOCUMENT_TYPES = java.util.Set.of("CC", "TI", "CE", "PP");
     private static final int MAX_TEXT = 255;
+    /** Lower bound of a plausible birth date (same range the web form enforces). */
+    public static final LocalDate MIN_BIRTH_DATE = LocalDate.of(1900, 1, 1);
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 
@@ -52,6 +54,12 @@ public class Person {
         }
         if (this.documentType != null && !DOCUMENT_TYPES.contains(this.documentType)) {
             throw new IllegalArgumentException("Person.documentType must be one of CC, TI, CE, PP");
+        }
+        if (this.birthDate != null && this.birthDate.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Person.birthDate cannot be in the future");
+        }
+        if (this.birthDate != null && this.birthDate.isBefore(MIN_BIRTH_DATE)) {
+            throw new IllegalArgumentException("Person.birthDate cannot be before " + MIN_BIRTH_DATE);
         }
         if (tooLong(this.name)) throw new IllegalArgumentException("Person.name max " + MAX_TEXT);
         if (tooLong(this.lastName)) throw new IllegalArgumentException("Person.lastName max " + MAX_TEXT);

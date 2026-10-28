@@ -1360,7 +1360,8 @@
   "termsGate": {
     "sign": "Sign and continue",
     "signing": "Signing...",
-    "leave": "Leave without signing"
+    "leave": "Leave without signing",
+    "unavailable": "We could not verify your acceptance of the terms and conditions. Check your connection and try signing in again."
   },
   "minorBlocked": {
     "title": "REGISTRATION PENDING",

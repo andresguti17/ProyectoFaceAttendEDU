@@ -1360,7 +1360,8 @@
   "termsGate": {
     "sign": "Assinar e continuar",
     "signing": "Assinando...",
-    "leave": "Sair sem assinar"
+    "leave": "Sair sem assinar",
+    "unavailable": "Não foi possível verificar sua aceitação dos termos e condições. Verifique sua conexão e tente entrar novamente."
   },
   "minorBlocked": {
     "title": "CADASTRO PENDENTE",
