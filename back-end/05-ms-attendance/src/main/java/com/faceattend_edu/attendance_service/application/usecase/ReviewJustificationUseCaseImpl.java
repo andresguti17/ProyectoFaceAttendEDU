@@ -2,6 +2,7 @@ package com.faceattend_edu.attendance_service.application.usecase;
 
 import com.faceattend_edu.attendance_service.domain.exception.EntityNotFoundException;
 import com.faceattend_edu.attendance_service.domain.exception.ValidationException;
+import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
 import com.faceattend_edu.attendance_service.domain.model.Justification;
 import com.faceattend_edu.attendance_service.domain.port.in.ReviewJustificationUseCase;
 import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
@@ -21,7 +22,9 @@ import java.util.UUID;
 /**
  * Review of a justification: {@code Pending -> Approved | Rejected}, once.
  * A resolved justification is final, and approving one whose type requires an
- * attachment needs at least one supporting document.
+ * attachment needs at least one supporting document. Approving it also turns the
+ * attendance record into {@code Justified}, in the same transaction, so reports and
+ * at-risk alerts count it as attended.
  */
 @Service
 @RequiredArgsConstructor
@@ -57,6 +60,7 @@ public class ReviewJustificationUseCaseImpl implements ReviewJustificationUseCas
         j.setResolutionNotes(resolutionNotes);
         j.touchUpdated();
         Justification saved = repository.save(j);
+        if ("Approved".equals(reviewStatus)) markRecordJustified(saved.getAttendanceRecordId());
         publishReviewed(saved);
         return saved;
     }
@@ -70,6 +74,14 @@ public class ReviewJustificationUseCaseImpl implements ReviewJustificationUseCas
                         + "\"academicActorId\":%s,\"status\":\"%s\",\"reviewedAt\":\"%s\"}",
                 j.getJustificationId(), j.getAttendanceRecordId(), actorId, j.getReviewStatus(), j.getReviewedAt());
         eventPublisher.publishAfterCommit(TOPIC, String.valueOf(j.getJustificationId()), payload);
+    }
+
+    private void markRecordJustified(Long recordId) {
+        AttendanceRecord record = recordRepository.findById(recordId)
+                .orElseThrow(() -> new EntityNotFoundException("AttendanceRecord", recordId));
+        record.setAttendanceStatus("Justified");
+        record.touchUpdated();
+        recordRepository.save(record);
     }
 
     private boolean requiresAttachment(Justification j) {
