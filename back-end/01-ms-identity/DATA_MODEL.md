@@ -18,6 +18,12 @@ Ver detalle canónico en:
 
 > Este archivo es índice de acople. El contenido normativo vive en `../../fae-docs/06-data/domains/01-identity.md` y en el DDL de `../database/01-ms-identity-db`. No duplicar aquí el DDL completo para evitar drift.
 
+### Menores de edad y términos (014)
+
+- `identity.guardian`: acudiente de un menor (uno activo por menor). Nombre, documento, correo y teléfono cifrados (`enc:v1:`).
+- `identity.terms_acceptance`: una fila por aceptación de los términos (versión, tipo de usuario `ADULT`/`MINOR`, quién aceptó, quién la registró, sede).
+- Detalle de flujos, endpoints y supuestos: `../../docs/MENORES_ACUDIENTES_Y_TERMINOS.md`.
+
 ### Checklist de verificación
 
 - [ ] `../database/01-ms-identity-db/changelog/changelog-master.yaml` incluye `01-ddl → 02-dml → 03-dcl → 04-tcl`

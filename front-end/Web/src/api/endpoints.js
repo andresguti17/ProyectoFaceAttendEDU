@@ -30,6 +30,8 @@ export const endpoints = {
         personStatus: (id) => `${API_V1}/persons/${id}/status`,
         personConsent: (id) => `${API_V1}/persons/${id}/consent`,
         personConsentBiometric: (id) => `${API_V1}/persons/${id}/consent/biometric`,
+        personTerms: (id) => `${API_V1}/persons/${id}/terms`,
+        personGuardian: (id) => `${API_V1}/persons/${id}/guardian`,
         users: `${API_V1}/users`,
         usersProvision: `${API_V1}/users/provision`,
         userById: (id) => `${API_V1}/users/${id}`,

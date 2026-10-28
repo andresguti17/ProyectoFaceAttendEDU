@@ -160,6 +160,7 @@ def match_log_to_document(entity: BiometricMatchLog) -> dict[str, Any]:
         "finger_number": entity.finger_number,
         "embedding_id": entity.embedding_id,
         "correlation_id": entity.correlation_id,
+        "actor_user_id": entity.actor_user_id,
         # TTL key: the collection's expireAfterSeconds index reads this field.
         "created_at": entity.created_at,
     }
@@ -179,5 +180,6 @@ def document_to_match_log(document: dict[str, Any]) -> BiometricMatchLog:
         finger_number=document.get("finger_number"),
         embedding_id=document.get("embedding_id"),
         correlation_id=document.get("correlation_id"),
+        actor_user_id=document.get("actor_user_id"),
         created_at=document.get("created_at"),
     )

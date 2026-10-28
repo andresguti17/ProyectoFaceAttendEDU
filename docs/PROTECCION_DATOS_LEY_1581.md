@@ -71,6 +71,14 @@ Genérelas con `openssl rand -base64 32` (MinIO: `nombre:$(openssl rand -base64 
 - Consulta directa: `select document_number, email from identity.person` devuelve valores `enc:v1:…`; en MongoDB, `db.facial_embeddings.findOne().encoding` es una cadena `enc:v1:…`, no números.
 - Pruebas automáticas: `ManageConsentUseCaseImplTest`, `ProvisionUserUseCaseImplTest`, `PiiCipherTest`, `PersonPiiPersistenceTest` (identity); `tests/unit/web/test_ley1581.py` (biometric); `consentApi.test.js`, `staffProvisioning.test.js`, `BiometricEnrollmentModal.test.js` (web); `consentService.test.js`, `userProvisioning.test.js` (móvil).
 
+## 6.1 Menores de edad
+
+Los datos de un menor (y los de su acudiente) se tratan con la autorización del representante
+legal, que el acudiente da en persona ante el administrador de la sede. Hasta que el registro esté
+completo el menor no usa funciones con términos ni verificación facial; el servidor biométrico lo
+rechaza (`PERSON_NOT_ENABLED`). Los datos del acudiente se guardan cifrados. Detalle:
+`MENORES_ACUDIENTES_Y_TERMINOS.md`.
+
 ## 7. Fuera de alcance
 
 - Ninguna respuesta de la API devuelve ya el vector descifrado ni la muestra cruda de huella: `template_response` entrega solo metadatos (id, persona, versión, fecha, dedo). Las rutas de personal por `person_id` (leer, historial, borrar, resumen) están limitadas a la sede de quien llama; el Super Administrador ve todas. La identificación 1:N (`/identify`, `/identify-image`, `/identify-sample`) y la verificación (`/verify`), por REST y por WebSocket, solo devuelven personas de la sede de quien llama (el Super Administrador ve todas): una cara o huella de otra sede responde "sin coincidencia", igual que una nunca inscrita.

@@ -60,6 +60,18 @@ public class Person {
         if (this.phone != null && this.phone.length() > 50) throw new IllegalArgumentException("Person.phone max 50");
     }
 
+    /** Age of majority in Colombia (Ley 27 de 1990). */
+    public static final int ADULT_AGE = 18;
+
+    /**
+     * Minor when the birth date says so; without a birth date, a TI (tarjeta de identidad,
+     * issued to people under 18) is treated as a minor, the safe side for children's data.
+     */
+    public boolean isMinor(LocalDate today) {
+        if (this.birthDate != null) return this.birthDate.plusYears(ADULT_AGE).isAfter(today);
+        return "TI".equals(this.documentType);
+    }
+
     public String getFullName() {
         String n = this.name == null ? "" : this.name.trim();
         String ln = this.lastName == null ? "" : this.lastName.trim();

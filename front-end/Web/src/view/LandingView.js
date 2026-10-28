@@ -119,7 +119,7 @@ function BackgroundSection({ background, minHeight, children }) {
 }
 
 /** Columna de enlaces del pie de página. */
-function FooterColumn({ title, links }) {
+function FooterColumn({ title, links, onNavigate }) {
     const { sp, fs } = useResponsive();
     const { theme } = useTheme();
     const c = theme.colors;
@@ -130,7 +130,12 @@ function FooterColumn({ title, links }) {
                 {title}
             </Text>
             {links.map((link, index) => (
-                <Text key={index} style={[T.bodySM, { color: c.text.secondary, marginBottom: sp(6) }]}>
+                <Text
+                    key={index}
+                    accessibilityRole={link.screen ? "link" : undefined}
+                    onPress={link.screen && onNavigate ? () => onNavigate(link.screen) : undefined}
+                    style={[T.bodySM, { color: link.screen ? c.brand.primary : c.text.secondary, marginBottom: sp(6) }]}
+                >
                     {link.label}
                 </Text>
             ))}
@@ -505,7 +510,7 @@ function CTAContent({ onNavigate }) {
 
 // ── Footer ───────────────────────────────────────────────────
 
-function Footer() {
+function Footer({ onNavigate }) {
     const { sp, fs, isSmall } = useResponsive();
     const { theme } = useTheme();
     const { t } = useTranslation();
@@ -524,8 +529,8 @@ function Footer() {
             { label: t("Contacto"), href: "#contact" },
         ],
         legal: [
-            { label: t("Privacidad"), href: "#privacy" },
-            { label: t("Términos"), href: "#terms" },
+            { label: t("Privacidad"), href: "#privacy", screen: "FaceAttendEDU-Privacy" },
+            { label: t("Términos"), href: "#terms", screen: "FaceAttendEDU-Terms" },
             { label: t("Cookies"), href: "#cookies" },
         ],
     };
@@ -583,7 +588,7 @@ function Footer() {
                         <>
                             <FooterColumn title={t("Producto")} links={FOOTER_LINKS.product} />
                             <FooterColumn title={t("Empresa")} links={FOOTER_LINKS.company} />
-                            <FooterColumn title={t("Legal")} links={FOOTER_LINKS.legal} />
+                            <FooterColumn title={t("Legal")} links={FOOTER_LINKS.legal} onNavigate={onNavigate} />
                         </>
                     )}
                 </View>
@@ -704,7 +709,7 @@ export default function LandingView({ onNavigate }) {
                     </View>
                     
                     {/* Footer con fondo blanco */}
-                    <Footer />
+                    <Footer onNavigate={onNavigate} />
                 </View>
             </CustomScrollBar>
         </SafeAreaView>

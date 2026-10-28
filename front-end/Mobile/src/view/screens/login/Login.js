@@ -15,10 +15,10 @@ import {useTranslation} from 'react-i18next';
 import {useLanguageRefresh} from '../../../utils/useLanguageRefresh';
 import {useTheme} from '../../components/common/ThemeContext';
 import PrimaryButton from '../../components/auth/PrimaryButton';
-import SelectableButton from '../../components/common/SelectableButton';
 import CustomLogo from '../../components/common/logo';
 import RegisterModal from '../../components/auth/RegisterModal';
 import TerminosModal from '../../components/common/TerminosModal';
+import MinorBlockedModal from '../../components/common/MinorBlockedModal';
 import PasswordUpdateModal from '../../components/common/PasswordUpdateModal';
 import ScrollView from '../../components/common/ScrollView';
 import CustomAlert from '../../components/common/CustomAlert';
@@ -128,10 +128,11 @@ export default function LoginScreen({ onLogin, navigation }) {
     const [showPassword, setShowPassword] = useState(false);
 
     const {
-        email, password, terms, isLoading, error, errorTimestamp,
-        setEmail, setPassword, setTerms, submit,
+        email, password, isLoading, error, errorTimestamp,
+        setEmail, setPassword, submit,
         codeStep, code, maskedEmail, setCode, submitCode, cancelCode,
         mustChangePassword, onForcedPasswordChanged,
+        termsGate, termsBusy, termsError, acceptTerms, recheckTerms, leaveTermsGate,
     } = useLoginViewModel({ onLogin });
 
     // Inyección de lógica corregida
@@ -286,11 +287,6 @@ export default function LoginScreen({ onLogin, navigation }) {
                                             )}
 
                                             <View style={styles.rowContainer}>
-                                                <SelectableButton
-                                                    checked={terms}
-                                                    onCheckChange={setTerms}
-                                                    accessibilityLabel={t('login.terms')}
-                                                />
                                                 <TouchableOpacity
                                                     onPress={() => setIsTerminosModalVisible(true)}
                                                     activeOpacity={0.7}
@@ -331,6 +327,20 @@ export default function LoginScreen({ onLogin, navigation }) {
                                 <TerminosModal
                                     isVisible={isTerminosModalVisible}
                                     onClose={() => setIsTerminosModalVisible(false)}
+                                />
+                                <TerminosModal
+                                    isVisible={termsGate?.gate === 'ACCEPT'}
+                                    onClose={leaveTermsGate}
+                                    onAccept={acceptTerms}
+                                    busy={termsBusy}
+                                    error={termsError}
+                                />
+                                <MinorBlockedModal
+                                    isVisible={termsGate?.gate === 'BLOCKED'}
+                                    step={termsGate?.step}
+                                    busy={termsBusy}
+                                    onRecheck={recheckTerms}
+                                    onLeave={leaveTermsGate}
                                 />
                                 {mustChangePassword && (
                                     <PasswordUpdateModal forced onChanged={onForcedPasswordChanged} />

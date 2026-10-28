@@ -43,6 +43,18 @@
         ],
         "type": "object"
       },
+      "AcceptTermsRequest": {
+        "properties": {
+          "termsVersion": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "termsVersion"
+        ],
+        "type": "object"
+      },
       "AdminPart": {
         "properties": {
           "biometricAccepted": {
@@ -232,6 +244,46 @@
         ],
         "type": "object"
       },
+      "EnablementResponse": {
+        "properties": {
+          "acceptedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "acceptedVersion": {
+            "type": "string"
+          },
+          "currentTermsVersion": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "guardianRegistered": {
+            "type": "boolean"
+          },
+          "minor": {
+            "type": "boolean"
+          },
+          "pendingStep": {
+            "type": "string"
+          },
+          "personId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "termsAccepted": {
+            "type": "boolean"
+          },
+          "termsUpToDate": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
       "ForgotPasswordRequest": {
         "properties": {
           "email": {
@@ -242,6 +294,90 @@
         "required": [
           "email"
         ],
+        "type": "object"
+      },
+      "GuardianRequest": {
+        "properties": {
+          "documentNumber": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          },
+          "documentType": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string"
+          },
+          "fullName": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string"
+          },
+          "phone": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          },
+          "relationship": {
+            "maxLength": 30,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "required": [
+          "documentNumber",
+          "documentType",
+          "fullName",
+          "relationship"
+        ],
+        "type": "object"
+      },
+      "GuardianResponse": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "documentNumber": {
+            "type": "string"
+          },
+          "documentType": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "guardianId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "minorPersonId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "relationship": {
+            "type": "string"
+          },
+          "schoolId": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "Meta": {
@@ -1531,9 +1667,118 @@
         ]
       }
     },
-    "/api/v1/persons/{personId}/consent": {
+    "/api/v1/persons/{minorId}/guardian": {
       "get": {
         "operationId": "get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "minorId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardianResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "guardian-controller"
+        ]
+      },
+      "post": {
+        "operationId": "register",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "minorId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardianRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardianResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "guardian-controller"
+        ]
+      },
+      "put": {
+        "operationId": "update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "minorId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardianRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardianResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "guardian-controller"
+        ]
+      }
+    },
+    "/api/v1/persons/{personId}/consent": {
+      "get": {
+        "operationId": "get_2",
         "parameters": [
           {
             "in": "path",
@@ -1562,7 +1807,7 @@
         ]
       },
       "post": {
-        "operationId": "accept",
+        "operationId": "accept_1",
         "parameters": [
           {
             "in": "path",
@@ -1629,6 +1874,76 @@
         },
         "tags": [
           "consent-controller"
+        ]
+      }
+    },
+    "/api/v1/persons/{personId}/terms": {
+      "get": {
+        "operationId": "get_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "personId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnablementResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "terms-controller"
+        ]
+      },
+      "post": {
+        "operationId": "accept",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "personId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptTermsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnablementResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "terms-controller"
         ]
       }
     },
