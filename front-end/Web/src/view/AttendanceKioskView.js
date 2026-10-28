@@ -120,12 +120,12 @@ function SelectSessionPanel({ kioskVm }) {
 // cohorte de esta clase y quiénes ya registraron asistencia (y con qué
 // método). Con canCorrectAttendance permite corregir a Tarde y quitar el
 // registro (HU-ATT-003, attendance.record:write).
-function RosterPanel({ kioskVm, canCorrect, onCorrect, onRemove }) {
+function RosterPanel({ kioskVm, canCorrect, onCorrect, onRemove, onManual }) {
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
 
-    const methodLabel = { FACIAL: t("Rostro"), FINGERPRINT: t("Huella") };
+    const methodLabel = { FACIAL: t("Rostro"), FINGERPRINT: t("Huella"), MANUAL: t("Manual") };
 
     return (
         <Card padding="lg" style={{ width: "100%", maxWidth: 320 }} contentStyle={{ gap: 4 }}>
@@ -166,6 +166,11 @@ function RosterPanel({ kioskVm, canCorrect, onCorrect, onRemove }) {
                                     <Text style={{ color: c.text.secondary, fontSize: 12 }}>
                                         {late ? t("Tarde") : methodLabel[method] || method || ""}
                                     </Text>
+                                )}
+                                {!present && canCorrect && (
+                                    <Button variant="outline" size="sm" onPress={() => onManual?.(student.academicActorId)}>
+                                        {t("Presente")}
+                                    </Button>
                                 )}
                                 {present && canCorrect && (
                                     <View style={{ flexDirection: "row", gap: 6 }}>
@@ -215,6 +220,9 @@ function CapturePanel({ kioskVm }) {
             if (err) kioskVm.onCaptureError(err);
         } else if (pending.kind === "correct") {
             const err = await kioskVm.correctRecord?.(pending.actorId, "Late");
+            if (err) kioskVm.onCaptureError(err);
+        } else if (pending.kind === "manual") {
+            const err = await kioskVm.registerManually?.(pending.actorId);
             if (err) kioskVm.onCaptureError(err);
         } else if (pending.kind === "remove") {
             const err = await kioskVm.removeRecord?.(pending.actorId);
@@ -677,6 +685,7 @@ function CapturePanel({ kioskVm }) {
                     canCorrect={canCorrect}
                     onCorrect={(actorId) => setPending({ kind: "correct", actorId })}
                     onRemove={(actorId) => setPending({ kind: "remove", actorId })}
+                    onManual={(actorId) => setPending({ kind: "manual", actorId })}
                 />
                 {pending != null && (
                     <ConfirmModal
@@ -684,20 +693,24 @@ function CapturePanel({ kioskVm }) {
                         onClose={() => (busy ? null : setPending(null))}
                         onConfirm={runPending}
                         loading={busy}
-                        variant="danger"
+                        variant={pending?.kind === "manual" ? "primary" : "danger"}
                         title={
                             pending?.kind === "cancel"
                                 ? t("Cancelar clase")
                                 : pending?.kind === "correct"
                                   ? t("Marcar tarde")
-                                  : t("Quitar registro")
+                                  : pending?.kind === "manual"
+                                    ? t("Registrar asistencia manual")
+                                    : t("Quitar registro")
                         }
                         message={
                             pending?.kind === "cancel"
                                 ? t("La sesión pasará a Cancelled y no se podrá reabrir. ¿Continuar?")
                                 : pending?.kind === "correct"
                                   ? t("El registro pasará a Tarde (captura MANUAL). ¿Continuar?")
-                                  : t("Se eliminará el registro de asistencia. ¿Continuar?")
+                                  : pending?.kind === "manual"
+                                    ? t("Se registrará la asistencia del aprendiz sin biometría (captura MANUAL). ¿Continuar?")
+                                    : t("Se eliminará el registro de asistencia. ¿Continuar?")
                         }
                         confirmText={t("Confirmar")}
                     />

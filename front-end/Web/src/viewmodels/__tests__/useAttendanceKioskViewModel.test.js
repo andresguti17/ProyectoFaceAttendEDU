@@ -560,3 +560,47 @@ test("the on-screen alert says who was registered and how, and flags a repeat as
     expect(getVm().view).toBe("DUPLICATE");
     expect(getVm().lastRegistration).toEqual({ name: "Ana Pérez", method: "FACIAL", status: null, duplicate: true });
 });
+
+describe("manual registration for a learner who does not use biometrics", () => {
+    test("the instructor marks a learner Present with captureMethod MANUAL and no match score", async () => {
+        attendanceApi.createRecord.mockResolvedValue({ attendanceRecordId: 31 });
+        cohortRoster.mockResolvedValue([{ academicActorId: 1, personId: "person-a", name: "Ana Pérez" }]);
+        const getVm = await startedVm({ startsAt: "23:59:00" }); // not late: the class has not started yet
+
+        let result;
+        await act(async () => {
+            result = await getVm().registerManually(1);
+        });
+
+        expect(result).toBeNull();
+        expect(attendanceApi.createRecord).toHaveBeenCalledWith(
+            expect.objectContaining({ academicActorId: 1, attendanceStatus: "Present", captureMethod: "MANUAL", matchScore: null })
+        );
+        expect(getVm().registeredActorIds.has(1)).toBe(true);
+        expect(getVm().registeredMethods.get(1)).toBe("MANUAL");
+        expect(getVm().recordIdByActor.get(1)).toBe(31);
+        expect(getVm().lastRegistration).toEqual({ name: "Ana Pérez", method: "MANUAL", status: "Present", duplicate: false });
+    });
+
+    test("marking the same learner twice does not create a second record", async () => {
+        attendanceApi.createRecord.mockResolvedValue({ attendanceRecordId: 31 });
+        cohortRoster.mockResolvedValue([{ academicActorId: 1, personId: "person-a", name: "Ana Pérez" }]);
+        const getVm = await startedVm();
+
+        await act(async () => { await getVm().registerManually(1); });
+        await act(async () => { await getVm().registerManually(1); });
+
+        expect(attendanceApi.createRecord).toHaveBeenCalledTimes(1);
+        expect(getVm().view).toBe("DUPLICATE");
+    });
+
+    test("a learner outside the class, or no running class, is refused without a request", async () => {
+        cohortRoster.mockResolvedValue([{ academicActorId: 1, personId: "person-a", name: "Ana Pérez" }]);
+        const getVm = await startedVm();
+
+        let outside;
+        await act(async () => { outside = await getVm().registerManually(999); });
+        expect(outside).toBe("No pertenece a esta clase");
+        expect(attendanceApi.createRecord).not.toHaveBeenCalled();
+    });
+});

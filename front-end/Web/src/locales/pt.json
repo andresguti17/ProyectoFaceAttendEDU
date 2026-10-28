@@ -610,6 +610,8 @@
   "El programa/departamento es requerido": "O programa/departamento é obrigatório",
   "El registro de sedes no está disponible por ahora. Inténtalo más tarde.": "O cadastro de sedes não está disponível no momento. Tente mais tarde.",
   "El registro pasará a Tarde (captura MANUAL). ¿Continuar?": "O registro passará para Atrasado (captura MANUAL). Continuar?",
+  "Registrar asistencia manual": "Registrar presença manualmente",
+  "Se registrará la asistencia del aprendiz sin biometría (captura MANUAL). ¿Continuar?": "A presença do aluno será registrada sem biometria (captura MANUAL). Continuar?",
   "El rol es requerido": "A função é obrigatória",
   "El rol no existe en el backend": "A função não existe no backend",
   "El servicio biométrico no responde. Puedes omitir este paso y completarlo luego desde Biometría.": "O serviço biométrico não responde. Você pode pular esta etapa e concluí-la depois em Biometria.",
