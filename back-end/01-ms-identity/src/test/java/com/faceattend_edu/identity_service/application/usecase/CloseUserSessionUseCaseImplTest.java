@@ -66,6 +66,18 @@ class CloseUserSessionUseCaseImplTest {
     }
 
     @Test
+    @DisplayName("givenStoredIdFromAdminListing_whenCloseSession_thenFallsBackAndCloses")
+    void givenStoredIdFromAdminListing_whenCloseSession_thenFallsBackAndCloses() {
+        when(loadUserSessionPort.loadUserSession(sessionId)).thenReturn(null);
+        when(loadUserSessionPort.loadUserSessionByStoredId(sessionId)).thenReturn(activeSession);
+
+        useCase.closeSession(sessionId);
+
+        assertThat(activeSession.isActive()).isFalse();
+        verify(updateUserSessionPort).updateUserSession(activeSession);
+    }
+
+    @Test
     @DisplayName("givenUnknownSession_whenCloseSession_thenEntityNotFoundAndNeverUpdates")
     void givenUnknownSession_whenCloseSession_thenEntityNotFoundAndNeverUpdates() {
         // Arrange
