@@ -1,0 +1,2285 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AdminReports at-risk view render empty state 1`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "WebkitBackdropFilter": "blur(10px)",
+        "alignItems": "flex-start",
+        "backdropFilter": "blur(10px)",
+        "backgroundColor": "rgba(248,250,252,0.90)",
+        "borderBottomColor": "rgba(226,232,240,1.00)",
+        "borderBottomWidth": "1px",
+        "boxShadow": "0px 2px 8px rgba(0,0,0,0.08)",
+        "flexDirection": "column",
+        "gap": "12px",
+        "justifyContent": "space-between",
+        "paddingBottom": "16px",
+        "paddingLeft": "16px",
+        "paddingRight": "16px",
+        "paddingTop": "16px",
+        "position": "sticky",
+        "top": "0px",
+        "zIndex": 1100,
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "flex": 1,
+        }
+      }
+    >
+      <div
+        className="css-text-146c3p1"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(0,0,0,1.00)",
+            "fontSize": "20px",
+            "fontWeight": "700",
+            "marginBottom": "4px",
+          }
+        }
+      >
+        Reportes
+      </div>
+      <div
+        className="css-text-146c3p1"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "13px",
+          }
+        }
+      >
+        0 estudiantes en riesgo por asistencia
+      </div>
+    </div>
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "flexWrap": "wrap",
+          "gap": "10px",
+        }
+      }
+    >
+      <button
+        aria-label="Recargar"
+        className="css-view-g5y9jx r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-sdzlij r-justifyContent-1777fci"
+        dir={null}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onContextMenu={[Function]}
+        onFocus={[Function]}
+        onKeyDown={[Function]}
+        ref={[Function]}
+        role="button"
+        style={
+          {
+            "backgroundColor": "rgba(176,212,254,1.00)",
+            "borderBottomColor": "rgba(176,212,254,1.00)",
+            "borderBottomWidth": "0px",
+            "borderLeftColor": "rgba(176,212,254,1.00)",
+            "borderLeftWidth": "0px",
+            "borderRightColor": "rgba(176,212,254,1.00)",
+            "borderRightWidth": "0px",
+            "borderTopColor": "rgba(176,212,254,1.00)",
+            "borderTopWidth": "0px",
+            "height": "40px",
+            "opacity": 1,
+            "width": "40px",
+          }
+        }
+        tabIndex={0}
+        type="button"
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "transform": "rotate(0deg)",
+            }
+          }
+        >
+          Feather:refresh-cw:18:#1983fc
+        </div>
+      </button>
+    </div>
+  </div>
+  ) } /&gt;
+  <div
+    className="css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-flexShrink-1wbh5a2 r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-scrollbarWidth-2eszeu"
+    dir={null}
+    onScroll={[Function]}
+    onTouchEnd={[Function]}
+    onTouchMove={[Function]}
+    onTouchStart={[Function]}
+    onWheel={[Function]}
+    ref={[Function]}
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "gap": "16px",
+          "paddingBottom": "16px",
+          "paddingLeft": "16px",
+          "paddingRight": "16px",
+          "paddingTop": "16px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(255,255,255,1.00)",
+            "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "paddingBottom": "0px",
+              "paddingLeft": "0px",
+              "paddingRight": "0px",
+              "paddingTop": "0px",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx r-alignItems-1awozwy r-flex-13awgt0 r-justifyContent-1777fci r-padding-1jgu3lx"
+            dir={null}
+            ref={[Function]}
+          >
+            <div
+              className="css-view-g5y9jx r-alignItems-1awozwy r-borderRadius-sdzlij r-height-1njcn02 r-justifyContent-1777fci r-marginBottom-1peese0 r-width-7bouqp"
+              dir={null}
+              ref={[Function]}
+            >
+              Feather:users:48:#94A3B8
+            </div>
+            <div
+              className="css-text-146c3p1 r-fontSize-1i10wst r-fontWeight-b88u0q r-marginBottom-5oul0u r-textAlign-q4m81j"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(0,0,0,1.00)",
+                }
+              }
+            >
+              No hay mas usuarios por reportar
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`AdminReports at-risk view render every risk message and row style 1`] = `
+<div
+  className="css-view-g5y9jx r-flex-13awgt0"
+  dir={null}
+  ref={[Function]}
+>
+  <div
+    className="css-view-g5y9jx"
+    dir={null}
+    ref={[Function]}
+    style={
+      {
+        "WebkitBackdropFilter": "blur(10px)",
+        "alignItems": "flex-start",
+        "backdropFilter": "blur(10px)",
+        "backgroundColor": "rgba(248,250,252,0.90)",
+        "borderBottomColor": "rgba(226,232,240,1.00)",
+        "borderBottomWidth": "1px",
+        "boxShadow": "0px 2px 8px rgba(0,0,0,0.08)",
+        "flexDirection": "column",
+        "gap": "12px",
+        "justifyContent": "space-between",
+        "paddingBottom": "16px",
+        "paddingLeft": "16px",
+        "paddingRight": "16px",
+        "paddingTop": "16px",
+        "position": "sticky",
+        "top": "0px",
+        "zIndex": 1100,
+      }
+    }
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "flex": 1,
+        }
+      }
+    >
+      <div
+        className="css-text-146c3p1"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(0,0,0,1.00)",
+            "fontSize": "20px",
+            "fontWeight": "700",
+            "marginBottom": "4px",
+          }
+        }
+      >
+        Reportes
+      </div>
+      <div
+        className="css-text-146c3p1"
+        dir="auto"
+        ref={[Function]}
+        style={
+          {
+            "color": "rgba(100,116,139,1.00)",
+            "fontSize": "13px",
+          }
+        }
+      >
+        5 estudiantes en riesgo por asistencia
+      </div>
+    </div>
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "flexWrap": "wrap",
+          "gap": "10px",
+        }
+      }
+    >
+      <button
+        aria-label="Recargar"
+        className="css-view-g5y9jx r-cursor-1loqt21 r-touchAction-1otgn73 r-alignItems-1awozwy r-borderRadius-sdzlij r-justifyContent-1777fci"
+        dir={null}
+        onBlur={[Function]}
+        onClick={[Function]}
+        onContextMenu={[Function]}
+        onFocus={[Function]}
+        onKeyDown={[Function]}
+        ref={[Function]}
+        role="button"
+        style={
+          {
+            "backgroundColor": "rgba(176,212,254,1.00)",
+            "borderBottomColor": "rgba(176,212,254,1.00)",
+            "borderBottomWidth": "0px",
+            "borderLeftColor": "rgba(176,212,254,1.00)",
+            "borderLeftWidth": "0px",
+            "borderRightColor": "rgba(176,212,254,1.00)",
+            "borderRightWidth": "0px",
+            "borderTopColor": "rgba(176,212,254,1.00)",
+            "borderTopWidth": "0px",
+            "height": "40px",
+            "opacity": 1,
+            "width": "40px",
+          }
+        }
+        tabIndex={0}
+        type="button"
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "transform": "rotate(0deg)",
+            }
+          }
+        >
+          Feather:refresh-cw:18:#1983fc
+        </div>
+      </button>
+    </div>
+  </div>
+  ) } /&gt;
+  <div
+    className="css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexGrow-16y2uox r-flexShrink-1wbh5a2 r-overflowX-11yh6sk r-overflowY-1rnoaur r-transform-agouwx r-scrollbarWidth-2eszeu"
+    dir={null}
+    onScroll={[Function]}
+    onTouchEnd={[Function]}
+    onTouchMove={[Function]}
+    onTouchStart={[Function]}
+    onWheel={[Function]}
+    ref={[Function]}
+  >
+    <div
+      className="css-view-g5y9jx"
+      dir={null}
+      ref={[Function]}
+      style={
+        {
+          "gap": "16px",
+          "paddingBottom": "16px",
+          "paddingLeft": "16px",
+          "paddingRight": "16px",
+          "paddingTop": "16px",
+        }
+      }
+    >
+      <div
+        className="css-view-g5y9jx r-borderRadius-1q9bdsx r-overflow-1udh08x"
+        dir={null}
+        ref={[Function]}
+        style={
+          {
+            "backgroundColor": "rgba(255,255,255,1.00)",
+            "boxShadow": "0px 1px 2px rgba(0,0,0,0.05)",
+          }
+        }
+      >
+        <div
+          className="css-view-g5y9jx"
+          dir={null}
+          ref={[Function]}
+          style={
+            {
+              "paddingBottom": "0px",
+              "paddingLeft": "0px",
+              "paddingRight": "0px",
+              "paddingTop": "0px",
+            }
+          }
+        >
+          <div
+            className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+            dir={null}
+            onClick={[Function]}
+            onContextMenu={[Function]}
+            onKeyDown={[Function]}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "backgroundColor": "rgba(253,224,222,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomWidth": "1px",
+                "flexDirection": "row",
+                "gap": "12px",
+                "paddingBottom": "16px",
+                "paddingLeft": "16px",
+                "paddingRight": "16px",
+                "paddingTop": "16px",
+                "transitionDuration": "0s",
+              }
+            }
+            tabIndex="0"
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "position": "relative",
+                }
+              }
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "rgba(25,131,252,1.00)",
+                    "borderBottomLeftRadius": "24px",
+                    "borderBottomRightRadius": "24px",
+                    "borderTopLeftRadius": "24px",
+                    "borderTopRightRadius": "24px",
+                    "height": "48px",
+                    "justifyContent": "center",
+                    "width": "48px",
+                  }
+                }
+              >
+                <div
+                  className="css-text-146c3p1"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(255,255,255,1.00)",
+                      "fontSize": "19.2px",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  E1
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "rgba(240,68,56,1.00)",
+                    "borderBottomColor": "rgba(253,224,222,1.00)",
+                    "borderBottomLeftRadius": "10px",
+                    "borderBottomRightRadius": "10px",
+                    "borderBottomWidth": "2px",
+                    "borderLeftColor": "rgba(253,224,222,1.00)",
+                    "borderLeftWidth": "2px",
+                    "borderRightColor": "rgba(253,224,222,1.00)",
+                    "borderRightWidth": "2px",
+                    "borderTopColor": "rgba(253,224,222,1.00)",
+                    "borderTopLeftRadius": "10px",
+                    "borderTopRightRadius": "10px",
+                    "borderTopWidth": "2px",
+                    "bottom": "-2px",
+                    "height": "20px",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "right": "-2px",
+                    "width": "20px",
+                  }
+                }
+              >
+                Feather:alert-octagon:10:#FFFFFF
+              </div>
+            </div>
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "flex": 1,
+                  "gap": "6px",
+                }
+              }
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "8px",
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "flex": 1,
+                      "fontSize": "14px",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Estudiante 1
+                </div>
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": "8px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(148,163,184,1.00)",
+                        "fontSize": "11px",
+                      }
+                    }
+                  >
+                    hace 2 días
+                  </div>
+                  <div
+                    className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(253,224,222,1.00)",
+                        "borderBottomLeftRadius": "9999px",
+                        "borderBottomRightRadius": "9999px",
+                        "borderTopLeftRadius": "9999px",
+                        "borderTopRightRadius": "9999px",
+                        "gap": "4px",
+                        "paddingBottom": "2px",
+                        "paddingLeft": "4px",
+                        "paddingRight": "4px",
+                        "paddingTop": "2px",
+                      }
+                    }
+                  >
+                    <div
+                      className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                      dir="auto"
+                      ref={[Function]}
+                      style={
+                        {
+                          "color": "rgba(240,68,56,1.00)",
+                          "fontSize": "10px",
+                        }
+                      }
+                    >
+                      50
+                      %
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "8px",
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flex": 1,
+                      "flexDirection": "row",
+                      "gap": "8px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(100,116,139,1.00)",
+                        "fontSize": "12px",
+                      }
+                    }
+                  >
+                    C-1
+                  </div>
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(100,116,139,1.00)",
+                        "fontSize": "12px",
+                      }
+                    }
+                  >
+                    • 
+                    ADSI 2758
+                  </div>
+                </div>
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": "10px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-view-g5y9jx"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": "4px",
+                      }
+                    }
+                  >
+                    Feather:x-circle:12:#F04438
+                    <div
+                      className="css-text-146c3p1"
+                      dir="auto"
+                      ref={[Function]}
+                      style={
+                        {
+                          "color": "rgba(100,116,139,1.00)",
+                          "fontSize": "11px",
+                        }
+                      }
+                    >
+                      4
+                       
+                      faltas
+                    </div>
+                  </div>
+                  <div
+                    className="css-view-g5y9jx"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": "4px",
+                      }
+                    }
+                  >
+                    Feather:repeat:12:#FFAB00
+                    <div
+                      className="css-text-146c3p1"
+                      dir="auto"
+                      ref={[Function]}
+                      style={
+                        {
+                          "color": "rgba(100,116,139,1.00)",
+                          "fontSize": "11px",
+                        }
+                      }
+                    >
+                      4
+                       
+                      seguidas
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx r-width-13qz1uu"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "backgroundColor": "rgba(226,232,240,1.00)",
+                      "height": "4px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(240,68,56,1.00)",
+                        "width": "50%",
+                      }
+                    }
+                  />
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "4px",
+                    "marginTop": "2px",
+                  }
+                }
+              >
+                Feather:alert-octagon:10:#F04438
+                <div
+                  className="css-text-146c3p1"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(240,68,56,1.00)",
+                      "fontSize": "10px",
+                      "fontWeight": "700",
+                    }
+                  }
+                >
+                  Sanción por ausencias consecutivas
+                   (
+                  4
+                   
+                  días seguidos
+                  )
+                </div>
+              </div>
+            </div>
+            Feather:chevron-right:22:#64748B
+          </div>
+          <div
+            className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+            dir={null}
+            onClick={[Function]}
+            onContextMenu={[Function]}
+            onKeyDown={[Function]}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "backgroundColor": "rgba(253,224,222,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomWidth": "1px",
+                "flexDirection": "row",
+                "gap": "12px",
+                "paddingBottom": "16px",
+                "paddingLeft": "16px",
+                "paddingRight": "16px",
+                "paddingTop": "16px",
+                "transitionDuration": "0s",
+              }
+            }
+            tabIndex="0"
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "position": "relative",
+                }
+              }
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "rgba(25,131,252,1.00)",
+                    "borderBottomLeftRadius": "24px",
+                    "borderBottomRightRadius": "24px",
+                    "borderTopLeftRadius": "24px",
+                    "borderTopRightRadius": "24px",
+                    "height": "48px",
+                    "justifyContent": "center",
+                    "width": "48px",
+                  }
+                }
+              >
+                <div
+                  className="css-text-146c3p1"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(255,255,255,1.00)",
+                      "fontSize": "19.2px",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  E2
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "rgba(240,68,56,1.00)",
+                    "borderBottomColor": "rgba(253,224,222,1.00)",
+                    "borderBottomLeftRadius": "10px",
+                    "borderBottomRightRadius": "10px",
+                    "borderBottomWidth": "2px",
+                    "borderLeftColor": "rgba(253,224,222,1.00)",
+                    "borderLeftWidth": "2px",
+                    "borderRightColor": "rgba(253,224,222,1.00)",
+                    "borderRightWidth": "2px",
+                    "borderTopColor": "rgba(253,224,222,1.00)",
+                    "borderTopLeftRadius": "10px",
+                    "borderTopRightRadius": "10px",
+                    "borderTopWidth": "2px",
+                    "bottom": "-2px",
+                    "height": "20px",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "right": "-2px",
+                    "width": "20px",
+                  }
+                }
+              >
+                Feather:alert-octagon:10:#FFFFFF
+              </div>
+            </div>
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "flex": 1,
+                  "gap": "6px",
+                }
+              }
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "8px",
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "flex": 1,
+                      "fontSize": "14px",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Estudiante 2
+                </div>
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": "8px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(148,163,184,1.00)",
+                        "fontSize": "11px",
+                      }
+                    }
+                  >
+                    hace 2 días
+                  </div>
+                  <div
+                    className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(253,224,222,1.00)",
+                        "borderBottomLeftRadius": "9999px",
+                        "borderBottomRightRadius": "9999px",
+                        "borderTopLeftRadius": "9999px",
+                        "borderTopRightRadius": "9999px",
+                        "gap": "4px",
+                        "paddingBottom": "2px",
+                        "paddingLeft": "4px",
+                        "paddingRight": "4px",
+                        "paddingTop": "2px",
+                      }
+                    }
+                  >
+                    <div
+                      className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                      dir="auto"
+                      ref={[Function]}
+                      style={
+                        {
+                          "color": "rgba(240,68,56,1.00)",
+                          "fontSize": "10px",
+                        }
+                      }
+                    >
+                      65
+                      %
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "8px",
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flex": 1,
+                      "flexDirection": "row",
+                      "gap": "8px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(100,116,139,1.00)",
+                        "fontSize": "12px",
+                      }
+                    }
+                  >
+                    C-2
+                  </div>
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(100,116,139,1.00)",
+                        "fontSize": "12px",
+                      }
+                    }
+                  >
+                    • 
+                    ADSI 2758
+                  </div>
+                </div>
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": "10px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-view-g5y9jx"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": "4px",
+                      }
+                    }
+                  >
+                    Feather:x-circle:12:#F04438
+                    <div
+                      className="css-text-146c3p1"
+                      dir="auto"
+                      ref={[Function]}
+                      style={
+                        {
+                          "color": "rgba(100,116,139,1.00)",
+                          "fontSize": "11px",
+                        }
+                      }
+                    >
+                      4
+                       
+                      faltas
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx r-width-13qz1uu"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "backgroundColor": "rgba(226,232,240,1.00)",
+                      "height": "4px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(240,68,56,1.00)",
+                        "width": "65%",
+                      }
+                    }
+                  />
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "4px",
+                    "marginTop": "2px",
+                  }
+                }
+              >
+                Feather:alert-octagon:10:#F04438
+                <div
+                  className="css-text-146c3p1"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(240,68,56,1.00)",
+                      "fontSize": "10px",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Umbral de sanción alcanzado
+                </div>
+              </div>
+            </div>
+            Feather:chevron-right:22:#64748B
+          </div>
+          <div
+            className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+            dir={null}
+            onClick={[Function]}
+            onContextMenu={[Function]}
+            onKeyDown={[Function]}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "backgroundColor": "rgba(253,224,222,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomWidth": "1px",
+                "flexDirection": "row",
+                "gap": "12px",
+                "paddingBottom": "16px",
+                "paddingLeft": "16px",
+                "paddingRight": "16px",
+                "paddingTop": "16px",
+                "transitionDuration": "0s",
+              }
+            }
+            tabIndex="0"
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "position": "relative",
+                }
+              }
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "rgba(25,131,252,1.00)",
+                    "borderBottomLeftRadius": "24px",
+                    "borderBottomRightRadius": "24px",
+                    "borderTopLeftRadius": "24px",
+                    "borderTopRightRadius": "24px",
+                    "height": "48px",
+                    "justifyContent": "center",
+                    "width": "48px",
+                  }
+                }
+              >
+                <div
+                  className="css-text-146c3p1"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(255,255,255,1.00)",
+                      "fontSize": "19.2px",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  E3
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "rgba(255,171,0,1.00)",
+                    "borderBottomColor": "rgba(253,224,222,1.00)",
+                    "borderBottomLeftRadius": "10px",
+                    "borderBottomRightRadius": "10px",
+                    "borderBottomWidth": "2px",
+                    "borderLeftColor": "rgba(253,224,222,1.00)",
+                    "borderLeftWidth": "2px",
+                    "borderRightColor": "rgba(253,224,222,1.00)",
+                    "borderRightWidth": "2px",
+                    "borderTopColor": "rgba(253,224,222,1.00)",
+                    "borderTopLeftRadius": "10px",
+                    "borderTopRightRadius": "10px",
+                    "borderTopWidth": "2px",
+                    "bottom": "-2px",
+                    "height": "20px",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "right": "-2px",
+                    "width": "20px",
+                  }
+                }
+              >
+                Feather:alert-octagon:10:#0F172A
+              </div>
+            </div>
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "flex": 1,
+                  "gap": "6px",
+                }
+              }
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "8px",
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "flex": 1,
+                      "fontSize": "14px",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Estudiante 3
+                </div>
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": "8px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(148,163,184,1.00)",
+                        "fontSize": "11px",
+                      }
+                    }
+                  >
+                    hace 2 días
+                  </div>
+                  <div
+                    className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(253,224,222,1.00)",
+                        "borderBottomLeftRadius": "9999px",
+                        "borderBottomRightRadius": "9999px",
+                        "borderTopLeftRadius": "9999px",
+                        "borderTopRightRadius": "9999px",
+                        "gap": "4px",
+                        "paddingBottom": "2px",
+                        "paddingLeft": "4px",
+                        "paddingRight": "4px",
+                        "paddingTop": "2px",
+                      }
+                    }
+                  >
+                    <div
+                      className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                      dir="auto"
+                      ref={[Function]}
+                      style={
+                        {
+                          "color": "rgba(240,68,56,1.00)",
+                          "fontSize": "10px",
+                        }
+                      }
+                    >
+                      78
+                      %
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "8px",
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flex": 1,
+                      "flexDirection": "row",
+                      "gap": "8px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(100,116,139,1.00)",
+                        "fontSize": "12px",
+                      }
+                    }
+                  >
+                    C-3
+                  </div>
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(100,116,139,1.00)",
+                        "fontSize": "12px",
+                      }
+                    }
+                  >
+                    • 
+                    ADSI 2758
+                  </div>
+                </div>
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": "10px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-view-g5y9jx"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": "4px",
+                      }
+                    }
+                  >
+                    Feather:x-circle:12:#F04438
+                    <div
+                      className="css-text-146c3p1"
+                      dir="auto"
+                      ref={[Function]}
+                      style={
+                        {
+                          "color": "rgba(100,116,139,1.00)",
+                          "fontSize": "11px",
+                        }
+                      }
+                    >
+                      4
+                       
+                      faltas
+                    </div>
+                  </div>
+                  <div
+                    className="css-view-g5y9jx"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": "4px",
+                      }
+                    }
+                  >
+                    Feather:repeat:12:#FFAB00
+                    <div
+                      className="css-text-146c3p1"
+                      dir="auto"
+                      ref={[Function]}
+                      style={
+                        {
+                          "color": "rgba(100,116,139,1.00)",
+                          "fontSize": "11px",
+                        }
+                      }
+                    >
+                      2
+                       
+                      seguidas
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx r-width-13qz1uu"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "backgroundColor": "rgba(226,232,240,1.00)",
+                      "height": "4px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(255,171,0,1.00)",
+                        "width": "78%",
+                      }
+                    }
+                  />
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "4px",
+                    "marginTop": "2px",
+                  }
+                }
+              >
+                Feather:clock:10:#FFAB00
+                <div
+                  className="css-text-146c3p1"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(255,171,0,1.00)",
+                      "fontSize": "10px",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  3 días hasta posible sanción
+                </div>
+              </div>
+            </div>
+            Feather:chevron-right:22:#64748B
+          </div>
+          <div
+            className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+            dir={null}
+            onClick={[Function]}
+            onContextMenu={[Function]}
+            onKeyDown={[Function]}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "backgroundColor": "rgba(255,230,179,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomWidth": "1px",
+                "flexDirection": "row",
+                "gap": "12px",
+                "paddingBottom": "16px",
+                "paddingLeft": "16px",
+                "paddingRight": "16px",
+                "paddingTop": "16px",
+                "transitionDuration": "0s",
+              }
+            }
+            tabIndex="0"
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "position": "relative",
+                }
+              }
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "rgba(25,131,252,1.00)",
+                    "borderBottomLeftRadius": "24px",
+                    "borderBottomRightRadius": "24px",
+                    "borderTopLeftRadius": "24px",
+                    "borderTopRightRadius": "24px",
+                    "height": "48px",
+                    "justifyContent": "center",
+                    "width": "48px",
+                  }
+                }
+              >
+                <div
+                  className="css-text-146c3p1"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(255,255,255,1.00)",
+                      "fontSize": "19.2px",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  E4
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "rgba(255,171,0,1.00)",
+                    "borderBottomColor": "rgba(255,230,179,1.00)",
+                    "borderBottomLeftRadius": "10px",
+                    "borderBottomRightRadius": "10px",
+                    "borderBottomWidth": "2px",
+                    "borderLeftColor": "rgba(255,230,179,1.00)",
+                    "borderLeftWidth": "2px",
+                    "borderRightColor": "rgba(255,230,179,1.00)",
+                    "borderRightWidth": "2px",
+                    "borderTopColor": "rgba(255,230,179,1.00)",
+                    "borderTopLeftRadius": "10px",
+                    "borderTopRightRadius": "10px",
+                    "borderTopWidth": "2px",
+                    "bottom": "-2px",
+                    "height": "20px",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "right": "-2px",
+                    "width": "20px",
+                  }
+                }
+              >
+                Feather:alert-circle:10:#0F172A
+              </div>
+            </div>
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "flex": 1,
+                  "gap": "6px",
+                }
+              }
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "8px",
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "flex": 1,
+                      "fontSize": "14px",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Estudiante 4
+                </div>
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": "8px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(148,163,184,1.00)",
+                        "fontSize": "11px",
+                      }
+                    }
+                  >
+                    hace 2 días
+                  </div>
+                  <div
+                    className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(255,230,179,1.00)",
+                        "borderBottomLeftRadius": "9999px",
+                        "borderBottomRightRadius": "9999px",
+                        "borderTopLeftRadius": "9999px",
+                        "borderTopRightRadius": "9999px",
+                        "gap": "4px",
+                        "paddingBottom": "2px",
+                        "paddingLeft": "4px",
+                        "paddingRight": "4px",
+                        "paddingTop": "2px",
+                      }
+                    }
+                  >
+                    <div
+                      className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                      dir="auto"
+                      ref={[Function]}
+                      style={
+                        {
+                          "color": "rgba(255,171,0,1.00)",
+                          "fontSize": "10px",
+                        }
+                      }
+                    >
+                      75.5
+                      %
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "8px",
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flex": 1,
+                      "flexDirection": "row",
+                      "gap": "8px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(100,116,139,1.00)",
+                        "fontSize": "12px",
+                      }
+                    }
+                  >
+                    C-4
+                  </div>
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(100,116,139,1.00)",
+                        "fontSize": "12px",
+                      }
+                    }
+                  >
+                    • 
+                    ADSI 2758
+                  </div>
+                </div>
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": "10px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-view-g5y9jx"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": "4px",
+                      }
+                    }
+                  >
+                    Feather:x-circle:12:#F04438
+                    <div
+                      className="css-text-146c3p1"
+                      dir="auto"
+                      ref={[Function]}
+                      style={
+                        {
+                          "color": "rgba(100,116,139,1.00)",
+                          "fontSize": "11px",
+                        }
+                      }
+                    >
+                      4
+                       
+                      faltas
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx r-width-13qz1uu"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "backgroundColor": "rgba(226,232,240,1.00)",
+                      "height": "4px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(255,171,0,1.00)",
+                        "width": "75.5%",
+                      }
+                    }
+                  />
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "4px",
+                    "marginTop": "2px",
+                  }
+                }
+              >
+                Feather:trending-down:10:#FFAB00
+                <div
+                  className="css-text-146c3p1"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(255,171,0,1.00)",
+                      "fontSize": "10px",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Asistencia por debajo del mínimo requerido
+                   (
+                  80
+                  %) · 
+                  Falta
+                   
+                  4.5
+                  %
+                </div>
+              </div>
+            </div>
+            Feather:chevron-right:22:#64748B
+          </div>
+          <div
+            className="css-view-g5y9jx r-transitionProperty-1i6wzkk r-userSelect-lrvibr r-cursor-1loqt21 r-touchAction-1otgn73"
+            dir={null}
+            onClick={[Function]}
+            onContextMenu={[Function]}
+            onKeyDown={[Function]}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "backgroundColor": "rgba(255,230,179,1.00)",
+                "borderBottomColor": "rgba(226,232,240,1.00)",
+                "borderBottomWidth": "0px",
+                "flexDirection": "row",
+                "gap": "12px",
+                "paddingBottom": "16px",
+                "paddingLeft": "16px",
+                "paddingRight": "16px",
+                "paddingTop": "16px",
+                "transitionDuration": "0s",
+              }
+            }
+            tabIndex="0"
+          >
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "position": "relative",
+                }
+              }
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "rgba(25,131,252,1.00)",
+                    "borderBottomLeftRadius": "24px",
+                    "borderBottomRightRadius": "24px",
+                    "borderTopLeftRadius": "24px",
+                    "borderTopRightRadius": "24px",
+                    "height": "48px",
+                    "justifyContent": "center",
+                    "width": "48px",
+                  }
+                }
+              >
+                <div
+                  className="css-text-146c3p1"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(255,255,255,1.00)",
+                      "fontSize": "19.2px",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  E5
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "rgba(79,221,54,1.00)",
+                    "borderBottomColor": "rgba(255,230,179,1.00)",
+                    "borderBottomLeftRadius": "10px",
+                    "borderBottomRightRadius": "10px",
+                    "borderBottomWidth": "2px",
+                    "borderLeftColor": "rgba(255,230,179,1.00)",
+                    "borderLeftWidth": "2px",
+                    "borderRightColor": "rgba(255,230,179,1.00)",
+                    "borderRightWidth": "2px",
+                    "borderTopColor": "rgba(255,230,179,1.00)",
+                    "borderTopLeftRadius": "10px",
+                    "borderTopRightRadius": "10px",
+                    "borderTopWidth": "2px",
+                    "bottom": "-2px",
+                    "height": "20px",
+                    "justifyContent": "center",
+                    "position": "absolute",
+                    "right": "-2px",
+                    "width": "20px",
+                  }
+                }
+              >
+                Feather:alert-circle:10:#0F172A
+              </div>
+            </div>
+            <div
+              className="css-view-g5y9jx"
+              dir={null}
+              ref={[Function]}
+              style={
+                {
+                  "flex": 1,
+                  "gap": "6px",
+                }
+              }
+            >
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "8px",
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <div
+                  className="css-text-146c3p1 r-maxWidth-dnmrzs r-overflow-1udh08x r-textOverflow-1udbk01 r-whiteSpace-3s2u2q r-wordWrap-1iln25a"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(0,0,0,1.00)",
+                      "flex": 1,
+                      "fontSize": "14px",
+                      "fontWeight": "600",
+                    }
+                  }
+                >
+                  Estudiante 5
+                </div>
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": "8px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(148,163,184,1.00)",
+                        "fontSize": "11px",
+                      }
+                    }
+                  >
+                    Sin registro
+                  </div>
+                  <div
+                    className="css-view-g5y9jx r-alignItems-1awozwy r-alignSelf-k200y r-flexDirection-18u37iz r-justifyContent-1777fci"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(255,230,179,1.00)",
+                        "borderBottomLeftRadius": "9999px",
+                        "borderBottomRightRadius": "9999px",
+                        "borderTopLeftRadius": "9999px",
+                        "borderTopRightRadius": "9999px",
+                        "gap": "4px",
+                        "paddingBottom": "2px",
+                        "paddingLeft": "4px",
+                        "paddingRight": "4px",
+                        "paddingTop": "2px",
+                      }
+                    }
+                  >
+                    <div
+                      className="css-text-146c3p1 r-fontWeight-1kfrs79"
+                      dir="auto"
+                      ref={[Function]}
+                      style={
+                        {
+                          "color": "rgba(255,171,0,1.00)",
+                          "fontSize": "10px",
+                        }
+                      }
+                    >
+                      85
+                      %
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "8px",
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flex": 1,
+                      "flexDirection": "row",
+                      "gap": "8px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(100,116,139,1.00)",
+                        "fontSize": "12px",
+                      }
+                    }
+                  >
+                    C-5
+                  </div>
+                  <div
+                    className="css-text-146c3p1"
+                    dir="auto"
+                    ref={[Function]}
+                    style={
+                      {
+                        "color": "rgba(100,116,139,1.00)",
+                        "fontSize": "12px",
+                      }
+                    }
+                  >
+                    • 
+                    ADSI 2758
+                  </div>
+                </div>
+                <div
+                  className="css-view-g5y9jx"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": "10px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-view-g5y9jx"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": "4px",
+                      }
+                    }
+                  >
+                    Feather:x-circle:12:#F04438
+                    <div
+                      className="css-text-146c3p1"
+                      dir="auto"
+                      ref={[Function]}
+                      style={
+                        {
+                          "color": "rgba(100,116,139,1.00)",
+                          "fontSize": "11px",
+                        }
+                      }
+                    >
+                      4
+                       
+                      faltas
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx r-width-13qz1uu"
+                dir={null}
+                ref={[Function]}
+              >
+                <div
+                  className="css-view-g5y9jx r-borderRadius-sdzlij r-overflow-1udh08x r-width-13qz1uu"
+                  dir={null}
+                  ref={[Function]}
+                  style={
+                    {
+                      "backgroundColor": "rgba(226,232,240,1.00)",
+                      "height": "4px",
+                    }
+                  }
+                >
+                  <div
+                    className="css-view-g5y9jx r-borderRadius-sdzlij r-height-1pi2tsx"
+                    dir={null}
+                    ref={[Function]}
+                    style={
+                      {
+                        "backgroundColor": "rgba(79,221,54,1.00)",
+                        "width": "85%",
+                      }
+                    }
+                  />
+                </div>
+              </div>
+              <div
+                className="css-view-g5y9jx"
+                dir={null}
+                ref={[Function]}
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "gap": "4px",
+                    "marginTop": "2px",
+                  }
+                }
+              >
+                Feather:info:10:#64748B
+                <div
+                  className="css-text-146c3p1"
+                  dir="auto"
+                  ref={[Function]}
+                  style={
+                    {
+                      "color": "rgba(100,116,139,1.00)",
+                      "fontSize": "10px",
+                      "fontWeight": "500",
+                    }
+                  }
+                >
+                  Estudiante requiere seguimiento de asistencia
+                </div>
+              </div>
+            </div>
+            Feather:chevron-right:22:#64748B
+          </div>
+          <div
+            className="css-view-g5y9jx"
+            dir={null}
+            ref={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "backgroundColor": "rgba(255,255,255,1.00)",
+                "borderTopColor": "rgba(226,232,240,1.00)",
+                "borderTopWidth": "1px",
+                "justifyContent": "center",
+                "paddingBottom": "24px",
+                "paddingLeft": "24px",
+                "paddingRight": "24px",
+                "paddingTop": "24px",
+              }
+            }
+          >
+            Feather:check-circle:24:#4fdd36
+            <div
+              className="css-text-146c3p1"
+              dir="auto"
+              ref={[Function]}
+              style={
+                {
+                  "color": "rgba(100,116,139,1.00)",
+                  "fontSize": "14px",
+                  "textAlign": "center",
+                }
+              }
+            >
+              ¡Ya llegaste hasta el final de la lista, no hay más usuarios que mostrar!
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

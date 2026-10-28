@@ -4,7 +4,9 @@ import com.faceattend_edu.attendance_service.domain.exception.EntityNotFoundExce
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecordFilter;
 import com.faceattend_edu.attendance_service.domain.port.in.GetAttendanceRecordUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.ListAttendanceRecordsUseCase;
+import com.faceattend_edu.attendance_service.domain.port.in.GetJustificationUseCase;
 import com.faceattend_edu.attendance_service.domain.port.in.ListJustificationsUseCase;
+import com.faceattend_edu.attendance_service.domain.model.JustificationFilter;
 import com.faceattend_edu.attendance_service.domain.port.in.ListSupportingDocumentsUseCase;
 import com.faceattend_edu.attendance_service.infrastructure.web.dto.AttendanceRecordResponse;
 import com.faceattend_edu.attendance_service.infrastructure.web.dto.JustificationResponse;
@@ -27,6 +29,7 @@ public class AttendanceRelationsController {
     private final ListAttendanceRecordsUseCase listRecordsUseCase;
     private final GetAttendanceRecordUseCase getRecordUseCase;
     private final ListJustificationsUseCase listJustificationsUseCase;
+    private final GetJustificationUseCase getJustificationUseCase;
     private final ListSupportingDocumentsUseCase listDocumentsUseCase;
     private final AttendanceRecordWebMapper recordMapper;
     private final JustificationWebMapper justificationMapper;
@@ -48,8 +51,8 @@ public class AttendanceRelationsController {
     @GetMapping("/api/v1/attendance/{id}/justification")
     public ResponseEntity<JustificationResponse> byAttendance(@PathVariable Long id) {
         requireRecord(id);
-        return ResponseEntity.ok(listJustificationsUseCase.list().stream()
-                .filter(j -> id.equals(j.getAttendanceRecordId()))
+        return ResponseEntity.ok(listJustificationsUseCase.search(new JustificationFilter(null, id, null), 0, 1)
+                .items().stream()
                 .findFirst()
                 .map(justificationMapper::toResponse)
                 .orElse(null));
@@ -58,9 +61,7 @@ public class AttendanceRelationsController {
     @GetMapping("/api/v1/justifications/{id}/documents")
     public ResponseEntity<List<SupportingDocumentResponse>> documentsByJustification(@PathVariable Long id) {
         if (ActorScope.restricted()) {
-            requireRecord(listJustificationsUseCase.list().stream()
-                    .filter(j -> id.equals(j.getJustificationId()))
-                    .findFirst().map(j -> j.getAttendanceRecordId()).orElse(null));
+            requireRecord(getJustificationUseCase.getById(id).getAttendanceRecordId());
         }
         return ResponseEntity.ok(listDocumentsUseCase.listByJustificationId(id).stream()
                 .map(documentMapper::toResponse).collect(Collectors.toList()));

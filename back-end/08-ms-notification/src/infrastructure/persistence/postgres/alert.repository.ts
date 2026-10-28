@@ -48,6 +48,14 @@ export class PostgresAlertRepository
       params.push(filter.actorId);
       conditions.push(`academic_actor_id = $${params.length}`);
     }
+    if (filter.actorIds !== undefined) {
+      if (filter.actorIds.length === 0) {
+        conditions.push('FALSE');
+      } else {
+        params.push(filter.actorIds);
+        conditions.push(`academic_actor_id = ANY($${params.length}::bigint[])`);
+      }
+    }
     if (filter.typeId !== undefined) {
       params.push(filter.typeId);
       conditions.push(`alert_type_id = $${params.length}`);

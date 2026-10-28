@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.1.1</version>
+		<version>4.1.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.faceattend-edu</groupId>
@@ -31,6 +31,24 @@
 		<jacoco.line.minimum>0.79</jacoco.line.minimum>
 		<java.version>21</java.version>
 	</properties>
+	<!-- Versions with known advisories fixed, pinned over what transitive deps ask for:
+	     lz4-java comes with the Kafka test jar (GHSA-mcr4-qmvw-px4g and others). -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>at.yawk.lz4</groupId>
+				<artifactId>lz4-java</artifactId>
+				<version>1.11.4</version>
+			</dependency>
+			<!-- MinIO 8.6 still asks for bcprov 1.81 (GHSA-9pwp-9qqc-pr26, GHSA-qp49-qgx5-5m26). -->
+			<dependency>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcprov-jdk18on</artifactId>
+				<version>1.86</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<!-- Shared session check (back-end/shared/auth-java): mvn -f ../shared/auth-java install -->
 		<dependency>
@@ -56,10 +74,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-liquibase</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 		<dependency>
@@ -76,6 +90,18 @@
 			<version>3.1.0</version>
 		</dependency>
 
+		<!-- Signed authorization of a minor's guardian in MinIO (ADR-009), as in ms-attendance. -->
+		<dependency>
+			<groupId>io.minio</groupId>
+			<artifactId>minio</artifactId>
+			<version>8.6.0</version>
+		</dependency>
+		<!-- OkHttp 5 (used by the MinIO SDK) ships its JVM classes in okhttp-jvm; Maven does not pick it up on its own. -->
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp-jvm</artifactId>
+			<version>5.1.0</version>
+		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
@@ -103,11 +129,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-liquibase-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
@@ -122,7 +143,7 @@
 			<scope>test</scope>
 		</dependency>
 		<!-- Base de datos embebida para tests @DataJpaTest.
-		     La versión (2.4.240) la fija el BOM de spring-boot-starter-parent 4.1.1. -->
+		     La versión (2.4.240) la fija el BOM de spring-boot-starter-parent 4.1.2. -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>

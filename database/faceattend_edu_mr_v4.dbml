@@ -68,6 +68,65 @@ Table app_user {
   }
 }
 
+Table guardian {
+  guardian_id uuid [pk, not null]
+  minor_person_id uuid [not null, note: 'person menor de edad (FK identity.person)']
+  full_name varchar [not null, note: 'cifrado AES-256-GCM']
+  document_type varchar [not null, note: 'CC / CE / PP']
+  document_number varchar [not null, note: 'cifrado AES-256-GCM']
+  email varchar [null, note: 'cifrado; correo o teléfono obligatorio']
+  phone varchar [null, note: 'cifrado']
+  relationship varchar [not null]
+  school_id bigint [null, note: 'sede donde se registró (academic.school, sin FK)']
+  consent_document_uri varchar [null, note: 'autorización firmada del acudiente en MinIO (<bucket>/<clave>); obligatoria para habilitar al menor']
+  consent_document_name varchar [null, note: 'nombre de presentación del archivo (sin ruta)']
+  consent_document_mime varchar [null, note: 'application/pdf, image/jpeg o image/png (detectado por firma, no por extensión)']
+  consent_document_size bigint [null, note: 'bytes (máx. 5 MB)']
+  consent_document_uploaded_at datetime [null]
+
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    minor_person_id [unique, name: 'uq_guardian_minor_active', where: 'deleted_at IS NULL']
+  }
+}
+
+Table terms_acceptance {
+  acceptance_id uuid [pk, not null]
+  person_id uuid [not null]
+  terms_version varchar [not null]
+  user_type varchar [not null, note: 'ADULT / MINOR']
+  accepted_by varchar [not null, note: 'SELF / GUARDIAN']
+  guardian_id uuid [null, note: 'obligatorio si accepted_by = GUARDIAN']
+  channel varchar [not null, note: 'self / assisted']
+  recorded_by uuid [null, note: 'usuario que registró la aceptación']
+  school_id bigint [null]
+  accepted_at datetime [not null]
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    (person_id, accepted_at) [name: 'idx_terms_person_accepted']
+  }
+}
+
+Ref: guardian.minor_person_id > person.person_id
+Ref: terms_acceptance.person_id > person.person_id
+Ref: terms_acceptance.guardian_id > guardian.guardian_id
+
 Table user_session {
   session_id uuid [pk, not null]
   user_id uuid [not null]
@@ -108,9 +167,35 @@ Table password_policy {
   row_version bigint [not null, default: 1]
 }
 
+Table data_processing_consent {
+  consent_id uuid [pk, not null]
+  person_id uuid [not null, note: 'Titular que autoriza; FK intra-contexto (ON DELETE CASCADE)']
+  policy_version varchar(20) [not null, note: 'Versión de la política de privacidad aceptada']
+  accepted_at datetime [not null, note: 'Ley 1581 de 2012, arts. 9 y 17-b']
+  biometric_accepted boolean [not null, default: false, note: 'Autorización opcional del tratamiento de datos biométricos (art. 6-a)']
+  biometric_revoked_at datetime [null, note: 'Revocatoria de la parte biométrica']
+  channel varchar(10) [not null, note: 'CHECK ck_consent_channel: self (el titular) / assisted (personal con el titular presente)']
+  recorded_by uuid [null, note: 'Cross-context: identity.app_user.user_id de quien registra (NO FK)']
+
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  deleted_at datetime [null]
+  created_by uuid [null]
+  updated_by uuid [null]
+  deleted_by uuid [null]
+  row_version bigint [not null, default: 1]
+
+  indexes {
+    (person_id, accepted_at) [name: 'idx_consent_person_accepted', note: 'accepted_at se crea DESC']
+  }
+
+  Note: 'Una fila por aceptación. La PK se llama data_processing_consent_pkey (default de PostgreSQL) en lugar de pk_data_processing_consent.'
+}
+
 // Relaciones internas (Identity)
 Ref: app_user.person_id - person.person_id
 Ref: user_session.user_id > app_user.user_id
+Ref: data_processing_consent.person_id > person.person_id [delete: cascade]
 
 
 ////////////////////////////////////////////////////////////
@@ -650,6 +735,24 @@ Table notification_log {
   }
 }
 
+Table device_token {
+  device_token_id bigint [pk, increment]
+  academic_actor_id bigint [not null, note: 'academic.academic_actor.academic_actor_id (cross-context, NO FK)']
+  token varchar(255) [not null, note: 'ExponentPushToken[...]; registrarlo de nuevo lo reactiva para el actor actual']
+  platform varchar(10) [not null, note: 'CHECK ck_device_token_platform: ios / android']
+  locale varchar(5) [not null, default: 'es', note: 'CHECK ck_device_token_locale: es / en / pt / fr']
+  created_at datetime [not null, default: `now()`]
+  updated_at datetime [not null, default: `now()`]
+  revoked_at datetime [null, note: 'Los tokens revocados se conservan y nunca reciben push']
+
+  indexes {
+    token [unique, name: 'uq_device_token_token']
+    academic_actor_id [name: 'idx_device_token_actor_active', note: 'Índice parcial: WHERE revoked_at IS NULL']
+  }
+
+  Note: 'Excepción al bloque de auditoría: solo created_at/updated_at (sin deleted_*, created_by/updated_by ni row_version) y sin trigger fn_audit_timestamps; el servicio escribe las marcas. Se revoca con revoked_at en vez de deleted_at.'
+}
+
 // Relaciones internas (Notification)
 Ref: alert.alert_type_id > alert_type.alert_type_id
 
@@ -916,6 +1019,7 @@ TableGroup Identity [color: #3498DB] {
   app_user
   user_session
   password_policy
+  data_processing_consent
 }
 
 TableGroup Authorization [color: #2980B9] {
@@ -953,6 +1057,8 @@ TableGroup Attendance [color: #e67e22] {
 TableGroup Notification [color: #f1c40f] {
   alert_type
   alert
+  notification_log
+  device_token
 }
 
 TableGroup Configuration [color: #34495e] {

@@ -1,13 +1,19 @@
-import React, {useMemo} from 'react';
-import {Modal, ScrollView, Text, TouchableOpacity, View,} from 'react-native';
-import {useTranslation} from 'react-i18next';
-import {useTheme} from './ThemeContext';
-import {createCommonStyles} from "./style/Style";
+import React from 'react';
+import {
+    Modal,
+    View,
+    Text,
+    ScrollView,
+    TouchableOpacity,
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from './ThemeContext';
+import styleAuth from "./style/Style";
 
-export default function TerminosModal({ isVisible, onClose }) {
+// Con onAccept es la firma del adulto (primer ingreso o versión nueva); sin él, solo lectura.
+export default function TerminosModal({ isVisible, onClose, onAccept, busy = false, error = null }) {
     const { t } = useTranslation();
     const { colors } = useTheme();
-    const styleAuth = useMemo(() => createCommonStyles(colors), [colors]);
 
     return (
         <Modal
@@ -20,9 +26,9 @@ export default function TerminosModal({ isVisible, onClose }) {
                 <View style={[styleAuth.modalContainerTerminos, { backgroundColor: colors.modalBackground }]}>
                     <Text style={[styleAuth.titleTerminos, { color: colors.modalText }]}>{t('termsModal.title')}</Text>
 
-                    <ScrollView persistentScrollbar
+                    <ScrollView
                         style={styleAuth.contentTerminos}
-                        showsVerticalScrollIndicator
+                        showsVerticalScrollIndicator={false}
                     >
                         <Text style={[styleAuth.paragraphTerminos, { color: colors.modalTextSecondary }]}>
                             <Text style={[styleAuth.subtitleTerminos, { color: colors.modalText }]}>{t('termsModal.acceptanceTitle')} {"\n\n"}</Text>
@@ -96,8 +102,29 @@ export default function TerminosModal({ isVisible, onClose }) {
                         </Text>
                     </ScrollView>
 
-                    <TouchableOpacity style={[styleAuth.buttonTerminos, { backgroundColor: colors.modalButton }]} onPress={onClose}>
-                        <Text style={[styleAuth.buttonTextTerminos, { color: colors.modalButtonText }]}>{t('common.close')}</Text>
+                    {error ? (
+                        <Text style={[styleAuth.paragraphTerminos, { color: colors.modalText }]}>{error}</Text>
+                    ) : null}
+                    {onAccept ? (
+                        <TouchableOpacity
+                            style={[styleAuth.buttonTerminos, { backgroundColor: colors.modalButton, opacity: busy ? 0.6 : 1 }]}
+                            onPress={onAccept}
+                            disabled={busy}
+                            accessibilityRole="button"
+                        >
+                            <Text style={[styleAuth.buttonTextTerminos, { color: colors.modalButtonText }]}>
+                                {busy ? t('termsGate.signing') : t('termsGate.sign')}
+                            </Text>
+                        </TouchableOpacity>
+                    ) : null}
+                    <TouchableOpacity
+                        style={[styleAuth.buttonTerminos, { backgroundColor: colors.modalButton }]}
+                        onPress={onClose}
+                        disabled={busy}
+                    >
+                        <Text style={[styleAuth.buttonTextTerminos, { color: colors.modalButtonText }]}>
+                            {onAccept ? t('termsGate.leave') : t('common.close')}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </View>

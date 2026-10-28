@@ -50,13 +50,18 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     private static final Pattern PERSON_ITEM = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})$");
     private static final Pattern USER_ITEM = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})$");
     /** Persona y sus sub-recursos de escritura: PUT /persons/{id}, PATCH /persons/{id}/status. */
-    private static final Pattern PERSON_SCOPED = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})(?:/status|/consent(?:/biometric)?)?$");
+    private static final Pattern PERSON_SCOPED = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})(?:/status|/consent(?:/biometric)?|/terms|/guardian(?:/document)?)?$");
     /** Data-processing authorization (Ley 1581): the holder or an administrator; the use case decides. */
     private static final Pattern PERSON_CONSENT = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})/consent(?:/biometric)?$");
+    /** Terms and Conditions: every role acts on its own; the use case lets only the school administrator record a minor's. */
+    private static final Pattern PERSON_TERMS = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})/terms$");
+    /** Guardian of a minor: third-party data tied to a child, so even reading it needs person administration. */
+    private static final Pattern PERSON_GUARDIAN = Pattern.compile("^/api/v1/persons/([0-9a-fA-F-]{36})/guardian(?:/document)?$");
     /** Cuenta y sub-recursos de escritura: PUT /users/{id}, PATCH .../status, POST .../activate. */
     private static final Pattern USER_SCOPED = Pattern.compile("^/api/v1/users/([0-9a-fA-F-]{36})(?:/status|/activate)?$");
     private static final Pattern USER_SESSIONS = Pattern.compile("^/api/v1/sessions/user/([0-9a-fA-F-]{36})$");
     private static final String WRITE = "identity.person:write";
+    static final String SUPER_ADMIN_ROLE = "Super Administrador";
 
     private final SessionAuthClient sessionAuth;
     // Perezoso: los tests @WebMvcTest cargan el filtro sin la capa de persistencia.
@@ -77,7 +82,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
-        String path = request.getRequestURI();
+        String path = SessionAuthClient.requestPath(request);
         if (!path.startsWith("/api/") || isPublic(request.getMethod(), path)) {
             chain.doFilter(request, response);
             return;
@@ -91,6 +96,13 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         final String caller = result.caller().userId();
         final List<String> roles = result.caller().roles();
         final String rawToken = result.caller().token();
+
+        // A session id is a bearer: listing, minting or revoking other people's sessions
+        // would let a school administrator act as anyone, so only the platform role may.
+        if (sessionAdminOnly(request.getMethod(), path, caller) && !roles.contains(SUPER_ADMIN_ROLE)) {
+            deny(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden: requires " + SUPER_ADMIN_ROLE, path);
+            return;
+        }
 
         String required = requiredPermission(request.getMethod(), path, caller);
         // Cada rol edita sus propios datos personales (perfil) sin identity.person:write.
@@ -158,6 +170,19 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 && path.indexOf("/", "/api/v1/sessions/".length()) < 0;
     }
 
+    /**
+     * Session endpoints that expose or create someone else's bearer: the full listing,
+     * another user's listing, and every write (POST mints, DELETE revokes by id).
+     * GET /sessions/{id} stays public (see isPublic) and the own listing stays open.
+     */
+    static boolean sessionAdminOnly(String method, String path, String caller) {
+        if (!path.equals("/api/v1/sessions") && !path.startsWith("/api/v1/sessions/")) return false;
+        if (!method.equalsIgnoreCase("GET")) return true;
+        if (path.equals("/api/v1/sessions")) return true;
+        Matcher own = USER_SESSIONS.matcher(path);
+        return own.matches() && !own.group(1).equalsIgnoreCase(caller);
+    }
+
     static String requiredPermission(String method, String path, String caller) {
         // Cambio de la propia contraseña: basta la sesión (la valida el caso de uso).
         if (method.equalsIgnoreCase("POST") && path.equals("/api/v1/auth/change-password")) return null;
@@ -166,7 +191,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         // Segundo factor propio: basta la sesión; los casos de uso piden la contraseña o el código.
         if (method.equalsIgnoreCase("POST") && path.startsWith("/api/v1/auth/two-factor/")) return null;
         // Consent: every role may act on its own; ManageConsentUseCase limits others to administrators.
-        if (PERSON_CONSENT.matcher(path).matches()) return "identity.person:read";
+        if (PERSON_CONSENT.matcher(path).matches() || PERSON_TERMS.matcher(path).matches()) return "identity.person:read";
+        if (PERSON_GUARDIAN.matcher(path).matches()) return WRITE;
         if (!method.equalsIgnoreCase("GET")) return WRITE;
         // Listados completos de cuentas y sesiones: solo administración.
         if (path.equals("/api/v1/users") || path.equals("/api/v1/sessions")) return WRITE;

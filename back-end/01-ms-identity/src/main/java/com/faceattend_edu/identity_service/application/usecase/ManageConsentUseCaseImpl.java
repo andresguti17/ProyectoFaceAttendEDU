@@ -29,8 +29,8 @@ public class ManageConsentUseCaseImpl implements ManageConsentUseCase {
     private final ConsentPort consentPort;
     private final LoadUserPort loadUserPort;
 
-    @Value("${faceattend.privacy.policy-version:2026-10}")
-    private String policyVersion = "2026-10";
+    @Value("${faceattend.privacy.policy-version:2026-11}")
+    private String policyVersion = "2026-11";
 
     @Override
     public String currentPolicyVersion() {

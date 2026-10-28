@@ -20,7 +20,7 @@ Gestionar la identidad de personas, credenciales de acceso, sesiones de usuario 
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
 | Lenguaje | **Java 21** | LTS, records, sealed classes, pattern matching |
-| Framework | **Spring Boot 4.1.1** | Madurez, ecosistema, compatibilidad con el proyecto |
+| Framework | **Spring Boot 4.1.2** | Madurez, ecosistema, compatibilidad con el proyecto |
 | Arquitectura | **Hexagonal** | Separacion de concerns, testabilidad |
 
 ### 3.2 Dependencias Principales
@@ -161,8 +161,13 @@ verificado.
 
 | Metodo | Endpoint | Descripcion |
 |--------|----------|-------------|
-| GET | `/api/v1/sessions` | Listar sesiones del usuario |
-| DELETE | `/api/v1/sessions/{id}` | Revocar sesion |
+| GET | `/api/v1/sessions` | Listar todas las sesiones (solo Super Administrador) |
+| GET | `/api/v1/sessions/user/{userId}` | Sesiones de un usuario (el propio, o Super Administrador) |
+| POST | `/api/v1/sessions` | Crear sesion para un usuario (solo Super Administrador) |
+| DELETE | `/api/v1/sessions/{id}` | Revocar sesion (solo Super Administrador; el cierre propio es `POST /auth/logout`) |
+
+El `sessionId` es el bearer: listar, crear o revocar sesiones ajenas equivale a actuar
+como ese usuario, por eso esas operaciones no bastan con `identity.person:write`.
 
 ### 4.5.1 Credenciales por correo y cambio obligatorio
 
@@ -340,7 +345,7 @@ alimenta `FACEATTEND_ONBOARDING_SERVICE_USER_ID`.
 
 ## 9. Stack Actual
 
-Identity esta implementado en **Java 21 + Spring Boot 4.1.1** con arquitectura hexagonal.
+Identity esta implementado en **Java 21 + Spring Boot 4.1.2** con arquitectura hexagonal.
 
 ### Justificacion
 

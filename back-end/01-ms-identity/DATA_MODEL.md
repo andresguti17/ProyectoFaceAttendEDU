@@ -2,7 +2,7 @@
 
 > **Servicio:** `01-ms-identity` · **Schema:** `identity` · **Puerto ADR-005:** `8081`
 > **Fuente canónica:** `../database/01-ms-identity-db/01-ddl/03-tables/` + `../../fae-docs/06-data/domains/01-identity.md`
-> **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **Stack:** `Java 21 + Spring Boot 4.1.1` → `../../fae-docs/_stacks/java-spring.md`
+> **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **Stack:** `Java 21 + Spring Boot 4.1.2` → `../../fae-docs/_stacks/java-spring.md`
 
 ## Responsabilidad
 
@@ -17,6 +17,12 @@ Ver detalle canónico en:
 - **Guía global:** `../database/ESTRUCTURA.md`, `../database/MODELO.md`, `../DATABASE.md`
 
 > Este archivo es índice de acople. El contenido normativo vive en `../../fae-docs/06-data/domains/01-identity.md` y en el DDL de `../database/01-ms-identity-db`. No duplicar aquí el DDL completo para evitar drift.
+
+### Menores de edad y términos (014)
+
+- `identity.guardian`: acudiente de un menor (uno activo por menor). Nombre, documento, correo y teléfono cifrados (`enc:v1:`).
+- `identity.terms_acceptance`: una fila por aceptación de los términos (versión, tipo de usuario `ADULT`/`MINOR`, quién aceptó, quién la registró, sede).
+- Detalle de flujos, endpoints y supuestos: `../../docs/MENORES_ACUDIENTES_Y_TERMINOS.md`.
 
 ### Checklist de verificación
 

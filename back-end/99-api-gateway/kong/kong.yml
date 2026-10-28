@@ -1,8 +1,34 @@
 _format_version: "3.0"
 _transform: true
 
-# Kong DB-less ï¿½ FaceAttend EDU ï¿½ ADR-007 + ADR-005
+# Kong DB-less - FaceAttend EDU - ADR-007 + ADR-005
 services:
+  # Credential endpoints (login, its second factor and password recovery): no
+  # session yet, so they get a tighter per-IP limit than the rest of identity.
+  # Kept above the school-NAT case (a class signing in from one public IP);
+  # identity adds its own per-account and per-IP lockout on top.
+  - name: identity-credentials-service
+    url: http://ms-identity:8081
+    routes:
+      - name: identity-credentials-route
+        paths: [/api/v1/auth/login, /api/v1/auth/forgot-password, /api/v1/auth/verify-code, /api/v1/auth/reset-password]
+        strip_path: false
+    plugins:
+      - name: cors
+        config:
+          origins: ["__CORS_ORIGINS__"]
+          methods: [POST, OPTIONS]
+          headers: [Authorization, Content-Type]
+          credentials: true
+      - name: rate-limiting
+        config:
+          minute: 60
+          hour: 600
+          fault_tolerant: true
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 0
+          policy: redis
   - name: identity-service
     url: http://ms-identity:8081
     routes:
@@ -13,6 +39,15 @@ services:
       - name: identity-nested-route
         paths: ["~/api/v1/users/.+/activate"]
         strip_path: false
+      # Signed guardian authorization: 5 MB file plus the multipart envelope (ms-identity enforces 5 MB).
+      - name: identity-guardian-document-route
+        paths: ["~/api/v1/persons/[^/]+/guardian/document$"]
+        strip_path: false
+        plugins:
+          - name: request-size-limiting
+            config:
+              allowed_payload_size: 6
+              size_unit: megabytes
     plugins:
       - name: cors
         config:
@@ -22,7 +57,7 @@ services:
           credentials: true
       - name: rate-limiting
         config:
-          minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+          minute: __RATE_LIMIT_GENERAL__ # general, por IP (KONG_RATE_LIMIT_PER_MINUTE)
           fault_tolerant: true
           redis_host: redis
           redis_port: 6379
@@ -64,7 +99,7 @@ services:
       # JWT retirado: AuthTokenFilter valida sesión + evaluate en el MS.
       - name: rate-limiting
         config:
-          minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+          minute: __RATE_LIMIT_GENERAL__ # general, por IP (KONG_RATE_LIMIT_PER_MINUTE)
           fault_tolerant: true
           redis_host: redis
           redis_port: 6379
@@ -101,12 +136,17 @@ services:
       # JWT retirado: AuthTokenFilter valida sesión + evaluate en el MS.
       - name: rate-limiting
         config:
-          minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+          minute: __RATE_LIMIT_GENERAL__ # general, por IP (KONG_RATE_LIMIT_PER_MINUTE)
           fault_tolerant: true
           redis_host: redis
           redis_port: 6379
           redis_database: 0
           policy: redis
+      # Supporting documents: 5 MB file plus the multipart envelope (ms-attendance enforces 5 MB).
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 6
+          size_unit: megabytes
   # Incluye registro/reconocimiento facial y de huella (rostro -> encoding vía
   # dlib, huella -> keypoints OpenCV), fusionado desde el antiguo face-auth-api;
   # read_timeout elevado por el costo de ese cómputo en /enroll-image,
@@ -118,7 +158,14 @@ services:
       - name: biometric-route
         paths: [/api/v1/biometric]
         strip_path: false
-    # Sin plugins propios: el enforcement lo hace el MS (require_permission).
+    # El enforcement lo hace el MS (require_permission). Base64 frames of up to
+    # BIOMETRIC_MAX_IMAGE_BYTES (3 MB decoded, ~4 MB encoded) and the liveness
+    # step's few frames fit in 12 MB; nothing bigger reaches the decoder.
+    plugins:
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 12
+          size_unit: megabytes
   - name: configuration-service
     url: http://ms-configuration:8087
     routes:
@@ -149,7 +196,7 @@ services:
       # JWT retirado: el enforcement vive en cada MS.
       - name: rate-limiting
         config:
-          minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+          minute: __RATE_LIMIT_GENERAL__ # general, por IP (KONG_RATE_LIMIT_PER_MINUTE)
           fault_tolerant: true
           redis_host: redis
           redis_port: 6379
@@ -169,7 +216,10 @@ plugins:
   # against identity (GET /sessions/{id}) instead of a JWT signature. Mirrors the
   # public paths of each MS AuthTokenFilter; permissions are still evaluated there.
   # Needs KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES=resty.http on the gateway.
-  - name: pre-function
+  # post-function (not pre-function): it runs after rate-limiting and
+  # request-size-limiting, so a flood of made-up tokens is counted and cut at
+  # the limit instead of reaching identity once per request.
+  - name: post-function
     config:
       access:
         - |
@@ -195,8 +245,12 @@ plugins:
             -- su ventana de 10 s).
             if path == "/api/v1/auth/logout" then
               pcall(function()
-                local args = kong.request.get_query()
-                local sid = args and args.sessionId
+                local auth = kong.request.get_header("authorization")
+                local sid = auth and auth:match("^[Bb]earer%s+(%S+)$")
+                if not sid then
+                  local args = kong.request.get_query()
+                  sid = args and args.sessionId
+                end
                 if type(sid) == "string" and #sid > 0 then
                   kong.cache:invalidate("faceattend:session:" .. sid)
                 end
@@ -208,13 +262,13 @@ plugins:
           local header = kong.request.get_header("authorization")
           local token = header and header:match("^[Bb]earer%s+(%S+)$")
           -- El navegador no puede poner cabeceras en el handshake de un
-          -- WebSocket: el kiosco manda la sesión como ?token=. Solo el canal
-          -- biométrico lo admite (el MS lo valida igual); el resto de rutas
-          -- sigue exigiendo la cabecera para no dejar tokens en URLs ni logs.
+          -- WebSocket: el kiosco manda la sesión como subprotocolo
+          -- ("faceattend.bearer, <token>"), nunca en la URL, que quedaría en
+          -- los logs de acceso. Solo el canal biométrico lo admite (el MS lo
+          -- valida igual); el resto de rutas exige la cabecera Authorization.
           if not token and method == "GET" and path == "/api/v1/biometric/ws" then
-            local ws_args = kong.request.get_query()
-            local ws_token = ws_args and ws_args.token
-            if type(ws_token) == "string" then token = ws_token end
+            local protocols = kong.request.get_header("sec-websocket-protocol")
+            token = protocols and protocols:match("^%s*faceattend%.bearer%s*,%s*([%x%-]+)%s*$")
           end
           if not token or not token:match("^%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$") then
             return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Missing or invalid bearer token", path = path })
@@ -233,49 +287,36 @@ plugins:
             end
           end
 
-          -- "active" / "must_change"; nil cuando la sesión no está activa.
-          local function session_state(res)
-            if not res or res.status ~= 200 or not res.body or not res.body:find('"sessionStatus"%s*:%s*"Active"') then return nil end
-            if res.body:find('"mustChangePassword"%s*:%s*true') then return "must_change" end
-            return "active"
-          end
-
-          local function verify_live()
+          -- "active" / "must_change" (10 s) or "invalid" (5 s, so a flood of
+          -- made-up tokens does not reach identity once per request). An
+          -- unreachable or failing identity returns an error: never cached,
+          -- the next request asks again (fail-secure 503).
+          local function lookup()
             local httpc = require("resty.http").new()
             httpc:set_timeouts(2000, 2000, 3000)
-            local res = httpc:request_uri("http://ms-identity:8081/api/v1/sessions/" .. token, {
+            local res, err = httpc:request_uri("http://ms-identity:8081/api/v1/sessions/" .. token, {
               method = "GET",
               headers = { Authorization = "Bearer " .. token },
             })
-            if not res then
-              return kong.response.exit(503, { status = 503, error = "Service Unavailable", message = "Cannot verify session", path = path })
+            if not res then return nil, err or "identity unreachable" end
+            if res.status >= 500 then return nil, "identity answered " .. res.status end
+            if res.status ~= 200 or not res.body or not res.body:find('"sessionStatus"%s*:%s*"Active"') then
+              return "invalid", nil, 5
             end
-            local state = session_state(res)
-            if not state then
-              return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Invalid or expired session", path = path })
-            end
-            return enforce_password_change(state == "must_change")
+            if res.body:find('"mustChangePassword"%s*:%s*true') then return "must_change", nil, 10 end
+            return "active", nil, 10
           end
 
-          -- Caché positiva de sesión (TTL 10s): sin ella cada request
-          -- autenticado costaba una introspección a identity, y bajo fan-out
-          -- del frontend los timeouts se volvían 503 "Cannot verify session".
-          -- Solo se cachean sesiones ACTIVAS; cualquier fallo se revalida en
-          -- vivo (fail-secure). Ventana de revocación/logout: 10 segundos.
-          local cache_ok, cached = pcall(function()
-            return kong.cache:get("faceattend:session:" .. token, { ttl = 10 }, function()
-              local inner = require("resty.http").new()
-              inner:set_timeouts(2000, 2000, 3000)
-              return session_state(inner:request_uri("http://ms-identity:8081/api/v1/sessions/" .. token, {
-                method = "GET",
-                headers = { Authorization = "Bearer " .. token },
-              }))
-            end)
-          end)
-          if cache_ok and cached then
-            return enforce_password_change(cached == "must_change")
+          -- Revocation/logout window: 10 s (logout and change-password
+          -- invalidate the entry right away).
+          local state = kong.cache:get("faceattend:session:" .. token, { ttl = 10 }, lookup)
+          if not state then
+            return kong.response.exit(503, { status = 503, error = "Service Unavailable", message = "Cannot verify session", path = path })
           end
-          return verify_live()
+          if state == "invalid" then
+            return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Invalid or expired session", path = path })
+          end
+          return enforce_password_change(state == "must_change")
   - name: cors
     config:
       # Solo los orígenes de KONG_CORS_ORIGINS (el compose los inserta en
@@ -288,9 +329,14 @@ plugins:
       max_age: 3600
   - name: rate-limiting
     config:
-      minute: 6000 # dev: límite holgado para la carga de las pantallas (ver docs de gateway)
+      minute: __RATE_LIMIT_GENERAL__ # general, por IP (KONG_RATE_LIMIT_PER_MINUTE)
       fault_tolerant: true
       redis_host: redis
       redis_port: 6379
       redis_database: 0
       policy: redis
+  # Every other route carries JSON only; services with uploads raise it above.
+  - name: request-size-limiting
+    config:
+      allowed_payload_size: 2
+      size_unit: megabytes

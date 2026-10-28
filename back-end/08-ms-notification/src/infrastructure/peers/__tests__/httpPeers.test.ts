@@ -1,4 +1,4 @@
-import { HttpPeers, peerConfigFromEnv, PeerHttpError, type FetchFn, type PeerConfig } from '../httpPeers';
+import { alertsOffReason, HttpPeers, peerConfigFromEnv, PeerHttpError, type FetchFn, type PeerConfig } from '../httpPeers';
 
 const cfg: PeerConfig = {
   identityUrl: 'http://identity',
@@ -50,6 +50,24 @@ describe('peerConfigFromEnv', () => {
       ACADEMIC_URL: 'http://ms-academic:8083/',
     });
     expect(config).toMatchObject({ academicUrl: 'http://ms-academic:8083', username: 'svc' });
+  });
+});
+
+describe('alertsOffReason', () => {
+  const account = { NOTIFICATION_SERVICE_USERNAME: 'svc', NOTIFICATION_SERVICE_PASSWORD: 'pw' };
+
+  it('reports a missing service account as a misconfiguration', () => {
+    expect(alertsOffReason({})).toBe('no-service-account');
+    expect(alertsOffReason({ NOTIFICATION_SERVICE_USERNAME: 'svc' })).toBe('no-service-account');
+  });
+
+  it('reports an explicit switch-off as a decision, with or without the account', () => {
+    expect(alertsOffReason({ ATTENDANCE_ALERTS_ENABLED: 'false' })).toBe('switched-off');
+    expect(alertsOffReason({ ...account, ATTENDANCE_ALERTS_ENABLED: 'False' })).toBe('switched-off');
+  });
+
+  it('is null when the alerts are on', () => {
+    expect(alertsOffReason(account)).toBeNull();
   });
 });
 

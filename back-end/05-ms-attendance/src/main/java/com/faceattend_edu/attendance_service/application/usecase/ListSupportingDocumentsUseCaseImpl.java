@@ -11,6 +11,5 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ListSupportingDocumentsUseCaseImpl implements ListSupportingDocumentsUseCase {
     private final SupportingDocumentRepository repository;
-    @Override public List<SupportingDocument> list(){ return repository.findAll(); }
     @Override public List<SupportingDocument> listByJustificationId(Long justificationId){ return repository.findByJustificationId(justificationId); }
 }

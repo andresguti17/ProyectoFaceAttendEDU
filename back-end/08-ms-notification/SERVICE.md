@@ -21,21 +21,20 @@ Gestionar tipos de alerta y alertas generadas automaticamente por el sistema sob
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
 | Lenguaje | **TypeScript 5 / Node.js 20** | Mismo runtime que Academic y Configuration |
-| Framework | **Fastify 4** | Router de alto rendimiento con validacion por esquema |
-| ORM / SQL | **drizzle-orm 0.36 + pg 8** | Acceso tipado a PostgreSQL; migraciones con drizzle-kit |
+| Framework | **Fastify 5** | Router de alto rendimiento con validacion por esquema |
+| SQL | **pg 8** | SQL parametrizado; el esquema y sus migraciones viven en Liquibase (`database/`) |
 | Arquitectura | **Hexagonal** | Misma estructura que los demas servicios (`src/domain` + `src/infrastructure`) |
 
 ### 3.2 Dependencias Principales
 
 ```text
 // package.json (dependencies)
-fastify       ^4.26.0   // HTTP framework
-drizzle-orm   ^0.36.4   // ORM / query builder PostgreSQL
+fastify       ^5.12.7   // HTTP framework
 pg            ^8.11.0   // Driver PostgreSQL
 kafkajs       ^2.2.4    // Consumo de eventos Kafka
-nodemailer    ^6.9.0    // Relay SMTP (canal de correo)
-pino          ^8.16.0   // Structured logging
-zod           ^3.22.0   // Validacion de payloads
+nodemailer    ^10.2.1   // Relay SMTP (canal de correo)
+pino          ^9.14.0   // Structured logging
+zod           ^4.6.7    // Validacion de payloads
 ```
 
 ### 3.3 Librerias Adicionales
@@ -46,9 +45,7 @@ zod           ^3.22.0   // Validacion de payloads
 | **nodemailer** | Correo (SMTP) | Relay para `POST /api/v1/emails` |
 | **pino** | Structured logging | Logs JSON de alto rendimiento |
 | **zod** | Validacion | Validacion de request bodies y payloads |
-| **drizzle-kit** | Migraciones | Genera el DDL del schema `notification` (`drizzle/`) |
-| **Testcontainers** | Tests de integracion | PostgreSQL + Kafka efimeros en tests |
-| **supertest** | Tests HTTP | Pruebas de rutas Fastify |
+| **fastify.inject** | Tests HTTP | Pruebas de rutas sin abrir puertos |
 
 ### 3.4 Herramientas de Desarrollo
 
@@ -316,7 +313,7 @@ Notification esta implementado en **TypeScript 5 + Fastify 4** con arquitectura 
 
 - **Mismo runtime que Academic y Configuration (Node 20)**: un solo stack TypeScript para los servicios ligeros de datos.
 - **Fastify**: Router rapido con validacion por esquema.
-- **drizzle-orm + pg**: Acceso tipado al schema `notification` (2 tablas: `alert_type`, `alert`).
+- **pg**: SQL parametrizado sobre el schema `notification` (2 tablas: `alert_type`, `alert`).
 - **Canal de correo**: `nodemailer` para el relay SMTP y render propio de plantillas; `firebase-admin` para push y `twilio` para SMS (pendientes).
 - **kafkajs + pino**: Consumo de eventos de otros servicios con logs JSON estructurados.
 

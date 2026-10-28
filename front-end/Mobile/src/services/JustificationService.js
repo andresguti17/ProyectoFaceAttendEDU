@@ -107,16 +107,6 @@ export const JustificationService = {
 
   deleteType: async (id) => request({ method: DELETE, url: `${BASE()}${TYPES_ENDPOINT}/${id}` }),
 
-  createDocument: async ({ justificationId, fileName, storageUri, mimeType, sizeBytes }) => {
-    const data = await request({
-      method: POST,
-      url: `${BASE()}${DOCS_ENDPOINT}`,
-      data: { justificationId, fileName, storageUri, mimeType, sizeBytes: sizeBytes || 1 },
-      requiresAuth: false,
-    });
-    return toSnakeDeep(data);
-  },
-
   getDocuments: async (justificationId) => backendGet(BASE(), DOCS_ENDPOINT, { justificationId }),
 
   // Sube el archivo real (multipart); attendance lo guarda cifrado en MinIO (ADR-009).

@@ -2,7 +2,7 @@
  * Barrel export de componentes de filtros
  */
 
-export { UserFilters } from './UserFilters';
+export { SearchFilterBar } from './SearchFilterBar';
 export { ColumnFilterDropdown } from './ColumnFilterDropdown';
 export { ContextualFilterDropdown } from './ContextualFilterDropdown';
 export { AttendanceFilterInput, AttendanceFilterBadge } from './AttendanceFilterInput';

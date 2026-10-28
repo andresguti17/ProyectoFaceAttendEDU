@@ -71,7 +71,7 @@ test("admin: one server call with person, role and the ADMIN school actor", asyn
         sendCredentials: false,
         roleName: "Administrador",
         academicActor: { actorTypeId: 3, schoolId: 2, actorCode: "ADMIN001" },
-        consent: { policyVersion: "2026-10", biometricAccepted: false },
+        consent: { policyVersion: "2026-11", biometricAccepted: false },
     });
 });
 

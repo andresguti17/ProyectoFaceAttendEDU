@@ -8,25 +8,19 @@
 //  Secciones: security · appearance
 // ============================================================
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Card } from "../../components/common";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
 import { useEditableConfig } from "../../components/hooks/useEditableConfig";
 import {
     NotificationsSettings,
-    SecuritySettings,
-    AppearanceSettings,
 } from "./modals";
 import {
     AtRiskAlertToggle,
     PushNotificationToggle,
     PushNotificationLimit,
-    TwoFactorSetup,
-    OwnSecurityMeter,
-    SessionTimeInput,
-    AccentBlock,
 } from "./sections";
-import { FutureNotice } from "./sections/FutureNotice";
+import { useSettingsActions, RoleSecuritySettings, RoleAppearanceSettings } from "./sharedSections";
 import {
     getInstitutionConfig,
     updateInstitutionConfig,
@@ -70,13 +64,7 @@ export function StudentSettings({ section, onSave, onDiscard, onDiscardColors, o
     });
 
     // ── Registrar callbacks con el padre ──────────────────────
-    useEffect(() => {
-        if (onSave) onSave(save);
-    }, [onSave, save]);
-
-    useEffect(() => {
-        if (onDiscard) onDiscard(discard);
-    }, [onDiscard, discard]);
+    useSettingsActions({ onSave, save, onDiscard, discard });
 
     // ── Mapa de secciones por clave ───────────────────────────
     const sectionMap = {
@@ -108,34 +96,19 @@ export function StudentSettings({ section, onSave, onDiscard, onDiscardColors, o
             />
         ),
         security: (
-            <SecuritySettings
-                title={t("Seguridad")}
-                header={<OwnSecurityMeter sessionTime={config.sessionTime} />}
-                sections={[
-                    <TwoFactorSetup />,
-                    <SessionTimeInput
-                        value={config.sessionTime}
-                        onChange={(value) => updateConfig("sessionTime", value)}
-                        contextHint={(min) =>
-                            min > 120 ? t(" ⚠ Sesiones largas aumentan el riesgo si el dispositivo queda desbloqueado.")
-                            : min <= 15 ? t(" Sesión muy corta — deberás iniciar sesión con frecuencia.")
-                            : t(" Tiempo razonable para uso normal.")
-                        }
-                    />,
-                ]}
+            <RoleSecuritySettings
+                sessionTime={config.sessionTime}
+                onSessionTimeChange={(value) => updateConfig("sessionTime", value)}
+                shortSessionHint={t(" Sesión muy corta — deberás iniciar sesión con frecuencia.")}
+                normalSessionHint={t(" Tiempo razonable para uso normal.")}
             />
         ),
         appearance: (
-            <AppearanceSettings
-                title={t("Apariencia")}
-                sections={[
-                    <AccentBlock
-                        onHasChanges={onColorChanges}
-                        onDiscardRegister={onDiscardColors}
-                        onSaveSuccessRegister={onSaveSuccessColors}
-                        previewTheme={previewTheme}
-                    />,
-                ]}
+            <RoleAppearanceSettings
+                onColorChanges={onColorChanges}
+                onDiscardColors={onDiscardColors}
+                onSaveSuccessColors={onSaveSuccessColors}
+                previewTheme={previewTheme}
             />
         ),
     };

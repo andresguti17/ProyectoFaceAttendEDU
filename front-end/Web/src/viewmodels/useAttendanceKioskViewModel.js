@@ -498,6 +498,20 @@ export function useAttendanceKioskViewModel() {
         return null;
     }, [session]);
 
+    // Registro manual (Ley 1581 art. 6: la biometría es facultativa): quien no usa su rostro ni su huella
+    // asiste igual, y el docente lo marca desde la lista. Mismo registro que la captura biométrica
+    // (Presente, o Tarde pasada la tolerancia), con captureMethod MANUAL y sin puntaje.
+    const registerManually = useCallback(
+        async (academicActorId) => {
+            if (!sessionRef.current) return "No hay sesión activa";
+            const entry = [...actorByPersonRef.current.entries()].find(([, actorId]) => actorId === academicActorId);
+            if (!entry) return "No pertenece a esta clase";
+            await onIdentified(entry[0], { biometricType: "MANUAL", score: null });
+            return null;
+        },
+        [onIdentified]
+    );
+
     // Corregir estado del registro (Present/Absent/Late/Justified).
     const correctRecord = useCallback(
         async (academicActorId, attendanceStatus) => {
@@ -555,6 +569,7 @@ export function useAttendanceKioskViewModel() {
         cancelClass,
         correctRecord,
         removeRecord,
+        registerManually,
         recordIdByActor,
         session,
         statusMessage,

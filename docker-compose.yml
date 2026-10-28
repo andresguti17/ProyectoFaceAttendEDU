@@ -135,7 +135,7 @@ services:
         # Solo fijar EXPO_PUBLIC_API_URL en .env si el gateway vive en un
         # host distinto al que sirve este frontend.
         EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-}
-    image: faceattend/frontend-web:latest
+    image: faceattend/frontend-web:${FACEATTEND_IMAGE_TAG:-latest}
     container_name: faceattend-frontend-web
     mem_limit: 128m
     cpus: "0.5"
@@ -146,7 +146,10 @@ services:
       # 0.0.0.0: browsers (and phones on the LAN) must reach the SPA.
       - "0.0.0.0:${FRONTEND_PORT:-8090}:8080"
     networks:
-      - faceattend-edge
+      # Fixed address: Kong trusts X-Forwarded-For only from here and Caddy
+      # (KONG_TRUSTED_IPS in back-end/docker-compose.yml, which owns the network).
+      faceattend-edge:
+        ipv4_address: 10.203.10.10
     restart: unless-stopped
     healthcheck:
       # nginx binds IPv4 only; `localhost` also resolves to ::1 in the
@@ -156,9 +159,3 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-
-# Browser-facing tier. `faceattend-app` and `faceattend-data` are declared by
-# back-end/docker-compose.yml and database/docker-compose.yml (same project).
-networks:
-  faceattend-edge:
-    driver: bridge

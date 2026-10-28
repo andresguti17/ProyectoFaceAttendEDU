@@ -21,6 +21,8 @@ import { clearToken, getToken, saveToken, setUnauthorizedHandler } from "../api/
 import { roleNamesFrom, toUiRole } from "../core/utils/backendRoles";
 import { authApi } from "../services/api/authApi";
 import { consentApi } from "../services/api/consentApi";
+import { termsApi } from "../services/api/termsApi";
+import { resolveTermsGate, TERMS_GATE } from "../core/utils/termsGate";
 import { loginErrorMessage, loginCodeErrorMessage } from "../core/utils/authErrors";
 
 // ── Roles del backend → roles de la UI ────────────────────────
@@ -400,6 +402,18 @@ export function AuthProvider({ children }) {
             }
         }
 
+        // Términos y condiciones: el adulto los firma una vez (y de nuevo si cambia la versión);
+        // al menor lo habilita el administrador de la sede con su acudiente. Si identity no
+        // responde no se bloquea el ingreso, el servidor sigue exigiéndolos en lo biométrico.
+        let termsGate = { gate: TERMS_GATE.NONE, step: "NONE", minor: false };
+        if (personId) {
+            try {
+                termsGate = resolveTermsGate(await termsApi.get(personId));
+            } catch {
+                termsGate = { gate: TERMS_GATE.NONE, step: "NONE", minor: false };
+            }
+        }
+
         const sessionUser = {
             id: userId,
             personId,
@@ -416,6 +430,9 @@ export function AuthProvider({ children }) {
             // La cuenta aún usa la contraseña inicial: AuthMiddleware fuerza el cambio.
             mustChangePassword: session?.mustChangePassword === true,
             consentRequired,
+            termsGate: termsGate.gate,
+            termsStep: termsGate.step,
+            isMinor: termsGate.minor,
             // Código por correo al iniciar sesión (lo activa la propia persona en Seguridad).
             twoFactorEnabled: userDto?.twoFactorEnabled === true,
         };
@@ -496,7 +513,7 @@ export function AuthProvider({ children }) {
         setUser((prev) => {
             if (!prev) return prev;
             const next = { ...prev, mustChangePassword: false };
-            sessionSet(JSON.stringify(next));
+            void sessionSet(JSON.stringify(next));
             return next;
         });
         return null;
@@ -514,10 +531,45 @@ export function AuthProvider({ children }) {
         setUser((prev) => {
             if (!prev) return prev;
             const next = { ...prev, consentRequired: false };
-            sessionSet(JSON.stringify(next));
+            void sessionSet(JSON.stringify(next));
             return next;
         });
         return null;
+    }, [user]);
+
+    // Firma de los términos vigentes por la propia persona adulta. Devuelve null si salió
+    // bien o el mensaje de error.
+    const acceptTerms = useCallback(async () => {
+        if (!user?.personId) return "No se encontró la persona de la sesión";
+        try {
+            await termsApi.accept(user.personId);
+        } catch (err) {
+            return err?.message || "No se pudo registrar la aceptación";
+        }
+        setUser((prev) => {
+            if (!prev) return prev;
+            const next = { ...prev, termsGate: TERMS_GATE.NONE, termsStep: "NONE" };
+            void sessionSet(JSON.stringify(next));
+            return next;
+        });
+        return null;
+    }, [user]);
+
+    // Vuelve a consultar el estado del menor (el administrador pudo completar el registro).
+    const refreshTerms = useCallback(async () => {
+        if (!user?.personId) return null;
+        try {
+            const gate = resolveTermsGate(await termsApi.get(user.personId));
+            setUser((prev) => {
+                if (!prev) return prev;
+                const next = { ...prev, termsGate: gate.gate, termsStep: gate.step, isMinor: gate.minor };
+                void sessionSet(JSON.stringify(next));
+                return next;
+            });
+            return null;
+        } catch (err) {
+            return err?.message || "No se pudo consultar el estado del registro";
+        }
     }, [user]);
 
     // Actualiza campos del usuario en sesión (p. ej. el correo tras editar el
@@ -526,7 +578,7 @@ export function AuthProvider({ children }) {
         setUser((prev) => {
             if (!prev) return prev;
             const next = { ...prev, ...patch };
-            sessionSet(JSON.stringify(next));
+            void sessionSet(JSON.stringify(next));
             return next;
         });
     }, []);
@@ -598,10 +650,12 @@ export function AuthProvider({ children }) {
             register,
             changePassword,
             acceptPrivacy,
+            acceptTerms,
+            refreshTerms,
             updateSessionUser,
             sessionTimeout,
         }),
-        [user, isLoadingAuth, sessionExpiredByTimeout, isLoadingTimeoutFlag, intendedRoute, saveIntendedRoute, clearIntendedRoute, consumeIntendedRoute, login, verifyLoginCode, logout, register, changePassword, acceptPrivacy, updateSessionUser, sessionTimeout]
+        [user, isLoadingAuth, sessionExpiredByTimeout, isLoadingTimeoutFlag, intendedRoute, saveIntendedRoute, clearIntendedRoute, consumeIntendedRoute, login, verifyLoginCode, logout, register, changePassword, acceptPrivacy, acceptTerms, refreshTerms, updateSessionUser, sessionTimeout]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

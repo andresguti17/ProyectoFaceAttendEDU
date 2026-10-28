@@ -45,7 +45,7 @@ import { useResponsive }         from "./components/hooks/useResponsive";
 import { useDashboardViewModel } from "../viewmodels/useDashboardViewModel";
 import { useRolePermissions }    from "../viewmodels/useRolePermissions";
 import { useTranslation }        from "../core/utils/i18n/hooks/useTranslation";
-import { 
+import {
     DEFAULT_ACADEMIC_PERIOD,
     getCurrentPeriod,
     getAcademicPeriodConfig,
@@ -60,7 +60,7 @@ import { onInstitutionConfigChange } from "../core/config/institutionConfig";
 /**
  * Genera el subtítulo dinámico para la sección de tendencia semanal
  * según el período académico configurado (viene de Settings)
- * 
+ *
  * @param {string} periodType - Tipo de período académico
  * @param {Function} t - Función de traducción
  * @returns {string} Subtítulo formateado
@@ -68,11 +68,11 @@ import { onInstitutionConfigChange } from "../core/config/institutionConfig";
 function getWeeklyTrendSubtitle(periodType, t) {
     const currentPeriod = getCurrentPeriod(periodType);
     const config = getAcademicPeriodConfig(periodType);
-    
+
     if (!currentPeriod || !config) {
         return `${t("Selecciona para ver detalles")}`;
     }
-    
+
     // Formatear el label del período según el tipo
     let periodLabel;
     switch (periodType) {
@@ -80,8 +80,8 @@ function getWeeklyTrendSubtitle(periodType, t) {
             periodLabel = t("Año actual");
             break;
         case "semestral":
-            periodLabel = currentPeriod.periodNumber === 1 
-                ? t("Primer semestre") 
+            periodLabel = currentPeriod.periodNumber === 1
+                ? t("Primer semestre")
                 : t("Segundo semestre");
             break;
         case "quarterly":
@@ -93,16 +93,16 @@ function getWeeklyTrendSubtitle(periodType, t) {
         default:
             periodLabel = currentPeriod.label;
     }
-    
+
     // Agregar indicador si es configuración manual
     const manualIndicator = currentPeriod.isManual ? ` ${t("(Manual)")}` : "";
-    
+
     return `${periodLabel}${manualIndicator} (${t(config.labelKey)}) • ${t("Selecciona para ver detalles")}`;
 }
 
 /**
  * Componente reutilizable para headers de sección con "Ver todos" condicional
- * 
+ *
  * @param {string} title - Título de la sección
  * @param {string} subtitle - Subtítulo descriptivo
  * @param {number} totalItems - Total de items disponibles
@@ -113,7 +113,7 @@ function getWeeklyTrendSubtitle(periodType, t) {
  */
 function SectionHeader({ title, subtitle, totalItems, maxItems, onSeeAll, colors, t }) {
     const showSeeAll = totalItems > maxItems;
-    
+
     return (
         <View style={{
             flexDirection: "row",
@@ -160,6 +160,111 @@ function SectionHeader({ title, subtitle, totalItems, maxItems, onSeeAll, colors
 // Estado sin datos: antes los paneles hacían `return null` y la
 // pantalla de Inicio quedaba vacía en blanco mientras AppDataContext
 // cargaba (o si una carga fallaba). Ahora se informa al usuario.
+/** Período académico configurado; se actualiza cuando cambia en Configuración. */
+function useAcademicPeriod() {
+    const [academicPeriod, setAcademicPeriod] = useState(() => getConfiguredAcademicPeriodType());
+
+    useEffect(() => {
+        const cleanup = onInstitutionConfigChange((newConfig) => {
+            if (newConfig.academicPeriodType && newConfig.academicPeriodType !== academicPeriod) {
+                setAcademicPeriod(newConfig.academicPeriodType);
+            }
+        });
+        return cleanup;
+    }, [academicPeriod]);
+
+    return academicPeriod;
+}
+
+/** "Esta semana (Sem X)" si es la semana actual; si no, la semana elegida. */
+function getWeekLabel({ isCurrentWeek, currentWeekNumber, selectedWeek }, t) {
+    if (isCurrentWeek && currentWeekNumber) return `${t("Esta semana")} (Sem ${currentWeekNumber})`;
+    return selectedWeek ? selectedWeek.week : t("Esta semana");
+}
+
+/** Tarjetas de estadísticas; `detailed` añade ancho mínimo y subtítulo (panel admin). */
+function StatsGrid({ stats, isSmall, c, detailed = false }) {
+    return (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+            {stats.map((stat) => (
+                <View key={stat.label} style={{
+                    flexBasis: isSmall ? "47%" : "23%",
+                    flexGrow: 1,
+                    ...(detailed && { minWidth: 160 }),
+                }}>
+                    <StatCard
+                        label={stat.label}
+                        value={stat.value}
+                        icon={<Feather name={stat.icon} size={20} color={stat.color} />}
+                        trend={stat.change ? (stat.change > 0 ? "up" : "down") : undefined}
+                        trendValue={stat.change ? `${Math.abs(stat.change)}%` : undefined}
+                        color={stat.color}
+                    />
+                    {detailed && stat.subtitle && (
+                        <Text style={{
+                            fontSize: 12,
+                            color: c.text.secondary,
+                            marginTop: 4,
+                            marginLeft: 16,
+                        }}>
+                            {stat.subtitle}
+                        </Text>
+                    )}
+                </View>
+            ))}
+        </View>
+    );
+}
+
+function CardTitle({ title, subtitle, c }) {
+    return (
+        <>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: c.text.primary, marginBottom: 4 }}>
+                {title}
+            </Text>
+            <Text style={{ fontSize: 12, color: c.text.secondary, marginBottom: 16 }}>
+                {subtitle}
+            </Text>
+        </>
+    );
+}
+
+/** Barra de asistencia por curso. */
+function CourseAttendanceBars({ items, c }) {
+    return (
+        <View style={{ gap: 14 }}>
+            {items.map(item => (
+                <View key={item.course}>
+                    <View style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 8,
+                    }}>
+                        <Text style={{
+                            fontSize: 13,
+                            fontWeight: "500",
+                            color: c.text.primary,
+                            flex: 1,
+                        }} numberOfLines={1}>
+                            {item.courseName}
+                        </Text>
+                        <Text style={{
+                            fontSize: 13,
+                            fontWeight: "700",
+                            color: item.barColor,
+                            marginLeft: 8,
+                        }}>
+                            {item.rate}%
+                        </Text>
+                    </View>
+                    <ProgressBar value={item.rate} color={item.barColor} size="md" />
+                </View>
+            ))}
+        </View>
+    );
+}
+
 // ──────────────────────────────────────────────────────────────
 
 function PanelDataState({ isLoading, t }) {
@@ -180,19 +285,9 @@ function PanelDataState({ isLoading, t }) {
 // ──────────────────────────────────────────────────────────────
 
 function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
-    // Estado para el período académico (reactivo a cambios en Settings)
-    const [academicPeriod, setAcademicPeriod] = useState(() => getConfiguredAcademicPeriodType());
-    
-    // Escuchar cambios en la configuración institucional
-    useEffect(() => {
-        const cleanup = onInstitutionConfigChange((newConfig) => {
-            if (newConfig.academicPeriodType && newConfig.academicPeriodType !== academicPeriod) {
-                setAcademicPeriod(newConfig.academicPeriodType);
-            }
-        });
-        return cleanup;
-    }, [academicPeriod]);
-    
+    // Período académico reactivo a cambios en Settings
+    const academicPeriod = useAcademicPeriod();
+
     // Hook para orquestar selección de semanas - DEBE ejecutarse siempre
     const {
         selectedWeek,
@@ -203,51 +298,19 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
         currentWeekNumber,
         isCurrentWeek,
     } = useWeeklyAttendanceController(vm.attendanceByWeek, vm.attendanceByDay);
-    
+
     // Obtener subtítulo con el período académico reactivo
     const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
-    
+
     // Early return DESPUÉS de todos los hooks
     if (!vm.adminData) return <PanelDataState isLoading={vm.isLoading} t={t} />;
 
-    // Label dinámico: si es la semana actual mostrar "Esta semana (Sem X)", sino "Sem X"
-    const weekLabel = isCurrentWeek && currentWeekNumber
-        ? `${t("Esta semana")} (Sem ${currentWeekNumber})` 
-        : selectedWeek 
-            ? selectedWeek.week 
-            : t("Esta semana");
+    const weekLabel = getWeekLabel({ isCurrentWeek, currentWeekNumber, selectedWeek }, t);
 
     return (
         <>
             {/* Stats principales */}
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-                {vm.stats.map((stat) => (
-                    <View key={stat.label} style={{ 
-                        flexBasis: isSmall ? "47%" : "23%", 
-                        flexGrow: 1,
-                        minWidth: 160,
-                    }}>
-                        <StatCard
-                            label={stat.label}
-                            value={stat.value}
-                            icon={<Feather name={stat.icon} size={20} color={stat.color} />}
-                            trend={stat.change ? (stat.change > 0 ? "up" : "down") : undefined}
-                            trendValue={stat.change ? `${Math.abs(stat.change)}%` : undefined}
-                            color={stat.color}
-                        />
-                        {stat.subtitle && (
-                            <Text style={{
-                                fontSize: 12,
-                                color: c.text.secondary,
-                                marginTop: 4,
-                                marginLeft: 16,
-                            }}>
-                                {stat.subtitle}
-                            </Text>
-                        )}
-                    </View>
-                ))}
-            </View>
+            <StatsGrid stats={vm.stats} isSmall={isSmall} c={c} detailed />
 
             {/* Sección: Asistencia de Instructores */}
             <View>
@@ -260,7 +323,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                     colors={c}
                     t={t}
                 />
-                
+
                 <InstructorAttendanceList
                     instructors={vm.adminData.instructorAttendance}
                     maxItems={5}
@@ -289,7 +352,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                             {t("Cursos con mejor asistencia")}
                         </Text>
                     </View>
-                    
+
                     <TopPerformingGroups
                         fichas={vm.adminData.fichas}
                         mode="top"
@@ -317,7 +380,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                             {t("Cursos con menor asistencia")}
                         </Text>
                     </View>
-                    
+
                     <TopPerformingGroups
                         fichas={vm.adminData.fichas}
                         mode="bottom"
@@ -332,7 +395,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
             {/* Gráficas de tendencias - Orquestadas por el hook */}
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                 <Card style={{ flex: 1 }}>
-                    <WeeklyTrend 
+                    <WeeklyTrend
                         {...weeklyTrendProps}
                         title={t("Tendencia semanal")}
                         maxWeeks={5}
@@ -374,7 +437,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                                     fontWeight: "600",
                                     color: c.status.info,
                                 }}>
-                                    {currentWeekNumber 
+                                    {currentWeekNumber
                                         ? `${t("Ver semana actual")} (Sem ${currentWeekNumber})`
                                         : t("Ver semana actual")
                                     }
@@ -390,7 +453,7 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                     }}>
                         {weekLabel}
                     </Text>
-                    <DailyBarChart 
+                    <DailyBarChart
                         {...dailyBarChartProps}
                         height={100}
                         showLegend={true}
@@ -407,14 +470,14 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                         subtitle={t("Requieren intervención urgente")}
                         totalItems={vm.adminData.atRiskStudents?.length || 0}
                         maxItems={5}
-                        onSeeAll={() => navigation.navigate("Users", { 
+                        onSeeAll={() => navigation.navigate("Users", {
                             section: "students",
                             attendanceFilter: "lt" // lt = less than (menor que)
                         })}
                         colors={c}
                         t={t}
                     />
-                    
+
                     <AtRiskStudentsList
                         students={vm.adminData.atRiskStudents}
                         maxItems={5}
@@ -431,14 +494,14 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                         subtitle={t("Excelencia en asistencia")}
                         totalItems={vm.adminData.perfectAttendanceStudents?.length || 0}
                         maxItems={5}
-                        onSeeAll={() => navigation.navigate("Users", { 
+                        onSeeAll={() => navigation.navigate("Users", {
                             section: "students",
                             attendanceFilter: "gt" // gt = greater than (mayor que)
                         })}
                         colors={c}
                         t={t}
                     />
-                    
+
                     <PerfectAttendanceList
                         students={vm.adminData.perfectAttendanceStudents}
                         maxItems={5}
@@ -458,43 +521,17 @@ function AdminDashboard({ vm, permissions, isSmall, c, t, navigation }) {
 // ──────────────────────────────────────────────────────────────
 
 function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
-    // Estado para el período académico (reactivo a cambios en Settings)
-    const [academicPeriod, setAcademicPeriod] = useState(() => getConfiguredAcademicPeriodType());
-    
-    // Escuchar cambios en la configuración institucional
-    useEffect(() => {
-        const cleanup = onInstitutionConfigChange((newConfig) => {
-            if (newConfig.academicPeriodType && newConfig.academicPeriodType !== academicPeriod) {
-                setAcademicPeriod(newConfig.academicPeriodType);
-            }
-        });
-        return cleanup;
-    }, [academicPeriod]);
-    
-    if (!vm.teacherData) return <PanelDataState isLoading={vm.isLoading} t={t} />;    
+    // Período académico reactivo a cambios en Settings
+    const academicPeriod = useAcademicPeriod();
+
+    if (!vm.teacherData) return <PanelDataState isLoading={vm.isLoading} t={t} />;
     // Obtener subtítulo con el período académico reactivo
     const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
 
     return (
         <>
             {/* Stats del teacher */}
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-                {vm.stats.map((stat) => (
-                    <View key={stat.label} style={{ 
-                        flexBasis: isSmall ? "47%" : "23%", 
-                        flexGrow: 1 
-                    }}>
-                        <StatCard
-                            label={stat.label}
-                            value={stat.value}
-                            icon={<Feather name={stat.icon} size={20} color={stat.color} />}
-                            trend={stat.change ? (stat.change > 0 ? "up" : "down") : undefined}
-                            trendValue={stat.change ? `${Math.abs(stat.change)}%` : undefined}
-                            color={stat.color}
-                        />
-                    </View>
-                ))}
-            </View>
+            <StatsGrid stats={vm.stats} isSmall={isSmall} />
 
             {/* Mis cursos */}
             <View>
@@ -506,7 +543,7 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                 }}>
                     {t("Mis Cursos")}
                 </Text>
-                
+
                 <TopPerformingGroups
                     fichas={vm.teacherData.myFichas}
                     mode="top"
@@ -520,76 +557,15 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
             {/* Gráficas del teacher */}
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                 <Card style={{ flex: 1 }}>
-                    <Text style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: c.text.primary,
-                        marginBottom: 4,
-                    }}>
-                        {t("Asistencia por ficha")}
-                    </Text>
-                    <Text style={{
-                        fontSize: 12,
-                        color: c.text.secondary,
-                        marginBottom: 16,
-                    }}>
-                        {t("Mis cursos asignados")}
-                    </Text>
-                    <View style={{ gap: 14 }}>
-                        {vm.courseAttendance.map(item => (
-                            <View key={item.course}>
-                                <View style={{
-                                    flexDirection: "row",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    marginBottom: 8,
-                                }}>
-                                    <Text style={{
-                                        fontSize: 13,
-                                        fontWeight: "500",
-                                        color: c.text.primary,
-                                        flex: 1,
-                                    }} numberOfLines={1}>
-                                        {item.courseName}
-                                    </Text>
-                                    <Text style={{
-                                        fontSize: 13,
-                                        fontWeight: "700",
-                                        color: item.barColor,
-                                        marginLeft: 8,
-                                    }}>
-                                        {item.rate}%
-                                    </Text>
-                                </View>
-                                <ProgressBar
-                                    value={item.rate}
-                                    color={item.barColor}
-                                    size="md"
-                                />
-                            </View>
-                        ))}
-                    </View>
+                    <CardTitle title={t("Asistencia por ficha")} subtitle={t("Mis cursos asignados")} c={c} />
+                    <CourseAttendanceBars items={vm.courseAttendance} c={c} />
                 </Card>
-                
+
                 {/* Vista integrada de tendencia semanal */}
                 <Card style={{ flex: 1 }}>
-                    <Text style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: c.text.primary,
-                        marginBottom: 4,
-                    }}>
-                        {t("Tendencia de mis cursos")}
-                    </Text>
-                    <Text style={{
-                        fontSize: 12,
-                        color: c.text.secondary,
-                        marginBottom: 16,
-                    }}>
-                        {weeklySubtitle}
-                    </Text>
-                    <WeeklyTrend 
-                        data={vm.attendanceByWeek} 
+                    <CardTitle title={t("Tendencia de mis cursos")} subtitle={weeklySubtitle} c={c} />
+                    <WeeklyTrend
+                        data={vm.attendanceByWeek}
                         maxWeeks={5}
                         showTrend={true}
                         colorByPerformance={true}
@@ -625,7 +601,7 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
                     }}>
                         {t("Mis Estudiantes en Riesgo")}
                     </Text>
-                    
+
                     <AtRiskStudentsList
                         students={vm.teacherData.myAtRiskStudents}
                         maxItems={10}
@@ -645,19 +621,9 @@ function TeacherDashboard({ vm, permissions, isSmall, c, t, navigation }) {
 // ──────────────────────────────────────────────────────────────
 
 function StudentDashboard({ vm, permissions, isSmall, c, t }) {
-    // Estado para el período académico (reactivo a cambios en Settings)
-    const [academicPeriod, setAcademicPeriod] = useState(() => getConfiguredAcademicPeriodType());
-    
-    // Escuchar cambios en la configuración institucional
-    useEffect(() => {
-        const cleanup = onInstitutionConfigChange((newConfig) => {
-            if (newConfig.academicPeriodType && newConfig.academicPeriodType !== academicPeriod) {
-                setAcademicPeriod(newConfig.academicPeriodType);
-            }
-        });
-        return cleanup;
-    }, [academicPeriod]);
-    
+    // Período académico reactivo a cambios en Settings
+    const academicPeriod = useAcademicPeriod();
+
     // Hook para orquestar selección de semanas
     const {
         selectedWeek,
@@ -668,60 +634,25 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
         currentWeekNumber,
         isCurrentWeek,
     } = useWeeklyAttendanceController(vm.attendanceByWeek, vm.attendanceByDay);
-    
+
     // Obtener subtítulo con el período académico reactivo
     const weeklySubtitle = getWeeklyTrendSubtitle(academicPeriod, t);
-    
+
     // Early return DESPUÉS de todos los hooks
     if (!vm.studentData) return <PanelDataState isLoading={vm.isLoading} t={t} />;
 
-    // Label dinámico: si es la semana actual mostrar "Esta semana (Sem X)", sino "Sem X"
-    const weekLabel = isCurrentWeek && currentWeekNumber
-        ? `${t("Esta semana")} (Sem ${currentWeekNumber})` 
-        : selectedWeek 
-            ? selectedWeek.week 
-            : t("Esta semana");
+    const weekLabel = getWeekLabel({ isCurrentWeek, currentWeekNumber, selectedWeek }, t);
 
     return (
         <>
             {/* Stats personales */}
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-                {vm.stats.map((stat) => (
-                    <View key={stat.label} style={{ 
-                        flexBasis: isSmall ? "47%" : "23%", 
-                        flexGrow: 1 
-                    }}>
-                        <StatCard
-                            label={stat.label}
-                            value={stat.value}
-                            icon={<Feather name={stat.icon} size={20} color={stat.color} />}
-                            trend={stat.change ? (stat.change > 0 ? "up" : "down") : undefined}
-                            trendValue={stat.change ? `${Math.abs(stat.change)}%` : undefined}
-                            color={stat.color}
-                        />
-                    </View>
-                ))}
-            </View>
+            <StatsGrid stats={vm.stats} isSmall={isSmall} />
 
             {/* Gráficas personales del estudiante */}
             <View style={{ flexDirection: isSmall ? "column" : "row", gap: 16 }}>
                 <Card style={{ flex: 1 }}>
-                    <Text style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: c.text.primary,
-                        marginBottom: 4,
-                    }}>
-                        {t("Mi asistencia semanal")}
-                    </Text>
-                    <Text style={{
-                        fontSize: 12,
-                        color: c.text.secondary,
-                        marginBottom: 16,
-                    }}>
-                        {weeklySubtitle}
-                    </Text>
-                    <WeeklyTrend 
+                    <CardTitle title={t("Mi asistencia semanal")} subtitle={weeklySubtitle} c={c} />
+                    <WeeklyTrend
                         {...weeklyTrendProps}
                         maxWeeks={5}
                         showTrend={true}
@@ -758,7 +689,7 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
                                     fontWeight: "600",
                                     color: c.status.info,
                                 }}>
-                                    {currentWeekNumber 
+                                    {currentWeekNumber
                                         ? `${t("Ver semana actual")} (Sem ${currentWeekNumber})`
                                         : t("Ver semana actual")
                                     }
@@ -773,7 +704,7 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
                     }}>
                         {weekLabel}
                     </Text>
-                    <DailyBarChart 
+                    <DailyBarChart
                         {...dailyBarChartProps}
                         height={100}
                         showLegend={true}
@@ -784,55 +715,8 @@ function StudentDashboard({ vm, permissions, isSmall, c, t }) {
 
             {/* Asistencia por curso del estudiante */}
             <Card>
-                <Text style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: c.text.primary,
-                    marginBottom: 4,
-                }}>
-                    {t("Asistencia por curso")}
-                </Text>
-                <Text style={{
-                    fontSize: 12,
-                    color: c.text.secondary,
-                    marginBottom: 16,
-                }}>
-                    {t("Mi rendimiento en cada curso")}
-                </Text>
-                <View style={{ gap: 14 }}>
-                    {vm.courseAttendance.map(item => (
-                        <View key={item.course}>
-                            <View style={{
-                                flexDirection: "row",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                marginBottom: 8,
-                            }}>
-                                <Text style={{
-                                    fontSize: 13,
-                                    fontWeight: "500",
-                                    color: c.text.primary,
-                                    flex: 1,
-                                }} numberOfLines={1}>
-                                    {item.courseName}
-                                </Text>
-                                <Text style={{
-                                    fontSize: 13,
-                                    fontWeight: "700",
-                                    color: item.barColor,
-                                    marginLeft: 8,
-                                }}>
-                                    {item.rate}%
-                                </Text>
-                            </View>
-                            <ProgressBar
-                                value={item.rate}
-                                color={item.barColor}
-                                size="md"
-                            />
-                        </View>
-                    ))}
-                </View>
+                <CardTitle title={t("Asistencia por curso")} subtitle={t("Mi rendimiento en cada curso")} c={c} />
+                <CourseAttendanceBars items={vm.courseAttendance} c={c} />
             </Card>
 
             {/* Actividad reciente */}
@@ -888,7 +772,7 @@ export default function DashboardView({ navigation: navigationProp }) {
     const { theme }   = useTheme();
     const navigationFromHook = useNavigation();
     const navigation = navigationProp || navigationFromHook;
-    
+
     const c           = theme.colors;
     const vm          = useDashboardViewModel();
     const { t }       = useTranslation();
@@ -914,8 +798,8 @@ export default function DashboardView({ navigation: navigationProp }) {
                 subtitle={dashboardSubtitle}
                 actions={
                     permissions.canRegisterFace && (
-                        <Button 
-                            variant="primary" 
+                        <Button
+                            variant="primary"
                             size="sm"
                             leftIcon={<Feather name="camera" size={16} color={c.brand.textOnPrimary} />}
                             onPress={() => navigation.navigate("AttendanceKiosk")}
@@ -932,8 +816,8 @@ export default function DashboardView({ navigation: navigationProp }) {
 
             {/* Renderizar dashboard según rol */}
             {vm.userRole === "admin" && (
-                <AdminDashboard 
-                    vm={vm} 
+                <AdminDashboard
+                    vm={vm}
                     permissions={permissions}
                     isSmall={isSmall}
                     c={c}
@@ -943,7 +827,7 @@ export default function DashboardView({ navigation: navigationProp }) {
             )}
 
             {vm.userRole === "teacher" && (
-                <TeacherDashboard 
+                <TeacherDashboard
                     vm={vm}
                     permissions={permissions}
                     isSmall={isSmall}
@@ -954,8 +838,8 @@ export default function DashboardView({ navigation: navigationProp }) {
             )}
 
             {vm.userRole === "student" && (
-                <StudentDashboard 
-                    vm={vm} 
+                <StudentDashboard
+                    vm={vm}
                     permissions={permissions}
                     isSmall={isSmall}
                     c={c}

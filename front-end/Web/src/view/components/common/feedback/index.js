@@ -15,7 +15,6 @@ export { ToastProvider, useToast } from './Toast';
 export { PushNotificationProvider, usePushNotification } from './PushNotification';
 
 // Progress
-export { ProgressBar } from './ProgressBar';
 
 // Contextual Help
 export { Tooltip } from './Tooltip';

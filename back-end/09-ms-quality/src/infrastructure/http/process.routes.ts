@@ -1,3 +1,4 @@
+import { patchSchema } from './patchSchema';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import {
@@ -101,7 +102,7 @@ export async function registerProcessRoutes(
   app.put('/api/v1/quality/projects/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
     if (!id) return reply.code(404).send({ error: 'NotFound', message: 'Project not found' });
-    const parsed = projectBody.partial().safeParse((req as any).body);
+    const parsed = patchSchema(projectBody).safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid project payload', parsed.error.flatten());
     const updated = await projects.update(id, parsed.data);
     if (!updated) return reply.code(404).send({ error: 'NotFound', message: 'Project not found' });
@@ -154,7 +155,7 @@ export async function registerProcessRoutes(
   app.put('/api/v1/quality/assessments/:id', async (req, reply) => {
     const id = parseId((req.params as any).id);
     if (!id) return reply.code(404).send({ error: 'NotFound', message: 'Assessment not found' });
-    const parsed = assessmentBody.partial().safeParse((req as any).body);
+    const parsed = patchSchema(assessmentBody).safeParse((req as any).body);
     if (!parsed.success) return send400(reply, 'Invalid assessment payload', parsed.error.flatten());
     const current = await assessments.findById(id);
     if (!current) return reply.code(404).send({ error: 'NotFound', message: 'Assessment not found' });

@@ -83,8 +83,8 @@ class TestEnrollSample:
         response = _enroll_sample(client)
         assert response.status_code == 201
         body = response.json()
-        assert body["raw_sample_b64"] == FAKE_SAMPLE
-        assert body["encoding"] == []
+        assert "raw_sample_b64" not in body and "encoding" not in body
+        assert body["person_id"] == PERSON and "sample_format" in body
 
     def test_enroll_sample_rejects_low_quality(self, client, monkeypatch):
         monkeypatch.setattr(fingerprint_router, "fingerprint_keypoint_score", lambda a, b: 0)

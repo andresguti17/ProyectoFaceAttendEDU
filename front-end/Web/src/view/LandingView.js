@@ -20,6 +20,129 @@ import {
     getInstitutionalImage 
 } from "../core/config/landing.config";
 
+// ── Piezas comunes de las secciones ──────────────────────────
+
+/** Contenedor con el margen lateral de cada sección. */
+function SectionContainer({ children }) {
+    const { sp, isSmall } = useResponsive();
+    return (
+        <View
+            style={{
+                paddingHorizontal: sp(isSmall ? 24 : 40),
+                width: "100%",
+                justifyContent: "center",
+            }}
+        >
+            {children}
+        </View>
+    );
+}
+
+/** Etiqueta en píldora + título centrado. */
+function SectionHeading({ eyebrow, title, badgeColor, eyebrowColor, titleColor, titleMaxWidth }) {
+    const { sp, fs } = useResponsive();
+    const T = getTypography(fs);
+    return (
+        <View style={{ alignItems: "center", marginBottom: sp(48) }}>
+            <View
+                style={{
+                    backgroundColor: badgeColor,
+                    paddingHorizontal: sp(16),
+                    paddingVertical: sp(6),
+                    borderRadius: 20,
+                    marginBottom: sp(16),
+                }}
+            >
+                <Text style={[T.eyebrow, { color: eyebrowColor, letterSpacing: 1.5 }]}>
+                    {eyebrow}
+                </Text>
+            </View>
+            <Text style={[T.heading1, { color: titleColor, textAlign: "center", maxWidth: titleMaxWidth }]}>
+                {title}
+            </Text>
+        </View>
+    );
+}
+
+/** Fila de tarjetas (columna en móvil). */
+function CardRow({ children }) {
+    const { sp, isSmall } = useResponsive();
+    return (
+        <View
+            style={{
+                flexDirection: isSmall ? "column" : "row",
+                gap: sp(24),
+                maxWidth: 1200,
+                alignSelf: "center",
+                width: "100%",
+            }}
+        >
+            {children}
+        </View>
+    );
+}
+
+/** Sección a pantalla completa con imagen de fondo configurable o fondo liso. */
+function BackgroundSection({ background, minHeight, children }) {
+    const { sp, isSmall } = useResponsive();
+    const { theme } = useTheme();
+    const c = theme.colors;
+    const centered = {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: sp(isSmall ? 40 : 60),
+    };
+
+    return (
+        <View style={{ minHeight, overflow: "hidden" }}>
+            {background ? (
+                <BackgroundImage
+                    source={background.source}
+                    blur={background.blur}
+                    opacity={background.opacity}
+                    pattern={background.pattern}
+                    flipHorizontal={background.flipHorizontal}
+                    flipVertical={background.flipVertical}
+                    position={background.position}
+                    overlayColor={c.background.app}
+                    overlayOpacity={background.overlayOpacity}
+                    style={{ minHeight }}
+                >
+                    <View style={centered}>{children}</View>
+                </BackgroundImage>
+            ) : (
+                <View style={{ ...centered, backgroundColor: c.background.app }}>{children}</View>
+            )}
+        </View>
+    );
+}
+
+/** Columna de enlaces del pie de página. */
+function FooterColumn({ title, links, onNavigate }) {
+    const { sp, fs } = useResponsive();
+    const { theme } = useTheme();
+    const c = theme.colors;
+    const T = getTypography(fs);
+    return (
+        <View style={{ flex: 1 }}>
+            <Text style={[T.bodyMD, { fontWeight: "600", color: c.text.primary, marginBottom: sp(12) }]}>
+                {title}
+            </Text>
+            {links.map((link, index) => (
+                <Text
+                    key={index}
+                    accessibilityRole={link.screen ? "link" : undefined}
+                    onPress={link.screen && onNavigate ? () => onNavigate(link.screen) : undefined}
+                    style={[T.bodySM, { color: link.screen ? c.brand.primary : c.text.secondary, marginBottom: sp(6) }]}
+                >
+                    {link.label}
+                </Text>
+            ))}
+        </View>
+    );
+}
+
 // ── Hero Section ─────────────────────────────────────────────
 
 function HeroContent({ fadeLeft, slideLeft, fadeRight, slideRight, onNavigate }) {
@@ -119,7 +242,7 @@ function HeroContent({ fadeLeft, slideLeft, fadeRight, slideRight, onNavigate })
 // ── Features Section ─────────────────────────────────────────
 
 function FeaturesContent() {
-    const { sp, fs, isSmall } = useResponsive();
+    const { sp, fs } = useResponsive();
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
@@ -144,57 +267,17 @@ function FeaturesContent() {
     ];
 
     return (
-        <View
-            style={{
-                paddingHorizontal: sp(isSmall ? 24 : 40),
-                width: "100%",
-                justifyContent: "center",
-            }}
-        >
-            {/* Header */}
-            <View style={{ alignItems: "center", marginBottom: sp(48) }}>
-                <View
-                    style={{
-                        backgroundColor: "rgba(255,255,255,0.15)",
-                        paddingHorizontal: sp(16),
-                        paddingVertical: sp(6),
-                        borderRadius: 20,
-                        marginBottom: sp(16),
-                    }}
-                >
-                    <Text
-                        style={[
-                            T.eyebrow,
-                            { color: "rgba(255,255,255,0.9)", letterSpacing: 1.5 },
-                        ]}
-                    >
-                        {t("CARACTERÍSTICAS")}
-                    </Text>
-                </View>
-                <Text
-                    style={[
-                        T.heading1,
-                        {
-                            color: c.text.onBrand,
-                            textAlign: "center",
-                            maxWidth: 800,
-                        },
-                    ]}
-                >
-                    {t("Todo lo que necesitas en una sola plataforma")}
-                </Text>
-            </View>
-
+        <SectionContainer>
+            <SectionHeading
+                eyebrow={t("CARACTERÍSTICAS")}
+                title={t("Todo lo que necesitas en una sola plataforma")}
+                badgeColor="rgba(255,255,255,0.15)"
+                eyebrowColor="rgba(255,255,255,0.9)"
+                titleColor={c.text.onBrand}
+                titleMaxWidth={800}
+            />
             {/* Feature Cards */}
-            <View
-                style={{
-                    flexDirection: isSmall ? "column" : "row",
-                    gap: sp(24),
-                    maxWidth: 1200,
-                    alignSelf: "center",
-                    width: "100%",
-                }}
-            >
+            <CardRow>
                 {FEATURES.map((feature, index) => (
                     <Card
                         key={index}
@@ -233,15 +316,15 @@ function FeaturesContent() {
                         </Text>
                     </Card>
                 ))}
-            </View>
-        </View>
+            </CardRow>
+        </SectionContainer>
     );
 }
 
 // ── Testimonials Section ─────────────────────────────────────
 
 function TestimonialsContent() {
-    const { sp, fs, isSmall } = useResponsive();
+    const { sp, fs } = useResponsive();
     const { theme } = useTheme();
     const { t } = useTranslation();
     const c = theme.colors;
@@ -272,53 +355,17 @@ function TestimonialsContent() {
     ];
 
     return (
-        <View
-            style={{
-                paddingHorizontal: sp(isSmall ? 24 : 40),
-                width: "100%",
-                justifyContent: "center",
-            }}
-        >
-            {/* Header */}
-            <View style={{ alignItems: "center", marginBottom: sp(48) }}>
-                <View
-                    style={{
-                        backgroundColor: c.brand.primaryLight,
-                        paddingHorizontal: sp(16),
-                        paddingVertical: sp(6),
-                        borderRadius: 20,
-                        marginBottom: sp(16),
-                    }}
-                >
-                    <Text
-                        style={[
-                            T.eyebrow,
-                            { color: c.brand.primary, letterSpacing: 1.5 },
-                        ]}
-                    >
-                        {t("TESTIMONIOS")}
-                    </Text>
-                </View>
-                <Text
-                    style={[
-                        T.heading1,
-                        { color: c.text.primary, textAlign: "center", maxWidth: 700 },
-                    ]}
-                >
-                    {t("Instituciones que confían en nosotros")}
-                </Text>
-            </View>
-
+        <SectionContainer>
+            <SectionHeading
+                eyebrow={t("TESTIMONIOS")}
+                title={t("Instituciones que confían en nosotros")}
+                badgeColor={c.brand.primaryLight}
+                eyebrowColor={c.brand.primary}
+                titleColor={c.text.primary}
+                titleMaxWidth={700}
+            />
             {/* Testimonial Cards */}
-            <View
-                style={{
-                    flexDirection: isSmall ? "column" : "row",
-                    gap: sp(24),
-                    maxWidth: 1200,
-                    alignSelf: "center",
-                    width: "100%",
-                }}
-            >
+            <CardRow>
                 {TESTIMONIALS.map((testimonial, index) => (
                     <Card
                         key={index}
@@ -385,8 +432,8 @@ function TestimonialsContent() {
                         </View>
                     </Card>
                 ))}
-            </View>
-        </View>
+            </CardRow>
+        </SectionContainer>
     );
 }
 
@@ -400,13 +447,7 @@ function CTAContent({ onNavigate }) {
     const T = getTypography(fs);
 
     return (
-        <View
-            style={{
-                paddingHorizontal: sp(isSmall ? 24 : 40),
-                width: "100%",
-                justifyContent: "center",
-            }}
-        >
+        <SectionContainer>
             <View
                 style={{
                     maxWidth: 800,
@@ -463,13 +504,13 @@ function CTAContent({ onNavigate }) {
                     </Button>
                 </View>
             </View>
-        </View>
+        </SectionContainer>
     );
 }
 
 // ── Footer ───────────────────────────────────────────────────
 
-function Footer() {
+function Footer({ onNavigate }) {
     const { sp, fs, isSmall } = useResponsive();
     const { theme } = useTheme();
     const { t } = useTranslation();
@@ -488,8 +529,8 @@ function Footer() {
             { label: t("Contacto"), href: "#contact" },
         ],
         legal: [
-            { label: t("Privacidad"), href: "#privacy" },
-            { label: t("Términos"), href: "#terms" },
+            { label: t("Privacidad"), href: "#privacy", screen: "FaceAttendEDU-Privacy" },
+            { label: t("Términos"), href: "#terms", screen: "FaceAttendEDU-Terms" },
             { label: t("Cookies"), href: "#cookies" },
         ],
     };
@@ -545,92 +586,9 @@ function Footer() {
                     {/* Links Columns */}
                     {!isSmall && (
                         <>
-                            <View style={{ flex: 1 }}>
-                                <Text
-                                    style={[
-                                        T.bodyMD,
-                                        {
-                                            fontWeight: "600",
-                                            color: c.text.primary,
-                                            marginBottom: sp(12),
-                                        },
-                                    ]}
-                                >
-                                    {t("Producto")}
-                                </Text>
-                                {FOOTER_LINKS.product.map((link, index) => (
-                                    <Text
-                                        key={index}
-                                        style={[
-                                            T.bodySM,
-                                            {
-                                                color: c.text.secondary,
-                                                marginBottom: sp(6),
-                                            },
-                                        ]}
-                                    >
-                                        {link.label}
-                                    </Text>
-                                ))}
-                            </View>
-
-                            <View style={{ flex: 1 }}>
-                                <Text
-                                    style={[
-                                        T.bodyMD,
-                                        {
-                                            fontWeight: "600",
-                                            color: c.text.primary,
-                                            marginBottom: sp(12),
-                                        },
-                                    ]}
-                                >
-                                    {t("Empresa")}
-                                </Text>
-                                {FOOTER_LINKS.company.map((link, index) => (
-                                    <Text
-                                        key={index}
-                                        style={[
-                                            T.bodySM,
-                                            {
-                                                color: c.text.secondary,
-                                                marginBottom: sp(6),
-                                            },
-                                        ]}
-                                    >
-                                        {link.label}
-                                    </Text>
-                                ))}
-                            </View>
-
-                            <View style={{ flex: 1 }}>
-                                <Text
-                                    style={[
-                                        T.bodyMD,
-                                        {
-                                            fontWeight: "600",
-                                            color: c.text.primary,
-                                            marginBottom: sp(12),
-                                        },
-                                    ]}
-                                >
-                                    {t("Legal")}
-                                </Text>
-                                {FOOTER_LINKS.legal.map((link, index) => (
-                                    <Text
-                                        key={index}
-                                        style={[
-                                            T.bodySM,
-                                            {
-                                                color: c.text.secondary,
-                                                marginBottom: sp(6),
-                                            },
-                                        ]}
-                                    >
-                                        {link.label}
-                                    </Text>
-                                ))}
-                            </View>
+                            <FooterColumn title={t("Producto")} links={FOOTER_LINKS.product} />
+                            <FooterColumn title={t("Empresa")} links={FOOTER_LINKS.company} />
+                            <FooterColumn title={t("Legal")} links={FOOTER_LINKS.legal} onNavigate={onNavigate} />
                         </>
                     )}
                 </View>
@@ -708,52 +666,9 @@ export default function LandingView({ onNavigate }) {
                 }}
             >
                 {/* Sección 1: Hero */}
-                <View
-                    style={{
-                        minHeight: SECTION_HEIGHT,
-                        overflow: "hidden",
-                    }}
-                >
-                    {heroBg ? (
-                        <BackgroundImage
-                            source={heroBg.source}
-                            blur={heroBg.blur}
-                            opacity={heroBg.opacity}
-                            pattern={heroBg.pattern}
-                            flipHorizontal={heroBg.flipHorizontal}
-                            flipVertical={heroBg.flipVertical}
-                            position={heroBg.position}
-                            overlayColor={c.background.app}
-                            overlayOpacity={heroBg.overlayOpacity}
-                            style={{
-                                minHeight: SECTION_HEIGHT,
-                            }}
-                        >
-                            <View
-                                style={{
-                                    flex: 1,
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    paddingVertical: sp(isSmall ? 40 : 60),
-                                }}
-                            >
-                                <HeroContent {...entrance} onNavigate={onNavigate} />
-                            </View>
-                        </BackgroundImage>
-                    ) : (
-                        <View
-                            style={{
-                                flex: 1,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                paddingVertical: sp(isSmall ? 40 : 60),
-                                backgroundColor: c.background.app,
-                            }}
-                        >
-                            <HeroContent {...entrance} onNavigate={onNavigate} />
-                        </View>
-                    )}
-                </View>
+                <BackgroundSection background={heroBg} minHeight={SECTION_HEIGHT}>
+                    <HeroContent {...entrance} onNavigate={onNavigate} />
+                </BackgroundSection>
 
                 {/* Sección 2: Features */}
                 <View
@@ -769,52 +684,9 @@ export default function LandingView({ onNavigate }) {
                 </View>
 
                 {/* Sección 3: Testimonials */}
-                <View
-                    style={{
-                        minHeight: SECTION_HEIGHT,
-                        overflow: "hidden",
-                    }}
-                >
-                    {testimonialsBg ? (
-                        <BackgroundImage
-                            source={testimonialsBg.source}
-                            blur={testimonialsBg.blur}
-                            opacity={testimonialsBg.opacity}
-                            pattern={testimonialsBg.pattern}
-                            flipHorizontal={testimonialsBg.flipHorizontal}
-                            flipVertical={testimonialsBg.flipVertical}
-                            position={testimonialsBg.position}
-                            overlayColor={c.background.app}
-                            overlayOpacity={testimonialsBg.overlayOpacity}
-                            style={{
-                                minHeight: SECTION_HEIGHT,
-                            }}
-                        >
-                            <View
-                                style={{
-                                    flex: 1,
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    paddingVertical: sp(isSmall ? 40 : 60),
-                                }}
-                            >
-                                <TestimonialsContent />
-                            </View>
-                        </BackgroundImage>
-                    ) : (
-                        <View
-                            style={{
-                                flex: 1,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                paddingVertical: sp(isSmall ? 40 : 60),
-                                backgroundColor: c.background.app,
-                            }}
-                        >
-                            <TestimonialsContent />
-                        </View>
-                    )}
-                </View>
+                <BackgroundSection background={testimonialsBg} minHeight={SECTION_HEIGHT}>
+                    <TestimonialsContent />
+                </BackgroundSection>
 
                 {/* Sección 4: CTA + Footer */}
                 <View
@@ -837,7 +709,7 @@ export default function LandingView({ onNavigate }) {
                     </View>
                     
                     {/* Footer con fondo blanco */}
-                    <Footer />
+                    <Footer onNavigate={onNavigate} />
                 </View>
             </CustomScrollBar>
         </SafeAreaView>

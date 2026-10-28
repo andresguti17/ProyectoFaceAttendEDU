@@ -31,15 +31,14 @@ src/
 │   ├── messaging/        justification.consumer.ts (kafkajs)
 │   ├── email/            render.ts, sender.ts (nodemailer)
 │   ├── webhook/          notifier.ts
-│   └── db/               database.ts (drizzle + pg)
+│   └── db/               database.ts (pg)
 └── main.ts
-drizzle/                  migraciones generadas (drizzle-kit)
 ```
 
 ## Dependencias (package.json)
 
-Fastify 4.26, drizzle-orm 0.36, pg 8.11, kafkajs 2.2, nodemailer 6.9, pino 8.16, zod 3.22.
-Dev: drizzle-kit 0.31, typescript 5.4, jest 29 + ts-jest, supertest, testcontainers.
+Fastify 5.12, pg 8.11, kafkajs 2.2, nodemailer 10.2, pino 9.14, zod 4.6 (migraciones: Liquibase en `database/`).
+Dev: typescript 5.4, jest 29 + ts-jest.
 
 ## Ejecución
 

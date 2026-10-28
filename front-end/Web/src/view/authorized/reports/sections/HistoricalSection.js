@@ -29,11 +29,55 @@ import { useAppData } from "../../../../context/AppDataContext";
 import { titleCase } from "../../../../core/utils/formatting";
 import UserHistoryModal from "../../../components/reports/UserHistoryModal";
 import { ExportConfigModal } from "../../../components/reports/ExportConfigModal";
-import { useHistoricosViewModel } from "../../../../viewmodels/useHistoricosViewModel";
+import { useHistoricosViewModel, buildHistoricosSheets, historicosStatusColumn } from "../../../../viewmodels/useHistoricosViewModel";
 import { usePushNotification } from "../../../components/common/feedback/PushNotification";
-import { exportToExcel, exportToPDF, buildHTMLTable, formatPercentageWithColor, formatStatusBadge } from "../../../../core/utils/exportHelpers";
+import { exportToExcel, exportToPDF, buildHTMLTable, formatPercentageWithColor, formatStatusBadge, trustedHtml } from "../../../../core/utils/exportHelpers";
 import { getInstitutionConfig } from "../../../../core/config/institutionConfig";
 import { getAttendanceThresholds } from "../../../../models/data/userDerivedData";
+
+/**
+ * Curso, ambiente, horario e instructor de un estudiante: el horario del curso
+ * en su ambiente o, si no hay, el primero del ambiente.
+ */
+function resolveCourseContext(student, courses, environments, t) {
+    const studentCourse = courses.find(c => c.code === student.course || c.id === student.course);
+    const context = {
+        fichaName: studentCourse?.name || student.courseName || student.course || t("Sin ficha"),
+        environmentName: t("Sin ambiente"),
+        scheduledStartTime: null,
+        scheduledEndTime: null,
+        instructorName: null,
+        instructorId: null,
+    };
+    if (!studentCourse?.room) return context;
+
+    const environment = environments.find(env => env.id === studentCourse.room);
+    if (environment?.number) {
+        context.environmentName = environment.number;
+    }
+    const schedule = environment?.schedules?.find(sch => sch.courseCode === student.course)
+        || environment?.schedules?.[0];
+    if (schedule) {
+        context.scheduledStartTime = schedule.startTime;
+        context.scheduledEndTime = schedule.endTime;
+        context.instructorName = schedule.instructorName || null;
+        context.instructorId = schedule.instructor || null;
+    }
+    return context;
+}
+
+/** La fecha cae entre el inicio (desde las 00:00) y el fin (hasta las 23:59) del rango. */
+function isWithinDateRange(date, range) {
+    if (!date) return false;
+    const day = new Date(date);
+    day.setHours(0, 0, 0, 0);
+    const start = new Date(range.start);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(range.end);
+    end.setHours(23, 59, 59, 999);
+    return day >= start && day <= end;
+}
+
 
 function UserRow({ user, index, isLast, onPress, isExportMode, isSelected, onToggleSelect }) {
     const { theme } = useTheme();
@@ -80,7 +124,7 @@ function UserRow({ user, index, isLast, onPress, isExportMode, isSelected, onTog
                 gap: 12,
                 borderBottomWidth: isLast ? 0 : 1,
                 borderBottomColor: c.border.primary,
-                backgroundColor: isSelected ? c.primary + "10" : "transparent",
+                backgroundColor: isSelected ? c.brand.primary + "10" : "transparent",
             }}
         >
             {/* Checkbox en modo exportación */}
@@ -279,57 +323,19 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
         if (!dateRange.start || !dateRange.end) {
             return uniqueStudents.map(student => {
                 let lastRecord = null;
-                let environmentName = t("Sin ambiente");
-                
                 if (student.attendanceHistory && student.attendanceHistory.length > 0) {
                     const sortedHistory = [...student.attendanceHistory].sort(
                         (a, b) => new Date(b.date) - new Date(a.date)
                     );
                     lastRecord = sortedHistory[0];
                 }
-                
-                // Obtener el ambiente y horario desde el curso del estudiante
-                const studentCourse = courses.find(c => c.code === student.course || c.id === student.course);
-                let scheduledStartTime = null;
-                let scheduledEndTime = null;
-                let actualCheckInTime = null;
-                let actualCheckOutTime = null;
-                let instructorName = null;
-                let instructorId = null;
-                
-                if (studentCourse?.room) {
-                    const environment = environments.find(env => env.id === studentCourse.room);
-                    if (environment?.number) {
-                        environmentName = environment.number;
-                    }
-                    
-                    // Obtener horario programado del curso e información del instructor
-                    if (environment?.schedules && environment.schedules.length > 0) {
-                        const courseSchedule = environment.schedules.find(
-                            sch => sch.courseCode === student.course
-                        );
-                        if (courseSchedule) {
-                            scheduledStartTime = courseSchedule.startTime;
-                            scheduledEndTime = courseSchedule.endTime;
-                            instructorName = courseSchedule.instructorName || null;
-                            instructorId = courseSchedule.instructor || null;
-                        } else if (environment.schedules[0]) {
-                            scheduledStartTime = environment.schedules[0].startTime;
-                            scheduledEndTime = environment.schedules[0].endTime;
-                            instructorName = environment.schedules[0].instructorName || null;
-                            instructorId = environment.schedules[0].instructor || null;
-                        }
-                    }
-                }
-                
-                // Obtener horas reales del último registro de asistencia
-                if (lastRecord) {
-                    actualCheckInTime = lastRecord.checkInTime || null;
-                    actualCheckOutTime = lastRecord.checkOutTime || null;
-                }
-                
-                // Obtener el nombre de la ficha desde el curso
-                const fichaName = studentCourse?.name || student.courseName || student.course || t("Sin ficha");
+
+                const { fichaName, environmentName, scheduledStartTime, scheduledEndTime, instructorName, instructorId } =
+                    resolveCourseContext(student, courses, environments, t);
+
+                // Horas reales del último registro de asistencia
+                const actualCheckInTime = lastRecord?.checkInTime || null;
+                const actualCheckOutTime = lastRecord?.checkOutTime || null;
                 
                 return {
                     id: student.id,
@@ -358,41 +364,8 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
         const allRecords = [];
         
         uniqueStudents.forEach(student => {
-            const studentCourse = courses.find(c => c.code === student.course || c.id === student.course);
-            let environmentName = t("Sin ambiente");
-            let scheduledStartTime = null;
-            let scheduledEndTime = null;
-            let instructorName = null;
-            let instructorId = null;
-            
-            // Obtener información del ambiente
-            if (studentCourse?.room) {
-                const environment = environments.find(env => env.id === studentCourse.room);
-                if (environment?.number) {
-                    environmentName = environment.number;
-                }
-                
-                // Obtener horario programado del curso e información del instructor
-                if (environment?.schedules && environment.schedules.length > 0) {
-                    const courseSchedule = environment.schedules.find(
-                        sch => sch.courseCode === student.course
-                    );
-                    if (courseSchedule) {
-                        scheduledStartTime = courseSchedule.startTime;
-                        scheduledEndTime = courseSchedule.endTime;
-                        instructorName = courseSchedule.instructorName || null;
-                        instructorId = courseSchedule.instructor || null;
-                    } else if (environment.schedules[0]) {
-                        scheduledStartTime = environment.schedules[0].startTime;
-                        scheduledEndTime = environment.schedules[0].endTime;
-                        instructorName = environment.schedules[0].instructorName || null;
-                        instructorId = environment.schedules[0].instructor || null;
-                    }
-                }
-            }
-            
-            // Obtener el nombre de la ficha desde el curso
-            const fichaName = studentCourse?.name || student.courseName || student.course || t("Sin ficha");
+            const { fichaName, environmentName, scheduledStartTime, scheduledEndTime, instructorName, instructorId } =
+                resolveCourseContext(student, courses, environments, t);
             
             // Si el estudiante tiene historial de asistencia, crear un registro por cada entrada
             if (student.attendanceHistory && student.attendanceHistory.length > 0) {
@@ -476,22 +449,8 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
         }
 
         if (dateRange.start && dateRange.end) {
-            result = result.filter(user => {
-                if (!user.date) return false;
-                
-                // Normalizar fechas para comparación (solo fecha, sin hora)
-                const userDate = new Date(user.date);
-                userDate.setHours(0, 0, 0, 0);
-                
-                const startDate = new Date(dateRange.start);
-                startDate.setHours(0, 0, 0, 0);
-                
-                const endDate = new Date(dateRange.end);
-                endDate.setHours(23, 59, 59, 999);
-                
-                return userDate >= startDate && userDate <= endDate;
-            });
-        }
+            result = result.filter(user => isWithinDateRange(user.date, dateRange));
+}
 
         // Ordenar por fecha descendente (más reciente primero) y luego por nombre
         return result.sort((a, b) => {
@@ -514,8 +473,8 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
     const { exportExcel, exportPDF } = useHistoricosViewModel(filteredUsers);
 
     // Handlers de exportación con feedback
-    const handleExportExcel = () => {
-        const result = exportExcel();
+    const handleExportExcel = async () => {
+        const result = await exportExcel();
         if (result.success) {
             pushNotification.success(
                 t("Exportación exitosa"),
@@ -589,7 +548,7 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
         setShowExportModal(false);
     };
 
-    const handleExportSelected = (format, exportType) => {
+    const handleExportSelected = async (format, exportType) => {
         // IMPORTANTE: Usar todos los usuarios, no solo los filtrados
         // Los usuarios seleccionados pueden estar en cualquier parte de la lista original
         const usersToExport = usersData.filter(u => selectedUsers.has(u.id));
@@ -619,59 +578,15 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                 const student = students.find(s => s.id === studentId);
                 if (!student || !student.attendanceHistory) return;
                 
-                // Obtener información del curso y ambiente
-                const studentCourse = courses.find(c => c.code === student.course || c.id === student.course);
-                let environmentName = t("Sin ambiente");
-                let scheduledStartTime = null;
-                let scheduledEndTime = null;
-                let instructorName = null;
-                let instructorId = null;
-                
-                if (studentCourse?.room) {
-                    const environment = environments.find(env => env.id === studentCourse.room);
-                    if (environment?.number) {
-                        environmentName = environment.number;
-                    }
-                    
-                    if (environment?.schedules && environment.schedules.length > 0) {
-                        const courseSchedule = environment.schedules.find(
-                            sch => sch.courseCode === student.course
-                        );
-                        if (courseSchedule) {
-                            scheduledStartTime = courseSchedule.startTime;
-                            scheduledEndTime = courseSchedule.endTime;
-                            instructorName = courseSchedule.instructorName || null;
-                            instructorId = courseSchedule.instructor || null;
-                        } else if (environment.schedules[0]) {
-                            scheduledStartTime = environment.schedules[0].startTime;
-                            scheduledEndTime = environment.schedules[0].endTime;
-                            instructorName = environment.schedules[0].instructorName || null;
-                            instructorId = environment.schedules[0].instructor || null;
-                        }
-                    }
-                }
-                
-                const fichaName = studentCourse?.name || student.courseName || student.course || t("Sin ficha");
+                const { fichaName, environmentName, scheduledStartTime, scheduledEndTime, instructorName, instructorId } =
+                    resolveCourseContext(student, courses, environments, t);
                 
                 // Filtrar historial según rango de fechas si existe
                 let historyToExport = student.attendanceHistory;
                 
                 if (dateRange.start && dateRange.end) {
-                    historyToExport = historyToExport.filter(record => {
-                        if (!record.date) return false;
-                        
-                        const recordDate = new Date(record.date);
-                        recordDate.setHours(0, 0, 0, 0);
-                        
-                        const startDate = new Date(dateRange.start);
-                        startDate.setHours(0, 0, 0, 0);
-                        
-                        const endDate = new Date(dateRange.end);
-                        endDate.setHours(23, 59, 59, 999);
-                        
-                        return recordDate >= startDate && recordDate <= endDate;
-                    });
-                }
+                    historyToExport = historyToExport.filter(record => isWithinDateRange(record.date, dateRange));
+}
                 
                 // Ordenar por fecha ascendente para calcular porcentajes acumulados correctamente
                 const sortedHistory = [...historyToExport].sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -733,43 +648,10 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
         console.log(`[HistoricalSection] Exportando ${finalUsersToExport.length} usuarios en formato ${format} con tipo ${exportType}`);
         
         if (format === "excel") {
-            // Construir filas de Excel con usuarios seleccionados
-            const rows = usersToExport.map(user => ({
-                [t("Código")]: user.studentCode,
-                [t("Nombre")]: user.studentName,
-                [t("Ficha")]: user.fichaName || user.ficha,
-                [t("Ambiente")]: user.environment,
-                [t("Fecha")]: user.date ? formatDate(user.date) : t("Sin registro"),
-                [t("Estado")]: user.late ? t("Retardo") : (user.status === "present" ? t("Presente") : t("Ausente")),
-                [t("Horario Programado")]: user.scheduledStartTime && user.scheduledEndTime 
-                    ? `${user.scheduledStartTime} - ${user.scheduledEndTime}` 
-                    : t("N/A"),
-                [t("Registro Real")]: user.actualCheckInTime && user.actualCheckOutTime 
-                    ? `${user.actualCheckInTime} - ${user.actualCheckOutTime}` 
-                    : t("N/A"),
-                [t("Total de Registros")]: user.totalRecords,
-                [t("Asistencia (%)")]: user.attendance || 0,
-            }));
-
-            const sheets = [{
-                name: t("Históricos de Asistencia"),
-                data: rows,
-                columns: [
-                    { wch: 12 },  // Código
-                    { wch: 32 },  // Nombre
-                    { wch: 16 },  // Ficha
-                    { wch: 14 },  // Ambiente
-                    { wch: 14 },  // Fecha
-                    { wch: 12 },  // Estado
-                    { wch: 20 },  // Horario Programado
-                    { wch: 20 },  // Registro Real
-                    { wch: 14 },  // Total Registros
-                    { wch: 14 },  // Asistencia (%)
-                ],
-            }];
+            const sheets = buildHistoricosSheets(usersToExport, t, formatDate);
 
             const filename = `Historicos_Seleccionados_${formatDate(new Date(), "YYYY-MM-DD")}.xlsx`;
-            const result = exportToExcel(sheets, filename);
+            const result = await exportToExcel(sheets, filename);
 
             if (result.success) {
                 pushNotification.success(
@@ -842,39 +724,34 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                 }
             }
             
-            // Determinar columnas según el tipo de exportación
-            let columns;
-            
-            if (exportType === "simple") {
-                // Exportación SENCILLA: Solo nombre, ficha y asistencia con progressbar
-                columns = [
-                    { key: "studentName", label: t("Nombre"), width: "40%" },
-                    { key: "fichaName", label: t("Ficha"), width: "30%", align: "center" },
-                    {
-                        key: "attendance",
-                        label: t("Asistencia"),
-                        width: "30%",
-                        align: "center",
-                        render: (value) => {
-                            const percentage = value || 0;
-                            // Determinar color según umbrales del tema
-                            let barColor = successColor; // Verde por defecto (>= excellent)
-                            if (percentage < warning) {
-                                barColor = dangerColor; // Rojo
-                            } else if (percentage < excellent) {
-                                barColor = warningColor; // Amarillo
-                            }
-                            
-                            return `
+            // Barra de asistencia coloreada según los umbrales del tema (la usan ambas exportaciones).
+            const attendanceBar = (value) => {
+                const percentage = Number(value) || 0;
+                let barColor = successColor; // Verde por defecto (>= excellent)
+                if (percentage < warning) {
+                    barColor = dangerColor; // Rojo
+                } else if (percentage < excellent) {
+                    barColor = warningColor; // Amarillo
+                }
+                return trustedHtml(`
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <div style="flex: 1; height: 8px; background: #E5E7EB; border-radius: 4px; overflow: hidden;">
                                         <div style="height: 100%; background: ${barColor}; width: ${percentage}%; transition: width 0.3s;"></div>
                                     </div>
                                     <strong style="color: ${barColor}; font-size: 14px; min-width: 45px; text-align: right;">${Math.round(percentage)}%</strong>
                                 </div>
-                            `;
-                        },
-                    },
+                            `);
+            };
+
+            // Determinar columnas según el tipo de exportación
+            let columns;
+
+            if (exportType === "simple") {
+                // Exportación SENCILLA: Solo nombre, ficha y asistencia con progressbar
+                columns = [
+                    { key: "studentName", label: t("Nombre"), width: "40%" },
+                    { key: "fichaName", label: t("Ficha"), width: "30%", align: "center" },
+                    { key: "attendance", label: t("Asistencia"), width: "30%", align: "center", render: attendanceBar },
                 ];
             } else {
                 // Exportación DETALLADA: Todos los campos
@@ -888,45 +765,8 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                         width: "15%",
                         render: (value) => value ? formatDate(value) : t("Sin registro")
                     },
-                    {
-                        key: "status",
-                        label: t("Estado"),
-                        width: "10%",
-                        align: "center",
-                        render: (value, row) => {
-                            const status = row.late ? "late" : (value === "present" ? "present" : "absent");
-                            return formatStatusBadge(status, {
-                                present: { text: t("Presente"), color: c.status.success },
-                                late: { text: t("Retardo"), color: c.status.warning },
-                                absent: { text: t("Ausente"), color: c.status.danger },
-                            });
-                        },
-                    },
-                    {
-                        key: "attendance",
-                        label: t("Asistencia"),
-                        width: "15%",
-                        align: "center",
-                        render: (value) => {
-                            const percentage = value || 0;
-                            // Determinar color según umbrales del tema
-                            let barColor = successColor; // Verde por defecto (>= excellent)
-                            if (percentage < warning) {
-                                barColor = dangerColor; // Rojo
-                            } else if (percentage < excellent) {
-                                barColor = warningColor; // Amarillo
-                            }
-                            
-                            return `
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="flex: 1; height: 8px; background: #E5E7EB; border-radius: 4px; overflow: hidden;">
-                                        <div style="height: 100%; background: ${barColor}; width: ${percentage}%; transition: width 0.3s;"></div>
-                                    </div>
-                                    <strong style="color: ${barColor}; font-size: 14px; min-width: 45px; text-align: right;">${Math.round(percentage)}%</strong>
-                                </div>
-                            `;
-                        },
-                    },
+                    historicosStatusColumn(t, c),
+{ key: "attendance", label: t("Asistencia"), width: "15%", align: "center", render: attendanceBar },
                 ];
             }
             
@@ -1399,12 +1239,12 @@ export const HistoricosSection = forwardRef(({ showFilters, onToggleFilters, onS
                                             paddingHorizontal: 8,
                                             paddingVertical: 3,
                                             borderRadius: 6,
-                                            backgroundColor: c.primary + "20",
+                                            backgroundColor: c.brand.primary + "20",
                                         }}>
-                                            <Feather name="filter" size={12} color={c.primary} />
+                                            <Feather name="filter" size={12} color={c.brand.primary} />
                                             <Text style={{
                                                 fontSize: 12,
-                                                color: c.primary,
+                                                color: c.brand.primary,
                                                 fontWeight: "500",
                                             }}>
                                                 {t("Filtros activos")}

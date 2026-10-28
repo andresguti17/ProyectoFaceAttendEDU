@@ -8,11 +8,11 @@ person_id-keyed and has no notion of a username. Mounted at the bare
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from domain.ports.out.biometric_repository import BiometricRepositoryPort
 from infrastructure.config.dependencies import get_facial_repository, get_fingerprint_repository
-from infrastructure.web.security import require_permission
+from infrastructure.web.security import ensure_staff_scope, require_permission
 
 router = APIRouter(
     tags=["biometric"],
@@ -36,9 +36,11 @@ async def biometric_summary_all(
 @router.get("/api/v1/biometric/{person_id}/summary")
 async def biometric_summary(
     person_id: str,
+    request: Request,
     facial_repository: BiometricRepositoryPort = Depends(get_facial_repository),
     fingerprint_repository: BiometricRepositoryPort = Depends(get_fingerprint_repository),
 ):
+    await ensure_staff_scope(request, person_id)
     has_face = await facial_repository.find_active(person_id) is not None
     has_fingerprint = bool(await fingerprint_repository.list_active(person_id))
     return {"person_id": person_id, "has_face": has_face, "has_fingerprint": has_fingerprint}

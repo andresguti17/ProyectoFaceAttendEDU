@@ -5,6 +5,7 @@ import com.faceattend_edu.identity_service.application.port.in.ChangePasswordUse
 import com.faceattend_edu.identity_service.application.port.out.HashPasswordPort;
 import com.faceattend_edu.identity_service.application.port.out.ListPasswordPoliciesPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserPort;
+import com.faceattend_edu.identity_service.application.port.out.LoadUserSessionPort;
 import com.faceattend_edu.identity_service.application.port.out.LoadUserSessionsPort;
 import com.faceattend_edu.identity_service.application.port.out.UpdateUserPort;
 import com.faceattend_edu.identity_service.application.port.out.UpdateUserSessionPort;
@@ -27,6 +28,7 @@ public class ChangePasswordUseCaseImpl implements ChangePasswordUseCase {
     private final UpdateUserPort updateUserPort;
     private final HashPasswordPort hashPasswordPort;
     private final ListPasswordPoliciesPort listPasswordPoliciesPort;
+    private final LoadUserSessionPort loadUserSessionPort;
     private final LoadUserSessionsPort loadUserSessionsPort;
     private final UpdateUserSessionPort updateUserSessionPort;
     private final DomainEventPublisher eventPublisher;
@@ -50,9 +52,12 @@ public class ChangePasswordUseCaseImpl implements ChangePasswordUseCase {
         user.setUpdatedAt(LocalDateTime.now());
         updateUserPort.updateUser(user);
 
-        // Las demás sesiones pudieron abrirse con la credencial vieja: se cierran.
+        // Las demás sesiones pudieron abrirse con la credencial vieja: se cierran. currentSessionId es el
+        // token del cliente; las filas guardan su huella, así que se compara con el id almacenado de esa sesión.
+        UserSession current = loadUserSessionPort.loadUserSession(currentSessionId);
+        UUID currentStoredId = current == null ? null : current.getSessionId();
         for (UserSession session : loadUserSessionsPort.loadUserSessions(userId)) {
-            if (session.isActive() && !session.getSessionId().equals(currentSessionId)) {
+            if (session.isActive() && !session.getSessionId().equals(currentStoredId)) {
                 session.end();
                 updateUserSessionPort.updateUserSession(session);
             }

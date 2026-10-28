@@ -3,7 +3,7 @@
 //
 //  Parseo puro (sin React ni React Native) de los archivos que
 //  acepta "Importar estudiantes": la grilla cruda viene de
-//  ../common/importFileParser (SheetJS para Excel, delimitador
+//  ../common/importFileParser (ExcelJS para Excel, delimitador
 //  detectado para texto) y aquí se traduce a drafts de alumno.
 //
 //  Módulo separado del modal para que los tests lo importen sin
@@ -19,7 +19,7 @@
 //  (provisionStudent necesita curso → cohorte → sede para matricular).
 // ============================================================
 
-import { parseImportFileGrid } from "../common/importFileParser";
+import { parseFileRows } from "../common/importFileParser";
 
 const ALIAS = {
     // name
@@ -117,13 +117,5 @@ function rowToStudent(headers, cells) {
 // Punto de entrada: binario de Excel jamás se lee como texto (se
 // convertía en basura que el parser CSV descartaba sin filas válidas).
 export function parseFileContent(name, buffer) {
-    const { headers, rows } = parseImportFileGrid(name, buffer);
-    let errors = 0;
-    const parsed = [];
-    rows.forEach((cells) => {
-        const r = rowToStudent(headers, cells);
-        if (r) parsed.push(r);
-        else errors++;
-    });
-    return { rows: parsed, errors };
+    return parseFileRows(name, buffer, rowToStudent);
 }

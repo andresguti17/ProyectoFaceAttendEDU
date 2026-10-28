@@ -1,6 +1,7 @@
-# Build context: back-end/ (package.json links ../shared/auth-node, which lands at /shared).
+# Build context: back-end/ (package.json links ../shared/auth-node and ../shared/node-infra, which land at /shared).
 FROM node:20-slim AS builder
 COPY shared/auth-node /shared/auth-node
+COPY shared/node-infra /shared/node-infra
 WORKDIR /app
 COPY 08-ms-notification/package*.json ./
 RUN npm ci --ignore-scripts
@@ -10,6 +11,7 @@ RUN npm run build
 FROM node:20-slim
 RUN apt-get update && apt-get install -y --no-install-recommends wget curl && rm -rf /var/lib/apt/lists/*
 COPY shared/auth-node /shared/auth-node
+COPY shared/node-infra /shared/node-infra
 WORKDIR /app
 COPY 08-ms-notification/package*.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force

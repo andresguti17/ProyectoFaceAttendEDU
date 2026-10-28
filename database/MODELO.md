@@ -27,20 +27,21 @@ sumó después y no está dibujado aquí):
 ├─────────────┬─────────────┬─────────────┬──────────────────┤
 │  IDENTITY   │ AUTHORIZATION│  ACADEMIC   │   SCHEDULING     │
 │  (5 tablas) │ (4 tablas)  │ (8 tablas)  │  (3 tablas)      │
-│ city        │ role        │ school      │ environment      │
-│ person      │ permission  │ program     │ schedule_block   │
-│ app_user*   │ role_perm.  │ acad_period │ class_session    │
-│ user_session│ user_role   │ cohort      │                  │
-│ pass_policy │             │ course      │                  │
+│ person      │ role        │ school      │ environment      │
+│ app_user*   │ permission  │ program     │ schedule_block   │
+│ user_session│ role_perm.  │ acad_period │ class_session    │
+│ pass_policy │ user_role   │ cohort      │                  │
+│ consent     │             │ course      │                  │
 │             │             │ actor_type  │                  │
 │             │             │ actor       │                  │
 │             │             │ enrollment  │                  │
 ├─────────────┼─────────────┼─────────────┼──────────────────┤
 │ ATTENDANCE  │  BIOMETRIC  │ CONFIGURATION│  NOTIFICATION   │
-│ (4 tablas)  │  (NoSQL)    │ (3 tablas)  │  (2 tablas)      │
+│ (5 tablas)  │  (NoSQL)    │ (3 tablas)  │  (4 tablas)      │
 │ att_record  │ facial_emb  │ acad_config │ alert_type       │
 │ justif_type │ finger_emb  │ sec_config  │ alert            │
-│ justification│ (MongoDB)  │ biometric_case│                │
+│ justification│ (MongoDB)  │ biometric_case│ notif._log     │
+│ attend._report│           │             │ device_token     │
 │ sup_document│             │             │                  │
 └─────────────┴─────────────┴─────────────┴──────────────────┘
 * app_user.person_id UNIQUE (1:1 con person)
@@ -58,12 +59,18 @@ sumó después y no está dibujado aquí):
 | `app_user` | Credenciales de acceso; 1:1 con `person` (`person_id` UNIQUE); `must_change_password` obliga a cambiar la contraseña inicial en el primer ingreso; `two_factor_enabled` exige un código enviado por correo tras la contraseña | `user_id` (UUID) |
 | `user_session` | Sesiones activas/cerradas | `session_id` (UUID) |
 | `password_policy` | Reglas de complejidad de contraseña | `policy_id` (INT) |
+| `data_processing_consent` | Constancia de autorización de tratamiento de datos (Ley 1581 de 2012, arts. 9 y 17-b): una fila por aceptación, con versión de la política, fecha, canal (`self` / `assisted`) y, aparte, la autorización opcional del dato biométrico (art. 6-a) y su revocatoria | `consent_id` (UUID) |
 
 **Relaciones internas:**
 - `app_user.person_id` → `person.person_id`
 - `user_session.user_id` → `app_user.user_id`
+- `data_processing_consent.person_id` → `person.person_id` (FK real, `ON DELETE CASCADE`)
+
+**Sin FK en el DDL:** `data_processing_consent.recorded_by` → `Identity.app_user.user_id` (mismo contexto, pero el DDL no declara el constraint).
 
 **Diseño clave:** `person` **no tiene** `school_id`. La identidad es agnóstica de sede.
+
+> **Nota — `identity.city`:** `AGENTS.md` la da por deprecada y el DBML no la contiene (las ciudades vienen de la API externa `countriesnow.space`). En Liquibase, `01-ms-identity-db/01-ddl/03-tables/` conserva `001-create-city-table.yaml` y `008-drop-city-table.yaml`; por el nombre, la segunda la elimina, pero no se leyó su contenido ni se comprobó contra una base real. Está pendiente que el equipo confirme que la tabla ya no existe tras migrar y, si procede, retire de las guías cualquier mención residual (p. ej. el ejemplo `001-seed-city-table.yaml` de `CONVENCIONES.md`).
 
 ---
 
@@ -222,15 +229,21 @@ instrumento es inmutable, así que no llevan FK.
 
 ## 10. Contexto: Notification
 
-**Responsabilidad:** Tipos de alerta y alertas generadas sobre actores académicos.
+**Responsabilidad:** Tipos de alerta, alertas generadas sobre actores académicos, bitácora de envíos para no repetir correos y tokens de notificaciones push.
 
 | Tabla | Descripción | PK |
 |---|---|---|
 | `alert_type` | Catálogo de tipos de alerta | `alert_type_id` (SMALLINT) |
 | `alert` | Alerta generada sobre un actor | `alert_id` (BIGINT) |
+| `notification_log` | Bitácora de envíos (`kind` + `dedupe_key`, sin datos personales) para evitar duplicados | `log_id` (BIGINT) |
+| `device_token` | Tokens Expo push de la app móvil, uno por dispositivo; un token se reactiva al registrarse de nuevo y los revocados se conservan (`revoked_at`) | `device_token_id` (BIGINT) |
 
 **Cross-context:**
 - `alert.academic_actor_id` → `Academic.academic_actor.academic_actor_id`
+- `device_token.academic_actor_id` → `Academic.academic_actor.academic_actor_id` (sin FK)
+- `notification_log.school_id` → `Academic.school.school_id` (sin FK)
+
+**Excepción al bloque de auditoría:** `device_token` solo tiene `created_at`/`updated_at` (sin `deleted_*`, `created_by`/`updated_by` ni `row_version`, y sin trigger `fn_audit_timestamps`); el servicio escribe las marcas y la baja es `revoked_at`. Es la única tabla que no cumple el bloque de 7 columnas; el DBML la refleja tal como está en el DDL.
 
 ---
 

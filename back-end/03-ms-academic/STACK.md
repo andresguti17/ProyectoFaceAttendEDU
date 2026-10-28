@@ -1,6 +1,6 @@
 # STACK — 03-ms-academic
 
-> **Stack ADR-005:** `TypeScript + Fastify + Drizzle ORM` · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
+> **Stack ADR-005:** `TypeScript + Fastify + Drizzle ORM` (decisión original; Drizzle se retiró y hoy se usa `pg`, ver más abajo) · **Guía:** `../../fae-docs/_stacks/node-typescript.md`
 > **Arquitectura:** `../../fae-docs/05-architecture/hexagonal-architecture.md` · **ADR:** `../../fae-docs/05-architecture/decisions/records/ADR-005-technology-stack.md`
 > **Database:** `../database/03-ms-academic-db` (schema `academic`) · **Puerto:** `8083` · **Dominio:** `06-data/domains/03-academic.md`
 
@@ -30,13 +30,13 @@ src/
 ├── application/use-cases/ CreateEnrollmentUseCase
 └── infrastructure/
     ├── http/ controllers + routes (Fastify)
-    ├── persistence/ Drizzle schema + repository
+    ├── persistence/ repositorios pg (SQL parametrizado)
     └── messaging/ Kafka publisher
 ```
 
 ## Dependencias (package.json)
 
-Fastify 4, Drizzle ORM, `pg` 8, `zod` 3, `kafkajs`, `pino`, `typescript` 5, `jest` + `testcontainers`.
+Fastify 5, `pg` 8, `zod` 4, `kafkajs`, `pino` 9, `typescript` 5, `jest`. (Drizzle ORM se retiró: el esquema lo gobierna Liquibase.)
 
 ## Ejecución
 

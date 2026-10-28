@@ -13,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UrlPathHelper;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,10 +39,9 @@ public class SessionAuthClient {
 
     private static final Logger log = LoggerFactory.getLogger(SessionAuthClient.class);
 
-    /** Salud y documentación: nunca piden sesión. */
+    /** Salud: nunca pide sesión (la documentación de springdoc se abre aparte, solo si está activada). */
     public static final List<String> PUBLIC_PREFIXES = List.of(
-            "/health", "/api/v1/health", "/api/health",
-            "/actuator/", "/v3/api-docs", "/swagger-ui", "/swagger-ui.html");
+            "/health", "/api/v1/health", "/api/health", "/actuator/health");
 
     static final long CACHE_TTL_MS = 10_000;
     private static final int CACHE_MAX_ENTRIES = 5_000;
@@ -56,6 +56,7 @@ public class SessionAuthClient {
         }
     }
 
+    /** {@code roles} es null cuando solo se validó la sesión ({@link #authenticateSession}). */
     private record CachedSession(String userId, List<String> roles, long expiresAt) {}
 
     private final RestTemplate restTemplate;
@@ -83,6 +84,30 @@ public class SessionAuthClient {
 
     /** Valida el header Authorization: sesión activa en identity y roles en authorization. */
     public AuthResult authenticate(String authorizationHeader) {
+        AuthResult session = authenticateSession(authorizationHeader);
+        if (!session.authenticated()) return session;
+        String token = session.caller().token();
+        String caller = session.caller().userId();
+
+        CachedSession cached = sessionCache.get(token);
+        if (cached != null && cached.roles() != null && cached.expiresAt() > System.currentTimeMillis()) {
+            return new AuthResult(new Caller(caller, cached.roles(), token), null);
+        }
+        List<String> roles = fetchRoles(token, caller);
+        if (roles == null) {
+            return new AuthResult(null, "Cannot verify user roles");
+        }
+        remember(token, caller, List.copyOf(roles));
+        return new AuthResult(new Caller(caller, List.copyOf(roles), token), null);
+    }
+
+    /**
+     * Solo la sesión activa en identity, sin pedir roles (el Caller sale con roles vacíos).
+     * Lo usa authorization para sus propias primitivas (roles y evaluate), que
+     * {@link #authenticate} de cualquier servicio consulta: pedir roles desde ahí
+     * volvería a llamar a authorization en bucle.
+     */
+    public AuthResult authenticateSession(String authorizationHeader) {
         if (authorizationHeader == null || !authorizationHeader.regionMatches(true, 0, "Bearer ", 0, 7)) {
             return new AuthResult(null, "Missing bearer token");
         }
@@ -96,7 +121,7 @@ public class SessionAuthClient {
 
         CachedSession cached = sessionCache.get(token);
         if (cached != null && cached.expiresAt() > System.currentTimeMillis()) {
-            return new AuthResult(new Caller(cached.userId(), cached.roles(), token), null);
+            return new AuthResult(new Caller(cached.userId(), List.of(), token), null);
         }
         if (cached != null) sessionCache.remove(token);
 
@@ -109,13 +134,13 @@ public class SessionAuthClient {
             return new AuthResult(null, "Session without user");
         }
         String caller = String.valueOf(userId);
-        List<String> roles = fetchRoles(token, caller);
-        if (roles == null) {
-            return new AuthResult(null, "Cannot verify user roles");
-        }
+        remember(token, caller, null);
+        return new AuthResult(new Caller(caller, List.of(), token), null);
+    }
+
+    private void remember(String token, String userId, List<String> roles) {
         if (sessionCache.size() > CACHE_MAX_ENTRIES) sessionCache.clear();
-        sessionCache.put(token, new CachedSession(caller, List.copyOf(roles), System.currentTimeMillis() + CACHE_TTL_MS));
-        return new AuthResult(new Caller(caller, List.copyOf(roles), token), null);
+        sessionCache.put(token, new CachedSession(userId, roles, System.currentTimeMillis() + CACHE_TTL_MS));
     }
 
     /** Pregunta a authorization si el llamante tiene el permiso (solo el "sí" se cachea). */
@@ -133,6 +158,18 @@ public class SessionAuthClient {
             allowedUntil.put(key, now + CACHE_TTL_MS);
         }
         return allowed;
+    }
+
+    private static final UrlPathHelper PATHS = new UrlPathHelper();
+
+    /**
+     * Ruta de la petición decodificada y sin parámetros de ruta, como la resuelve Spring MVC.
+     * Los filtros deben decidir (pública, permiso requerido) sobre esta ruta y no sobre
+     * {@code getRequestURI()}: ahí {@code /%61pi/v1/...} llega al controlador de
+     * {@code /api/v1/...} pero un filtro que compara el texto crudo no lo reconoce.
+     */
+    public static String requestPath(HttpServletRequest request) {
+        return PATHS.getPathWithinApplication(request);
     }
 
     public static boolean isPublicPrefix(String path) {

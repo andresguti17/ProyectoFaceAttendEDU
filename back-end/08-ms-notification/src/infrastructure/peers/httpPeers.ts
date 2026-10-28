@@ -42,6 +42,16 @@ export function peerConfigFromEnv(env: NodeJS.ProcessEnv = process.env): PeerCon
   };
 }
 
+/**
+ * Why the attendance alerts are off: 'switched-off' is a decision (ATTENDANCE_ALERTS_ENABLED=false),
+ * 'no-service-account' is a misconfiguration that leaves every closed class without its Absent
+ * records; null when they are on.
+ */
+export function alertsOffReason(env: NodeJS.ProcessEnv = process.env): 'switched-off' | 'no-service-account' | null {
+  if ((env.ATTENDANCE_ALERTS_ENABLED ?? 'true').trim().toLowerCase() === 'false') return 'switched-off';
+  return peerConfigFromEnv(env) ? null : 'no-service-account';
+}
+
 export type FetchFn = (input: string, init?: { method?: string; headers?: Record<string, string>; body?: string }) => Promise<{
   ok: boolean;
   status: number;

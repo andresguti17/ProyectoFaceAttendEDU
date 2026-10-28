@@ -22,7 +22,7 @@ Control de acceso basado en roles (RBAC). Gestionar roles, permisos y asignacion
 | Componente | Tecnologia | Justificacion |
 |------------|-----------|---------------|
 | Lenguaje | **Java 21** | Consistencia con los demas servicios nucleares (Identity, Scheduling, Attendance) |
-| Framework | **Spring Boot 4.1.1** | Spring Security es el estandar oro para RBAC |
+| Framework | **Spring Boot 4.1.2** | Spring Security es el estandar oro para RBAC |
 | Arquitectura | **Hexagonal** | Misma estructura que Identity |
 
 ### 3.2 Dependencias Principales
@@ -72,7 +72,7 @@ lombok
 
 ### 3.5 Stack Actual
 
-Authorization esta implementado en **Java 21 + Spring Boot 4.1.1** con arquitectura hexagonal.
+Authorization esta implementado en **Java 21 + Spring Boot 4.1.2** con arquitectura hexagonal.
 
 #### Justificacion
 

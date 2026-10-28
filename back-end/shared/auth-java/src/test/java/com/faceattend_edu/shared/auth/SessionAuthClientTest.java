@@ -72,6 +72,20 @@ class SessionAuthClientTest {
     }
 
     @Test
+    void sessionOnlyCheckNeverAsksForRoles() {
+        // authorization serves the role lookups itself: asking for roles there would call itself.
+        activeSession(ExpectedCount.once());
+
+        SessionAuthClient.AuthResult result = client.authenticateSession("Bearer " + TOKEN);
+
+        assertThat(result.authenticated()).isTrue();
+        assertThat(result.caller().userId()).isEqualTo(USER);
+        assertThat(result.caller().roles()).isEmpty();
+        assertThat(client.authenticateSession("Bearer not-a-uuid").denial()).isEqualTo("Invalid token format");
+        server.verify();
+    }
+
+    @Test
     void inactiveSessionIsRejected() {
         server.expect(requestTo(SESSION_URL))
                 .andRespond(withSuccess("{\"sessionStatus\":\"Closed\",\"userId\":\"" + USER + "\"}", MediaType.APPLICATION_JSON));
@@ -144,9 +158,53 @@ class SessionAuthClientTest {
     }
 
     @Test
-    void healthAndDocsArePublic() {
+    void onlyHealthIsPublic() {
         assertThat(SessionAuthClient.isPublicPrefix("/actuator/health")).isTrue();
-        assertThat(SessionAuthClient.isPublicPrefix("/v3/api-docs")).isTrue();
+        assertThat(SessionAuthClient.isPublicPrefix("/api/v1/health")).isTrue();
+        assertThat(SessionAuthClient.isPublicPrefix("/actuator/env")).isFalse();
+        assertThat(SessionAuthClient.isPublicPrefix("/v3/api-docs")).isFalse();
         assertThat(SessionAuthClient.isPublicPrefix("/api/v1/persons")).isFalse();
+    }
+
+    @Test
+    void sessionOnlyNeverAsksAuthorizationForRoles() {
+        activeSession(ExpectedCount.once());
+
+        SessionAuthClient.AuthResult first = client.authenticateSession("Bearer " + TOKEN);
+        SessionAuthClient.AuthResult second = client.authenticateSession("Bearer " + TOKEN);
+
+        assertThat(first.authenticated()).isTrue();
+        assertThat(first.caller().userId()).isEqualTo(USER);
+        assertThat(first.caller().roles()).isEmpty();
+        assertThat(second.caller()).isEqualTo(first.caller());
+        assertThat(client.authenticateSession(null).denial()).isEqualTo("Missing bearer token");
+        server.verify();
+    }
+
+    @Test
+    void fullAuthenticationAfterASessionOnlyCheckStillResolvesRoles() {
+        activeSession(ExpectedCount.once());
+        roles(ExpectedCount.once());
+
+        client.authenticateSession("Bearer " + TOKEN);
+        SessionAuthClient.AuthResult full = client.authenticate("Bearer " + TOKEN);
+
+        assertThat(full.caller().roles()).containsExactly("Instructor", "Aprendiz");
+        server.verify();
+    }
+
+    @Test
+    void requestPathIsDecodedLikeSpringMvcDoes() {
+        assertThat(SessionAuthClient.requestPath(request("/api/v1/roles"))).isEqualTo("/api/v1/roles");
+        assertThat(SessionAuthClient.requestPath(request("/%61pi/v1/%72oles"))).isEqualTo("/api/v1/roles");
+        assertThat(SessionAuthClient.requestPath(request("/api/v1/roles;jsessionid=abc"))).isEqualTo("/api/v1/roles");
+        assertThat(SessionAuthClient.isPublicPrefix(SessionAuthClient.requestPath(request("/%68ealth")))).isTrue();
+        assertThat(SessionAuthClient.isPublicPrefix(SessionAuthClient.requestPath(request("/%61pi/v1/persons")))).isFalse();
+    }
+
+    private static MockHttpServletRequest request(String uri) {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", uri);
+        request.setRequestURI(uri);
+        return request;
     }
 }

@@ -6,9 +6,14 @@
 # tocar su esquema; los crea database/scripts/create-service-logins.sh.
 # Requiere NEON_HOST: host completo de Neon, con region (p. ej.
 # ep-xxxx-pooler.c-2.sa-east-1.aws.neon.tech). Sin la region el nombre no resuelve.
+#
+# Los microservicios NO publican puertos en el host en producción (hallazgo S-04): Caddy -> Kong
+# los alcanza por la red Docker y el health gate del despliegue usa `docker inspect` y Kong :8000.
+# Así un BIND_IP=0.0.0.0 en .env.prod ya no los expone. Para depurar: `docker exec` o un túnel SSH a Kong.
 
 services:
   ms-identity:
+    ports: !reset []
     depends_on: !override
       # Quitamos: postgres (service_healthy)
       redis:
@@ -23,8 +28,12 @@ services:
       SPRING_DATASOURCE_USERNAME: ${IDENTITY_DB_USER:-identity_app}
       SPRING_DATASOURCE_PASSWORD: ${IDENTITY_DB_PASSWORD:?IDENTITY_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: identity
+      # No API documentation in production (springdoc on by default for local runs).
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
 
   ms-authorization:
+    ports: !reset []
     depends_on: !override
       redis:
         condition: service_healthy
@@ -35,8 +44,12 @@ services:
       SPRING_DATASOURCE_USERNAME: ${AUTHORIZATION_DB_USER:-authorization_app}
       SPRING_DATASOURCE_PASSWORD: ${AUTHORIZATION_DB_PASSWORD:?AUTHORIZATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: authorization
+      # No API documentation in production (springdoc on by default for local runs).
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
 
   ms-scheduling:
+    ports: !reset []
     depends_on: !override
       kafka:
         condition: service_healthy
@@ -45,8 +58,12 @@ services:
       SPRING_DATASOURCE_USERNAME: ${SCHEDULING_DB_USER:-scheduling_app}
       SPRING_DATASOURCE_PASSWORD: ${SCHEDULING_DB_PASSWORD:?SCHEDULING_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: scheduling
+      # No API documentation in production (springdoc on by default for local runs).
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
 
   ms-attendance:
+    ports: !reset []
     depends_on: !override
       mongodb:
         condition: service_healthy
@@ -59,21 +76,24 @@ services:
       SPRING_DATASOURCE_USERNAME: ${ATTENDANCE_DB_USER:-attendance_app}
       SPRING_DATASOURCE_PASSWORD: ${ATTENDANCE_DB_PASSWORD:?ATTENDANCE_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}
       SPRING_DATASOURCE_HIKARI_SCHEMA: attendance
+      # No API documentation in production (springdoc on by default for local runs).
+      SPRINGDOC_API_DOCS_ENABLED: "false"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "false"
 
   ms-biometric:
+    ports: !reset []
     depends_on: !override
       mongodb:
         condition: service_healthy
       kafka:
         condition: service_healthy
+    # Biometric keeps its data in MongoDB only: it never receives the Neon credentials.
     environment:
-      SPRING_DATASOURCE_URL: ${NEON_JDBC_URL}
-      SPRING_DATASOURCE_USERNAME: ${NEON_USER}
-      SPRING_DATASOURCE_PASSWORD: ${NEON_PASSWORD}
-      SPRING_DATASOURCE_HIKARI_SCHEMA: biometric
+      BIOMETRIC_DOCS_ENABLED: "false"
 
   # ── Node/TypeScript services ──
   ms-academic:
+    ports: !reset []
     depends_on: !override
       kafka:
         condition: service_healthy
@@ -81,6 +101,7 @@ services:
       DATABASE_URL: postgresql://${ACADEMIC_DB_USER:-academic_app}:${ACADEMIC_DB_PASSWORD:?ACADEMIC_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=academic&sslmode=require
 
   ms-configuration:
+    ports: !reset []
     depends_on: !override
       kafka:
         condition: service_healthy
@@ -88,6 +109,7 @@ services:
       DATABASE_URL: postgresql://${CONFIGURATION_DB_USER:-configuration_app}:${CONFIGURATION_DB_PASSWORD:?CONFIGURATION_DB_PASSWORD is required (database/scripts/create-service-logins.sh)}@${NEON_HOST:?NEON_HOST is required}/${POSTGRES_DB}?schema=configuration&sslmode=require
 
   ms-quality:
+    ports: !reset []
     depends_on: !override
       kafka:
         condition: service_healthy
@@ -96,6 +118,7 @@ services:
 
   # ── Go — ms-notification ──
   ms-notification:
+    ports: !reset []
     depends_on: !override
       kafka:
         condition: service_healthy
@@ -104,6 +127,9 @@ services:
 
   # ── Gateway ──
   kong-gateway:
+    # Caddy termina TLS y llega a Kong por la red Docker: el proxy sin TLS no se publica fuera del host.
+    ports: !override
+      - "127.0.0.1:${KONG_PROXY_PORT:-8000}:8000"
     environment:
       # Real web origins only (e.g. the Vercel domain). No default in production.
       KONG_CORS_ORIGINS: ${KONG_CORS_ORIGINS:?KONG_CORS_ORIGINS is required (comma-separated https origins of the web app)}

@@ -22,8 +22,6 @@ import {
     GeneralSettings,
     FaceSettings,
     NotificationsSettings,
-    SecuritySettings,
-    AppearanceSettings,
 } from "./modals";
 import {
     InstitutionInfo,
@@ -40,12 +38,9 @@ import {
     DailySummaryToggle,
     PushNotificationToggle,
     PushNotificationLimit,
-    TwoFactorSetup,
-    OwnSecurityMeter,
-    SessionTimeInput,
-    AccentBlock,
 } from "./sections";
 import { FutureNotice } from "./sections/FutureNotice";
+import { useSettingsActions, RoleSecuritySettings, RoleAppearanceSettings } from "./sharedSections";
 import {
     calendarPeriodDates,
     describePeriod,
@@ -158,9 +153,7 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
     );
 
     // ── Registrar callbacks con el padre ──────────────────────
-    useEffect(() => {
-        if (onSave) onSave(save);
-    }, [onSave, save]);
+    useSettingsActions({ onSave, save, onDiscard, discard });
 
     // ── Hidratación desde el backend ──────────────────────────
     // La réplica web.* por sede es la fuente compartida entre
@@ -187,10 +180,6 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    useEffect(() => {
-        if (onDiscard) onDiscard(discard);
-    }, [onDiscard, discard]);
 
     // ── Derivados ─────────────────────────────────────────────
     const automaticPeriod = useMemo(() => {
@@ -357,37 +346,22 @@ export function AdminSettings({ section, onSave, onDiscard, onDiscardColors, onS
             />
         ),
         security: (
-            <SecuritySettings
-                title={t("Seguridad")}
-                header={<OwnSecurityMeter sessionTime={config.sessionTime} />}
-                sections={[
-                    ...(user?.schoolId != null ? [
-                        <FutureNotice message={t("El tiempo de sesión es global de la plataforma: lo define el Super Administrador. Tu cambio solo se aplica en este navegador.")} />,
-                    ] : []),
-                    <TwoFactorSetup />,
-                    <SessionTimeInput
-                        value={config.sessionTime}
-                        onChange={(value) => updateConfig("sessionTime", value)}
-                        contextHint={(min) =>
-                            min > 120 ? t(" ⚠ Sesiones largas aumentan el riesgo si el dispositivo queda desbloqueado.")
-                            : min <= 15 ? t(" Sesión muy corta — el usuario deberá iniciar sesión con frecuencia.")
-                            : t(" Tiempo razonable para uso normal en aula.")
-                        }
-                    />,
-                ]}
+            <RoleSecuritySettings
+                sessionTime={config.sessionTime}
+                onSessionTimeChange={(value) => updateConfig("sessionTime", value)}
+                shortSessionHint={t(" Sesión muy corta — el usuario deberá iniciar sesión con frecuencia.")}
+                normalSessionHint={t(" Tiempo razonable para uso normal en aula.")}
+                notices={user?.schoolId != null ? [
+                    <FutureNotice message={t("El tiempo de sesión es global de la plataforma: lo define el Super Administrador. Tu cambio solo se aplica en este navegador.")} />,
+                ] : []}
             />
         ),
         appearance: (
-            <AppearanceSettings
-                title={t("Apariencia")}
-                sections={[
-                    <AccentBlock
-                        onHasChanges={onColorChanges}
-                        onDiscardRegister={onDiscardColors}
-                        onSaveSuccessRegister={onSaveSuccessColors}
-                        previewTheme={previewTheme}
-                    />,
-                ]}
+            <RoleAppearanceSettings
+                onColorChanges={onColorChanges}
+                onDiscardColors={onDiscardColors}
+                onSaveSuccessColors={onSaveSuccessColors}
+                previewTheme={previewTheme}
             />
         ),
     };

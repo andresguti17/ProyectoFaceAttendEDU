@@ -122,23 +122,25 @@ class TestRouteTable:
     def test_every_business_route_is_mounted_under_the_gateway_prefix(self, client):
         """Kong forwards `/api/v1/biometric` with strip_path=false, so the full
         prefix must be served by the app itself."""
-        actual = {
-            (method, route.path)
-            for route in app.routes
-            for method in getattr(route, "methods", set())
-            if getattr(route, "include_in_schema", True) or route.path.startswith("/health")
-        }
-        missing = EXPECTED_ROUTES - actual
+        missing = EXPECTED_ROUTES - _served_routes()
         assert not missing, f"routes not mounted: {sorted(missing)}"
 
     def test_no_business_route_leaked_outside_the_prefix(self, client):
-        for route in app.routes:
-            path = getattr(route, "path", "")
+        for _method, path in _served_routes():
             if path.startswith("/health") or path in {"/api/v1/health"}:
                 continue
-            if path.startswith(("/openapi.json", "/docs", "/redoc")):
-                continue
             assert path.startswith("/api/v1/biometric"), f"unexpected route {path}"
+
+
+def _served_routes() -> set[tuple[str, str]]:
+    """(METHOD, path) of every HTTP route, read from the OpenAPI document: the
+    public contract, unlike `app.routes`, whose shape changes between FastAPI
+    releases (included routers are no longer flattened into it)."""
+    return {
+        (method.upper(), path)
+        for path, operations in app.openapi()["paths"].items()
+        for method in operations
+    }
 
 
 class TestFacialEndpoints:
@@ -147,7 +149,7 @@ class TestFacialEndpoints:
         assert response.status_code == 201
         body = response.json()
         assert body["person_id"] == PERSON
-        assert body["encoding"] == UNIT_VECTOR
+        assert "encoding" not in body  # the biometric itself never leaves through the API
         assert body["model_version"] == "facenet-v1"
         assert body["is_active"] is True
         assert body["template_version"] == 1
@@ -404,7 +406,8 @@ class TestMatchAudit:
             f"{FACIAL_PREFIX}/verify", json={"person_id": PERSON, "encoding": UNIT_VECTOR}
         )
 
-        entries = stores["match_logs"].entries
+        # The enrollment is audited too (who enrolled), so only the verification is counted here.
+        entries = [e for e in stores["match_logs"].entries if e.operation != "ENROLL"]
         assert len(entries) == 1
         assert entries[0].operation == "VERIFY"
         assert entries[0].biometric_type is BiometricType.FACIAL
@@ -418,7 +421,7 @@ class TestMatchAudit:
             f"{FACIAL_PREFIX}/identify", json={"encoding": UNIT_VECTOR}
         ).status_code == 404
 
-        entries = stores["match_logs"].entries
+        entries = [e for e in stores["match_logs"].entries if e.operation != "ENROLL"]
         assert len(entries) == 1
         assert entries[0].operation == "IDENTIFY"
         assert entries[0].matched is False

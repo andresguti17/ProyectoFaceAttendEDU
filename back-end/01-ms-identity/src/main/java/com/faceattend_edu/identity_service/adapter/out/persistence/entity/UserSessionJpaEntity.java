@@ -14,8 +14,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class UserSessionJpaEntity {
 
+    // Guarda el resumen del token (SessionTokenHasher), no el token: lo asigna el adaptador.
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "session_id")
     private UUID sessionId;
 

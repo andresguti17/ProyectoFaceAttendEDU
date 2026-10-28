@@ -12,6 +12,63 @@ import { exportToExcel, exportToPDF, buildHTMLTable, formatPercentageWithColor, 
 import { useDateFormat } from "../view/components/hooks/useDateFormat";
 
 /**
+ * Hoja de Excel de históricos: una fila por registro con anchos de columna fijos.
+ */
+export function buildHistoricosSheets(users, t, formatDate) {
+    const rows = users.map(user => ({
+        [t("Código")]: user.studentCode,
+        [t("Nombre")]: user.studentName,
+        [t("Ficha")]: user.fichaName || user.ficha,
+        [t("Ambiente")]: user.environment,
+        [t("Fecha")]: user.date ? formatDate(user.date) : t("Sin registro"),
+        [t("Estado")]: user.late ? t("Retardo") : (user.status === "present" ? t("Presente") : t("Ausente")),
+        [t("Horario Programado")]: user.scheduledStartTime && user.scheduledEndTime
+            ? `${user.scheduledStartTime} - ${user.scheduledEndTime}`
+            : t("N/A"),
+        [t("Registro Real")]: user.actualCheckInTime && user.actualCheckOutTime
+            ? `${user.actualCheckInTime} - ${user.actualCheckOutTime}`
+            : t("N/A"),
+        [t("Total de Registros")]: user.totalRecords,
+        [t("Asistencia (%)")]: user.attendance || 0,
+    }));
+
+    return [{
+        name: t("Históricos de Asistencia"),
+        data: rows,
+        columns: [
+            { wch: 12 },  // Código
+            { wch: 32 },  // Nombre
+            { wch: 16 },  // Ficha
+            { wch: 14 },  // Ambiente
+            { wch: 14 },  // Fecha
+            { wch: 12 },  // Estado
+            { wch: 20 },  // Horario Programado
+            { wch: 20 },  // Registro Real
+            { wch: 14 },  // Total Registros
+            { wch: 14 },  // Asistencia (%)
+        ],
+    }];
+}
+
+/** Columna "Estado" del PDF: presente, retardo o ausente con su color. */
+export function historicosStatusColumn(t, c) {
+    return {
+        key: "status",
+        label: t("Estado"),
+        width: "10%",
+        align: "center",
+        render: (value, row) => {
+            const status = row.late ? "late" : (value === "present" ? "present" : "absent");
+            return formatStatusBadge(status, {
+                present: { text: t("Presente"), color: c.status.success },
+                late: { text: t("Retardo"), color: c.status.warning },
+                absent: { text: t("Ausente"), color: c.status.danger },
+            });
+        },
+    };
+}
+
+/**
  * Hook para manejar la lógica de exportación de históricos
  */
 export function useHistoricosViewModel(filteredUsers) {
@@ -21,62 +78,20 @@ export function useHistoricosViewModel(filteredUsers) {
     const c = theme.colors;
 
     /**
-     * Construye las filas de datos para Excel
-     */
-    const buildExcelRows = useCallback((users) => {
-        return users.map(user => ({
-            [t("Código")]: user.studentCode,
-            [t("Nombre")]: user.studentName,
-            [t("Ficha")]: user.fichaName || user.ficha,
-            [t("Ambiente")]: user.environment,
-            [t("Fecha")]: user.date ? formatDate(user.date) : t("Sin registro"),
-            [t("Estado")]: user.late ? t("Retardo") : (user.status === "present" ? t("Presente") : t("Ausente")),
-            [t("Horario Programado")]: user.scheduledStartTime && user.scheduledEndTime 
-                ? `${user.scheduledStartTime} - ${user.scheduledEndTime}` 
-                : t("N/A"),
-            [t("Registro Real")]: user.actualCheckInTime && user.actualCheckOutTime 
-                ? `${user.actualCheckInTime} - ${user.actualCheckOutTime}` 
-                : t("N/A"),
-            [t("Total de Registros")]: user.totalRecords,
-            [t("Asistencia (%)")]: user.attendance || 0,
-        }));
-    }, [t, formatDate]);
-
-    /**
      * Exporta los datos históricos a Excel
      */
-    const exportExcel = useCallback(() => {
-        const rows = buildExcelRows(filteredUsers);
-
-        // Configurar hojas con anchos de columna
-        const sheets = [
-            {
-                name: t("Históricos de Asistencia"),
-                data: rows,
-                columns: [
-                    { wch: 12 },  // Código
-                    { wch: 32 },  // Nombre
-                    { wch: 16 },  // Ficha
-                    { wch: 14 },  // Ambiente
-                    { wch: 14 },  // Fecha
-                    { wch: 12 },  // Estado
-                    { wch: 20 },  // Horario Programado
-                    { wch: 20 },  // Registro Real
-                    { wch: 14 },  // Total Registros
-                    { wch: 14 },  // Asistencia (%)
-                ],
-            },
-        ];
+    const exportExcel = useCallback(async () => {
+        const sheets = buildHistoricosSheets(filteredUsers, t, formatDate);
 
         const filename = `Historicos_Asistencia_${formatDate(new Date(), "YYYY-MM-DD")}.xlsx`;
-        const result = exportToExcel(sheets, filename);
+        const result = await exportToExcel(sheets, filename);
 
         if (!result.success) {
             console.error("Error al exportar Excel:", result.error);
         }
 
         return result;
-    }, [filteredUsers, buildExcelRows, t, formatDate]);
+    }, [filteredUsers, t, formatDate]);
 
     /**
      * Exporta los datos históricos a PDF
@@ -94,21 +109,8 @@ export function useHistoricosViewModel(filteredUsers) {
                 width: "12%",
                 render: (value) => value ? formatDate(value) : t("Sin registro")
             },
-            {
-                key: "status",
-                label: t("Estado"),
-                width: "10%",
-                align: "center",
-                render: (value, row) => {
-                    const status = row.late ? "late" : (value === "present" ? "present" : "absent");
-                    return formatStatusBadge(status, {
-                        present: { text: t("Presente"), color: c.status.success },
-                        late: { text: t("Retardo"), color: c.status.warning },
-                        absent: { text: t("Ausente"), color: c.status.danger },
-                    });
-                },
-            },
-            {
+            historicosStatusColumn(t, c),
+{
                 key: "attendance",
                 label: t("Asistencia"),
                 width: "10%",
@@ -140,12 +142,12 @@ export function useHistoricosViewModel(filteredUsers) {
             text-align: center;
             margin-bottom: 40px;
             padding-bottom: 20px;
-            border-bottom: 3px solid ${c.primary};
+            border-bottom: 3px solid ${c.brand.primary};
         }
         .header h1 {
             font-size: 32px;
             font-weight: 700;
-            color: ${c.primary};
+            color: ${c.brand.primary};
             margin-bottom: 8px;
         }
         .header p {
@@ -167,7 +169,7 @@ export function useHistoricosViewModel(filteredUsers) {
         .summary-item .value {
             font-size: 36px;
             font-weight: 700;
-            color: ${c.primary};
+            color: ${c.brand.primary};
             margin-bottom: 4px;
         }
         .summary-item .label {
@@ -182,7 +184,7 @@ export function useHistoricosViewModel(filteredUsers) {
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         thead {
-            background: ${c.primary};
+            background: ${c.brand.primary};
             color: white;
         }
         th {

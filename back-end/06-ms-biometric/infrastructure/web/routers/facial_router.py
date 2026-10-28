@@ -49,11 +49,13 @@ from infrastructure.web.liveness import (
     verify_liveness_challenge,
 )
 from infrastructure.web.match_audit import record_match
+from infrastructure.web.match_scope import UNRESTRICTED, MatchScope, best_allowed, get_match_scope
 from infrastructure.web.security import (
     STAFF_PERMISSION,
     bearer_or_none,
     ensure_biometric_consent,
     ensure_can_enroll,
+    ensure_staff_scope,
     require_permission,
 )
 from infrastructure.web.schemas.responses import template_response
@@ -82,6 +84,11 @@ def _liveness_failure_reason(images, action: str) -> str:
         return liveness_report(images, action).reason
     except Exception:  # noqa: BLE001 - diagnostics must never turn a 400 into a 500
         return "reason unavailable"
+
+
+def _actor_user_id(request: Request | None) -> str | None:
+    """The authenticated user who made the call (audit: who enrolled a face)."""
+    return str(getattr(getattr(request, "state", None), "user_id", "") or "") or None
 
 
 def _correlation_id(request: Request) -> str | None:
@@ -126,10 +133,14 @@ async def _best_facial_match(
     repository: BiometricRepositoryPort,
     threshold: float,
     exclude_person_id: str | None = None,
+    scope: MatchScope = UNRESTRICTED,
 ) -> tuple[FacialEmbedding | None, float]:
-    """Shared 1:N face scan (`face_similarity`) used by `/identify` and `/identify-image`."""
-    best: FacialEmbedding | None = None
-    best_score = 0.0
+    """Shared 1:N face scan (`face_similarity`) used by `/identify` and `/identify-image`.
+
+    Only a person the caller's `scope` allows can match (see `match_scope`): a face of another
+    school answers "no match", exactly like a face that was never enrolled.
+    """
+    scored: list[tuple[float, FacialEmbedding]] = []
     seen: set[str] = set()
     for template in await repository.list_active():
         if template.person_id in seen:
@@ -137,12 +148,9 @@ async def _best_facial_match(
         seen.add(template.person_id)
         if exclude_person_id is not None and template.person_id == exclude_person_id:
             continue
-        score = face_similarity(encoding, list(template.encoding))
-        if score > best_score:
-            best_score = score
-            best = template
-    matched = best is not None and best_score >= threshold
-    return (best, best_score) if matched else (None, best_score)
+        scored.append((face_similarity(encoding, list(template.encoding)), template))
+    best, score = await best_allowed(scored, threshold, scope)
+    return best, float(max(score, 0.0))
 
 
 async def _closest_other_face(
@@ -169,6 +177,7 @@ async def _closest_other_face(
 async def enroll_facial(
     req: EnrollFacialRequest,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
+    match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
     request: Request = None,
 ):
     # REST only: the WebSocket channel checks the authorization itself before calling this.
@@ -179,7 +188,22 @@ async def enroll_facial(
         encoding=req.encoding,
         model_version=req.model_version,
     )
-    return template_response(await repository.enroll(template))
+    stored = await repository.enroll(template)
+    await record_match(
+        match_logs,
+        BiometricMatchLog(
+            biometric_type=BiometricType.FACIAL,
+            operation=OPERATION_ENROLL,
+            matched=True,
+            score=1.0,
+            threshold=0.0,
+            person_id=req.person_id,
+            embedding_id=stored.embedding_id,
+            correlation_id=_correlation_id(request) if request is not None else None,
+            actor_user_id=_actor_user_id(request),
+        ),
+    )
+    return template_response(stored)
 
 
 @router.get("/liveness-challenge", dependencies=[ANY_ROLE])
@@ -211,8 +235,10 @@ async def liveness_challenge(
 @router.get("/{person_id}", dependencies=[STAFF])
 async def get_facial(
     person_id: str,
+    request: Request,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
 ):
+    await ensure_staff_scope(request, person_id)
     active = await repository.find_active(person_id)
     if active is None:
         raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
@@ -222,8 +248,10 @@ async def get_facial(
 @router.get("/{person_id}/history", dependencies=[STAFF])
 async def facial_history(
     person_id: str,
+    request: Request,
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
 ):
+    await ensure_staff_scope(request, person_id)
     history = await repository.list_history(person_id)
     return {"history": [template_response(template) for template in history]}
 
@@ -235,6 +263,7 @@ async def delete_facial(
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
 ):
+    await ensure_staff_scope(request, person_id)
     # Soft delete: the document stays, is_active goes false and deleted_at is set.
     # Covers both "revoke template" and "delete subject" from the merged
     # 10-ms-face-auth lifecycle endpoints — there is no identity left to keep
@@ -264,7 +293,11 @@ async def verify_facial(
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
     threshold: float = Depends(get_face_match_threshold),
+    match_scope: MatchScope = Depends(get_match_scope),
 ):
+    # A person of another school answers like one without a template: no existence oracle.
+    if not await match_scope.allows(req.person_id):
+        raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
     active = await repository.find_active(req.person_id)
     if active is None:
         raise HTTPException(status_code=404, detail=NO_ACTIVE_TEMPLATE)
@@ -295,8 +328,9 @@ async def identify_facial(
     repository: BiometricRepositoryPort = Depends(get_facial_repository),
     match_logs: MatchLogRepositoryPort = Depends(get_match_log_repository),
     threshold: float = Depends(get_face_match_threshold),
+    match_scope: MatchScope = Depends(get_match_scope),
 ):
-    best, best_score = await _best_facial_match(req.encoding, repository, threshold)
+    best, best_score = await _best_facial_match(req.encoding, repository, threshold, scope=match_scope)
     await record_match(
         match_logs,
         BiometricMatchLog(
@@ -464,6 +498,7 @@ async def enroll_facial_image(
             person_id=req.person_id,
             embedding_id=template.embedding_id,
             correlation_id=_correlation_id(request),
+            actor_user_id=_actor_user_id(request),
         ),
     )
     return template_response(template)
@@ -478,6 +513,7 @@ async def identify_facial_image(
     threshold: float = Depends(get_face_match_threshold),
     secret: str = Depends(get_liveness_secret),
     settings: Settings = Depends(get_settings),
+    match_scope: MatchScope = Depends(get_match_scope),
 ):
     try:
         consume_liveness_challenge(secret, req.challenge_token)
@@ -490,7 +526,7 @@ async def identify_facial_image(
     if encoding is None:
         raise HTTPException(status_code=400, detail="No face found in the image")
 
-    best, best_score = await _best_facial_match(encoding, repository, threshold)
+    best, best_score = await _best_facial_match(encoding, repository, threshold, scope=match_scope)
     await record_match(
         match_logs,
         BiometricMatchLog(

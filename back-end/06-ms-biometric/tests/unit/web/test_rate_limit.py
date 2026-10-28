@@ -99,3 +99,32 @@ class TestLivenessStepRateLimit:
 
         third = client.post(f"{FACIAL_PREFIX}/liveness-step", json=payload)
         assert third.status_code == 429
+
+    def test_clients_behind_the_same_gateway_get_separate_buckets(self, client):
+        # Every request arrives from Kong; the bucket must follow the real caller.
+        challenge = client.get(f"{FACIAL_PREFIX}/liveness-challenge", params={"actions": 2}).json()
+        payload = {"challenge_token": challenge["challenge_token"], "action_index": 0, "images": ["x"] * 6}
+        for _ in range(2):
+            client.post(f"{FACIAL_PREFIX}/liveness-step", json=payload, headers={"X-Real-IP": "203.0.113.1"})
+        blocked = client.post(f"{FACIAL_PREFIX}/liveness-step", json=payload, headers={"X-Real-IP": "203.0.113.1"})
+        other = client.post(f"{FACIAL_PREFIX}/liveness-step", json=payload, headers={"X-Real-IP": "203.0.113.2"})
+        assert blocked.status_code == 429
+        assert other.status_code != 429
+
+
+class TestRateLimitCaller:
+    class _Request:
+        def __init__(self, user_id=None, headers=None, host="10.0.0.5"):
+            self.state = type("State", (), {"user_id": user_id})()
+            self.headers = headers or {}
+            self.client = type("Client", (), {"host": host})()
+
+    def test_the_authenticated_user_wins_over_any_address(self):
+        request = self._Request(user_id="u-1", headers={"x-real-ip": "203.0.113.9"})
+        assert dependencies._rate_limit_caller(request) == "user:u-1"
+
+    def test_without_a_user_the_gateway_forwarded_address_is_used(self):
+        assert dependencies._rate_limit_caller(self._Request(headers={"x-real-ip": "203.0.113.9"})) == "ip:203.0.113.9"
+
+    def test_direct_calls_fall_back_to_the_socket_address(self):
+        assert dependencies._rate_limit_caller(self._Request()) == "ip:10.0.0.5"

@@ -34,5 +34,7 @@ class BiometricMatchLog:
     finger_number: int | None = None
     embedding_id: str | None = None
     correlation_id: str | None = None
+    # Who triggered it (e.g. the school administrator who enrolled a face for a learner).
+    actor_user_id: str | None = None
     log_id: str = field(default_factory=lambda: str(uuid4()))
     created_at: datetime = field(default_factory=_utcnow)

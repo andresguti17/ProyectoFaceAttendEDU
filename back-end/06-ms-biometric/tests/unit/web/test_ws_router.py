@@ -7,6 +7,7 @@ suite already pins — just over `/api/v1/biometric/ws` instead of HTTP.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 from urllib.parse import unquote
 
@@ -28,6 +29,7 @@ from infrastructure.config.dependencies import (
 from infrastructure.config.settings import get_settings
 from infrastructure.web import security
 from infrastructure.web.routers import ws_router
+from infrastructure.web.ws.connection_manager import ConnectionManager
 from main import app
 from tests.support.in_memory_repositories import (
     InMemoryBiometricRepository,
@@ -45,6 +47,10 @@ LIVENESS_SECRET = "test-liveness-secret"
 ADMIN = "11111111-1111-1111-1111-111111111111"
 STUDENT = "22222222-2222-2222-2222-222222222222"
 _PERMISSIONS = {"admin": {"attendance.record:write"}, "student": set()}
+
+
+def _bearer(token):
+    return [security.WS_BEARER_PROTOCOL, token]
 
 
 def _send(ws, message_type, payload=None, client_message_id=None, direction=None):
@@ -109,6 +115,12 @@ def auth_client(monkeypatch, stores):
     get_settings.cache_clear()
     monkeypatch.setattr(security, "_get_json", _fake_get_json)
 
+    async def _roles(url: str, token: str):
+        return [{"roleName": "Super Administrador"}]
+
+    monkeypatch.setattr(security, "_get_list", _roles)
+    security._caller_school_cache.clear()
+
     app.dependency_overrides[get_facial_repository_ws] = lambda: stores["facial"]
     app.dependency_overrides[get_fingerprint_repository_ws] = lambda: stores["fingerprint"]
     app.dependency_overrides[get_match_log_repository_ws] = lambda: stores["match_logs"]
@@ -118,6 +130,7 @@ def auth_client(monkeypatch, stores):
 
     app.dependency_overrides.clear()
     get_settings.cache_clear()
+    security._caller_school_cache.clear()
 
 
 class TestFacialOverWebSocket:
@@ -253,6 +266,158 @@ class TestBroadcastNotifications:
             _send(device, ws_router.PING)
             pong = device.receive_json()
             assert pong["type"] == "pong"
+
+
+# ── Broadcasts stay inside the school ──────────────────────────────────────
+
+SCHOOL_A_ADMIN = "aaaaaaaa-0000-4000-8000-00000000000a"
+SCHOOL_A_KIOSK = "aaaaaaaa-0000-4000-8000-00000000000b"
+SCHOOL_B_ADMIN = "bbbbbbbb-0000-4000-8000-00000000000a"
+SUPER_ADMIN = "cccccccc-0000-4000-8000-00000000000a"
+NO_ACTOR_ADMIN = "dddddddd-0000-4000-8000-00000000000a"
+_SCHOOL_USERS = {  # session token -> (user id, person id, roles)
+    SCHOOL_A_ADMIN: ("user-a1", "person-a1", ["Administrador"]),
+    SCHOOL_A_KIOSK: ("user-a2", "person-a2", ["Instructor"]),
+    SCHOOL_B_ADMIN: ("user-b1", "person-b1", ["Administrador"]),
+    SUPER_ADMIN: ("user-sa", "person-sa", ["Super Administrador"]),
+    NO_ACTOR_ADMIN: ("user-na", "person-na", ["Administrador"]),
+}
+_PERSON_SCHOOL = {"person-a1": 100, "person-a2": 100, "person-b1": 200, "person-in-a": 100, "person-in-b": 200}
+
+
+@pytest.fixture
+def school_client(monkeypatch, stores):
+    monkeypatch.setenv("BIOMETRIC_MONGO_ENABLED", "false")
+    monkeypatch.setenv("BIOMETRIC_AUTH_ENABLED", "true")
+    get_settings.cache_clear()
+    security._caller_school_cache.clear()
+
+    async def get_json(url: str, token: str):
+        if "/api/v1/sessions/" in url:
+            user = _SCHOOL_USERS.get(url.rsplit("/", 1)[1])
+            return (200, {"sessionStatus": "Active", "userId": user[0]}) if user else (404, None)
+        if "/auth/evaluate" in url:
+            return 200, {"allowed": True}
+        user_id = url.rsplit("/", 1)[1]  # identity: GET /api/v1/users/{id}
+        person = next((u[1] for u in _SCHOOL_USERS.values() if u[0] == user_id), None)
+        return (200, {"personId": person}) if person else (404, None)
+
+    async def get_list(url: str, token: str):
+        if "/roles" in url:
+            user_id = url.split("/users/")[1].split("/")[0]
+            return [{"roleName": r} for u in _SCHOOL_USERS.values() if u[0] == user_id for r in u[2]]
+        if "/academic-actors?personId=" in url:
+            school = _PERSON_SCHOOL.get(url.split("personId=")[1])
+            return [{"academicActorId": 1, "schoolId": school}] if school else []
+        return []
+
+    monkeypatch.setattr(security, "_get_json", get_json)
+    monkeypatch.setattr(security, "_get_list", get_list)
+    app.dependency_overrides[get_facial_repository_ws] = lambda: stores["facial"]
+    app.dependency_overrides[get_fingerprint_repository_ws] = lambda: stores["fingerprint"]
+    app.dependency_overrides[get_match_log_repository_ws] = lambda: stores["match_logs"]
+
+    with TestClient(app) as test_client:
+        yield test_client
+
+    app.dependency_overrides.clear()
+    get_settings.cache_clear()
+    security._caller_school_cache.clear()
+
+
+def _ws(client, token):
+    return client.websocket_connect(WS_PATH, subprotocols=_bearer(token))
+
+
+def _enroll(ws, person):
+    _send(ws, ws_router.FACIAL_ENROLL, {"person_id": person, "encoding": UNIT_VECTOR})
+    assert ws.receive_json()["type"] == f"{ws_router.FACIAL_ENROLL}.ack"
+
+
+def _next_frame_is_pong(ws):
+    """Nothing was queued ahead of the pong: no event reached this connection."""
+    _send(ws, ws_router.PING)
+    return ws.receive_json()["type"] == "pong"
+
+
+class TestBroadcastIsScopedBySchool:
+    def test_an_event_reaches_the_same_school_and_super_admins_but_not_another_school(self, school_client):
+        with _ws(school_client, SCHOOL_A_KIOSK) as same_school, _ws(school_client, SCHOOL_B_ADMIN) as other_school, \
+                _ws(school_client, SUPER_ADMIN) as super_admin, _ws(school_client, SCHOOL_A_ADMIN) as sender:
+            _enroll(sender, "person-in-a")
+
+            event = same_school.receive_json()
+            assert event["type"] == "attendance.event" and event["person_id"] == "person-in-a"
+            assert super_admin.receive_json()["person_id"] == "person-in-a"
+            assert _next_frame_is_pong(other_school)
+
+    def test_an_event_about_another_school_does_not_leak_to_the_senders_school(self, school_client):
+        with _ws(school_client, SCHOOL_A_KIOSK) as same_school, _ws(school_client, SCHOOL_B_ADMIN) as other_school, \
+                _ws(school_client, SUPER_ADMIN) as super_admin, _ws(school_client, SCHOOL_A_ADMIN) as sender:
+            _enroll(sender, "person-in-b")
+
+            assert other_school.receive_json()["person_id"] == "person-in-b"
+            assert super_admin.receive_json()["person_id"] == "person-in-b"
+            assert _next_frame_is_pong(same_school)
+
+    def test_an_event_whose_school_is_unknown_only_reaches_super_admins(self, school_client):
+        with _ws(school_client, SCHOOL_A_KIOSK) as same_school, _ws(school_client, SUPER_ADMIN) as super_admin, \
+                _ws(school_client, SCHOOL_A_ADMIN) as sender:
+            _enroll(sender, "person-without-actor")
+
+            assert super_admin.receive_json()["person_id"] == "person-without-actor"
+            assert _next_frame_is_pong(same_school)
+
+    def test_a_caller_without_an_academic_actor_receives_no_school_events(self, school_client):
+        with _ws(school_client, NO_ACTOR_ADMIN) as orphan, _ws(school_client, SCHOOL_A_ADMIN) as sender:
+            _enroll(sender, "person-in-a")
+            assert _next_frame_is_pong(orphan)
+
+    def test_the_handshake_is_refused_when_the_callers_school_cannot_be_resolved(self, school_client, monkeypatch):
+        async def down(url: str, token: str):
+            raise security.httpx.ConnectError("authorization down")
+
+        monkeypatch.setattr(security, "_get_list", down)
+        with pytest.raises(WebSocketDisconnect) as exc_info:
+            with _ws(school_client, SCHOOL_A_ADMIN) as ws:
+                ws.receive_text()
+        assert exc_info.value.code == security.WS_CLOSE_SERVICE_UNAVAILABLE
+
+
+class _FakeSocket:
+    def __init__(self):
+        self.received = []
+
+    async def send_json(self, message):
+        self.received.append(message)
+
+
+class TestConnectionManagerScopes:
+    def _deliveries(self, scopes, school_id):
+        async def run():
+            manager = ConnectionManager()
+            sockets = [_FakeSocket() for _ in scopes]
+            for socket, scope in zip(sockets, scopes):
+                await manager.connect(socket, None, 100, scope)
+            await manager.broadcast({"x": 1}, school_id=school_id)
+            return [bool(socket.received) for socket in sockets]
+
+        return asyncio.run(run())
+
+    def test_each_scope_sees_only_what_it_may(self):
+        scopes = [(True, None), (False, "100"), (False, "200"), (False, None)]
+        assert self._deliveries(scopes, "100") == [True, True, False, False]
+        assert self._deliveries(scopes, None) == [True, False, False, False]
+
+    def test_a_default_connection_is_unrestricted(self):
+        async def run():
+            manager = ConnectionManager()
+            socket = _FakeSocket()
+            await manager.connect(socket, None, 100)
+            await manager.broadcast({"x": 1}, school_id="999")
+            return socket.received
+
+        assert asyncio.run(run()) == [{"x": 1}]
 
 
 class TestIdempotentReplay:
@@ -406,15 +571,34 @@ class TestWebSocketAuthentication:
 
     def test_student_without_permission_is_rejected(self, auth_client):
         with pytest.raises(WebSocketDisconnect) as exc_info:
-            with auth_client.websocket_connect(f"{WS_PATH}?token={STUDENT}") as ws:
+            with auth_client.websocket_connect(WS_PATH, subprotocols=_bearer(STUDENT)) as ws:
                 ws.receive_text()
         assert exc_info.value.code == security.WS_CLOSE_FORBIDDEN
 
-    def test_admin_token_is_accepted(self, auth_client):
-        with auth_client.websocket_connect(f"{WS_PATH}?token={ADMIN}") as ws:
+    def test_admin_token_is_accepted_and_the_bearer_subprotocol_echoed(self, auth_client):
+        with auth_client.websocket_connect(WS_PATH, subprotocols=_bearer(ADMIN)) as ws:
+            assert ws.accepted_subprotocol == security.WS_BEARER_PROTOCOL
             _send(ws, ws_router.PING)
             pong = ws.receive_json()
         assert pong["type"] == "pong"
+
+    def test_a_token_in_the_url_is_no_longer_accepted(self, auth_client):
+        # Query strings end up in proxy and access logs; the token must not travel there.
+        with pytest.raises(WebSocketDisconnect) as exc_info:
+            with auth_client.websocket_connect(f"{WS_PATH}?token={ADMIN}") as ws:
+                ws.receive_text()
+        assert exc_info.value.code == security.WS_CLOSE_UNAUTHORIZED
+
+    def test_one_user_cannot_hold_more_than_the_connection_cap(self, auth_client, monkeypatch):
+        monkeypatch.setenv("BIOMETRIC_WS_MAX_CONNECTIONS_PER_USER", "1")
+        get_settings.cache_clear()
+        with auth_client.websocket_connect(WS_PATH, subprotocols=_bearer(ADMIN)) as first:
+            _send(first, ws_router.PING)
+            first.receive_json()
+            with pytest.raises(WebSocketDisconnect) as exc_info:
+                with auth_client.websocket_connect(WS_PATH, subprotocols=_bearer(ADMIN)) as second:
+                    second.receive_text()
+        assert exc_info.value.code == ws_router.WS_CLOSE_TOO_MANY_CONNECTIONS
 
 
 class TestFacialImageOverWebSocket:

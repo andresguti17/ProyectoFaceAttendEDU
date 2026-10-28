@@ -117,12 +117,28 @@ def _bearer(request: Request) -> str:
     return token
 
 
+WS_BEARER_PROTOCOL = "faceattend.bearer"
+
+
+def _offered_ws_protocols(websocket: WebSocket) -> list[str]:
+    raw = websocket.headers.get("sec-websocket-protocol", "")
+    return [p.strip() for p in raw.split(",") if p.strip()]
+
+
+def ws_bearer_subprotocol(websocket: WebSocket) -> str | None:
+    """The subprotocol to echo on accept: browsers drop the connection unless the
+    server picks one of the protocols they offered."""
+    return WS_BEARER_PROTOCOL if WS_BEARER_PROTOCOL in _offered_ws_protocols(websocket) else None
+
+
 def extract_ws_token(websocket: WebSocket) -> str | None:
-    """Browsers cannot set custom headers on a WS handshake, so the token also
-    travels as `?token=`; non-browser clients may still send a Bearer header."""
-    token = websocket.query_params.get("token")
-    if token:
-        return token.strip()
+    """Browsers cannot set custom headers on a WS handshake, so the token travels as
+    the value after `faceattend.bearer` in Sec-WebSocket-Protocol — never in the URL,
+    where proxies and access logs would keep it. Non-browser clients may send a
+    Bearer header instead."""
+    offered = _offered_ws_protocols(websocket)
+    if len(offered) == 2 and offered[0] == WS_BEARER_PROTOCOL:
+        return offered[1]
     header = websocket.headers.get("authorization", "")
     if header.lower().startswith("bearer "):
         return header[7:].strip()
@@ -354,6 +370,16 @@ async def ensure_can_touch_person(request: Request, person_id: str) -> None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only manage biometric data within your own school")
 
 
+async def ensure_staff_scope(request: Request, person_id: str) -> None:
+    """Staff routes addressed by `person_id` (read, list or delete someone's templates).
+
+    The route dependency already proved the staff permission; this narrows it to the caller's
+    school (Super Administrador: any), so an Instructor or Administrador cannot read or erase the
+    biometrics of another school. A caller without an academic actor gets 403, never "everything".
+    """
+    await ensure_can_touch_case_person(request, person_id)
+
+
 async def ensure_can_touch_case_person(request: Request, case_person_id: str) -> None:
     """Who may review/delete a biometric update case belonging to `case_person_id`.
 
@@ -425,6 +451,17 @@ async def ensure_can_enroll(request: Request, person_id: str, enrolled_at: datet
         code, user = await _get_json(f"{settings.identity_url}/api/v1/users/{quote(user_id)}", token)
         if code != 200 or not user or str(user.get("personId")) != person_id:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "You can only enroll your own face")
+        if settings.enablement_check_enabled:
+            enablement = await _get_enablement(person_id, token)
+            if enablement.get("minor") is True:
+                # The guardian is present at the school and the administrator enrolls the face.
+                raise HTTPException(
+                    status.HTTP_403_FORBIDDEN,
+                    detail={
+                        "code": MINOR_ENROLLMENT_BY_ADMIN_ONLY,
+                        "message": "The face of a minor is enrolled by a school administrator with the guardian present",
+                    },
+                )
         if not has_template:
             return
         cases = await _get_list(
@@ -442,6 +479,8 @@ async def ensure_can_enroll(request: Request, person_id: str, enrolled_at: datet
 
 
 BIOMETRIC_CONSENT_REQUIRED = "BIOMETRIC_CONSENT_REQUIRED"
+PERSON_NOT_ENABLED = "PERSON_NOT_ENABLED"
+MINOR_ENROLLMENT_BY_ADMIN_ONLY = "MINOR_ENROLLMENT_BY_ADMIN_ONLY"
 
 
 def bearer_or_none(request: Request | None) -> str | None:
@@ -466,6 +505,7 @@ async def ensure_biometric_consent(person_id: str, token: str | None) -> None:
         logger.warning("identity unreachable while checking the biometric authorization")
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify the biometric data authorization")
     if code == 200 and body and body.get("biometricAuthorized") is True:
+        await ensure_person_enabled(person_id, token)
         return
     if code in (200, 404):
         raise HTTPException(
@@ -479,8 +519,43 @@ async def ensure_biometric_consent(person_id: str, token: str | None) -> None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Person outside your scope")
     if code == 400:
         # identity rejected the id itself: a client error, not an outage (nothing is stored either way)
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "person_id is not a valid person")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "person_id is not a valid person")
     raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify the biometric data authorization")
+
+
+async def _get_enablement(person_id: str, token: str | None) -> dict:
+    """Terms/guardian status of the person from identity (GET /persons/{id}/terms).
+
+    Fails closed: if identity cannot answer, nothing biometric is stored or matched."""
+    settings = get_settings()
+    try:
+        code, body = await _get_json(f"{settings.identity_url}/api/v1/persons/{quote(person_id)}/terms", token or "")
+    except httpx.HTTPError:
+        logger.warning("identity unreachable while checking the terms acceptance")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify the terms acceptance")
+    if code == 200 and isinstance(body, dict):
+        return body
+    if code == 403:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Person outside your scope")
+    raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Cannot verify the terms acceptance")
+
+
+async def ensure_person_enabled(person_id: str, token: str | None) -> None:
+    """A learner who has not accepted the terms (a minor: without a registered guardian and the
+    guardian acceptance) cannot enroll or use facial verification."""
+    if not get_settings().enablement_check_enabled:
+        return
+    enablement = await _get_enablement(person_id, token)
+    if enablement.get("enabled") is True:
+        return
+    step = enablement.get("pendingStep") or "TERMS"
+    raise HTTPException(
+        status.HTTP_403_FORBIDDEN,
+        detail={
+            "code": PERSON_NOT_ENABLED,
+            "message": f"The person cannot use biometric features yet; pending step: {step}",
+        },
+    )
 
 
 async def authenticate_websocket(websocket: WebSocket, permission: str | None) -> str | None:

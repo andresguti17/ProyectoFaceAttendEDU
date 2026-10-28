@@ -338,7 +338,7 @@ const SubmitButton = ({
                 <ActivityIndicator color={labels.colors.onPrimary} size="small" />
             ) : cooldown.isActive ? (
                 <Text style={styles.recoveryPrimaryButtonText}>
-                    {t('forgotPassword.retryIn', {seconds: cooldown.remaining})}
+                    {labels.retryIn(cooldown.remaining)}
                 </Text>
             ) : (
                 <Text style={styles.recoveryPrimaryButtonText}>
@@ -404,6 +404,7 @@ export default function ForgotPasswordScreen({ navigation }) {
         sendA11y: t('forgotPassword.sendA11y'),
         emailHint: t('forgotPassword.emailHint'),
         waitSeconds: (seconds) => t('forgotPassword.waitSeconds', {seconds}),
+        retryIn: (seconds) => t('forgotPassword.retryIn', {seconds}),
         colors,
     }), [t, colors]);
 

@@ -8,3 +8,4 @@ export * from "./configurationApi";
 export * from "./notificationApi";
 export * from "./qualityApi";
 export * from "./biometricCaptureApi";
+export * from "./termsApi";

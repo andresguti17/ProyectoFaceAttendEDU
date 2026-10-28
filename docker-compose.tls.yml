@@ -15,7 +15,7 @@
 
 services:
   caddy:
-    image: caddy:2-alpine
+    image: caddy:2-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f
     container_name: faceattend-caddy
     restart: unless-stopped
     depends_on:
@@ -34,7 +34,9 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     networks:
-      - faceattend-edge
+      # Fixed address: one of the two proxies Kong trusts for X-Forwarded-For.
+      faceattend-edge:
+        ipv4_address: 10.203.10.11
 
 volumes:
   caddy_data:

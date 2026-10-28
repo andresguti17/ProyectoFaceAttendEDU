@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: id-018-add-guardian-consent-document
+      author: FaceAttendEDU
+      splitStatements: false
+      comment: >-
+        Signed authorization of the guardian of a minor (Ley 1581 art. 7): the file lives in MinIO and the row
+        keeps its location and metadata. A minor is not enabled for biometric features until the active
+        guardian has one. Nullable so the guardians registered before this change stay valid rows; they are
+        asked for the document when the minor is next checked.
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE identity.guardian
+                ADD COLUMN consent_document_uri VARCHAR(500) NULL,
+                ADD COLUMN consent_document_name VARCHAR(255) NULL,
+                ADD COLUMN consent_document_mime VARCHAR(100) NULL,
+                ADD COLUMN consent_document_size BIGINT NULL,
+                ADD COLUMN consent_document_uploaded_at TIMESTAMP NULL,
+                ADD CONSTRAINT ck_guardian_document CHECK (
+                  consent_document_uri IS NULL
+                  OR (consent_document_name IS NOT NULL AND consent_document_mime IS NOT NULL
+                      AND consent_document_size IS NOT NULL AND consent_document_uploaded_at IS NOT NULL));
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE identity.guardian
+                DROP CONSTRAINT IF EXISTS ck_guardian_document,
+                DROP COLUMN IF EXISTS consent_document_uri,
+                DROP COLUMN IF EXISTS consent_document_name,
+                DROP COLUMN IF EXISTS consent_document_mime,
+                DROP COLUMN IF EXISTS consent_document_size,
+                DROP COLUMN IF EXISTS consent_document_uploaded_at;

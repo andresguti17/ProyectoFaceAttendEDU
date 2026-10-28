@@ -47,3 +47,9 @@ databaseChangeLog:
   - include:
       file: 03-tables/013-document-hash-ignore-soft-deleted.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 03-tables/014-create-guardian-and-terms-acceptance-tables.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 03-tables/015-add-guardian-consent-document.yaml
+      relativeToChangelogFile: true

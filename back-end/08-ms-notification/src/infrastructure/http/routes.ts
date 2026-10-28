@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { ALERT_TYPE_CHANNELS } from '../../domain/entities/AlertType';
@@ -12,6 +13,7 @@ import {
 import { notifyWebhook, webhookConfigFromEnv, WEBHOOK_NOT_CONFIGURED, type WebhookPayload } from '../webhook/notifier';
 import { sendEmail, SMTP_NOT_CONFIGURED, type SmtpConfig } from '../email/sender';
 import { render, subjectFor, SUPPORTED_TEMPLATES } from '../email/render';
+import { maskEmail } from './logMask';
 
 /**
  * HTTP adapters — 08-ms-notification.
@@ -146,12 +148,13 @@ export async function registerNotificationRoutes(
       const typeId = query?.typeId !== undefined ? Number(query.typeId) : undefined;
       const resolved = resolvedFilterFrom(query);
 
-      // actorId/typeId/resolved narrow the SQL query itself, combined with
-      // limit/offset — matching the Go `AlertRepository.FindAll`. Only the
-      // caller's actor scope is filtered afterward, in memory, because it is
-      // derived at request time and not a column the repository can push
-      // into its own WHERE clause (same as the Go handler's `actorAllowed`).
-      const page = await repos.alerts.findFiltered({ actorId, typeId, resolved, limit, offset });
+      // actorId/typeId/resolved and the caller's actor scope narrow the SQL query itself,
+      // combined with limit/offset, so the page is cut after the scope is applied. The
+      // in-memory check stays as a second barrier.
+      const page = await repos.alerts.findFiltered({
+        actorId, typeId, resolved, limit, offset,
+        actorIds: scope === null ? undefined : [...scope],
+      });
       const visible = page.filter((a) => actorAllowed(scope, a.academicActorId));
       return reply.send({ alerts: visible });
     });
@@ -281,7 +284,7 @@ export function registerDeviceTokenRoutes(app: FastifyInstance, tokens: IDeviceT
 const sendEmailBody = z.object({
   to: z.string().email(),
   template: z.string().min(1),
-  data: z.record(z.string()).optional(),
+  data: z.record(z.string(), z.string()).optional(),
 });
 
 /**
@@ -292,13 +295,22 @@ const sendEmailBody = z.object({
  * No `/emails` alias: unlike alerts/alert-types, spec §2.2 only defines
  * `/api/v1/emails` and Kong never exposes it outside the compose network.
  */
+/** Constant-time comparison, so response timing does not leak the token byte by byte. */
+function sameSecret(received: unknown, expected: string): boolean {
+  if (typeof received !== 'string') return false;
+  const a = Buffer.from(received);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 export function registerEmailRoute(app: FastifyInstance, cfg: SmtpConfig): void {
   app.post('/api/v1/emails', async (req, reply) => {
-    if (cfg.internalToken) {
-      const token = (req.headers as any)['x-internal-token'];
-      if (token !== cfg.internalToken) {
-        return reply.code(403).send({ error: 'FORBIDDEN', message: 'missing or invalid internal token' });
-      }
+    // Fail closed: without a shared token any container on the network could send mail as the app.
+    if (!cfg.internalToken) {
+      return reply.code(503).send({ error: 'EMAIL_RELAY_DISABLED', message: 'EMAIL_INTERNAL_TOKEN is not configured' });
+    }
+    if (!sameSecret((req.headers as any)['x-internal-token'], cfg.internalToken)) {
+      return reply.code(403).send({ error: 'FORBIDDEN', message: 'missing or invalid internal token' });
     }
 
     const parsed = sendEmailBody.safeParse((req as any).body);
@@ -326,11 +338,11 @@ export function registerEmailRoute(app: FastifyInstance, cfg: SmtpConfig): void 
         htmlBody: body.html,
       });
       if (result === SMTP_NOT_CONFIGURED) {
-        app.log.warn({ to, template }, 'email skipped, SMTP_HOST is empty');
+        app.log.warn({ to: maskEmail(to), template }, 'email skipped, SMTP_HOST is empty');
         return reply.code(202).send({ status: 'skipped', reason: 'smtp_not_configured' });
       }
     } catch (err) {
-      app.log.error({ err, to, template }, 'email delivery failed');
+      app.log.error({ err, to: maskEmail(to), template }, 'email delivery failed');
       return reply.code(502).send({ error: 'DELIVERY_FAILED', message: 'email delivery failed' });
     }
 

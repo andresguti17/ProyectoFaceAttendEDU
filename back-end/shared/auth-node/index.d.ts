@@ -12,7 +12,10 @@ export interface GuardRequest {
 export interface AuthGuardOptions {
   /** Paths that skip the guard. Default: everything outside /api/ plus the health checks. */
   isPublic?: (path: string, method: string) => boolean;
-  /** Path the decision is made on. Default: the raw URL without its query string. */
+  /**
+   * Path the decision is made on. Default: the URL path percent-decoded like the router
+   * does, without its query string. A throw is answered with 400.
+   */
   resolvePath?: (req: GuardRequest) => string;
 }
 

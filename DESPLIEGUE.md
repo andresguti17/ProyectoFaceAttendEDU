@@ -22,7 +22,7 @@ Internet ──443/80──▶ Caddy ──red Docker──▶ Kong :8000 ──
 | Caddy | 80 / 443 | `0.0.0.0` | Internet (único punto de entrada) |
 | Kong proxy | 8000 | `127.0.0.1` (`KONG_PROXY_BIND_IP=127.0.0.1`) | solo Caddy y el propio host |
 | Kong admin | 8001 | `127.0.0.1` fijo | túnel SSH |
-| ms-* | 8081–8089 | `127.0.0.1` (`BIND_IP=127.0.0.1`) | solo Kong |
+| ms-* | 8081–8089 | no se publican en producción (en local, `127.0.0.1` con `BIND_IP`) | solo Kong, por la red Docker |
 | MongoDB / Redis / Kafka | 27017 / 6379 / 9092 | `127.0.0.1` fijo | solo la red Docker y el host |
 | Portainer | 9443 | `127.0.0.1` fijo | túnel SSH |
 
@@ -65,8 +65,9 @@ Variables obligatorias (genere cada secreto con `openssl rand -base64 32`):
 | `MONGO_USER`, `MONGO_PASSWORD` | usuario root de MongoDB (autenticación obligatoria) |
 | `BIOMETRIC_LIVENESS_CHALLENGE_SECRET` | firma de los retos de prueba de vida (≥ 32 caracteres) |
 | `API_DOMAIN` | nombre DNS del host (Caddy) |
-| `BIND_IP=127.0.0.1`, `KONG_PROXY_BIND_IP=127.0.0.1` | perímetro: nada de la aplicación escucha fuera del host |
+| `BIND_IP=127.0.0.1`, `KONG_PROXY_BIND_IP=127.0.0.1` | perímetro: nada de la aplicación escucha fuera del host. En producción ya no dependen de estos valores: `back-end/docker-compose.neon-overrides.yml` quita los puertos de los 9 microservicios y deja Kong solo en `127.0.0.1:8000` (Caddy los alcanza por la red Docker) |
 | `ONBOARDING_SERVICE_USER_ID` | cuenta de servicio del alta pública de sedes (ver §7) |
+| `NOTIFICATION_SERVICE_USERNAME`, `NOTIFICATION_SERVICE_PASSWORD` | cuenta de servicio (un Super Administrador dedicado) con la que ms-notification lee los demás servicios. **Sin ella nadie queda marcado como ausente al cerrar una clase** y no salen los correos de ausencia ni las alertas de riesgo, de modo que los reportes de asistencia salen inflados; el servicio arranca igual y lo avisa en el log (`attendance alerts disabled`, nivel warn). `SMTP_HOST` y sus credenciales son necesarios para los correos |
 | `KONG_CORS_ORIGINS` | orígenes web permitidos por CORS, separados por coma (p. ej. el dominio de Vercel); sin valor por defecto en producción |
 | `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_KMS_SECRET_KEY` | almacenamiento de soportes de justificación; la clave KMS (`nombre:$(openssl rand -base64 32)`) cifra cada archivo y debe respaldarse aparte: sin ella los soportes no se pueden leer |
 | `PII_ENCRYPTION_KEY`, `PII_HASH_KEY`, `BIOMETRIC_ENCRYPTION_KEY` | cifrado en reposo de los datos personales y de las plantillas biométricas (Ley 1581; `openssl rand -base64 32` cada una); respaldarlas aparte de los datos: sin ellas la información no se puede leer, y cambiarlas exige volver a cifrar |

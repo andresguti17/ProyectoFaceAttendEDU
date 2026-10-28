@@ -224,10 +224,11 @@ export const AuthService = {
 
   logout: async (sessionId) => {
     if (!sessionId) return;
+    // El id de sesión viaja como bearer (el cliente adjunta el guardado), no en la URL:
+    // la URL queda en los logs de acceso del gateway.
     await request({
       method: POST,
       url: LOGOUT_ENDPOINT,
-      params: { sessionId },
       requiresAuth: false,
     }).catch(() => null);
   },

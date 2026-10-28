@@ -24,15 +24,21 @@ import { authorizationApi } from "../services/api/authorizationApi";
 import { provisionStaff, provisionStudent, credentialsNotice, cohortsForCourseCode, importStudents as bulkImportStudents, personDetails, findExistingStudents } from "../services/api/staffProvisioning";
 import { userByPersonMap } from "../services/api/referenceData";
 import { isValidEmail } from "../core/utils/validation";
+import { isMinorPerson } from "../core/utils/termsGate";
 
 // Alta exitosa: aviso del correo de credenciales + a quién capturarle la
 // biometría que se marcó en el formulario (personId solo si el backend lo devolvió).
-const registrationResult = (form, provisioned) => ({
-    credentialsEmail: credentialsNotice(form, provisioned)?.credentialsEmail ?? null,
-    personId: provisioned?.personId ?? null,
-    wantFace: !!form.hasFacial,
-    wantFingerprint: !!form.hasFingerprint,
-});
+// A un menor de edad no se le captura aquí: primero se registra al acudiente y la
+// aceptación de los términos (detalle del aprendiz), y solo entonces su rostro.
+const registrationResult = (form, provisioned) => {
+    const minor = form.role === USER_TYPES.STUDENT && isMinorPerson(form);
+    return {
+        credentialsEmail: credentialsNotice(form, provisioned)?.credentialsEmail ?? null,
+        personId: provisioned?.personId ?? null,
+        wantFace: !minor && !!form.hasFacial,
+        wantFingerprint: !minor && !!form.hasFingerprint,
+    };
+};
 
 // Usuarios pintados por página (la vista de Usuarios pagina en el cliente
 // para no cargar miles de filas de golpe en el DOM).

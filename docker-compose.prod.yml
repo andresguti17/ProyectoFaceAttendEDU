@@ -14,7 +14,7 @@ include:
 services:
   # Portainer CE — accesible solo por túnel SSH (:9443)
   portainer:
-    image: portainer/portainer-ce:lts
+    image: portainer/portainer-ce:lts@sha256:3609c307943bca8e5c492f69ddd6965df177208b50678a4cff28391c8dd4e96e
     container_name: faceattend-portainer
     mem_limit: 512m
     cpus: "0.5"
@@ -30,7 +30,7 @@ services:
 
   # Caddy — TLS (Let's Encrypt) delante de Kong. Sirve https://$API_DOMAIN.
   caddy:
-    image: caddy:2-alpine
+    image: caddy:2-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f
     container_name: faceattend-caddy
     mem_limit: 128m
     cpus: "0.25"
@@ -49,7 +49,9 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     networks:
-      - faceattend-edge
+      # Fixed address: the only proxy Kong trusts for X-Forwarded-For in production.
+      faceattend-edge:
+        ipv4_address: 10.203.10.11
 
 # Las redes (faceattend-edge/app/data) y los volumenes mongo_data, redis_data y
 # kafka_data ya los define back-end/docker-compose.yml, que se importa arriba.

@@ -23,6 +23,9 @@ export interface IEnrollmentRepository extends ICrudRepository<EnrollmentRecord,
 
   findByCohort(cohortId: number, page?: PageOptions): Promise<EnrollmentRecord[]>;
   countByCohort(cohortId: number): Promise<number>;
+  /** Every row of one school, filtered and paged in SQL (no school_id column: it goes through program). */
+  findBySchool(schoolId: number, page?: PageOptions): Promise<EnrollmentRecord[]>;
+  countBySchool(schoolId: number): Promise<number>;
   findByAcademicActor(academicActorId: number, page?: PageOptions): Promise<EnrollmentRecord[]>;
   countByAcademicActor(academicActorId: number): Promise<number>;
 }

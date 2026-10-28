@@ -4,5 +4,13 @@
 # faceattend.duckdns.org. Caddy obtiene y renueva el certificado de Let's Encrypt
 # solo; necesita los puertos 80 y 443 abiertos al público.
 {$API_DOMAIN} {
+	# API only (JSON): forbid framing and sniffing, pin HTTPS, hide the server banner.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
 	reverse_proxy kong-gateway:8000
 }
