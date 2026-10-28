@@ -22,7 +22,7 @@ export const PRIVACY_NOTICE = [
     },
     {
         title: "Grupo sanguíneo (dato de salud, opcional)",
-        body: "Puedes indicar tu grupo sanguíneo en tu perfil, pero no es necesario: no se usa para el control de asistencia y puedes dejarlo vacío o borrarlo cuando quieras. Es un dato sensible y su suministro es facultativo.",
+        body: "Puedes indicar tu grupo sanguíneo en tu perfil, pero no es necesario y puedes dejarlo vacío o borrarlo cuando quieras. Si lo indicas, la aplicación móvil puede usarlo como una de las preguntas para verificar tu identidad cuando el reconocimiento facial falla; no se usa para otro fin. Es un dato sensible y su suministro es facultativo.",
     },
     {
         title: "Datos biométricos (sensibles, facultativos)",
