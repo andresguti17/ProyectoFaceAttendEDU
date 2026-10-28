@@ -271,14 +271,15 @@ describe("credentials email", () => {
             expect(result.credentials).toEqual({ sent: 1, notSent: ["Beto Dos"] });
         });
 
-        test("without sendCredentials keeps the shared fallback password and no email", async () => {
+        test("without sendCredentials uses a random per-student password (never a shared one) and no email", async () => {
             authApi.provisionUser.mockResolvedValue({ userId: "u1" });
 
             const result = await run({ sendCredentials: false });
 
-            expect(authApi.provisionUser).toHaveBeenCalledWith(
-                expect.objectContaining({ password: "Estudiante123!", sendCredentials: false })
-            );
+            const passwords = authApi.provisionUser.mock.calls.map(([body]) => body.password);
+            expect(authApi.provisionUser).toHaveBeenCalledWith(expect.objectContaining({ sendCredentials: false }));
+            expect(new Set(passwords).size).toBe(passwords.length);
+            expect(passwords.every((p) => p !== "Estudiante123!" && p.length >= 8)).toBe(true);
             expect(result.credentials).toEqual({ sent: 0, notSent: [] });
         });
 

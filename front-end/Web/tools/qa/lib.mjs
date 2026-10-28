@@ -48,7 +48,13 @@ export const ROLE_USERS = {
 
 /** Las rutas absolutas solo se aceptan si apuntan al mismo origen que la API bajo prueba. */
 function resolveRoute(route) {
-    if (!route.startsWith("http")) return `${API}${route}`;
+    if (!route.startsWith("http")) {
+        // Ruta relativa: debe quedarse bajo la base de la API (sin saltos de directorio).
+        if (!route.startsWith("/") || route.split("?")[0].split("/").includes("..")) {
+            throw new Error(`Ruta inválida para la API de QA: ${route}`);
+        }
+        return `${API}${route}`;
+    }
     if (new URL(route).origin !== new URL(API).origin) {
         throw new Error(`Ruta fuera del origen de la API de QA: ${route}`);
     }

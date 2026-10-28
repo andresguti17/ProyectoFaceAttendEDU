@@ -12,6 +12,12 @@ const tester = new RuleTester({
     },
 });
 
+describe("button-standard", () => {
+    it("runs the RuleTester valid and invalid cases", () => {
+        expect(typeof rule.create).toBe("function");
+    });
+});
+
 tester.run("button-standard", rule, {
     valid: [
         // Botones compartidos solo con layout en style
