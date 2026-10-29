@@ -21,10 +21,13 @@ if (!USER || !PASSWORD) {
 
 let pass = 0;
 let fail = 0;
+// Lo que llega de la red (cabeceras, cuerpos) se imprime sin saltos de línea ni caracteres de control, para que
+// una respuesta con ellos no pueda falsificar líneas del informe (S5145, inyección en registros).
+const show = (value) => String(JSON.stringify(value)).replace(/[\u0000-\u001f\u007f-\u009f]/g, " ");
 const check = (name, expected, got) => {
     const ok = JSON.stringify(expected) === JSON.stringify(got);
     ok ? (pass += 1) : (fail += 1);
-    console.log(`${ok ? "OK   " : "FALLA"} ${name.padEnd(66)} ${ok ? JSON.stringify(got) : `esperado ${JSON.stringify(expected)}, obtenido ${JSON.stringify(got)}`}`);
+    console.log(`${ok ? "OK   " : "FALLA"} ${name.padEnd(66)} ${ok ? show(got) : `esperado ${show(expected)}, obtenido ${show(got)}`}`);
 };
 
 const post = (path, { headers = {}, body } = {}) =>
