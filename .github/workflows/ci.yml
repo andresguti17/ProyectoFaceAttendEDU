@@ -30,7 +30,7 @@ jobs:
         run: mvn -B test
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
       - name: node --test (auth-node)
         working-directory: back-end/shared/auth-node
         run: npm test
@@ -111,7 +111,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: back-end/${{ matrix.service }}/package-lock.json
       - name: npm ci
@@ -208,7 +208,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: front-end/Mobile/package-lock.json
       - name: npm ci
@@ -229,7 +229,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: front-end/Web/package-lock.json
       - name: npm ci

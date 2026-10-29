@@ -43,7 +43,7 @@ services:
   # digest. Objects are encrypted at rest with SSE-S3 using MINIO_KMS_SECRET_KEY
   # (ADR-016). No port is published: only ms-attendance reaches it.
   minio:
-    image: cgr.dev/chainguard/minio@sha256:d88920d6a50bd0b088223b688be3b76c63e6205dbe494437f67ba1240ea12880
+    image: cgr.dev/chainguard/minio@sha256:e234321fd3abff7fb968b0674056e883b702aa1ad93a0d4d795cb6c21fa46407
     container_name: faceattend-minio
     mem_limit: 512m
     cpus: "0.5"
@@ -60,7 +60,7 @@ services:
       - faceattend-data
 
   redis:
-    image: redis:7-alpine@sha256:6ba19c50b56777f5c11c58eff8ddb69d0d5f27ba131cffb63f180ccfd43c66af
+    image: redis:7-alpine@sha256:8da19c7399dca900c6822a1cf30f9d2285585e2c4b457ff4095b0f4500054d3f
     container_name: faceattend-redis
     mem_limit: 128m
     cpus: "0.5"
