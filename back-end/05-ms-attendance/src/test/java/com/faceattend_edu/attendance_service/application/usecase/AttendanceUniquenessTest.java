@@ -1,7 +1,9 @@
 package com.faceattend_edu.attendance_service.application.usecase;
 
 import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityException;
+import com.faceattend_edu.attendance_service.domain.model.ArrivalWindow;
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
+import com.faceattend_edu.attendance_service.domain.port.out.ArrivalWindowPort;
 import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
 import com.faceattend_edu.attendance_service.infrastructure.messaging.DomainEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +14,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,10 +42,18 @@ class AttendanceUniquenessTest {
     private RecordAttendanceUseCaseImpl record;
     private BulkRecordAttendanceUseCaseImpl bulk;
 
+    private static final ZoneId BOGOTA = ZoneId.of("America/Bogota");
+    /** The class starts in an hour: every arrival is on time. */
+    private static final ArrivalWindowPort ON_TIME =
+            id -> new ArrivalWindow(LocalDateTime.now(BOGOTA).plusHours(1), 15, BOGOTA);
+    /** The class started three hours ago: every arrival is late. */
+    private static final ArrivalWindowPort LATE =
+            id -> new ArrivalWindow(LocalDateTime.now(BOGOTA).minusHours(3), 15, BOGOTA);
+
     @BeforeEach
     void setUp() {
-        create = new CreateAttendanceRecordUseCaseImpl(repository, eventPublisher);
-        record = new RecordAttendanceUseCaseImpl(repository);
+        create = new CreateAttendanceRecordUseCaseImpl(repository, eventPublisher, ON_TIME);
+        record = new RecordAttendanceUseCaseImpl(repository, ON_TIME);
         bulk = new BulkRecordAttendanceUseCaseImpl(record);
     }
 
@@ -117,6 +129,7 @@ class AttendanceUniquenessTest {
 
     @Test
     void bulkSavesEveryRowOfAClass() {
+        bulk = new BulkRecordAttendanceUseCaseImpl(new RecordAttendanceUseCaseImpl(repository, LATE));
         when(repository.findByClassSessionIdAndAcademicActorId(any(), any())).thenReturn(Optional.empty());
         when(repository.save(any(AttendanceRecord.class))).thenAnswer(call -> call.getArgument(0));
 
@@ -124,7 +137,10 @@ class AttendanceUniquenessTest {
                 row(SESSION, 1L, "Present"), row(SESSION, 2L, "Late"), row(SESSION, 3L, "Absent")));
 
         assertEquals(3, saved.size());
+        // Arrivals are decided by the server's clock (N-14); an absence is kept as sent.
+        assertEquals("Late", saved.get(0).getAttendanceStatus());
         assertEquals("Late", saved.get(1).getAttendanceStatus());
+        assertEquals("Absent", saved.get(2).getAttendanceStatus());
     }
 
     @Test

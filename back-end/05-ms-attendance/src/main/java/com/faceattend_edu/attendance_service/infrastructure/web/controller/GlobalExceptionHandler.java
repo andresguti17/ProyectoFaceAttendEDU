@@ -3,6 +3,7 @@ package com.faceattend_edu.attendance_service.infrastructure.web.controller;
 import com.faceattend_edu.attendance_service.infrastructure.web.security.ActorScope;
 import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.attendance_service.domain.exception.EntityNotFoundException;
+import com.faceattend_edu.attendance_service.domain.exception.PeerUnavailableException;
 import com.faceattend_edu.attendance_service.domain.exception.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,6 +123,13 @@ public class GlobalExceptionHandler {
         errorLog.error("Document storage failure: {}", ex.getMessage(), ex);
         return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE, "ISO-10.2-NC-004",
             "Document storage is unavailable, try again later", "10.2", "ERROR");
+    }
+
+    @ExceptionHandler(PeerUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> handlePeerUnavailable(PeerUnavailableException ex) {
+        errorLog.error("Peer service failure: {}", ex.getMessage(), ex);
+        return buildErrorResponse(HttpStatus.SERVICE_UNAVAILABLE, "ISO-10.2-NC-005",
+            "A required service is unavailable, try again later", "10.2", "ERROR");
     }
 
     @ExceptionHandler(Exception.class)

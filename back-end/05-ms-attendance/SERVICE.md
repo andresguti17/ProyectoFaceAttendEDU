@@ -91,9 +91,13 @@ mapstruct-processor
 
 | Metodo | Endpoint | Descripcion |
 |--------|----------|-------------|
-| POST | `/api/v1/attendance` | Registrar asistencia (FACIAL/MANUAL/FINGERPRINT/IMPORT) |
-| GET | `/api/v1/attendance/{id}` | Obtener registro |
-| PUT | `/api/v1/attendance/{id}` | Actualizar registro |
+| POST | `/api/v1/attendance-records` | Registrar asistencia (FACIAL/MANUAL/FINGERPRINT/IMPORT); el servidor decide Present/Late (ver §6) |
+| POST | `/api/v1/attendance-records/bulk` | Registrar varios (mismas reglas, una fila por actor) |
+| GET | `/api/v1/attendance-records` | Listar (filtros `classSessionId`, `academicActorId`, `attendanceStatus`; paginado) |
+| GET | `/api/v1/attendance-records/summary?academicActorIds=` | Conteos por actor (hasta 300 ids) |
+| GET | `/api/v1/attendance-records/{id}` | Obtener registro |
+| PUT | `/api/v1/attendance-records/{id}` | Corregir registro (corrección manual del instructor: el estado enviado se respeta) |
+| DELETE | `/api/v1/attendance-records/{id}` | Eliminar registro |
 | GET | `/api/v1/class-sessions/{sessionId}/attendance` | Asistencia de una sesion |
 | GET | `/api/v1/academic-actors/{actorId}/attendance` | Historial de asistencia de un actor |
 
@@ -157,8 +161,25 @@ mapstruct-processor
 |--------|-------------|
 | Present | Asistencia confirmada |
 | Absent | Inasistencia sin justificar |
-| Late | Tardanza (llegada despues del inicio) |
+| Late | Tardanza (llegada despues del inicio mas la tolerancia de la sede) |
 | Justified | Inasistencia/tardanza justificada |
+
+### Presente o Tarde lo decide el servidor (N-14)
+
+Al crear un registro con estado `Present` o `Late` (por `POST /attendance-records` o `/bulk`), attendance
+ignora el estado que envia el cliente:
+
+1. Fija `captured_at` con su propio reloj.
+2. Pide a scheduling la sesion (`sessionDate`) y su bloque (`startsAt`, `environmentId`), y el ambiente
+   (`schoolId`); a configuration, `GET /schools/{schoolId}/configurations` → `tardy_tolerance_minutes`
+   (15 si la sede no la tiene o no es un numero valido). Usa el bearer de quien llama, asi que solo
+   resuelve sesiones que ese usuario ya puede ver.
+3. Si la captura es posterior a `sessionDate + startsAt + tolerancia` (zona `faceattend.attendance.zone`,
+   America/Bogota por defecto) el registro queda `Late`; si no, `Present`.
+
+La ventana se guarda en memoria un minuto por sesion. Errores: sesion inexistente o ajena → 400;
+scheduling o configuration no responden → 503 y no se guarda nada (nunca un estado adivinado).
+`Absent` y `Justified` se guardan tal cual (los crea notification al cerrar la clase, o una correccion).
 
 ---
 
@@ -219,6 +240,14 @@ faceattend:
   storage:
     endpoint: http://localhost:9000
     bucket: justification-documents
+  auth:
+    identity-url: http://localhost:8081       # FACEATTEND_AUTH_IDENTITY_URL
+    authorization-url: http://localhost:8082  # FACEATTEND_AUTH_AUTHORIZATION_URL
+    academic-url: http://localhost:8083       # FACEATTEND_AUTH_ACADEMIC_URL (alcance por actor)
+    scheduling-url: http://localhost:8084     # FACEATTEND_AUTH_SCHEDULING_URL (alcance y ventana de llegada)
+    configuration-url: http://localhost:8087  # FACEATTEND_AUTH_CONFIGURATION_URL (tardy_tolerance_minutes)
+  attendance:
+    zone: America/Bogota                      # FACEATTEND_ATTENDANCE_ZONE (hora local de los bloques)
 ```
 
 ---

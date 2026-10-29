@@ -42,6 +42,20 @@ public class AttendanceRecord {
             throw new IllegalArgumentException("matchScore must be between 0 and 1");
     }
 
+    /** An arrival (Present or Late, from a capture) as opposed to Absent/Justified, which nobody "arrives" with. */
+    public boolean isArrival() {
+        return "Present".equals(attendanceStatus) || "Late".equals(attendanceStatus);
+    }
+
+    /**
+     * N-14: the server stamps the capture time and decides Present/Late from it; whatever
+     * arrival status or time the client sent is ignored.
+     */
+    public void applyArrival(ArrivalWindow window, Instant now) {
+        capturedAt = now;
+        attendanceStatus = window.statusAt(now);
+    }
+
     public void touchCreated() {
         if (createdAt == null) createdAt = Instant.now();
         // Una ausencia no tiene captura: el modelo declara captured_at NULL justo

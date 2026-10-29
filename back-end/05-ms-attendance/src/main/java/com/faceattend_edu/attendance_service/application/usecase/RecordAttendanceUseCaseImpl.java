@@ -3,6 +3,7 @@ package com.faceattend_edu.attendance_service.application.usecase;
 import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
 import com.faceattend_edu.attendance_service.domain.port.in.RecordAttendanceUseCase;
+import com.faceattend_edu.attendance_service.domain.port.out.ArrivalWindowPort;
 import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,6 +16,7 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class RecordAttendanceUseCaseImpl implements RecordAttendanceUseCase {
     private final AttendanceRecordRepository repository;
+    private final ArrivalWindowPort arrivalWindows;
 
     @Override @Transactional
     public AttendanceRecord record(Long classSessionId, Long academicActorId, String attendanceStatus, String captureMethod, BigDecimal matchScore) {
@@ -24,13 +26,13 @@ public class RecordAttendanceUseCaseImpl implements RecordAttendanceUseCase {
         r.setAttendanceStatus(attendanceStatus);
         r.setCaptureMethod(captureMethod);
         r.setMatchScore(matchScore);
-        // An absence has no capture: captured_at stays NULL (see AttendanceRecord.touchCreated).
-        r.setCapturedAt("Absent".equals(attendanceStatus) ? null : Instant.now());
         r.validate();
-        r.touchCreated();
         repository.findByClassSessionIdAndAcademicActorId(classSessionId, academicActorId).ifPresent(existing -> {
             throw new DuplicateEntityException("Duplicate attendance for session=" + classSessionId + " actor=" + academicActorId);
         });
+        // An absence has no capture: captured_at stays NULL (see AttendanceRecord.touchCreated).
+        if (r.isArrival()) r.applyArrival(arrivalWindows.windowFor(classSessionId), Instant.now());
+        r.touchCreated();
         try {
             return repository.save(r);
         } catch (DataIntegrityViolationException ex) {

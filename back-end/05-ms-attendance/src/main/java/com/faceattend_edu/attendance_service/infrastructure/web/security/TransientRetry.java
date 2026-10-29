@@ -11,13 +11,13 @@ import java.util.function.Supplier;
  * statuses are never retried and a second failure still propagates, so callers
  * keep failing secure.
  */
-final class TransientRetry {
+public final class TransientRetry {
 
     private static final long PAUSE_MS = 250;
 
     private TransientRetry() {}
 
-    static <T> T call(Supplier<T> call) {
+    public static <T> T call(Supplier<T> call) {
         try {
             return call.get();
         } catch (ResourceAccessException first) {

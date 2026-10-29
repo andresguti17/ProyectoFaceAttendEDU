@@ -548,6 +548,33 @@ test("an arrival past the school's tolerance is recorded as Late and flagged in 
     expect(getVm().lastRegistration).toEqual({ name: "Ana Pérez", method: "FINGERPRINT", status: "Late", duplicate: false });
 });
 
+test("N-14: the status the server decided wins over the kiosk's own estimate", async () => {
+    // The kiosk clock says late (class at midnight), but the server answered Present.
+    attendanceApi.createRecord.mockResolvedValue({ attendanceRecordId: 9, attendanceStatus: "Present" });
+    cohortRoster.mockResolvedValue([{ academicActorId: 1, personId: "person-a", name: "Ana Pérez" }]);
+    const getVm = await startedVm({ startsAt: "00:00:00" });
+
+    await act(async () => {
+        await getVm().onIdentified("person-a", { biometricType: "FACIAL", score: 0.9 });
+    });
+
+    expect(getVm().lateActorIds.has(1)).toBe(false);
+    expect(getVm().lastRegistration).toEqual({ name: "Ana Pérez", method: "FACIAL", status: "Present", duplicate: false });
+});
+
+test("N-14: a server Late is shown as Late even when the kiosk thought it was on time", async () => {
+    attendanceApi.createRecord.mockResolvedValue({ attendanceRecordId: 9, attendanceStatus: "Late" });
+    cohortRoster.mockResolvedValue([{ academicActorId: 1, personId: "person-a", name: "Ana Pérez" }]);
+    const getVm = await startedVm({ startsAt: "23:59:00" }); // class not started yet by the kiosk clock
+
+    await act(async () => {
+        await getVm().onIdentified("person-a", { biometricType: "FACIAL", score: 0.9 });
+    });
+
+    expect(getVm().lateActorIds.has(1)).toBe(true);
+    expect(getVm().lastRegistration.status).toBe("Late");
+});
+
 test("the on-screen alert says who was registered and how, and flags a repeat as a duplicate", async () => {
     attendanceApi.createRecord.mockResolvedValue({ attendanceRecordId: 1 });
     cohortRoster.mockResolvedValue([{ academicActorId: 1, personId: "person-a", name: "Ana Pérez" }]);

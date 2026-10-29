@@ -398,8 +398,9 @@ export function useAttendanceKioskViewModel() {
                 return;
             }
 
-            // Llegar pasada la tolerancia de la sede (Ajustes > Reconocimiento) marca "Tarde".
-            const late = isLateArrival(
+            // El servidor decide Presente/Tarde con su reloj y la tolerancia de la sede (N-14);
+            // la estimación local solo cubre una respuesta sin estado.
+            const estimatedLate = isLateArrival(
                 blockRef.current?.startsAt,
                 new Date(),
                 getInstitutionConfig().tardyToleranceMinutes
@@ -409,7 +410,7 @@ export function useAttendanceKioskViewModel() {
                 const created = await attendanceApi.createRecord({
                     classSessionId: currentSession.classSessionId,
                     academicActorId,
-                    attendanceStatus: late ? "Late" : "Present",
+                    attendanceStatus: estimatedLate ? "Late" : "Present",
                     captureMethod: biometricType,
                     // El score de huella es un conteo crudo de keypoints SIFT
                     // (puede ser >1), no una similitud coseno 0..1 como el
@@ -421,6 +422,8 @@ export function useAttendanceKioskViewModel() {
                 syncRegisteredActorIds();
                 registeredMethodsRef.current.set(academicActorId, biometricType);
                 syncRegisteredMethods();
+                const serverStatus = created?.attendanceStatus ?? created?.attendance_status;
+                const late = serverStatus ? serverStatus === "Late" : estimatedLate;
                 const recordId = created?.attendanceRecordId ?? created?.attendance_record_id;
                 if (recordId != null) {
                     recordIdByActorRef.current.set(academicActorId, recordId);

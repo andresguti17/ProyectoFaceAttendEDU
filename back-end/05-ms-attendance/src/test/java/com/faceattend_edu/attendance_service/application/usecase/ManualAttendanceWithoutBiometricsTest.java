@@ -1,6 +1,8 @@
 package com.faceattend_edu.attendance_service.application.usecase;
 
+import com.faceattend_edu.attendance_service.domain.model.ArrivalWindow;
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
+import com.faceattend_edu.attendance_service.domain.port.out.ArrivalWindowPort;
 import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,9 +37,15 @@ class ManualAttendanceWithoutBiometricsTest {
 
     private RecordAttendanceUseCaseImpl record;
 
+    private static final ZoneId BOGOTA = ZoneId.of("America/Bogota");
+
+    private static ArrivalWindowPort classStarted(long minutesAgo) {
+        return id -> new ArrivalWindow(LocalDateTime.now(BOGOTA).minusMinutes(minutesAgo), 15, BOGOTA);
+    }
+
     @BeforeEach
     void setUp() {
-        record = new RecordAttendanceUseCaseImpl(repository);
+        record = new RecordAttendanceUseCaseImpl(repository, classStarted(0));
         when(repository.findByClassSessionIdAndAcademicActorId(SESSION, ACTOR_WITHOUT_BIOMETRICS)).thenReturn(Optional.empty());
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
@@ -52,7 +62,8 @@ class ManualAttendanceWithoutBiometricsTest {
 
     @Test
     void aManualLateArrivalIsRecordedAsLate() {
-        AttendanceRecord saved = record.record(SESSION, ACTOR_WITHOUT_BIOMETRICS, "Late", "MANUAL", null);
+        record = new RecordAttendanceUseCaseImpl(repository, classStarted(40));
+        AttendanceRecord saved = record.record(SESSION, ACTOR_WITHOUT_BIOMETRICS, "Present", "MANUAL", null);
 
         assertEquals("Late", saved.getAttendanceStatus());
         assertNotNull(saved.getCapturedAt());

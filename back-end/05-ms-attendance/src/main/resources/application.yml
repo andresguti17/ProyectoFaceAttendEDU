@@ -45,6 +45,12 @@ faceattend:
   auth:
     identity-url: http://localhost:8081
     authorization-url: http://localhost:8082
+    scheduling-url: http://localhost:8084
+    # tardy_tolerance_minutes de la sede: el servidor decide Presente/Tarde (N-14).
+    configuration-url: http://localhost:8087
+  attendance:
+    # Hora local de los bloques de horario (TIME sin zona).
+    zone: America/Bogota
 management:
   endpoints:
     web:
