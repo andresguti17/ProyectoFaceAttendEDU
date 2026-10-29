@@ -533,10 +533,14 @@ describe("isLateArrival", () => {
     });
 });
 
+afterEach(() => jest.useRealTimers());
+
 test("an arrival past the school's tolerance is recorded as Late and flagged in lateActorIds", async () => {
     attendanceApi.createRecord.mockResolvedValue({ attendanceRecordId: 9 });
     cohortRoster.mockResolvedValue([{ academicActorId: 1, personId: "person-a", name: "Ana Pérez" }]);
-    const getVm = await startedVm({ startsAt: "00:00:00" }); // the class started at midnight: always past 15 min (unless run 00:00-00:15)
+    // Only Date is faked (10:00), so the midnight class is 10 h past tolerance whatever time the suite runs.
+    jest.useFakeTimers({ now: new Date(2026, 9, 21, 10, 0), doNotFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "setImmediate", "clearImmediate", "nextTick", "queueMicrotask", "performance", "requestAnimationFrame", "cancelAnimationFrame"] });
+    const getVm = await startedVm({ startsAt: "00:00:00" });
 
     await act(async () => {
         await getVm().onIdentified("person-a", { biometricType: "FINGERPRINT", score: 12 });

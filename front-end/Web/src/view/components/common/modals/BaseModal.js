@@ -75,7 +75,10 @@ export function BaseModal({
       transparent
       animationType="fade"
       visible={visible}
-      onRequestClose={closeOnBackdrop ? onClose : undefined}
+      // Escape (web) y el botón atrás (Android) cierran igual que la X: si el modal tiene botón de cerrar
+      // o se cierra al tocar fuera, también se cierra con el teclado. Sin ninguna de las dos vías
+      // (p. ej. una pantalla obligatoria) sigue siendo bloqueante.
+      onRequestClose={closeOnBackdrop || showCloseButton ? onClose : undefined}
       statusBarTranslucent
     >
       <KeyboardAvoidingView
