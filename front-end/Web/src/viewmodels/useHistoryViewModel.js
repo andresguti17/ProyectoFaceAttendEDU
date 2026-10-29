@@ -127,16 +127,15 @@ export function useHistoryViewModel() {
         }
 
         if (user.role === "teacher") {
-            const myCourseIds = (appData.courses || [])
-                .filter(
-                    (c) =>
-                        Array.isArray(c.instructorActorIds) &&
-                        c.instructorActorIds.includes(user.academicActorId)
-                )
-                .map((c) => c.id);
-            const mine = students.filter(
-                (s) => Array.isArray(s.courseIds) && s.courseIds.some((id) => myCourseIds.includes(id))
-            );
+            // Mismo alcance que el backend (CallerScopeResolver) y que Justificaciones: los
+            // aprendices de las FICHAS donde el docente tiene un bloque. Por curso entraban
+            // los de otra ficha con la misma materia, cuyos registros el backend no devuelve.
+            const me = String(user.academicActorId);
+            const myCohortIds = new Set();
+            for (const course of appData.courses || []) {
+                for (const cohortId of course.instructorCohortIds?.[me] ?? []) myCohortIds.add(String(cohortId));
+            }
+            const mine = students.filter((s) => s.cohortId != null && myCohortIds.has(String(s.cohortId)));
             return { kind: "teacher", label: t("Asistencia de tus estudiantes"), students: mine };
         }
 

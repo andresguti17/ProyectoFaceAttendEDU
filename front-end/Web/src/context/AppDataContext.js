@@ -73,8 +73,10 @@ function toStaffRow(user) {
         ...user,
         grade: user.role === "admin" ? "Administrador" : "Docente",
         attendance: 0, // pendiente de la fase de consulta
-        hasFacial: false,
-        hasFingerprint: false,
+        // Las banderas ya vienen de ms-biometric (withBiometrics); fijarlas en false
+        // dejaba a todo el personal como "Pendiente" aunque tuviera rostro o huella.
+        hasFacial: user.hasFacial ?? false,
+        hasFingerprint: user.hasFingerprint ?? false,
     };
 }
 

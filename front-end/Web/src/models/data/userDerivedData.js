@@ -99,15 +99,21 @@ export function getAtRiskStudents(students, minAttendanceThreshold = 80) {
             // ══════════════════════════════════════════════════════
             // CÁLCULO DE ESTADÍSTICAS
             // ══════════════════════════════════════════════════════
+            // Conteos reales del resumen de asistencia; la estimación (45 clases, 15 %
+            // de tardanzas) queda solo para registros sin resumen (altas locales, mock).
+            const counts = student.attendanceCounts;
             const estimatedTotalClasses = student.attendanceHistory?.length || 45;
-            const totalAbsences = Math.round((absenceRate / 100) * estimatedTotalClasses);
-            
-            // Contar tardanzas del historial si existe
+            const totalAbsences = counts
+                ? counts.absent ?? 0
+                : Math.round((absenceRate / 100) * estimatedTotalClasses);
+
             let lateCount = 0;
-            if (student.attendanceHistory) {
+            if (counts) {
+                lateCount = counts.late ?? 0;
+            } else if (student.attendanceHistory) {
                 lateCount = student.attendanceHistory.filter(r => r.late).length;
             } else {
-                lateCount = Math.round(totalAbsences * 0.15); // Estimación: 15%
+                lateCount = Math.round(totalAbsences * 0.15);
             }
             
             // ══════════════════════════════════════════════════════
@@ -224,18 +230,23 @@ export function getPerfectAttendanceStudents(students, minAttendanceThreshold = 
             const isActive = student.status === "active";
             return isActive && attendance >= perfectThreshold;
         })
-        .map(student => ({
-            id: `pas_${student.id}`,
-            studentId: student.id,
-            name: student.name,
-            code: student.code,
-            ficha: student.ficha || "N/A",
-            fichaName: student.course || "N/A",
-            attendanceRate: student.attendance || 0,
-            totalClasses: 45, // Estimado
-            consecutivePerfect: Math.round((student.attendance || 0) * 0.45),
-            streak: `${Math.round((student.attendance || 0) * 0.45)} días`,
-        }))
+        .map(student => {
+            // Clases asistidas sobre registradas, del resumen real. Antes se mostraba
+            // una "racha" de asistencia × 0,45 días sobre 45 clases supuestas.
+            const counts = student.attendanceCounts;
+            const attended = counts ? (counts.present ?? 0) + (counts.late ?? 0) + (counts.justified ?? 0) : null;
+            return {
+                id: `pas_${student.id}`,
+                studentId: student.id,
+                name: student.name,
+                code: student.code,
+                ficha: student.ficha || "N/A",
+                fichaName: student.course || "N/A",
+                attendanceRate: student.attendance || 0,
+                totalClasses: counts?.total ?? null,
+                streak: counts ? `${attended}/${counts.total} clases` : `${student.attendance || 0}%`,
+            };
+        })
         .sort((a, b) => b.attendanceRate - a.attendanceRate); // Mayor a menor
 }
 

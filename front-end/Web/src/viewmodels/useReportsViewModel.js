@@ -71,7 +71,8 @@ export const DEFAULT_FILTERS = {
 function periodLabel(p, t) {
     if (p === "week") return t("Esta semana");
     if (p === "month") return t("Este mes");
-    return t("Semestre 2024-2");
+    // Antes "Semestre 2024-2" fijo en todos los reportes y exportaciones.
+    return t("Semestre");
 }
 
 /**
@@ -571,18 +572,12 @@ export function useReportsViewModel(
         const atRiskCount = students.filter((s) => s.attendance < getAttendanceThresholds().minAttendance).length;
         const programCount = appData.programs.length;
 
-        // Factor de escala según período para simular variación
-        const factor = period === "week" ? 1.03 : period === "month" ? 1.01 : 1;
-        const displayRate = Math.min(100, Math.round(avgAttendance * factor));
-
-        const change = period === "week" ? 1.2 : period === "month" ? 0.8 : 0;
-
+        // El porcentaje es el real del padrón: antes se escalaba por período (x1,03 la
+        // semana) y se mostraba un "vs período anterior" fijo, sin datos que lo respaldaran.
         return [
             {
                 label: t("Asistencia global"),
-                value: `${displayRate}%`,
-                change: change,
-                changeLabel: t("vs período ant."),
+                value: `${Math.min(100, avgAttendance)}%`,
                 color: c.brand.primary,
                 icon: "trending-up",
             },
@@ -606,7 +601,7 @@ export function useReportsViewModel(
                 icon: "book-open",
             },
         ];
-    }, [c, t, period, students, appData.programs]);
+    }, [c, t, students, appData.programs]);
 
     /**
      * Distribución de asistencia por categorías

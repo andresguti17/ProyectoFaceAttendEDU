@@ -165,9 +165,10 @@ export function calculateStudentCurrentPeriod(
     // Calcular cuántos meses han transcurrido desde el inicio
     const elapsedMonths = Math.ceil((current - startDate) / (1000 * 60 * 60 * 24 * 30.44));
     
-    // Calcular en qué período estamos actualmente (1-indexed)
+    // Calcular en qué período estamos actualmente (1-indexed): el mismo día de inicio
+    // han pasado 0 meses y sin el mínimo salía "0to".
     const currentPeriodNumber = Math.min(
-        Math.ceil(elapsedMonths / periodDurationMonths),
+        Math.max(1, Math.ceil(elapsedMonths / periodDurationMonths)),
         totalPeriods
     );
     

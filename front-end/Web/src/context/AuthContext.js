@@ -619,36 +619,9 @@ export function AuthProvider({ children }) {
         setUser(null);
     }, [sessionTimeout]);
 
-    const register = useCallback(async (userData) => {
-        // ── Mock: el backend no expone auto-registro de usuarios ──
-        await new Promise((res) => setTimeout(res, 900)); // simular latencia de red
-
-        if (!userData.email || !userData.password || !userData.username) {
-            return "Completa todos los campos";
-        }
-
-        // Crear objeto de usuario registrado (por ahora sin rol, se asignaría en backend)
-        const newUser = {
-            id: `user_${Date.now()}`, // ID temporal
-            username: userData.username,
-            email: userData.email,
-            firstName: userData.username, // Temporalmente usar username como nombre
-            lastName: "",
-            role: "student", // Rol por defecto para usuarios registrados
-            avatar: null,
-        };
-
-        await sessionSet(JSON.stringify(newUser));
-        setUser(newUser);
-        await removeIntendedRoute(); // Limpiar ruta deseada al registrarse
-        await removeTimeoutFlag(); // Limpiar flag persistente al registrarse
-        setSessionExpiredByTimeout(false); // Limpiar flag al registrarse
-        
-        // El timer se iniciará automáticamente cuando enabled=true (user !== null)
-        
-        return { success: true, redirectRoute: null }; // No hay redirección en registro
-    }, [sessionTimeout]);
-
+    // Sin "register": el alta es la de sede + administrador (authApi.onboardSchool) y la de
+    // usuarios por un administrador. El register simulado que había abría una sesión local
+    // de aprendiz sin pasar por el backend.
     const value = useMemo(
         () => ({
             user,
@@ -663,7 +636,6 @@ export function AuthProvider({ children }) {
             login,
             verifyLoginCode,
             logout,
-            register,
             changePassword,
             acceptPrivacy,
             acceptTerms,
@@ -671,7 +643,7 @@ export function AuthProvider({ children }) {
             updateSessionUser,
             sessionTimeout,
         }),
-        [user, isLoadingAuth, sessionExpiredByTimeout, isLoadingTimeoutFlag, intendedRoute, saveIntendedRoute, clearIntendedRoute, consumeIntendedRoute, login, verifyLoginCode, logout, register, changePassword, acceptPrivacy, acceptTerms, refreshTerms, updateSessionUser, sessionTimeout]
+        [user, isLoadingAuth, sessionExpiredByTimeout, isLoadingTimeoutFlag, intendedRoute, saveIntendedRoute, clearIntendedRoute, consumeIntendedRoute, login, verifyLoginCode, logout, changePassword, acceptPrivacy, acceptTerms, refreshTerms, updateSessionUser, sessionTimeout]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

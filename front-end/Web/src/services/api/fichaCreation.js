@@ -53,7 +53,7 @@ export async function createPeriod({ schoolId, name, startsOn, endsOn, isActive 
         throw new Error("A school is required");
     }
     const sid = Number(schoolId);
-    if (!Number.isInteger(sid)) throw new Error("A school is required");
+    if (!Number.isInteger(sid) || sid <= 0) throw new Error("A school is required");
     if (!String(startsOn ?? "").trim() || !String(endsOn ?? "").trim()) {
         throw new Error("Start and end dates are required");
     }
@@ -82,8 +82,9 @@ export async function createPeriod({ schoolId, name, startsOn, endsOn, isActive 
 export async function createCohort({ programId, academicPeriodId, code }) {
     const pid = Number(programId);
     const perid = Number(academicPeriodId);
-    if (!Number.isInteger(pid)) throw new Error("A program is required");
-    if (!Number.isInteger(perid)) throw new Error("An academic period is required");
+    // Number(null) y Number("") son 0: sin "> 0" la ficha viajaba con program/período 0.
+    if (!Number.isInteger(pid) || pid <= 0) throw new Error("A program is required");
+    if (!Number.isInteger(perid) || perid <= 0) throw new Error("An academic period is required");
     if (!String(code ?? "").trim()) throw new Error("A code is required");
 
     const created = await academicApi.createCohort({

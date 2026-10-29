@@ -158,6 +158,9 @@ async function studentsFromApi() {
                 cohortId: cohortId != null ? String(cohortId) : null,
                 grade: null, // lo rellena AppDataContext con el período del curso
                 attendance: rateOf(actor.academicActorId),
+                // Conteos reales del resumen ({ present, late, absent, justified, total }):
+                // faltas, tardanzas y clases salen de aquí, no de estimaciones.
+                attendanceCounts: attendance.get(actor.academicActorId) ?? null,
                 status: normalizeStatus(actor.status),
                 hasFacial: false,
                 hasFingerprint: false,

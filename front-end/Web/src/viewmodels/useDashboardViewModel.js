@@ -247,31 +247,15 @@ export function useDashboardViewModel() {
             ? attendanceValues.reduce((sum, avg) => sum + avg, 0) / attendanceValues.length
             : 0;
         
-        // Calcular asistencia del día basándose en estudiantes reales
-        let todayAttendanceStats = { present: 0, late: 0, absent: 0 };
-        
-        if (students && students.length > 0) {
-            // Por ahora usamos los datos mock para simular, pero en producción esto vendría de registros reales
-            // Se puede calcular basándose en los estudiantes activos y sus patrones de asistencia
-            const activeStudentsCount = students.filter(s => s.status === "active").length;
-            
-            if (activeStudentsCount > 0) {
-                // Simular distribución realista basándose en el patrón de asistencia de los estudiantes
-                const avgAttendanceRate = students.reduce((sum, s) => sum + (s.attendance || 0), 0) / students.length;
-                
-                // Calcular distribución proporcional
-                const presentRate = avgAttendanceRate / 100;  // % que normalmente asiste
-                const lateRate = Math.min(0.08, (100 - avgAttendanceRate) / 300); // ~8% máximo tardanzas
-                const absentRate = 1 - presentRate - lateRate;
-                
-                todayAttendanceStats = {
-                    present: Math.round(activeStudentsCount * presentRate),
-                    late: Math.round(activeStudentsCount * lateRate),
-                    absent: Math.round(activeStudentsCount * absentRate)
-                };
-            }
-        }
-        
+        // Asistencia del día: registros reales del último día con sesión de la serie
+        // (antes se estimaba con el promedio general y una tasa fija de tardanzas).
+        const lastDay = series.daily.length > 0 ? series.daily[series.daily.length - 1] : null;
+        const todayAttendanceStats = {
+            present: lastDay?.present || 0,
+            late: lastDay?.late || 0,
+            absent: lastDay?.absent || 0,
+        };
+
         const todayTotalStudents = todayAttendanceStats.present + todayAttendanceStats.late + todayAttendanceStats.absent;
         const todayPresent = todayAttendanceStats.present + todayAttendanceStats.late;
         const todayAttendanceRate = todayTotalStudents > 0 
@@ -316,49 +300,23 @@ export function useDashboardViewModel() {
             ? (activeStudents / totalStudents) * 100
             : 0;
         
-        // Calcular tasa de puntualidad basándose en estudiantes reales
-        // En producción esto vendría de registros de asistencia reales de la semana
-        let weeklyPunctualityStats = { totalPresent: 0, totalLate: 0 };
-        
-        if (students && students.length > 0) {
-            const activeStudentsCount = students.filter(s => s.status === "active").length;
-            
-            if (activeStudentsCount > 0) {
-                // Simular datos de puntualidad semanal basándose en patrones de estudiantes
-                const daysInWeek = 5;
-                const avgAttendanceRate = students.reduce((sum, s) => sum + (s.attendance || 0), 0) / students.length;
-                
-                // Estudiantes que asisten por día (promedio semanal)
-                const avgDailyAttending = Math.round(activeStudentsCount * (avgAttendanceRate / 100));
-                
-                // De los que asisten, calcular cuántos llegan tarde (basado en puntualidad individual)
-                const avgLateRate = 0.08; // ~8% de tardanzas promedio
-                const avgDailyLate = Math.round(avgDailyAttending * avgLateRate);
-                const avgDailyOnTime = avgDailyAttending - avgDailyLate;
-                
-                weeklyPunctualityStats = {
-                    totalPresent: avgDailyOnTime * daysInWeek,
-                    totalLate: avgDailyLate * daysInWeek
-                };
-            }
-        }
-        
-        const totalAttending = weeklyPunctualityStats.totalPresent + weeklyPunctualityStats.totalLate;
-        const punctualityRate = totalAttending > 0 
-            ? (weeklyPunctualityStats.totalPresent / totalAttending) * 100
-            : 0;
+        // Puntualidad: de quienes asistieron en los días de la serie real, los que
+        // llegaron a tiempo (antes se suponía una tasa fija de 8 % de tardanzas).
+        const seriesOnTime = series.daily.reduce((sum, d) => sum + (d.present || 0), 0);
+        const seriesLate = series.daily.reduce((sum, d) => sum + (d.late || 0), 0);
+        const totalAttending = seriesOnTime + seriesLate;
+        const punctualityRate = totalAttending > 0 ? (seriesOnTime / totalAttending) * 100 : 0;
 
         // Obtener umbrales dinámicos
         const thresholds = getAttendanceThresholds();
 
+        // Sin "change": no hay serie del período anterior con la que comparar, y las
+        // tendencias que se mostraban eran constantes elegidas según el valor actual.
         return [
             {
                 label: t("Asistencia hoy"),
                 value: `${formatPercentage(todayAttendanceRate)}%`,
                 subtitle: `${todayPresent}/${todayTotalStudents} ${t("estudiantes")}`,
-                change: todayAttendanceRate >= thresholds.excellent ? 2.3 : 
-                        todayAttendanceRate >= thresholds.warning ? 1.5 : 
-                        todayAttendanceRate >= thresholds.danger ? 0 : -1.5,
                 color: todayAttendanceRate >= thresholds.warning ? c.status.success : c.status.warning,
                 icon: "calendar",
             },
@@ -366,9 +324,6 @@ export function useDashboardViewModel() {
                 label: t("Asistencia global"),
                 value: `${formatPercentage(globalAvgAttendance)}%`,
                 subtitle: t("Promedio general"),
-                change: globalAvgAttendance >= thresholds.warning ? 
-                    Number.parseFloat(Math.min(2.5, (globalAvgAttendance - thresholds.warning + 2) * 0.5).toFixed(1)) : 
-                    Number.parseFloat(Math.max(-2.5, (globalAvgAttendance - thresholds.warning) * 0.3).toFixed(1)),
                 color: globalAvgAttendance >= thresholds.warning ? c.status.success : c.status.warning,
                 icon: "trending-up",
             },
@@ -411,9 +366,6 @@ export function useDashboardViewModel() {
                 label: t("Tasa de puntualidad"),
                 value: `${formatPercentage(punctualityRate)}%`,
                 subtitle: t("Estudiantes a tiempo"),
-                change: punctualityRate >= 95 ? 1.2 :
-                        punctualityRate >= 90 ? 0.8 : 
-                        punctualityRate >= 85 ? 0.3 : -0.5,
                 color: punctualityRate >= 90 ? c.status.success : c.status.warning,
                 icon: "clock",
             },
@@ -488,9 +440,6 @@ export function useDashboardViewModel() {
                 label: t("Asistencia promedio"),
                 value: `${formatPercentage(avgAttendance)}%`,
                 subtitle: t("General"),
-                change: avgAttendance >= thresholds.excellent ? 2.5 : 
-                        avgAttendance >= thresholds.warning ? 1.5 : 
-                        avgAttendance >= thresholds.danger ? 0.5 : -1.0,
                 color: avgAttendance >= thresholds.warning ? c.status.success : c.status.warning,
                 icon: "trending-up",
             },
@@ -590,10 +539,6 @@ export function useDashboardViewModel() {
                 label: t("Mi asistencia"),
                 value: `${formatPercentage(monthAttendance)}%`,
                 subtitle: t("Este mes"),
-                change: monthAttendance >= thresholds.excellent ? 2.4 :
-                        monthAttendance >= (thresholds.warning + thresholds.excellent) / 2 ? 1.8 :
-                        monthAttendance >= thresholds.warning ? 1.0 :
-                        monthAttendance >= thresholds.danger ? 0 : -1.2,
                 color: monthAttendance >= (thresholds.warning + thresholds.excellent) / 2 ? c.status.success : 
                        monthAttendance >= thresholds.danger ? c.status.warning : c.status.danger,
                 icon: "trending-up",
@@ -789,9 +734,12 @@ export function useDashboardViewModel() {
         // Validaciones defensivas
         if (!courses || courses.length === 0) return null;
 
-        // CALCULAR CURSOS DEL TEACHER DINÁMICAMENTE
-        // TODO: Filtrar por user.assignedCourses cuando esté implementado
-        const teacherCourses = courses.slice(0, 2).map(course => {
+        // Cursos donde el docente tiene bloques (mismo criterio que courseAttendance y
+        // Mis cursos); antes se tomaban los dos primeros cursos de la sede, fueran o no suyos.
+        const actorId = user?.academicActorId;
+        const teacherCourses = courses.filter(course =>
+            Array.isArray(course.instructorActorIds) && actorId != null && course.instructorActorIds.includes(actorId)
+        ).map(course => {
             // Obtener estudiantes de este curso
             const courseStudents = students.filter(s => 
                 s.course === course.code || s.course === course.name || s.course === course.id

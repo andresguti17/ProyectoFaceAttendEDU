@@ -20,7 +20,6 @@ import { useRolePermissions } from "./useRolePermissions";
 import { useTranslation } from "../core/utils/i18n/hooks/useTranslation";
 import { batched } from "../core/utils/batching";
 import { attendanceApi, schedulingApi } from "../services/api";
-import { notifyJustificationResult } from "../services/api/justificationNotifications";
 import { actorMap, listBlocks, optional, personMap } from "../services/api/referenceData";
 
 // Formatos y tamaño máximo propuestos por HU-JUS-001 (PDF, JPG, JPEG, PNG · 5 MB).
@@ -538,11 +537,8 @@ export function useJustificationsViewModel() {
                 reviewedBy: user?.id ?? null,
                 resolutionNotes: notes?.trim() || null,
             });
-            // HU-JUS-003: avisar al estudiante (fire-and-forget: un fallo
-            // de notificaciones jamás revierte una evaluación guardada).
-            notifyJustificationResult(detail.record?.academicActorId).catch((e) =>
-                console.warn("[FaceAttend] no se pudo notificar el resultado:", e?.message)
-            );
+            // HU-JUS-003: el aviso al estudiante lo crea notification al consumir
+            // attendance.justification.events; crearlo también aquí lo duplicaba.
             setConfirmOpen(false);
             setFeedback({
                 type: "success",

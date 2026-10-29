@@ -18,8 +18,9 @@ import { useAppData } from "../context/AppDataContext";
 import { useRolePermissions } from "./useRolePermissions";
 import { academicApi } from "../services/api";
 import { isValidEmail, isValidPhone, normalizePhone } from "../core/utils/validation";
+import { getAttendanceThresholds } from "../models/data/userDerivedData";
 
-// Umbral de asistencia mínima (mismo criterio de "en riesgo" que Reportes).
+// Corte de color de la asistencia en la tarjeta de la sede (solo presentación).
 export const ATTENDANCE_THRESHOLD = 75;
 
 export const EMPTY_SCHOOL_FORM = {
@@ -98,6 +99,8 @@ export function useSchoolsViewModel() {
     const statsBySchool = useMemo(() => {
         const bySchool = new Map();
         let unassigned = 0;
+        // "En riesgo" con el mínimo configurado de la institución, como Reportes por sede.
+        const minAttendance = getAttendanceThresholds().minAttendance;
         for (const s of students) {
             const key = s.schoolId ?? "sin-sede";
             if (s.schoolId == null) unassigned += 1;
@@ -106,7 +109,7 @@ export function useSchoolsViewModel() {
                 { total: 0, active: 0, atRisk: 0, attendanceSum: 0 };
             entry.total += 1;
             if (s.status === "active") entry.active += 1;
-            if (s.attendance < ATTENDANCE_THRESHOLD) entry.atRisk += 1;
+            if (s.attendance < minAttendance) entry.atRisk += 1;
             entry.attendanceSum += s.attendance || 0;
             bySchool.set(key, entry);
         }
