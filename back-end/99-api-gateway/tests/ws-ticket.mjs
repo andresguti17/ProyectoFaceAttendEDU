@@ -23,7 +23,7 @@ let pass = 0;
 let fail = 0;
 // Lo que llega de la red (cabeceras, cuerpos) se imprime sin saltos de línea ni caracteres de control, para que
 // una respuesta con ellos no pueda falsificar líneas del informe (S5145, inyección en registros).
-const show = (value) => String(JSON.stringify(value)).replace(/[\u0000-\u001f\u007f-\u009f]/g, " ");
+const show = (value) => String(JSON.stringify(value)).replace(/[\r\n]/g, " ").replace(/[\u0000-\u001f\u007f-\u009f]/g, " ");
 const check = (name, expected, got) => {
     const ok = JSON.stringify(expected) === JSON.stringify(got);
     ok ? (pass += 1) : (fail += 1);
