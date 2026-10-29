@@ -80,7 +80,15 @@ Requieren Node 20.
 cd front-end/Web      # o front-end/Mobile
 npm ci
 npm test
+npm test -- --coverage   # lo que corre el CI
 ```
+
+La cobertura se mide sobre las capas de lógica (`viewmodels`, `services`, `api`, `models`,
+`context`/`utils`, `core`…), no sobre las pantallas (`view/`), que se prueban con _snapshots_
+y renderizado. El piso está en `coverageThreshold` del `package.json` de cada app (líneas
+medidas, redondeadas hacia abajo: súbelo cuando agregues pruebas, no lo bajes).
+`src/api/__tests__/endpointsContract.test.js` (Web) comprueba que cada ruta del catálogo
+exista en los contratos de `docs/openapi`: si cambias un endpoint, ese test te avisa.
 
 Las pruebas de **Web** fijan la zona horaria a `America/Bogota`
 (`front-end/Web/jest.global-setup.js`): los _snapshots_ de reportes y PDF se grabaron en

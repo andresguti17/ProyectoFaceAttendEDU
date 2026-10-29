@@ -60,8 +60,23 @@
     ],
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "/dist/"
-    ]
+      "/dist/",
+      "/__tests__/support/"
+    ],
+    "collectCoverageFrom": [
+      "src/{api,config,hooks,models,services,storage,theme,utils,viewmodels}/**/*.js",
+      "!src/**/__tests__/**"
+    ],
+    "coverageReporters": [
+      "text-summary",
+      "json-summary",
+      "lcov"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 81
+      }
+    }
   },
   "overrides": {
     "follow-redirects": "^1.16.1",

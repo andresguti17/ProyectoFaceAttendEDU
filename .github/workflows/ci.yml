@@ -214,9 +214,20 @@ jobs:
       - name: npm ci
         working-directory: front-end/Mobile
         run: npm ci --ignore-scripts
-      - name: npm test
+      # coverageThreshold (package.json) covers the logic layers (viewmodels, services, api,
+      # models, utils...), not the screens: the job fails under that floor.
+      - name: npm test (with coverage gate)
         working-directory: front-end/Mobile
-        run: npm test
+        run: npm test -- --coverage
+      - name: coverage summary
+        if: always()
+        run: python3 .github/scripts/coverage-summary.py jest front-end/Mobile/coverage/coverage-summary.json mobile
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-mobile
+          path: front-end/Mobile/coverage
+          if-no-files-found: ignore
       - name: npm audit (informational)
         working-directory: front-end/Mobile
         run: npm audit --audit-level=high
@@ -235,9 +246,19 @@ jobs:
       - name: npm ci
         working-directory: front-end/Web
         run: npm ci --ignore-scripts
-      - name: npm test
+      # Same floor and scope as mobile (logic layers, package.json coverageThreshold).
+      - name: npm test (with coverage gate)
         working-directory: front-end/Web
-        run: npm test
+        run: npm test -- --coverage
+      - name: coverage summary
+        if: always()
+        run: python3 .github/scripts/coverage-summary.py jest front-end/Web/coverage/coverage-summary.json web
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-web
+          path: front-end/Web/coverage
+          if-no-files-found: ignore
       - name: expo export --platform web
         working-directory: front-end/Web
         run: ./node_modules/.bin/expo export --platform web
