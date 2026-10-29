@@ -240,7 +240,9 @@ Para actualizar una, obtén el digest actual de su etiqueta y cámbialo en todos
 docker buildx imagetools inspect redis:7-alpine   # línea "Digest: sha256:…"
 ```
 
-Las imágenes propias (`faceattend/*:latest`) y las de los `Dockerfile` (`node`, `eclipse-temurin`, `maven`, `python`, `nginx`) siguen sin fijar.
+Las imágenes base de los `Dockerfile` (`node:20-slim`, `node:20-alpine`, `maven:3.9-eclipse-temurin-21-alpine`, `eclipse-temurin:21-jre-alpine`, `python:3.12-slim` y `nginxinc/nginx-unprivileged:1.27-alpine`) también van fijadas como `etiqueta@sha256:…` en los diez `Dockerfile` (`back-end/*/Dockerfile` y `front-end/Web/Dockerfile`). Se actualizan igual: `docker buildx imagetools inspect node:20-slim`, y se cambia el digest en todos los `Dockerfile` donde aparece. Ojo: `node:20` ya está fuera de soporte (terminó en abril de 2026) y fijarlo no le devuelve parches; pasar a una versión vigente de Node es un cambio aparte y hay que probar los cuatro servicios Node.
+
+Las imágenes propias (`faceattend/*`) se fijan con `FACEATTEND_IMAGE_TAG` (por defecto `latest`).
 
 ---
 

@@ -296,7 +296,7 @@ services:
       FACEATTEND_AUTH_ACADEMIC_URL: http://ms-academic:8083
       FACEATTEND_AUTH_SCHEDULING_URL: http://ms-scheduling:8084
       # Tolerancia de tardanza de la sede (N-14): attendance decide Present o Late con la hora del servidor.
-      FACEATTEND_AUTH_CONFIGURATION_URL: http://ms-configuration:8087
+      FACEATTEND_AUTH_CONFIGURATION_URL: ${FACEATTEND_AUTH_CONFIGURATION_URL:-http://ms-configuration:8087}
       # Supporting documents (MinIO, ADR-009).
       FACEATTEND_STORAGE_ENDPOINT: http://minio:9000
       FACEATTEND_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
