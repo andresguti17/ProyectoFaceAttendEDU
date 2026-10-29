@@ -43,9 +43,11 @@ export const EnrollmentService = {
     return unwrap(data).map(Enrollment.fromApi);
   },
 
+  // GET /api/v1/enrollments ignora ?academic_actor_id/?enrollment_status y responde en camelCase:
+  // devolvía la primera matrícula de la sede con cohortId null. La ruta anidada filtra por actor.
   getActiveByActor: async (academicActorId) => {
-    const data = await request({ method: GET, url: ENDPOINT, params: { academic_actor_id: academicActorId, enrollment_status: 'Active' }, requiresAuth: false });
-    return unwrap(data).map(Enrollment.fromApi);
+    const enrollments = await EnrollmentService.listByActor(academicActorId);
+    return enrollments.filter((e) => e?.isActive);
   },
 
   // Ruta anidada (filtra en el servidor): GET /api/v1/academic-actors/:id/enrollments.

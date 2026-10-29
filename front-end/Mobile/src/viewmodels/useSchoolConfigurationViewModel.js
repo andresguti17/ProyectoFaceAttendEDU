@@ -10,16 +10,24 @@ import School from "../models/academic/School";
 const ACADEMIC_FIELD_NAMES = ['academicYear', 'startDate', 'endDate'];
 const ATTENDANCE_FIELD_NAMES = ['toleranceMinutes', 'maxAbsences', 'maxLatenesses'];
 
+// Campo de la pantalla -> clave en ms-configuration. La tolerancia es la clave nativa que lee
+// attendance para decidir Presente/Tarde (y la que edita Web); con "toleranceMinutes" no surtía efecto.
+const CONFIG_NAME_BY_FIELD = {toleranceMinutes: 'tardy_tolerance_minutes'};
+export const configNameOf = (field) => CONFIG_NAME_BY_FIELD[field] ?? field;
+
 function buildConfigState(configs, fieldNames, extraDefaults = {}) {
     const byName = {};
     for (const cfg of configs || []) {
         if (cfg?.configurationName) byName[cfg.configurationName] = cfg;
     }
+    const byField = {};
     const state = {...extraDefaults};
-    for (const name of fieldNames) {
-        state[name] = byName[name]?.configurationValue ?? '';
+    for (const field of fieldNames) {
+        const cfg = byName[configNameOf(field)];
+        if (cfg) byField[field] = cfg;
+        state[field] = cfg?.configurationValue ?? '';
     }
-    return {state, byName};
+    return {state, byName: byField};
 }
 
 
@@ -95,23 +103,15 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
                     const attendanceBuilt = buildConfigState(configs, ATTENDANCE_FIELD_NAMES);
                     academic = academicBuilt.state;
                     attendance = attendanceBuilt.state;
-                    const mergedByName = {...academicBuilt.byName, ...attendanceBuilt.byName};
-                    const academicMap = {};
-                    const attendanceMap = {};
-                    for (const name of ACADEMIC_FIELD_NAMES) {
-                        if (mergedByName[name]) academicMap[name] = mergedByName[name];
-                    }
-                    for (const name of ATTENDANCE_FIELD_NAMES) {
-                        if (mergedByName[name]) attendanceMap[name] = mergedByName[name];
-                    }
-                    setAcademicConfigsByName(academicMap);
-                    setAttendanceConfigsByName(attendanceMap);
+                    setAcademicConfigsByName(academicBuilt.byName);
+                    setAttendanceConfigsByName(attendanceBuilt.byName);
                 } catch (configError) {
                     console.error('Error cargando configuración académica:', configError);
                 }
 
                 setGeneralInfo(general);
-                setContactInfo(contact);
+                // La lista de países carga en paralelo y puede haber fijado ya el país: no se pisa.
+                setContactInfo(prev => ({...contact, country: prev?.country || '', dialCode: prev?.dialCode}));
                 setAcademicConfig(academic);
                 setAttendanceConfig(attendance);
                 setSchoolId(school.schoolId);
@@ -220,31 +220,31 @@ export function useSchoolConfigurationViewModel({isAdmin = false, t = (key) => k
 
             const persistConfigs = async (fieldNames, values, existingByName, setByName) => {
                 const nextByName = {...existingByName};
-                for (const name of fieldNames) {
-                    const value = values?.[name];
+                for (const field of fieldNames) {
+                    const value = values?.[field];
                     if (value === undefined || value === null || String(value).trim() === '') continue;
-                    const existing = existingByName[name];
+                    const existing = existingByName[field];
                     if (existing?.configurationId) {
                         const updated = await AcademicConfigService.update(
                             existing.configurationId,
                             new AcademicConfiguration({
                                 configuration_id: existing.configurationId,
                                 school_id: schoolId,
-                                configuration_name: name,
+                                configuration_name: configNameOf(field),
                                 configuration_value: String(value),
                                 description: existing.description,
                             })
                         );
-                        if (updated) nextByName[name] = updated;
+                        if (updated) nextByName[field] = updated;
                     } else {
                         const created = await AcademicConfigService.create(
                             new AcademicConfiguration({
                                 school_id: schoolId,
-                                configuration_name: name,
+                                configuration_name: configNameOf(field),
                                 configuration_value: String(value),
                             })
                         );
-                        if (created) nextByName[name] = created;
+                        if (created) nextByName[field] = created;
                     }
                 }
                 setByName(nextByName);
