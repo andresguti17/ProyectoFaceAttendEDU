@@ -11,6 +11,7 @@ jest.mock("../../api/apiClient", () => ({
     clearToken: jest.fn().mockResolvedValue(undefined),
     saveToken: jest.fn().mockResolvedValue(true),
     setUnauthorizedHandler: jest.fn(),
+    isCookieMode: jest.fn(() => false),
 }));
 jest.mock("../../core/hooks/useSessionTimeout", () => ({
     useSessionTimeout: () => ({ resetTimer: jest.fn(), isActive: false }),
@@ -31,7 +32,7 @@ jest.mock("../../services/api/consentApi", () => ({
 jest.mock("../../services/api/termsApi", () => ({ termsApi: { get: jest.fn(), accept: jest.fn() } }));
 
 import { AuthProvider, useAuth } from "../AuthContext";
-import { clearToken, getToken } from "../../api/apiClient";
+import { clearToken, getToken, isCookieMode } from "../../api/apiClient";
 import { authApi } from "../../services/api/authApi";
 import { termsApi } from "../../services/api/termsApi";
 import { TERMS_UNAVAILABLE } from "../../core/utils/termsGate";
@@ -154,4 +155,31 @@ test("a stored session that was never checked is dropped when identity does not 
 
     expect(getAuth().user).toBeNull();
     expect(clearToken).toHaveBeenCalled();
+});
+
+describe("cookie mode (S-10)", () => {
+    beforeEach(() => isCookieMode.mockReturnValue(true));
+    afterEach(() => isCookieMode.mockReturnValue(false));
+
+    test("login works although the body carries no sessionId", async () => {
+        authApi.login.mockResolvedValue({ sessionId: null, userId: "u-1" });
+        const getAuth = mount();
+        await flush();
+
+        expect(await signIn(getAuth)).toMatchObject({ success: true });
+        expect(getAuth().user).not.toBeNull();
+    });
+
+    test("a restored session is checked with GET /auth/session, not /sessions/{id}", async () => {
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify({ id: "u-1", personId: "p-1", role: "student", termsGate: "NONE" }));
+        getToken.mockResolvedValue("cookie-session");
+        authApi.currentSession = jest.fn().mockResolvedValue({ sessionStatus: "Active" });
+
+        const getAuth = mount();
+        await flush();
+
+        expect(authApi.currentSession).toHaveBeenCalledTimes(1);
+        expect(authApi.getSession).not.toHaveBeenCalled();
+        expect(getAuth().user).not.toBeNull();
+    });
 });

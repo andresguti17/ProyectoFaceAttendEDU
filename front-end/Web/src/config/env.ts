@@ -28,7 +28,26 @@ const GATEWAY_PORT = 8000;
 const DEV_TUNNEL_HOST = /^.+-\d+\.[^.]+\.devtunnels\.ms$/i;
 
 // Este valor es reemplazado por Expo durante el build si EXPO_PUBLIC_API_URL está definida
-declare const process: { env: { EXPO_PUBLIC_API_URL?: string } };
+declare const process: {
+    env: { EXPO_PUBLIC_API_URL?: string; EXPO_PUBLIC_SESSION_MODE?: string; EXPO_PUBLIC_WS_URL?: string };
+};
+
+/**
+ * "cookie": la web guarda la sesión en una cookie HttpOnly que fija el gateway y JavaScript no ve (S-10).
+ * Cualquier otro valor: el sessionId viaja como Bearer, como siempre (móvil y modo por defecto).
+ */
+export function getSessionMode(): "cookie" | "bearer" {
+    return process.env.EXPO_PUBLIC_SESSION_MODE?.trim() === "cookie" ? "cookie" : "bearer";
+}
+
+/**
+ * Base para el WebSocket del kiosco. Con el proxy de Vercel la API REST va por el mismo origen de la web, pero
+ * Vercel no reenvía WebSockets: el canal se abre directo contra la API (EXPO_PUBLIC_WS_URL). Sin ella, la base REST.
+ */
+export function getWsBaseUrl(): string | null {
+    const url = process.env.EXPO_PUBLIC_WS_URL?.trim();
+    return url ? url.replace(/\/$/, "") : null;
+}
 
 function inferApiBaseUrl(): string {
     if (typeof window === "undefined" || !window.location?.hostname) {

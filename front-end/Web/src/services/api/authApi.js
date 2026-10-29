@@ -6,7 +6,7 @@
 // transforma nada, la capa solo transporta.
 //
 // El flujo de login completa roles con authorizationApi.userRoles().
-import { request } from "../../api/apiClient";
+import { isCookieMode, request } from "../../api/apiClient";
 import { endpoints } from "../../api/endpoints";
 
 export const authApi = {
@@ -34,7 +34,14 @@ export const authApi = {
         request(endpoints.identity.twoFactorDisable, { method: "POST", body: { password } }),
     logout: (sessionId) =>
         // El id viaja como bearer, no en la URL: la URL queda en los logs de acceso.
-        request(endpoints.identity.logout, { method: "POST", headers: { Authorization: `Bearer ${sessionId}` } }),
+        // En modo cookie el navegador manda la cookie y el servicio la borra en la respuesta.
+        isCookieMode()
+            ? request(endpoints.identity.logout, { method: "POST" })
+            : request(endpoints.identity.logout, { method: "POST", headers: { Authorization: `Bearer ${sessionId}` } }),
+    /** Sesión en uso (sin su id): usuario, estado y caducidad. Es lo que la web pregunta al cargar en modo cookie. */
+    currentSession: () => request(endpoints.identity.currentSession, { method: "GET" }),
+    /** Ticket de un solo uso (30 s) para abrir el WebSocket del kiosco sin exponer la sesión. */
+    wsTicket: () => request(endpoints.identity.wsTicket, { method: "POST" }),
     me: (identifier) =>
         request(endpoints.identity.me, {
             method: "GET",
