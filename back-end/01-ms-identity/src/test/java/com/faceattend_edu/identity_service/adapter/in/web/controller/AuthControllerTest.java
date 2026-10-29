@@ -1,13 +1,16 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
+import com.faceattend_edu.identity_service.adapter.in.web.SessionCookie;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserSessionWebMapper;
 import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserWebMapper;
 import com.faceattend_edu.identity_service.application.port.in.AuthenticateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CloseUserSessionUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetUserByUsernameUseCase;
+import com.faceattend_edu.identity_service.application.port.in.GetUserSessionUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ManageTwoFactorUseCase;
 import com.faceattend_edu.identity_service.application.port.in.VerifyLoginCodeUseCase;
 import com.faceattend_edu.identity_service.application.port.in.RefreshSessionUseCase;
+import com.faceattend_edu.identity_service.config.AuthProperties;
 import com.faceattend_edu.identity_service.domain.exception.AccountLockedException;
 import com.faceattend_edu.identity_service.domain.exception.TwoFactorRequiredException;
 import com.faceattend_edu.identity_service.domain.exception.UnauthorizedException;
@@ -47,7 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(controllers = AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import({UserSessionWebMapper.class, UserWebMapper.class})
+@Import({UserSessionWebMapper.class, UserWebMapper.class, SessionCookie.class, AuthProperties.class})
 @DisplayName("AuthController HTTP tests (MockMvc)")
 class AuthControllerTest {
 
@@ -62,6 +65,8 @@ class AuthControllerTest {
     private GetUserByUsernameUseCase getUserByUsernameUseCase;
     @MockitoBean
     private RefreshSessionUseCase refreshSessionUseCase;
+    @MockitoBean
+    private GetUserSessionUseCase getUserSessionUseCase;
     @MockitoBean
     private VerifyLoginCodeUseCase verifyLoginCodeUseCase;
     @MockitoBean
