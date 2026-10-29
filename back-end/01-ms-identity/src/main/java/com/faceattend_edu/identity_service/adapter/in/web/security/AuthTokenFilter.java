@@ -186,6 +186,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     static String requiredPermission(String method, String path, String caller) {
         // Cambio de la propia contraseña: basta la sesión (la valida el caso de uso).
         if (method.equalsIgnoreCase("POST") && path.equals("/api/v1/auth/change-password")) return null;
+        // Quién es la propia sesión: basta con tener una sesión válida.
+        if (method.equalsIgnoreCase("GET") && path.equals("/api/v1/auth/session")) return null;
         // Perfil propio: la cuenta sale de la sesión y el caso de uso solo toca campos editables.
         if (method.equalsIgnoreCase("PUT") && path.equals("/api/v1/auth/me/profile")) return null;
         // Segundo factor propio: basta la sesión; los casos de uso piden la contraseña o el código.

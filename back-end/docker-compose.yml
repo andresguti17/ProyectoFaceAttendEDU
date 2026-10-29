@@ -157,6 +157,8 @@ services:
       # Alcance por rol de /persons: fichas (scheduling) y matrículas (academic).
       FACEATTEND_AUTH_ACADEMIC_URL: http://ms-academic:8083
       FACEATTEND_AUTH_SCHEDULING_URL: http://ms-scheduling:8084
+      # Cookie de sesión de la web (S-10): HttpOnly; solo con X-Session-Mode: cookie. Secure por defecto.
+      FACEATTEND_SESSION_COOKIE_SECURE: ${FACEATTEND_SESSION_COOKIE_SECURE:-true}
       # Canal de correo: identity llama por HTTP a POST /api/v1/emails (SERVICE.md §4.4).
       FACEATTEND_NOTIFICATION_BASE_URL: http://ms-notification:8088
       FACEATTEND_NOTIFICATION_INTERNAL_TOKEN: "${EMAIL_INTERNAL_TOKEN:?EMAIL_INTERNAL_TOKEN is required (shared secret identity -> notification, e.g. openssl rand -hex 32)}"

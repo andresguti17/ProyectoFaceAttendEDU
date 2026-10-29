@@ -18,6 +18,12 @@ class AuthTokenFilterProfileTest {
     }
 
     @Test
+    @DisplayName("GET /auth/session (who the own session is) needs only a session")
+    void currentSessionNeedsOnlySession() {
+        assertNull(AuthTokenFilter.requiredPermission("GET", "/api/v1/auth/session", CALLER));
+    }
+
+    @Test
     @DisplayName("the own second factor needs only a session, the use cases ask for password or code")
     void twoFactorNeedsOnlySession() {
         for (String action : new String[] {"enable", "confirm", "disable"}) {
