@@ -172,6 +172,16 @@ docker logs faceattend-ms-identity
 curl -s -o /dev/null -w '%{http_code}\n' https://<API_DOMAIN>/api/v1/health
 ```
 
+### Alertas mínimas (OPS-02)
+
+`tools/monitor/check.sh` revisa en una pasada: la URL pública de salud, los contenedores caídos o `unhealthy` (ignora los trabajos de una sola vez como liquibase), las respuestas 5xx recientes del gateway y el uso de disco. Sale con 1 si algo falla y, si se le da un webhook, avisa **solo cuando el estado cambia** (alerta y recuperación). En el servidor, con cron cada 5 minutos:
+
+```bash
+*/5 * * * * HEALTH_URL=https://<API_DOMAIN>/api/v1/health ALERT_WEBHOOK_URL=<webhook de Slack o Mattermost> /ruta/al/repo/tools/monitor/check.sh >> /var/log/faceattend-monitor.log 2>&1
+```
+
+Las variables (umbral de 5xx, ventana, disco, contenedores ignorados) están documentadas en la cabecera del script. Complementa, no sustituye, un monitor externo (por ejemplo UptimeRobot sobre la URL pública), porque si el servidor entero cae este script cae con él. Probado en local con alerta, aviso único ante un fallo repetido, recuperación, disco y contenedor detenido; la URL de salud real y el webhook hay que comprobarlos en el servidor.
+
 ---
 
 ## 10. Troubleshooting
