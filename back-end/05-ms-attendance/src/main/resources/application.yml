@@ -45,6 +45,11 @@ faceattend:
   auth:
     identity-url: http://localhost:8081
     authorization-url: http://localhost:8082
+    # Tolerancia de tardanza por sede (N-14).
+    configuration-url: http://localhost:8087
+  attendance:
+    # Zona horaria de las sedes: contra ella se compara la hora de llegada con el inicio del bloque.
+    zone: America/Bogota
 management:
   endpoints:
     web:
