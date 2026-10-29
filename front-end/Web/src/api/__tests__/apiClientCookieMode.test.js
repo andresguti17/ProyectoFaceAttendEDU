@@ -1,4 +1,4 @@
-// S-10: con EXPO_PUBLIC_SESSION_MODE=cookie la web no guarda ni envía el id de sesión.
+// S-10: por defecto la web no guarda ni envía el id de sesión; EXPO_PUBLIC_SESSION_MODE=bearer lo apaga.
 import { getToken, isCookieMode, request, saveToken } from '../apiClient';
 
 const okResponse = (body) => ({ ok: true, status: 200, text: async () => JSON.stringify(body) });
@@ -12,7 +12,11 @@ afterEach(() => {
     delete process.env.EXPO_PUBLIC_SESSION_MODE;
 });
 
-describe('modo bearer (por defecto)', () => {
+describe('modo bearer (EXPO_PUBLIC_SESSION_MODE=bearer)', () => {
+    beforeEach(() => {
+        process.env.EXPO_PUBLIC_SESSION_MODE = 'bearer';
+    });
+
     it('no está en modo cookie y manda Authorization sin credentials', async () => {
         await saveToken('11111111-2222-3333-4444-555555555555');
         expect(isCookieMode()).toBe(false);
@@ -24,12 +28,10 @@ describe('modo bearer (por defecto)', () => {
     });
 });
 
-describe('modo cookie', () => {
-    beforeEach(() => {
+describe('modo cookie (por defecto)', () => {
+    it('está activo sin configurar nada, o con cookie', () => {
+        expect(isCookieMode()).toBe(true);
         process.env.EXPO_PUBLIC_SESSION_MODE = 'cookie';
-    });
-
-    it('se activa solo con el valor exacto', () => {
         expect(isCookieMode()).toBe(true);
         process.env.EXPO_PUBLIC_SESSION_MODE = 'bearer';
         expect(isCookieMode()).toBe(false);
