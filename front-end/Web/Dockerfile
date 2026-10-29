@@ -11,6 +11,12 @@ FROM node:24-alpine@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f407
 WORKDIR /app
 ARG EXPO_PUBLIC_API_URL=
 ENV EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL}
+# S-10: "cookie" = la sesión vive en una cookie HttpOnly (sin token en JavaScript). WS_URL: API directa para el
+# WebSocket del kiosco cuando REST pasa por el proxy de Vercel (que no reenvía WebSockets).
+ARG EXPO_PUBLIC_SESSION_MODE=
+ENV EXPO_PUBLIC_SESSION_MODE=${EXPO_PUBLIC_SESSION_MODE}
+ARG EXPO_PUBLIC_WS_URL=
+ENV EXPO_PUBLIC_WS_URL=${EXPO_PUBLIC_WS_URL}
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY . ./

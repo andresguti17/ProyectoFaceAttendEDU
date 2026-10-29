@@ -17,7 +17,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { Platform } from "react-native";
 import { getInstitutionConfig } from "../core/config/institutionConfig";
 import { useSessionTimeout } from "../core/hooks/useSessionTimeout";
-import { clearToken, getToken, saveToken, setUnauthorizedHandler } from "../api/apiClient";
+import { clearToken, getToken, isCookieMode, saveToken, setUnauthorizedHandler } from "../api/apiClient";
 import { roleNamesFrom, toUiRole } from "../core/utils/backendRoles";
 import { authApi } from "../services/api/authApi";
 import { consentApi } from "../services/api/consentApi";
@@ -178,7 +178,8 @@ async function removeIntendedRoute() {
  */
 async function isSessionAlive(token) {
     try {
-        const session = await authApi.getSession(token);
+        // En modo cookie no se conoce el id: se pregunta por "la sesión en uso" (GET /auth/session).
+        const session = isCookieMode() ? await authApi.currentSession() : await authApi.getSession(token);
         return session?.sessionStatus === "Active";
     } catch (err) {
         return err?.status !== 401 && err?.status !== 404;
@@ -359,7 +360,10 @@ export function AuthProvider({ children }) {
 
     // Con la sesión ya emitida: roles, perfil, sede y estado de sesión del usuario.
     const finishLogin = useCallback(async (session, identifier) => {
-        const sessionId = session?.sessionId ?? session?.session_id ?? session?.id;
+        // En modo cookie el cuerpo trae sessionId nulo: la sesión ya quedó en la cookie HttpOnly.
+        const sessionId = isCookieMode()
+            ? "cookie"
+            : session?.sessionId ?? session?.session_id ?? session?.id;
         const userId = session?.userId ?? session?.user_id;
         if (!sessionId || !userId) {
             return "No se pudo crear la sesión";

@@ -1,6 +1,6 @@
 # Diseño S-10: sesión web en cookie HttpOnly
 
-Estado: **opción A elegida el 29 de octubre de 2026** (proxy de `/api` en Vercel, ticket de un solo uso para el WebSocket, `SameSite=Lax`, 8 horas). El PR 1 (identity) está fusionado (#330). El PR 2 (Kong: cookie a `Authorization`, comprobación de `Origin` y de la cabecera anti-CSRF, CORS por servicio) está probado con 31 casos contra el gateway real (`back-end/99-api-gateway/tests/cookie-session.sh`); el ticket de un solo uso del WebSocket también está en Kong (`back-end/99-api-gateway/tests/ws-ticket.mjs`, 24 casos contra el gateway y el servicio biométrico reales); los PR 3 (web) y 4 (limpieza) no se han empezado. Hallazgo S-10 del informe de madurez: el token de sesión de la web vive en `sessionStorage`.
+Estado: **opción A elegida el 29 de octubre de 2026** (proxy de `/api` en Vercel, ticket de un solo uso para el WebSocket, `SameSite=Lax`, 8 horas). El PR 1 (identity) está fusionado (#330). El PR 2 (Kong: cookie a `Authorization`, comprobación de `Origin` y de la cabecera anti-CSRF, CORS por servicio) está probado con 31 casos contra el gateway real (`back-end/99-api-gateway/tests/cookie-session.sh`); el ticket de un solo uso del WebSocket también está en Kong (`back-end/99-api-gateway/tests/ws-ticket.mjs`, 24 casos contra el gateway y el servicio biométrico reales); el PR 3 (web, detrás de `EXPO_PUBLIC_SESSION_MODE=cookie`) está implementado y el PR 4 (limpieza) no se ha empezado. Hallazgo S-10 del informe de madurez: el token de sesión de la web vive en `sessionStorage`.
 
 ## 1. El problema, con lo que hay hoy
 
@@ -59,6 +59,17 @@ CORS ya tiene `credentials: true` y orígenes explícitos (`__CORS_ORIGINS__`); 
 - `AuthContext.js`: el estado "sesión iniciada" sale del perfil y la caducidad guardados (no secretos); un `401` en cualquier petición limpia el estado local. Hoy no hay forma de preguntar "¿quién soy?" con la sesión: `GET /auth/me` exige un usuario o correo (responde 400 sin ellos) y `/auth/me/profile` no admite `GET`. Se propone un endpoint nuevo en identity, `GET /auth/session`, que devuelva usuario, estado, caducidad y `mustChangePassword` de la sesión que llega como Bearer (el que Kong inyecta desde la cookie), para validar la sesión al cargar la página.
 - Revisar los cuatro archivos que llaman a `fetch` directamente (`cityCatalog.js`, `SearchInput.js`, `useJustificationsViewModel.js`, `useMinorEnrollmentViewModel.js`): ninguno pone `Authorization` hoy, pero los que llaman a la API necesitan `credentials` y la cabecera anti-CSRF.
 - Detrás de un interruptor (`EXPO_PUBLIC_SESSION_MODE=cookie`); por defecto sigue el modo actual hasta validarlo.
+
+Cómo quedó el PR 3:
+
+- `config/env.ts`: `getSessionMode()` (solo el valor exacto `cookie` activa el modo) y `getWsBaseUrl()` (`EXPO_PUBLIC_WS_URL`, la API directa para el WebSocket).
+- `apiClient.js`: `isCookieMode()` (solo web). En modo cookie la petición lleva `credentials: "include"`, `X-Requested-With: FaceAttend` y `X-Session-Mode: cookie` y **nunca** `Authorization`. `saveToken` no guarda el id: deja la marca `cookie-session`, para que las comprobaciones de "hay sesión" y la hora de caducidad sigan funcionando sin ningún secreto en `sessionStorage`.
+- `AuthContext.js`: el login no exige `sessionId` (llega nulo) y al cargar la página la sesión se valida con `GET /auth/session` en vez de `/sessions/{id}`.
+- `authApi.logout`: sin cabecera `Authorization`; el servicio lee la cookie y la borra.
+- `biometricSocket.js`: en modo cookie pide `POST /auth/ws-ticket` en cada conexión (también en cada reconexión: el ticket es de un solo uso) y abre el canal con `faceattend.ticket, <ticket>`, contra `EXPO_PUBLIC_WS_URL` si existe.
+- `vercel.json`: `/api/:path*` se reescribe hacia la API antes del reemplazo a `index.html`.
+- Despliegue en Vercel: `EXPO_PUBLIC_SESSION_MODE=cookie`, `EXPO_PUBLIC_API_URL` = el propio origen de la web (el proxy lo lleva a la API) y `EXPO_PUBLIC_WS_URL=https://faceattend-edu.duckdns.org`. Ese origen de la web debe estar en `KONG_CORS_ORIGINS`.
+- Pendiente de comprobar en el entorno real: detrás del proxy de Vercel, los límites por IP de Kong e identity pueden ver la IP de salida de Vercel y no la del cliente.
 
 ## 4. Decisiones que hacen falta antes de implementar
 
