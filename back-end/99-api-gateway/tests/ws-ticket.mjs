@@ -11,7 +11,7 @@ import { randomBytes } from "node:crypto";
 
 const API = (process.env.FAE_API ?? "http://localhost:8000/api/v1").replace(/\/$/, "");
 const ORIGIN = process.env.FAE_ORIGIN ?? "http://localhost:8090";
-const EVIL = "http://evil.example";
+const EVIL = "https://evil.example";
 const USER = process.env.FAE_TEST_USER;
 const PASSWORD = process.env.FAE_TEST_PASSWORD;
 if (!USER || !PASSWORD) {

@@ -8,7 +8,7 @@
 # http://localhost:8090). Hace login y logout con esa cuenta (11 segundos de espera por la ventana de los servicios).
 B=${FAE_API:-http://localhost:8000/api/v1}
 O=${FAE_ORIGIN:-http://localhost:8090}
-EVIL=http://evil.example
+EVIL=https://evil.example
 U=${FAE_TEST_USER:?define FAE_TEST_USER}
 PW=${FAE_TEST_PASSWORD:?define FAE_TEST_PASSWORD}
 LOGIN="{\"identifier\":\"$U\",\"password\":\"$PW\"}"
@@ -16,7 +16,7 @@ H=(-H 'Content-Type: application/json')
 WEB=(-H 'X-Session-Mode: cookie' -H 'X-Requested-With: FaceAttend' -H "Origin: $O")
 pass=0; fail=0
 check() { # nombre esperado obtenido
-  if [ "$2" = "$3" ]; then pass=$((pass+1)); printf 'OK    %-62s %s\n' "$1" "$3"; else fail=$((fail+1)); printf 'FALLA %-62s esperado %s, obtenido %s\n' "$1" "$2" "$3"; fi
+  if [[ "$2" = "$3" ]]; then pass=$((pass+1)); printf 'OK    %-62s %s\n' "$1" "$3"; else fail=$((fail+1)); printf 'FALLA %-62s esperado %s, obtenido %s\n' "$1" "$2" "$3"; fi
 }
 code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
 body() { curl -s "$@"; }
@@ -26,7 +26,7 @@ sid_of() { grep -i '^set-cookie: fae_session=' | head -1 | sed -E 's/^[Ss]et-[Cc
 R=$(curl -si -X POST "$B/auth/login" "${H[@]}" "${WEB[@]}" -d "$LOGIN")
 SID=$(echo "$R" | sid_of)
 check "login web: 200" 200 "$(echo "$R" | head -1 | awk '{print $2}')"
-check "login web: llega la cookie" yes "$([ -n "$SID" ] && echo yes || echo no)"
+check "login web: llega la cookie" yes "$([[ -n "$SID" ]] && echo yes || echo no)"
 check "login web: la cookie es HttpOnly" yes "$(echo "$R" | grep -i '^set-cookie: fae_session' | grep -qi httponly && echo yes || echo no)"
 check "login web: el cuerpo trae sessionId nulo" yes "$(echo "$R" | tail -1 | grep -q "\"sessionId\":null" && echo yes || echo no)"
 # 2. login en modo cookie sin cabecera anti-CSRF ni Origin
@@ -46,8 +46,8 @@ check "GET con cookie desde Origin ajeno (lectura): 200" 200 "$(code "$B/schools
 EV='{"userId":"00000000-0000-0000-0000-000000000000","permission":"x"}'
 check "POST con cookie sin X-Requested-With: 403" 403 "$(code -X POST "$B/auth/evaluate" "${H[@]}" -H "Cookie: fae_session=$SID" -H "Origin: $O" -d "$EV")"
 check "POST con cookie y X-Requested-With pero Origin ajeno: 403" 403 "$(code -X POST "$B/auth/evaluate" "${H[@]}" -H "Cookie: fae_session=$SID" -H 'X-Requested-With: FaceAttend' -H "Origin: $EVIL" -d "$EV")"
-check "POST con cookie, cabecera y Origin permitido: no 403" no "$([ "$(code -X POST "$B/auth/evaluate" "${H[@]}" -H "Cookie: fae_session=$SID" -H 'X-Requested-With: FaceAttend' -H "Origin: $O" -d "$EV")" = 403 ] && echo yes || echo no)"
-check "POST móvil con Bearer sin cabeceras web: no 403" no "$([ "$(code -X POST "$B/auth/evaluate" "${H[@]}" -H "Authorization: Bearer $BEARER" -d "$EV")" = 403 ] && echo yes || echo no)"
+check "POST con cookie, cabecera y Origin permitido: no 403" no "$([[ "$(code -X POST "$B/auth/evaluate" "${H[@]}" -H "Cookie: fae_session=$SID" -H 'X-Requested-With: FaceAttend' -H "Origin: $O" -d "$EV")" = 403 ]] && echo yes || echo no)"
+check "POST móvil con Bearer sin cabeceras web: no 403" no "$([[ "$(code -X POST "$B/auth/evaluate" "${H[@]}" -H "Authorization: Bearer $BEARER" -d "$EV")" = 403 ]] && echo yes || echo no)"
 # 11-13. cookies inválidas y prioridad de Authorization
 check "cookie que no es un UUID: 401" 401 "$(code "$B/schools?limit=1" -H 'Cookie: fae_session=hola')"
 check "cookie con un UUID inventado: 401" 401 "$(code "$B/schools?limit=1" -H 'Cookie: fae_session=11111111-2222-4333-8444-555555555555')"
@@ -72,11 +72,11 @@ check "…y en los demás servicios tras su ventana de 10 s: 401" 401 "$(code "$
 R4=$(curl -si -X POST "$B/auth/login" "${H[@]}" "${WEB[@]}" -d "$LOGIN"); S2=$(echo "$R4" | sid_of)
 RF=$(curl -si -X POST "$B/auth/refresh" "${WEB[@]}" -H "Cookie: fae_session=$S2")
 S3=$(echo "$RF" | sid_of)
-check "refresh por cookie: 200 y cookie nueva distinta" yes "$([ "$(echo "$RF" | head -1 | awk '{print $2}')" = 200 ] && [ -n "$S3" ] && [ "$S3" != "$S2" ] && echo yes || echo no)"
+check "refresh por cookie: 200 y cookie nueva distinta" yes "$([[ "$(echo "$RF" | head -1 | awk '{print $2}')" = 200 && -n "$S3" && "$S3" != "$S2" ]] && echo yes || echo no)"
 check "…la cookie nueva funciona: 200" 200 "$(code "$B/auth/session" -H "Cookie: fae_session=$S3")"
 check "…la anterior ya no: 401" 401 "$(code "$B/auth/session" -H "Cookie: fae_session=$S2")"
 # limpieza
 curl -s -o /dev/null -X POST "$B/auth/logout" "${WEB[@]}" -H "Cookie: fae_session=$S3"
 curl -s -o /dev/null -X POST "$B/auth/logout" -H "Authorization: Bearer $BEARER"
 echo; echo "Resultado: $pass bien, $fail con falla"
-[ "$fail" = 0 ]
+[[ "$fail" = 0 ]]
