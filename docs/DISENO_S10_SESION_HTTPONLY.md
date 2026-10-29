@@ -1,6 +1,6 @@
 # Diseño S-10: sesión web en cookie HttpOnly
 
-Estado: **opción A elegida el 29 de octubre de 2026** (proxy de `/api` en Vercel, ticket de un solo uso para el WebSocket, `SameSite=Lax`, 8 horas). El PR 1 (identity) está fusionado (#330). El PR 2 (Kong: cookie a `Authorization`, comprobación de `Origin` y de la cabecera anti-CSRF, CORS por servicio) está probado con 31 casos contra el gateway real (`back-end/99-api-gateway/tests/cookie-session.sh`); el ticket de un solo uso del WebSocket también está en Kong (`back-end/99-api-gateway/tests/ws-ticket.mjs`, 24 casos contra el gateway y el servicio biométrico reales); el PR 3 (web, detrás de `EXPO_PUBLIC_SESSION_MODE=cookie`) está implementado y el PR 4 (limpieza) no se ha empezado. Hallazgo S-10 del informe de madurez: el token de sesión de la web vive en `sessionStorage`.
+Estado: **opción A elegida el 29 de octubre de 2026** (proxy de `/api` en Vercel, ticket de un solo uso para el WebSocket, `SameSite=Lax`, 8 horas). El PR 1 (identity) está fusionado (#330). El PR 2 (Kong: cookie a `Authorization`, comprobación de `Origin` y de la cabecera anti-CSRF, CORS por servicio) está probado con 31 casos contra el gateway real (`back-end/99-api-gateway/tests/cookie-session.sh`); el ticket de un solo uso del WebSocket también está en Kong (`back-end/99-api-gateway/tests/ws-ticket.mjs`, 24 casos contra el gateway y el servicio biométrico reales); el PR 3 (web) está fusionado (#332). El PR 4 convierte la cookie en el modo por defecto de la web; `EXPO_PUBLIC_SESSION_MODE=bearer` se conserva como salida (red local por http, o vuelta atrás) y por eso el código del token en `sessionStorage` no se borra todavía. Hallazgo S-10 del informe de madurez: el token de sesión de la web vive en `sessionStorage`.
 
 ## 1. El problema, con lo que hay hoy
 
@@ -58,7 +58,7 @@ CORS ya tiene `credentials: true` y orígenes explícitos (`__CORS_ORIGINS__`); 
 - `biometricSocket.js`: abre el WebSocket sin subprotocolo.
 - `AuthContext.js`: el estado "sesión iniciada" sale del perfil y la caducidad guardados (no secretos); un `401` en cualquier petición limpia el estado local. Hoy no hay forma de preguntar "¿quién soy?" con la sesión: `GET /auth/me` exige un usuario o correo (responde 400 sin ellos) y `/auth/me/profile` no admite `GET`. Se propone un endpoint nuevo en identity, `GET /auth/session`, que devuelva usuario, estado, caducidad y `mustChangePassword` de la sesión que llega como Bearer (el que Kong inyecta desde la cookie), para validar la sesión al cargar la página.
 - Revisar los cuatro archivos que llaman a `fetch` directamente (`cityCatalog.js`, `SearchInput.js`, `useJustificationsViewModel.js`, `useMinorEnrollmentViewModel.js`): ninguno pone `Authorization` hoy, pero los que llaman a la API necesitan `credentials` y la cabecera anti-CSRF.
-- Detrás de un interruptor (`EXPO_PUBLIC_SESSION_MODE=cookie`); por defecto sigue el modo actual hasta validarlo.
+- Interruptor `EXPO_PUBLIC_SESSION_MODE`: la cookie es el modo por defecto desde el PR 4 y `bearer` lo apaga.
 
 Cómo quedó el PR 3:
 

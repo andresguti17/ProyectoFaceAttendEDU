@@ -33,11 +33,13 @@ declare const process: {
 };
 
 /**
- * "cookie": la web guarda la sesión en una cookie HttpOnly que fija el gateway y JavaScript no ve (S-10).
- * Cualquier otro valor: el sessionId viaja como Bearer, como siempre (móvil y modo por defecto).
+ * Por defecto la web guarda la sesión en una cookie HttpOnly que fija el gateway y JavaScript no ve (S-10).
+ * EXPO_PUBLIC_SESSION_MODE=bearer la apaga: el sessionId viaja como Bearer desde sessionStorage. Hace falta si la
+ * web se abre por http en una IP de la red local, donde el navegador descarta la cookie Secure (o fijar
+ * FACEATTEND_SESSION_COOKIE_SECURE=false en el servidor).
  */
 export function getSessionMode(): "cookie" | "bearer" {
-    return process.env.EXPO_PUBLIC_SESSION_MODE?.trim() === "cookie" ? "cookie" : "bearer";
+    return process.env.EXPO_PUBLIC_SESSION_MODE?.trim() === "bearer" ? "bearer" : "cookie";
 }
 
 /**

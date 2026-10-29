@@ -1,3 +1,5 @@
+// Estas pruebas cubren el modo Bearer (EXPO_PUBLIC_SESSION_MODE=bearer); el modo cookie, apiClientCookieMode.test.js.
+process.env.EXPO_PUBLIC_SESSION_MODE = 'bearer';
 // Archivos: la subida del soporte va en multipart (FormData) y la descarga vuelve como Blob.
 import { request, saveToken, setUnauthorizedHandler } from '../apiClient';
 import { attendanceApi } from '../../services/api/attendanceApi';
