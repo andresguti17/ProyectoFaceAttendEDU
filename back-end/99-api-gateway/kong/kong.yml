@@ -237,6 +237,13 @@ plugins:
           -- cookie (móvil y scripts). "__CORS_ORIGINS__" lo sustituye el compose por la lista
           -- de KONG_CORS_ORIGINS, la misma del CORS.
           local allowed_origins = { "__CORS_ORIGINS__" }
+          local function origin_allowed()
+            local origin = kong.request.get_header("origin")
+            for _, allowed in ipairs(allowed_origins) do
+              if origin == allowed then return true end
+            end
+            return false
+          end
           local cookie_header = kong.request.get_header("cookie")
           local cookie_sid = cookie_header and (";" .. cookie_header):match(";%s*fae_session=([%x%-]+)")
           local from_cookie = cookie_sid ~= nil and kong.request.get_header("authorization") == nil
@@ -246,12 +253,7 @@ plugins:
             -- CSRF: una cookie viaja sola, así que lo que escribe exige una cabecera propia (obliga a
             -- una petición CORS con preflight, que solo pasa desde los orígenes permitidos) y un
             -- Origin permitido. Incluye login, refresh y logout de la web.
-            local origin = kong.request.get_header("origin")
-            local origin_ok = false
-            for _, allowed in ipairs(allowed_origins) do
-              if origin == allowed then origin_ok = true end
-            end
-            if kong.request.get_header("x-requested-with") ~= "FaceAttend" or not origin_ok then
+            if kong.request.get_header("x-requested-with") ~= "FaceAttend" or not origin_allowed() then
               return kong.response.exit(403, { status = 403, error = "Forbidden", code = "CSRF_REJECTED", message = "Cookie sessions need the X-Requested-With header and an allowed Origin", path = path })
             end
           end
@@ -304,6 +306,24 @@ plugins:
           if not token and method == "GET" and path == "/api/v1/biometric/ws" then
             local protocols = kong.request.get_header("sec-websocket-protocol")
             token = protocols and protocols:match("^%s*faceattend%.bearer%s*,%s*([%x%-]+)%s*$")
+            local ticket = not token and protocols and protocols:match("^%s*faceattend%.ticket%s*,%s*(%x+)%s*$")
+            if ticket then
+              -- Ticket de un solo uso (S-10, opción A): Vercel no reenvía WebSockets, así que el kiosco abre el canal
+              -- directo contra la API, donde la cookie no viaja. Pide antes un ticket (POST /auth/ws-ticket) y lo manda
+              -- como subprotocolo ("faceattend.ticket, <ticket>"). Aquí se canjea por la sesión y se le pasa al servicio
+              -- el subprotocolo de siempre; el id de sesión nunca llega al JavaScript. Vale 30 s y una sola vez.
+              local tickets = ngx.shared.fae_ws_tickets
+              if tickets and #ticket == 32 and origin_allowed() then
+                local sid = tickets:get(ticket)
+                -- add() solo triunfa para el primero que lo canjea: dos handshakes a la vez no lo usan los dos.
+                if sid and tickets:add("used:" .. ticket, 1, 60) then
+                  tickets:delete(ticket)
+                  token = sid
+                  kong.service.request.set_header("Sec-WebSocket-Protocol", "faceattend.bearer, " .. sid)
+                  kong.ctx.plugin.ws_ticket = true
+                end
+              end
+            end
           end
           if not token or not token:match("^%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$") then
             return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Missing or invalid bearer token", path = path })
@@ -351,7 +371,34 @@ plugins:
           if state == "invalid" then
             return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Invalid or expired session", path = path })
           end
-          return enforce_password_change(state == "must_change")
+          enforce_password_change(state == "must_change")
+
+          -- POST /api/v1/auth/ws-ticket: emite un ticket de un solo uso para abrir el WebSocket biométrico.
+          -- Lo contesta el gateway (no hay endpoint en identity): quien llega aquí ya tiene una sesión válida y,
+          -- si vino por cookie, ya pasó la comprobación anti-CSRF de arriba.
+          if method == "POST" and path == "/api/v1/auth/ws-ticket" then
+            local tickets = ngx.shared.fae_ws_tickets
+            if not tickets then
+              return kong.response.exit(503, { status = 503, error = "Service Unavailable", message = "WebSocket tickets are not enabled on this gateway", path = path })
+            end
+            -- Como mucho 20 tickets por minuto y sesión.
+            local issued = tickets:incr("n:" .. token, 1, 0, 60)
+            if issued and issued > 20 then
+              return kong.response.exit(429, { status = 429, error = "Too Many Requests", message = "Too many WebSocket tickets", path = path })
+            end
+            local ticket = ngx.var.request_id -- 16 bytes aleatorios de nginx, en hexadecimal
+            if not ticket or #ticket ~= 32 or not tickets:add(ticket, token, 30) then
+              return kong.response.exit(503, { status = 503, error = "Service Unavailable", message = "Cannot issue a WebSocket ticket", path = path })
+            end
+            return kong.response.exit(200, { ticket = ticket, expiresIn = 30 }, { ["Cache-Control"] = "no-store" })
+          end
+      header_filter:
+        - |
+          -- Con un ticket, el navegador ofreció "faceattend.ticket" y el servicio contesta "faceattend.bearer":
+          -- el navegador corta la conexión si el subprotocolo elegido no es uno de los que ofreció.
+          if kong.ctx.plugin.ws_ticket and kong.response.get_header("sec-websocket-protocol") == "faceattend.bearer" then
+            kong.response.set_header("Sec-WebSocket-Protocol", "faceattend.ticket")
+          end
   - name: cors
     config:
       # Solo los orígenes de KONG_CORS_ORIGINS (el compose los inserta en

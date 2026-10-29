@@ -644,6 +644,10 @@ services:
       KONG_DNS_STALE_TTL: '0'
       # Lets the post-function token check call identity through resty.http.
       KONG_UNTRUSTED_LUA_SANDBOX_REQUIRES: resty.http
+      # Tickets de un solo uso del WebSocket biométrico (S-10): POST /api/v1/auth/ws-ticket los guarda 30 s aquí.
+      # 1 MB alcanza para miles; sin este diccionario el endpoint responde 503. Un solo gateway: si hubiera
+      # varios, el ticket tendría que vivir en un almacén compartido.
+      KONG_NGINX_HTTP_LUA_SHARED_DICT: fae_ws_tickets 1m
       # Real client IP: only the two proxies in front of Kong are trusted to set
       # X-Forwarded-For (frontend-web nginx and Caddy, fixed addresses on
       # faceattend-edge). Trusting whole private ranges let any client pick its
