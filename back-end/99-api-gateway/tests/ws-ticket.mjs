@@ -122,10 +122,8 @@ await post("/auth/logout", { headers: { ...web, Cookie: `fae_session=${cookieSid
 const sid2 = await login();
 const t3 = await issue(sid2);
 await logout(sid2);
-// La sesión cerrada sigue valiendo hasta 10 s en la caché de Kong y del servicio biométrico (también con el token
-// de siempre); pasada esa ventana el ticket ya no sirve.
-await new Promise((resolve) => setTimeout(resolve, 11000));
-check("ticket de una sesión cerrada, pasada la ventana de 10 s: 401", 401, (await handshake(`faceattend.ticket, ${t3.body.ticket}`)).status);
+// Kong marca la sesión como revocada al cerrarla: el ticket deja de servir al instante.
+check("ticket de una sesión cerrada: 401", 401, (await handshake(`faceattend.ticket, ${t3.body.ticket}`)).status);
 
 // ── límite por sesión ──
 const sid3 = await login();

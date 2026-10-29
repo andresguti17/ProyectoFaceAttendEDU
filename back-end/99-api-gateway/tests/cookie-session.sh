@@ -66,8 +66,8 @@ check "logout por cookie: 204" 204 "$(echo "$L" | head -1 | awk '{print $2}')"
 check "…la cookie se borra (Max-Age=0)" yes "$(echo "$L" | grep -i '^set-cookie: fae_session' | grep -qi 'max-age=0' && echo yes || echo no)"
 check "…y la misma cookie ya no sirve en identity al instante: 401" 401 "$(code "$B/auth/session" -H "Cookie: fae_session=$SID")"
 check "logout por cookie sin cabecera anti-CSRF: 403" 403 "$(code -X POST "$B/auth/logout" -H "Cookie: fae_session=$BEARER" -H "Origin: $O")"
-sleep 11
-check "…y en los demás servicios tras su ventana de 10 s: 401" 401 "$(code "$B/schools?limit=1" -H "Cookie: fae_session=$SID")"
+check "un logout rechazado por CSRF no revoca la sesión: 200" 200 "$(code "$B/schools?limit=1" -H "Authorization: Bearer $BEARER")"
+check "…y en los demás servicios también al instante (Kong lo corta): 401" 401 "$(code "$B/schools?limit=1" -H "Cookie: fae_session=$SID")"
 # 16. refresh por cookie
 R4=$(curl -si -X POST "$B/auth/login" "${H[@]}" "${WEB[@]}" -d "$LOGIN"); S2=$(echo "$R4" | sid_of)
 RF=$(curl -si -X POST "$B/auth/refresh" "${WEB[@]}" -H "Cookie: fae_session=$S2")

@@ -271,9 +271,9 @@ plugins:
             ["/api/v1/onboarding/schools"] = true,
           }
           if method == "POST" and public_posts[path] then
-            -- Logout: invalida la entrada cacheada para que el token
-            -- deje de pasar el edge de inmediato (los servicios conservan
-            -- su ventana de 10 s).
+            -- Logout: marca la sesión como revocada para que el token deje de pasar el edge de inmediato
+            -- (los servicios conservan su ventana de 10 s, pero solo se llega a ellos por aquí). No se usa
+            -- kong.cache:invalidate: el sandbox de los plugins solo expone get y get_bulk de la caché.
             if path == "/api/v1/auth/logout" then
               pcall(function()
                 local auth = kong.request.get_header("authorization")
@@ -283,8 +283,10 @@ plugins:
                   local args = kong.request.get_query()
                   sid = args and args.sessionId
                 end
-                if type(sid) == "string" and #sid > 0 then
-                  kong.cache:invalidate("faceattend:session:" .. sid)
+                local revoked = ngx.shared.fae_ws_tickets
+                if revoked and type(sid) == "string" and #sid > 0 then
+                  -- 15 s: más que los 10 s de la caché de sesión, que caduca sola después.
+                  revoked:set("revoked:" .. sid, true, 15)
                 end
               end)
             end
@@ -331,10 +333,12 @@ plugins:
 
           -- Cuenta con la contraseña inicial (mustChangePassword): solo puede
           -- leer (la web carga roles y perfil al entrar) y cambiar la clave.
-          -- El cambio de clave invalida la entrada cacheada de la sesión.
+          -- El cambio de clave deja de usar la entrada cacheada de la sesión.
           local function enforce_password_change(must_change)
             if path == "/api/v1/auth/change-password" then
-              pcall(function() kong.cache:invalidate("faceattend:session:" .. token) end)
+              -- Sube la generación de la clave de caché: la entrada vieja (mustChangePassword) deja de usarse.
+              local gens = ngx.shared.fae_ws_tickets
+              if gens then pcall(function() gens:incr("gen:" .. token, 1, 0, 60) end) end
               return
             end
             if must_change and method ~= "GET" then
@@ -362,9 +366,15 @@ plugins:
             return "active", nil, 10
           end
 
-          -- Revocation/logout window: 10 s (logout and change-password
-          -- invalidate the entry right away).
-          local state = kong.cache:get("faceattend:session:" .. token, { ttl = 10 }, lookup)
+          -- Sesión cerrada hace menos de 15 s: la caché de abajo aún podría darla por activa.
+          local revoked = ngx.shared.fae_ws_tickets
+          if revoked and revoked:get("revoked:" .. token) then
+            return kong.response.exit(401, { status = 401, error = "Unauthorized", message = "Invalid or expired session", path = path })
+          end
+
+          -- Revocation window: 10 s (a logout is cut at the edge right away by the marker above).
+          local generation = revoked and revoked:get("gen:" .. token) or 0
+          local state = kong.cache:get("faceattend:session:" .. token .. ":" .. generation, { ttl = 10 }, lookup)
           if not state then
             return kong.response.exit(503, { status = 503, error = "Service Unavailable", message = "Cannot verify session", path = path })
           end
