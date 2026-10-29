@@ -1,6 +1,6 @@
 # Diseño S-10: sesión web en cookie HttpOnly
 
-Estado: **opción A elegida el 29 de octubre de 2026** (proxy de `/api` en Vercel, ticket de un solo uso para el WebSocket, `SameSite=Lax`, 8 horas). El PR 1 (identity) está escrito y probado con la suite de identity, sin confirmar en git; los PR 2 a 4 no se han empezado. Hallazgo S-10 del informe de madurez: el token de sesión de la web vive en `sessionStorage`.
+Estado: **opción A elegida el 29 de octubre de 2026** (proxy de `/api` en Vercel, ticket de un solo uso para el WebSocket, `SameSite=Lax`, 8 horas). El PR 1 (identity) está fusionado (#330). El PR 2 (Kong: cookie a `Authorization`, comprobación de `Origin` y de la cabecera anti-CSRF, CORS por servicio) está probado con 31 casos contra el gateway real (`back-end/99-api-gateway/tests/cookie-session.sh`); queda aparte el ticket de un solo uso del WebSocket (identity más Kong) y los PR 3 (web) y 4 (limpieza) no se han empezado. Hallazgo S-10 del informe de madurez: el token de sesión de la web vive en `sessionStorage`.
 
 ## 1. El problema, con lo que hay hoy
 
