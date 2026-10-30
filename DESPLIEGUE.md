@@ -8,7 +8,7 @@
 
 ## 1. Arquitectura desplegada
 
-- **EC2** (Debian, t3.xlarge, 150 GB gp3) con Docker Compose: 9 microservicios, Kong, MongoDB, Redis, Kafka, Portainer y Caddy.
+- **EC2** (Ubuntu, t3.xlarge, 150 GB gp3) con Docker Compose: 9 microservicios, Kong, MongoDB, Redis, Kafka, Portainer y Caddy.
 - **Neon PostgreSQL**: 8 esquemas (uno por bounded context), migrados con Liquibase desde GitHub Actions.
 - **Vercel**: frontend web estático (`expo export`), que llama a `https://<API_DOMAIN>`.
 - **Caddy** termina TLS (Let's Encrypt) delante de Kong. Es lo único que escucha en Internet.
@@ -88,7 +88,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --r
 Despliegue manual equivalente (desde el host, con el repo clonado en `DEPLOY_DIR`):
 
 ```bash
-ssh -i <llave-del-equipo>.pem admin@<API_DOMAIN>
+ssh -i <llave-del-equipo>.pem ubuntu@<API_DOMAIN>
 cd <DEPLOY_DIR>
 git fetch --prune origin && git checkout --detach <sha>
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --remove-orphans
@@ -181,7 +181,7 @@ Comprobación tras desplegar (ventana privada, herramientas del navegador): la c
 Todo acceso administrativo va por túnel SSH:
 
 ```bash
-ssh -L 9443:127.0.0.1:9443 -L 8001:127.0.0.1:8001 admin@<API_DOMAIN>   # Portainer y Kong admin
+ssh -L 9443:127.0.0.1:9443 -L 8001:127.0.0.1:8001 ubuntu@<API_DOMAIN>   # Portainer y Kong admin
 docker ps
 docker logs faceattend-kong
 docker logs faceattend-ms-identity
