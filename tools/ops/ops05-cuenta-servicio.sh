@@ -38,6 +38,14 @@ if [[ -n "${OPS05_PSQL:-}" ]]; then
 elif [[ -n "${OPS05_DATABASE_URL:-}" ]]; then
   # Cadena de conexión completa (la de la consola de Neon: Connect). Es lo recomendable: las variables NEON_HOST,
   # NEON_USER y NEON_PASSWORD del .env.prod pueden apuntar a un proyecto de Neon anterior al que usa producción.
+  case "$OPS05_DATABASE_URL" in
+    postgres://* | postgresql://*) ;;
+    *)
+      # No se imprime el valor: puede traer la contraseña.
+      echo "OPS05_DATABASE_URL debe empezar por postgresql:// (la cadena «Connect» de la consola de Neon), no por jdbc:." >&2
+      exit 1
+      ;;
+  esac
   WRAP=$(mktemp)
   trap 'rm -f "$WRAP"' EXIT
   cat > "$WRAP" <<'WRAPPER'
