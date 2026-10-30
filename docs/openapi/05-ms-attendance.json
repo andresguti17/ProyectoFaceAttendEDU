@@ -723,6 +723,9 @@
               }
             },
             "description": "OK"
+          },
+          "204": {
+            "description": "El registro existe y no tiene justificación"
           }
         },
         "tags": [

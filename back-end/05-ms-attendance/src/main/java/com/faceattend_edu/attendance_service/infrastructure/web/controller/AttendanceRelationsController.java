@@ -15,6 +15,9 @@ import com.faceattend_edu.attendance_service.infrastructure.web.mapper.Attendanc
 import com.faceattend_edu.attendance_service.infrastructure.web.mapper.JustificationWebMapper;
 import com.faceattend_edu.attendance_service.infrastructure.web.mapper.SupportingDocumentWebMapper;
 import com.faceattend_edu.attendance_service.infrastructure.web.security.ActorScope;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,14 +51,24 @@ public class AttendanceRelationsController {
                 .items().stream().map(recordMapper::toResponse).collect(Collectors.toList()));
     }
 
+    /** 200 con la justificación, o 204 si el registro existe y todavía no tiene ninguna (estado normal, no un error). */
     @GetMapping("/api/v1/attendance/{id}/justification")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "204", description = "El registro existe y no tiene justificación", content = @Content)
+    })
     public ResponseEntity<JustificationResponse> byAttendance(@PathVariable Long id) {
         requireRecord(id);
-        return ResponseEntity.ok(listJustificationsUseCase.search(new JustificationFilter(null, id, null), 0, 1)
+        return listJustificationsUseCase.search(new JustificationFilter(null, id, null), 0, 1)
                 .items().stream()
                 .findFirst()
                 .map(justificationMapper::toResponse)
-                .orElse(null));
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> {
+                    // Quien tiene alcance restringido ya comprobó el registro arriba; el resto, solo si no hay nada que devolver.
+                    if (!ActorScope.restricted()) getRecordUseCase.getById(id);
+                    return ResponseEntity.noContent().build();
+                });
     }
 
     @GetMapping("/api/v1/justifications/{id}/documents")
