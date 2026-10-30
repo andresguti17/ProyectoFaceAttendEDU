@@ -43,6 +43,29 @@ servicio del alta de sedes y de ms-notification) y recrea ms-identity y ms-notif
 lean, corre los flujos y después `tools/seed-api-test-data`. Al final baja el stack con sus volúmenes.
 Ninguna credencial sale del job: todas se generan en él y se enmascaran en el log.
 
+El runner trae Docker Compose 2.x, que rechaza que el `docker-compose.yml` raíz redefina servicios de
+sus `include` (`conflicts with imported resource`); el job instala Compose v5.3.1, fijado por sha256.
+
+La siembra **no decide** el resultado del job: mide la herramienta de siembra, no la plataforma. Su
+estado sale en el resumen y, si falla, se suben los logs.
+
+**Tiempo** (primera corrida completa, run 41004553863): unos 16 minutos. 11 de ellos son el build de
+las imágenes (`docker compose up --build`), unos 30 s las cuentas y los healthchecks, 2 los flujos y
+2 la siembra. Si el build pesa demasiado, las opciones son cachear capas con `docker buildx` y la
+caché de Actions (`cache-from/cache-to: type=gha` en un override de compose solo para el CI) o
+partir de imágenes ya publicadas por `deploy-backend.yml` en vez de construirlas.
+
+### Estado conocido (octubre de 2026)
+
+- **Flujo 4 falla contra el código de `develop`.** `GET /class-sessions/{id}/attendance` (y todo
+  listado de asistencia sin filtro de estado) responde 409: el filtro apagado manda `""` como
+  `attendance_status` y, con `stringtype=unspecified`, PostgreSQL intenta convertirlo al enum antes
+  de evaluar la bandera (`AttendanceRecordPersistenceAdapter.search`). Por eso ms-notification no
+  puede marcar los ausentes al cerrar. Es un bug de producción que este E2E detecta; se corrige
+  aparte. En un stack local construido antes de ese cambio el flujo pasa.
+- **La siembra falla en una base vacía** por desfase con la API actual: `GET /auth/me?username` da
+  404, el enrolamiento facial 422 y la creación de alertas 400.
+
 ## Cómo leer el resultado
 
 - **Resumen del job** (pestaña *Summary* de la ejecución): una tabla con cada flujo, su estado, cuántos

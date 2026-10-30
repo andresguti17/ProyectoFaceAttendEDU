@@ -217,7 +217,12 @@ export async function flujoHorario(ctx, step) {
 
 // ── 4. Asistencia manual y cierre con ausentes ──────────────────────────────
 
-const recordsOf = async (ctx, token) => items((await call("GET", `/class-sessions/${seg(ctx.sessionId)}/attendance`, { token })).json);
+// Un error al leer no es "todavía no": falla en el acto con la respuesta, en vez de esperar 90 s.
+const recordsOf = async (ctx, token) => {
+  const res = await call("GET", `/class-sessions/${seg(ctx.sessionId)}/attendance`, { token });
+  expectStatus("lectura de la asistencia de la sesión", res, 200);
+  return items(res.json);
+};
 const recordFor = (records, who) => records.find((r) => String(r.academicActorId) === String(who.actorId));
 
 export async function flujoAsistencia(ctx, step) {
