@@ -87,6 +87,12 @@ Las pruebas de **Web** fijan la zona horaria a `America/Bogota`
 hora de Colombia, así que no dependas de la zona horaria de tu máquina ni la cambies
 para que pasen.
 
+## Flujos E2E del MVP
+
+`tools/e2e/mvp-flujos.mjs` recorre los 6 flujos críticos contra el stack de docker compose. En el CI
+es el workflow opcional **E2E flujos MVP** (a mano, los lunes o con la etiqueta `run-e2e` en el PR).
+Cómo correrlo y leer el resultado: [docs/E2E_FLUJOS_MVP.md](docs/E2E_FLUJOS_MVP.md).
+
 ## Contratos OpenAPI (`docs/openapi`)
 
 Cuando cambies un endpoint o un DTO, regenera los contratos y commitea el resultado; el
