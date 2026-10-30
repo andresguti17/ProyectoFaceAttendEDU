@@ -156,7 +156,23 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --force-rec
 
 ## 8. Frontend en Vercel
 
-Variable del proyecto en Vercel: `EXPO_PUBLIC_API_URL=https://<API_DOMAIN>`. El flujo es Vercel → `https://<API_DOMAIN>` (Caddy) → Kong → microservicio.
+La web guarda la sesión en una cookie HttpOnly (S-10) y esa cookie solo viaja si el navegador habla con **el mismo origen** de la web: `vercel.app` y `duckdns.org` son sufijos públicos, es decir, sitios distintos. Por eso la API **no** se llama directamente desde el navegador: `front-end/Web/vercel.json` reescribe `/api/:path*` hacia `https://<API_DOMAIN>/api/:path*` (Vercel actúa de proxy) y la web llama a su propio origen. El flujo es navegador → Vercel (`/api`) → `https://<API_DOMAIN>` (Caddy) → Kong → microservicio.
+
+Variables del proyecto en Vercel (**solo Production**; se hornean al construir, así que un cambio exige redesplegar):
+
+| Variable | Valor | Para qué |
+|---|---|---|
+| `EXPO_PUBLIC_API_URL` | `https://<ORIGEN_WEB>` (el dominio de producción de la propia web) | Las llamadas REST van por el proxy de `/api`. **No** poner `https://<API_DOMAIN>`: con la cookie por defecto el login parecería funcionar y la sesión se perdería al recargar. |
+| `EXPO_PUBLIC_WS_URL` | `https://<API_DOMAIN>` | El WebSocket del kiosco, que Vercel no reenvía, va directo a la API con un ticket de un solo uso. |
+| `EXPO_PUBLIC_SESSION_MODE` | vacía o `cookie` | `bearer` apaga la cookie y vuelve al token en `sessionStorage` (vuelta atrás, o web abierta por http en una IP de red local). |
+
+Además, en el servidor (`ENV_PROD_FILE`):
+- `KONG_CORS_ORIGINS` debe incluir `https://<ORIGEN_WEB>`, escrito igual (con `https://`, sin barra final). El gateway comprueba el `Origin` en las escrituras con cookie y al canjear el ticket del WebSocket.
+- `FACEATTEND_SESSION_COOKIE_SECURE=true` (valor por defecto).
+
+Si el destino del proxy en `vercel.json` no es tu `<API_DOMAIN>`, cámbialo antes de desplegar. Si el proyecto tiene la protección de Vercel Authentication activa, comprueba que el dominio de producción carga sin pedir cuenta de Vercel, o los usuarios no podrán entrar.
+
+Comprobación tras desplegar (ventana privada, herramientas del navegador): la cookie `fae_session` aparece como HttpOnly, Secure y SameSite=Lax; `sessionStorage` solo guarda `cookie-session`; ninguna petición a `/api` lleva `Authorization`; el WebSocket del kiosco abre con 101 tras `POST /api/v1/auth/ws-ticket`. Diseño y razones en [docs/DISENO_S10_SESION_HTTPONLY.md](docs/DISENO_S10_SESION_HTTPONLY.md). Pendiente de comprobar en producción: la IP que ven los límites por IP de Kong e identity detrás del proxy.
 
 ---
 
