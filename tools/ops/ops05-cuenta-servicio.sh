@@ -35,10 +35,23 @@ fi
 
 if [[ -n "${OPS05_PSQL:-}" ]]; then
   PSQL_CMD=$OPS05_PSQL
+elif [[ -n "${OPS05_DATABASE_URL:-}" ]]; then
+  # Cadena de conexión completa (la de la consola de Neon: Connect). Es lo recomendable: las variables NEON_HOST,
+  # NEON_USER y NEON_PASSWORD del .env.prod pueden apuntar a un proyecto de Neon anterior al que usa producción.
+  WRAP=$(mktemp)
+  trap 'rm -f "$WRAP"' EXIT
+  cat > "$WRAP" <<'WRAPPER'
+#!/usr/bin/env bash
+exec docker run --rm -i -e OPS05_DATABASE_URL postgres:17-alpine sh -c 'exec psql "$OPS05_DATABASE_URL" "$@"' psql "$@"
+WRAPPER
+  export OPS05_DATABASE_URL
+  PSQL_CMD="bash $WRAP -v ON_ERROR_STOP=1"
+  echo "Conectando a $(sed -E 's#^[a-z]+://([^@]*@)?([^/:?]+).*/([^/?]+).*#\2 (base \3)#' <<<"$OPS05_DATABASE_URL")"
 else
   for v in NEON_HOST NEON_USER NEON_PASSWORD POSTGRES_DB; do
     [[ -n "$(get "$v")" ]] || { echo "Falta $v en $ENV_FILE" >&2; exit 1; }
   done
+  echo "Conectando a $(get NEON_HOST) (base $(get POSTGRES_DB)): comprueba que es el proyecto de Neon que usa producción."
   export PGPASSWORD PGSSLMODE=require
   PGPASSWORD=$(get NEON_PASSWORD)
   PSQL_CMD="docker run --rm -i -e PGPASSWORD -e PGSSLMODE postgres:17-alpine psql -h $(get NEON_HOST) -U $(get NEON_USER) -d $(get POSTGRES_DB) -v ON_ERROR_STOP=1"
