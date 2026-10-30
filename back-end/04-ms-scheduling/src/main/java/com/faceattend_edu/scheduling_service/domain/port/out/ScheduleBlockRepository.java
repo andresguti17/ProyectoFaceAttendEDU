@@ -12,6 +12,9 @@ public interface ScheduleBlockRepository {
     void deleteById(Long id);
     boolean existsById(Long id);
 
+    /** True if the room still has live (not deleted) blocks. */
+    boolean existsByEnvironmentId(Integer environmentId);
+
     /** True if another live block in the room overlaps the interval on that weekday ({@code excludeId} skips the block being edited). */
     boolean existsEnvironmentOverlap(Integer environmentId, Short dayOfWeek, LocalTime startsAt, LocalTime endsAt, Long excludeId);
 

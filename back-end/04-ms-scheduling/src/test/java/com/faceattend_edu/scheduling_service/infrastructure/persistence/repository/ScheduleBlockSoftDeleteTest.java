@@ -73,4 +73,17 @@ class ScheduleBlockSoftDeleteTest {
         assertFalse(repository.existsById(b.getScheduleBlockId()));
         assertTrue(repository.findAll().stream().noneMatch(x -> b.getScheduleBlockId().equals(x.getScheduleBlockId())));
     }
+
+    @Test
+    @DisplayName("existsByEnvironmentId solo cuenta los bloques vivos")
+    void existsByEnvironmentIdIgnoresDeletedBlocks() {
+        ScheduleBlockJpaEntity b = saved(803);
+        assertTrue(repository.existsByEnvironmentId(803));
+
+        repository.deleteById(b.getScheduleBlockId());
+        repository.flush();
+        em.clear();
+
+        assertFalse(repository.existsByEnvironmentId(803));
+    }
 }
