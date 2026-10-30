@@ -48,9 +48,23 @@ export function readCredentials(file, key) {
 
 // ── PostgreSQL (docker exec psql) ────────────────────────────
 
+// Ruta absoluta de docker: no se busca en PATH (un directorio escribible en PATH podría suplantarlo).
+// QA_DOCKER_BIN la sobrescribe si Docker está en otro sitio.
+const DOCKER_CANDIDATES = [
+    "C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe",
+    "/usr/local/bin/docker",
+    "/opt/homebrew/bin/docker",
+    "/usr/bin/docker",
+];
+function dockerBin() {
+    const bin = process.env.QA_DOCKER_BIN ?? DOCKER_CANDIDATES.find((p) => existsSync(p));
+    if (!bin) throw new Error("No encuentro docker en las rutas habituales: define QA_DOCKER_BIN con su ruta completa.");
+    return bin;
+}
+
 function psql(statement, flags) {
     return execFileSync(
-        "docker",
+        dockerBin(),
         ["exec", "-e", "Q", PG_CONTAINER, "sh", "-c", `psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" ${flags} -c "$Q"`],
         { env: { ...process.env, Q: statement }, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 }
     );
