@@ -33,5 +33,8 @@
       ]
     }
   ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://faceattend-edu.duckdns.org/api/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

@@ -1,3 +1,5 @@
+// Estas pruebas cubren el modo Bearer (EXPO_PUBLIC_SESSION_MODE=bearer); el modo cookie, apiClientCookieMode.test.js.
+process.env.EXPO_PUBLIC_SESSION_MODE = 'bearer';
 import {
     ApiError,
     getToken,

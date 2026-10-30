@@ -124,6 +124,10 @@ public class ProvisionUserUseCaseImpl implements ProvisionUserUseCase {
         if (actorType == null) {
             throw new ValidationException("roleName must be one of " + ROLE_ACTOR_TYPE.keySet());
         }
+        // A TI (tarjeta de identidad) is issued to minors: never valid for an instructor or admin.
+        if (actorType != 1 && "TI".equals(command.person().getDocumentType())) {
+            throw new ValidationException("documentType TI only applies to apprentices");
+        }
         // The academic actor is optional (an account may not belong to a school yet), but when
         // it comes it must match the role; the enrollment only exists for apprentices.
         Actor actor = command.actor();

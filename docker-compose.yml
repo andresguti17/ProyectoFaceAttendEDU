@@ -135,6 +135,9 @@ services:
         # Solo fijar EXPO_PUBLIC_API_URL en .env si el gateway vive en un
         # host distinto al que sirve este frontend.
         EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-}
+        # S-10: vacío = sesión en cookie HttpOnly (por defecto); "bearer" = Bearer en sessionStorage.
+        EXPO_PUBLIC_SESSION_MODE: ${EXPO_PUBLIC_SESSION_MODE:-}
+        EXPO_PUBLIC_WS_URL: ${EXPO_PUBLIC_WS_URL:-}
     image: faceattend/frontend-web:${FACEATTEND_IMAGE_TAG:-latest}
     container_name: faceattend-frontend-web
     mem_limit: 128m

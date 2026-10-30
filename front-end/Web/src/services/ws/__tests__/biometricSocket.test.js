@@ -1,10 +1,14 @@
 jest.mock("../../../api/apiClient", () => ({
     getToken: jest.fn(),
+    isCookieMode: jest.fn(() => false),
+    request: jest.fn(),
     resolveBaseUrl: jest.fn(() => "http://localhost:8080"),
 }));
+jest.mock("../../../config/env", () => ({ getWsBaseUrl: jest.fn(() => null) }));
 
-import { connectBiometricSocket, WS_BEARER_PROTOCOL } from "../biometricSocket";
-import { getToken } from "../../../api/apiClient";
+import { connectBiometricSocket, WS_BEARER_PROTOCOL, WS_TICKET_PROTOCOL } from "../biometricSocket";
+import { getToken, isCookieMode, request } from "../../../api/apiClient";
+import { getWsBaseUrl } from "../../../config/env";
 
 class FakeWebSocket {
     constructor(url, protocols) {
@@ -35,6 +39,9 @@ beforeEach(() => {
     FakeWebSocket.instances = [];
     global.WebSocket = FakeWebSocket;
     getToken.mockReset();
+    isCookieMode.mockReturnValue(false);
+    request.mockReset();
+    getWsBaseUrl.mockReturnValue(null);
     jest.useFakeTimers();
 });
 
@@ -281,4 +288,51 @@ test("sends the session as a subprotocol, never in the URL", async () => {
 
     expect(ws.url).toBe("ws://localhost:8080/api/v1/biometric/ws");
     expect(ws.protocols).toEqual([WS_BEARER_PROTOCOL, "11111111-1111-4111-8111-111111111111"]);
+});
+describe("modo cookie (S-10)", () => {
+    test("pide un ticket y lo ofrece como subprotocolo, sin token", async () => {
+        isCookieMode.mockReturnValue(true);
+        request.mockResolvedValue({ ticket: "a".repeat(32), expiresIn: 30 });
+        connectBiometricSocket({});
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(request).toHaveBeenCalledWith(expect.stringContaining("/auth/ws-ticket"), { method: "POST" });
+        expect(getToken).not.toHaveBeenCalled();
+        const ws = FakeWebSocket.instances[0];
+        expect(ws.protocols).toEqual([WS_TICKET_PROTOCOL, "a".repeat(32)]);
+        expect(ws.url).toBe("ws://localhost:8080/api/v1/biometric/ws");
+    });
+
+    test("el canal va directo a EXPO_PUBLIC_WS_URL cuando existe", async () => {
+        isCookieMode.mockReturnValue(true);
+        getWsBaseUrl.mockReturnValue("https://api.example.test");
+        request.mockResolvedValue({ ticket: "b".repeat(32) });
+        connectBiometricSocket({});
+        await Promise.resolve();
+        await Promise.resolve();
+
+        expect(FakeWebSocket.instances[0].url).toBe("wss://api.example.test/api/v1/biometric/ws");
+    });
+
+    test("cada reconexión pide un ticket nuevo", async () => {
+        isCookieMode.mockReturnValue(true);
+        request.mockResolvedValueOnce({ ticket: "1".repeat(32) }).mockResolvedValueOnce({ ticket: "2".repeat(32) });
+        connectBiometricSocket({});
+        await Promise.resolve();
+        await Promise.resolve();
+        FakeWebSocket.instances[0].triggerClose();
+        await jest.advanceTimersByTimeAsync(1000);
+
+        expect(request).toHaveBeenCalledTimes(2);
+        expect(FakeWebSocket.instances[1].protocols).toEqual([WS_TICKET_PROTOCOL, "2".repeat(32)]);
+    });
+
+    test("con un token explícito sigue usando faceattend.bearer", async () => {
+        isCookieMode.mockReturnValue(true);
+        connectBiometricSocket({ token: "t" });
+        await Promise.resolve();
+        expect(FakeWebSocket.instances[0].protocols).toEqual([WS_BEARER_PROTOCOL, "t"]);
+        expect(request).not.toHaveBeenCalled();
+    });
 });

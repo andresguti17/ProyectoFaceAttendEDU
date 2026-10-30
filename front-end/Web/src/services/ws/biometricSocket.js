@@ -7,7 +7,9 @@
 //  client_message_id y reconecta ante cortes inesperados.
 // ============================================================
 
-import { getToken, resolveBaseUrl } from "../../api/apiClient";
+import { getToken, isCookieMode, request, resolveBaseUrl } from "../../api/apiClient";
+import { endpoints } from "../../api/endpoints";
+import { getWsBaseUrl } from "../../config/env";
 
 const HEARTBEAT_MS = 20000;
 const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 8000];
@@ -23,6 +25,9 @@ const MAX_SEND_ATTEMPTS = 3;
 const WS_OPEN = 1;
 // Subprotocol name the gateway and ms-biometric read the session from.
 export const WS_BEARER_PROTOCOL = "faceattend.bearer";
+// Modo cookie (S-10): el navegador no puede mandar la cookie al canal y el id de sesión no está en JavaScript,
+// así que se pide a la API un ticket de un solo uso (30 s) y se ofrece con este subprotocolo.
+export const WS_TICKET_PROTOCOL = "faceattend.ticket";
 
 function toWsUrl(httpBaseUrl) {
     return httpBaseUrl.replace(/^http/i, "ws");
@@ -148,11 +153,16 @@ export function connectBiometricSocket({ token, baseUrl } = {}) {
     }
 
     async function connectOnce() {
-        const resolvedToken = token ?? (await getToken());
-        const url = `${toWsUrl(resolveBaseUrl(baseUrl))}/api/v1/biometric/ws`;
-        // The browser cannot set headers on the handshake: the session goes in
+        const cookieMode = token == null && isCookieMode();
+        // Each connection (also each reconnect) needs its own ticket: it is single-use.
+        const credential = cookieMode
+            ? (await request(endpoints.identity.wsTicket, { method: "POST" })).ticket
+            : (token ?? (await getToken()));
+        const base = cookieMode ? (getWsBaseUrl() ?? resolveBaseUrl(baseUrl)) : resolveBaseUrl(baseUrl);
+        const url = `${toWsUrl(base)}/api/v1/biometric/ws`;
+        // The browser cannot set headers on the handshake: the session (or the ticket) goes in
         // Sec-WebSocket-Protocol, never in the URL, where proxies and logs keep it.
-        ws = new WebSocket(url, [WS_BEARER_PROTOCOL, resolvedToken]);
+        ws = new WebSocket(url, [cookieMode ? WS_TICKET_PROTOCOL : WS_BEARER_PROTOCOL, credential]);
         ws.onopen = () => {
             reconnectAttempt = 0;
             notifyStatus("open");

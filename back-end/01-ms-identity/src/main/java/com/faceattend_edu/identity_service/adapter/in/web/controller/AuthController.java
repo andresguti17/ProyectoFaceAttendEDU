@@ -1,5 +1,6 @@
 package com.faceattend_edu.identity_service.adapter.in.web.controller;
 
+import com.faceattend_edu.identity_service.adapter.in.web.SessionCookie;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.AuthRequest;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.RefreshSessionRequest;
 import com.faceattend_edu.identity_service.adapter.in.web.dto.TwoFactorCodeRequest;
@@ -13,6 +14,7 @@ import com.faceattend_edu.identity_service.adapter.in.web.mapper.UserWebMapper;
 import com.faceattend_edu.identity_service.application.port.in.AuthenticateUserUseCase;
 import com.faceattend_edu.identity_service.application.port.in.CloseUserSessionUseCase;
 import com.faceattend_edu.identity_service.application.port.in.GetUserByUsernameUseCase;
+import com.faceattend_edu.identity_service.application.port.in.GetUserSessionUseCase;
 import com.faceattend_edu.identity_service.application.port.in.ManageTwoFactorUseCase;
 import com.faceattend_edu.identity_service.application.port.in.VerifyLoginCodeUseCase;
 import com.faceattend_edu.identity_service.application.port.in.RefreshSessionUseCase;
@@ -24,6 +26,7 @@ import com.faceattend_edu.identity_service.domain.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,12 +45,29 @@ public class AuthController {
     private final ManageTwoFactorUseCase manageTwoFactorUseCase;
     private final UserSessionWebMapper sessionWebMapper;
     private final UserWebMapper userWebMapper;
+    private final SessionCookie sessionCookie;
+    private final GetUserSessionUseCase getUserSessionUseCase;
+
+    /**
+     * With {@code X-Session-Mode: cookie} (the web) the new session travels in an HttpOnly cookie and the body no
+     * longer carries its id; without it (mobile, scripts) the response is the same as always.
+     */
+    private ResponseEntity<UserSessionDto> opened(UserSessionDto dto, HttpServletRequest http) {
+        return sessionCookie.requested(http) ? inCookie(dto) : ResponseEntity.ok(dto);
+    }
+
+    private ResponseEntity<UserSessionDto> inCookie(UserSessionDto dto) {
+        if (dto.getSessionId() == null) return ResponseEntity.ok(dto);
+        String cookie = sessionCookie.issue(dto.getSessionId()).toString();
+        dto.setSessionId(null);
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie).body(dto);
+    }
 
     @PostMapping("/login")
     public ResponseEntity<UserSessionDto> login(@Valid @RequestBody AuthRequest authRequest, HttpServletRequest http) {
         try {
-            return ResponseEntity.ok(sessionWebMapper.toDto(
-                    authenticateUserUseCase.authenticate(authRequest.getIdentifier(), authRequest.getPassword(), loginIp(http))));
+            return opened(sessionWebMapper.toDto(
+                    authenticateUserUseCase.authenticate(authRequest.getIdentifier(), authRequest.getPassword(), loginIp(http))), http);
         } catch (TwoFactorRequiredException challenge) {
             // 200 without a session: the client asks for the e-mailed code and calls /login/verify.
             UserSessionDto pending = new UserSessionDto();
@@ -59,9 +79,9 @@ public class AuthController {
 
     /** Second step of a login with two-factor: the e-mailed code opens the session. */
     @PostMapping("/login/verify")
-    public ResponseEntity<UserSessionDto> verifyLogin(@Valid @RequestBody VerifyLoginCodeRequest request) {
-        return ResponseEntity.ok(sessionWebMapper.toDto(
-                verifyLoginCodeUseCase.verify(request.getIdentifier(), request.getCode())));
+    public ResponseEntity<UserSessionDto> verifyLogin(@Valid @RequestBody VerifyLoginCodeRequest request, HttpServletRequest http) {
+        return opened(sessionWebMapper.toDto(
+                verifyLoginCodeUseCase.verify(request.getIdentifier(), request.getCode())), http);
     }
 
     /** Starts enabling the second factor: checks the password and e-mails a code. */
@@ -101,10 +121,14 @@ public class AuthController {
      * renovada (un solo uso).
      */
     @PostMapping("/refresh")
-    public ResponseEntity<UserSessionDto> refresh(@Valid @RequestBody RefreshSessionRequest request,
+    public ResponseEntity<UserSessionDto> refresh(@RequestBody(required = false) RefreshSessionRequest request,
                                                   HttpServletRequest httpRequest) {
-        return ResponseEntity.ok(sessionWebMapper.toDto(
-                refreshSessionUseCase.refresh(request.getSessionId(), clientIp(httpRequest))));
+        // The session comes in the body (mobile) or, for the web, in its cookie: with no body the cookie is the only source.
+        boolean bodyHasSession = request != null && request.getSessionId() != null;
+        UUID current = bodyHasSession ? request.getSessionId() : sessionCookie.read(httpRequest).orElse(null);
+        if (current == null) throw new ValidationException("sessionId is required");
+        UserSessionDto renewed = sessionWebMapper.toDto(refreshSessionUseCase.refresh(current, clientIp(httpRequest)));
+        return sessionCookie.requested(httpRequest) || !bodyHasSession ? inCookie(renewed) : ResponseEntity.ok(renewed);
     }
 
     private static String clientIp(HttpServletRequest request) {
@@ -132,12 +156,40 @@ public class AuthController {
      */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader(value = "Authorization", required = false) String authorization,
-                                       @RequestParam(value = "sessionId", required = false) UUID legacySessionId) {
+                                       @RequestParam(value = "sessionId", required = false) UUID legacySessionId,
+                                       HttpServletRequest http) {
+        UUID fromCookie = sessionCookie.read(http).orElse(null);
         UUID sessionId = bearerSessionId(authorization);
-        if (sessionId == null) sessionId = legacySessionId;
+        if (sessionId == null) sessionId = fromCookie != null ? fromCookie : legacySessionId;
         if (sessionId == null) return ResponseEntity.badRequest().build();
         closeUserSessionUseCase.closeSession(sessionId);
+        // A web client also loses its cookie, so the browser stops sending a session that no longer exists.
+        if (fromCookie != null || sessionCookie.requested(http)) {
+            return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, sessionCookie.clear().toString()).build();
+        }
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Who the session in use is: user, status, start, end and whether the password must change. The web calls it
+     * on load because it cannot read its own session any more (HttpOnly cookie). The session id is never returned.
+     * It reads the Bearer, which the gateway fills in from the cookie; the cookie itself is the fallback.
+     */
+    @GetMapping("/session")
+    public ResponseEntity<UserSessionDto> currentSession(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                                         HttpServletRequest http) {
+        UUID sessionId = bearerSessionId(authorization);
+        if (sessionId == null) sessionId = sessionCookie.read(http).orElse(null);
+        if (sessionId == null) throw new UnauthorizedException("Authentication required");
+        UserSessionDto dto;
+        try {
+            dto = sessionWebMapper.toDto(getUserSessionUseCase.getUserSession(sessionId));
+        } catch (EntityNotFoundException e) {
+            throw new UnauthorizedException("Invalid or expired session");
+        }
+        if (!"Active".equalsIgnoreCase(dto.getSessionStatus())) throw new UnauthorizedException("Invalid or expired session");
+        dto.setSessionId(null);
+        return ResponseEntity.ok(dto);
     }
 
     private static UUID bearerSessionId(String authorization) {

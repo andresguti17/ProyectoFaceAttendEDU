@@ -10,7 +10,7 @@
 // ============================================================
 
 import { Platform } from "react-native";
-import { API_TIMEOUT_MS, getApiBaseUrl } from "../config/env";
+import { API_TIMEOUT_MS, getApiBaseUrl, getSessionMode } from "../config/env";
 
 export class ApiError extends Error {
     constructor(opts) {
@@ -23,6 +23,8 @@ export class ApiError extends Error {
 }
 
 const TOKEN_KEY = "auth_token";
+// Marca (no secreta) que se guarda en lugar del sessionId cuando la sesión vive en la cookie HttpOnly.
+const COOKIE_MARKER = "cookie-session";
 const SESSION_USER_KEY = "@faceattend:session_user";
 
 // Web: la sesión vive en sessionStorage (se borra al cerrar la pestaña y no queda en
@@ -79,6 +81,11 @@ async function removeRaw(key) {
  * Forma compartida con Mobile: { token, savedAt, expiresAt, email }.
  * @returns el token o null si no hay sesión o si ya expiró.
  */
+/** ¿La web usa la cookie HttpOnly (S-10)? Solo en web y con EXPO_PUBLIC_SESSION_MODE=cookie. */
+export function isCookieMode() {
+    return Platform.OS === "web" && getSessionMode() === "cookie";
+}
+
 export async function getToken() {
     const raw = await readRaw(TOKEN_KEY);
     if (!raw) return null;
@@ -97,6 +104,8 @@ export async function getToken() {
 
 export async function saveToken(token, { email = null, expiresAt = null } = {}) {
     if (!token || typeof token !== "string") return false;
+    // En modo cookie el id de sesión no llega al JavaScript: solo queda la marca de que hay sesión.
+    if (isCookieMode()) token = COOKIE_MARKER;
     return writeRaw(
         TOKEN_KEY,
         JSON.stringify({ token, savedAt: Date.now(), expiresAt: expiresAt ?? null, email })
@@ -241,12 +250,20 @@ async function performRequest(path, opts, method) {
         ...(isForm ? {} : { "Content-Type": "application/json" }),
         ...(opts.headers ?? {}),
     };
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (isCookieMode()) {
+        // La cookie la manda el navegador. X-Requested-With obliga a un preflight CORS y X-Session-Mode pide
+        // al gateway la cookie en lugar de sessionId en el cuerpo (defensa CSRF, ver DISENO_S10).
+        delete headers.Authorization;
+        headers["X-Requested-With"] = "FaceAttend";
+        headers["X-Session-Mode"] = "cookie";
+    } else if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
 
     const url = buildUrl(path, opts.query, opts.baseUrl);
     let body;
     if (opts.body !== undefined && method !== "GET") body = isForm ? opts.body : JSON.stringify(opts.body);
-    const init = { method, headers, body };
+    const init = { method, headers, body, ...(isCookieMode() ? { credentials: "include" } : {}) };
 
     let lastErr = null;
     const attempts = opts.retryOnceOnNetworkError === false || method !== "GET" ? 1 : 2;

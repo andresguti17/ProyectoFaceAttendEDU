@@ -108,6 +108,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             }
         }
 
+        request.setAttribute(CallerToken.ATTRIBUTE, rawToken);
         SessionAuthClient.propagate(request, response, result.caller());
         try {
             chain.doFilter(request, response);

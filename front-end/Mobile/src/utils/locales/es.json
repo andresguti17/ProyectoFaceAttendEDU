@@ -1360,7 +1360,8 @@
   "termsGate": {
     "sign": "Firmar y continuar",
     "signing": "Firmando...",
-    "leave": "Salir sin firmar"
+    "leave": "Salir sin firmar",
+    "unavailable": "No se pudo verificar tu aceptación de los términos y condiciones. Revisa tu conexión e intenta ingresar de nuevo."
   },
   "minorBlocked": {
     "title": "REGISTRO PENDIENTE",

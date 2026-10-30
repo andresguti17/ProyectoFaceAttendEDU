@@ -2,6 +2,8 @@ package com.faceattend_edu.identity_service.domain.model;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
+
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -29,6 +31,27 @@ class PersonValidationTest {
     void rejectsUnknownDocumentType() {
         Person p = valid();
         p.setDocumentType("XX");
+        assertThrows(IllegalArgumentException.class, p::validate);
+    }
+
+    @Test
+    void acceptsAPastBirthDate() {
+        Person p = valid();
+        p.setBirthDate(LocalDate.of(2005, 3, 5));
+        assertDoesNotThrow(p::validate);
+    }
+
+    @Test
+    void rejectsAFutureBirthDate() {
+        Person p = valid();
+        p.setBirthDate(LocalDate.now().plusDays(1));
+        assertThrows(IllegalArgumentException.class, p::validate);
+    }
+
+    @Test
+    void rejectsABirthDateBefore1900() {
+        Person p = valid();
+        p.setBirthDate(LocalDate.of(1899, 12, 31));
         assertThrows(IllegalArgumentException.class, p::validate);
     }
 

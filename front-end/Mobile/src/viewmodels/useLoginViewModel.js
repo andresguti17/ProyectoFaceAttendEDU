@@ -89,8 +89,20 @@ export function useLoginViewModel({onLogin}) {
     // Última puerta antes de entrar: términos vigentes (adulto) o registro completo (menor).
     // El aviso de datos lo registra la propia persona adulta; el de un menor lo registró el
     // administrador con su acudiente, así que aquí no se acepta por él.
+    // Si no se puede saber si la persona ya firmó, no entra: la sesión guardada se descarta y
+    // el siguiente intento vuelve a consultar (sin esto el aviso se saltaba en silencio).
     const enterOrGate = async ({role, token, personId}) => {
-        const gate = await TermsService.gateFor(personId);
+        let gate;
+        try {
+            gate = await TermsService.gateFor(personId);
+        } catch {
+            setTermsGate(null);
+            try {
+                await removeToken();
+            } catch {}
+            setErrorWithTimestamp(t('termsGate.unavailable'));
+            return;
+        }
         if (gate.gate !== TERMS_GATE.NONE) {
             setTermsError(null);
             setTermsGate({...gate, role, token, personId});
@@ -182,6 +194,8 @@ export function useLoginViewModel({onLogin}) {
             } else {
                 setTermsGate({...gate, role, token, personId});
             }
+        } catch {
+            setTermsError(t('termsGate.unavailable'));
         } finally {
             setTermsBusy(false);
         }

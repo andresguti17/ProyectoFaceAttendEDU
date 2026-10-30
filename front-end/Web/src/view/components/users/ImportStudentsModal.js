@@ -31,7 +31,7 @@ import { AnimatedDropdown, Button, Badge, IconButton, Checkbox } from "../common
 import { useTheme }       from "../hooks/useTheme";
 import { useResponsive }  from "../hooks/useResponsive";
 import { useTranslation } from "../../../core/utils/i18n/hooks/useTranslation";
-import { parseFileContent } from "./importStudentsParser";
+import { importOutcome, parseFileContent, targetCourseItems } from "./importStudentsParser";
 import { downloadCsvTemplate, pickImportFile } from "../common/importFilePicker";
 
 // ── Template CSV descargable ──────────────────────────────
@@ -119,13 +119,20 @@ export default function ImportStudentsModal({
         const result = await pickImportFile();
         if (!result) return;
         const { rows, errors } = await parseFileContent(result.name, result.buffer);
-        setFileName(result.name);
-        setParseErrors(errors);
         if (rows.length === 0) {
-            setErrorMsg(t("El archivo no contiene filas válidas"));
-            setStep("error");
+            // Nada que importar no es una importación con errores: se queda en
+            // la selección de archivo con un aviso y sin archivo cargado.
+            setFileName(null);
+            setPreview([]);
+            setParseErrors(0);
+            setErrorMsg(errors > 0
+                ? t("Ninguna fila del archivo es válida: revisa las columnas name, code y email")
+                : t("El archivo está vacío: no tiene filas de estudiantes"));
+            setStep("idle");
             return;
         }
+        setFileName(result.name);
+        setParseErrors(errors);
         // Marca filas cuyo correo/documento ya existe en el sistema: se
         // omiten al importar en vez de fallar una por una con "ya existe
         // una persona con ese número de documento". Sin checker (o si
@@ -140,6 +147,7 @@ export default function ImportStudentsModal({
     };
 
     const handleImport = async () => {
+        if (importable.length === 0) return; // todas ya existen: no hay alta que hacer
         setStep("importing");
         try {
             // Las filas sin course (o con el curso destino) se matriculan en
@@ -155,7 +163,8 @@ export default function ImportStudentsModal({
             // onImport ahora devuelve { success, errors } (alta real en el
             // backend, fila por fila): un fallo individual no detiene el resto.
             const result = await onImport(drafts, { privacyAccepted });
-            setImportResult(result ?? { success: 0, errors: [] });
+            // Sin resultado no se puede afirmar que algo se creó: nunca "exitosa".
+            setImportResult(result ?? { success: 0, errors: [{ student: "—", reason: t("No se recibió el resultado de la importación") }] });
             setStep("done");
         } catch {
             setErrorMsg(t("Error al importar los estudiantes"));
@@ -175,6 +184,15 @@ export default function ImportStudentsModal({
     const importable = preview.filter((r) => !r.existing);
     const existingCount = preview.length - importable.length;
 
+    // Título e icono del paso final según lo que de verdad pasó.
+    const errorBg = c.status.errorLight || c.status.error + "20";
+    const outcomeView = {
+        ok:      { title: t("¡Importación exitosa!"),               icon: "check-circle", color: c.status.success, background: c.status.successLight },
+        partial: { title: t("Importación completada con errores"),  icon: "alert-circle", color: c.status.warning, background: c.status.warningLight },
+        failed:  { title: t("No se pudo importar ningún estudiante"), icon: "x-circle",   color: c.status.error,   background: errorBg },
+        nothing: { title: t("No se agregó ningún estudiante"),       icon: "info",         color: c.text.secondary, background: c.background.app },
+    }[importOutcome(importResult)];
+
     // Selectores Curso/Ficha destino: se pintan en idle y en preview para
     // poder corregir el destino sin perder el archivo ya cargado.
     const targetSelectors = (
@@ -186,7 +204,7 @@ export default function ImportStudentsModal({
                 </Text>
             </Text>
             <AnimatedDropdown
-                items={courses}
+                items={targetCourseItems(courses, t("Sin curso destino"))}
                 value={targetCourse}
                 onSelect={setTargetCourse}
                 placeholder={t("Sin curso destino")}
@@ -298,6 +316,23 @@ export default function ImportStudentsModal({
                         {/* ── STEP: idle ── */}
                         {step === "idle" && (
                             <View style={{ gap: 16 }}>
+                                {/* Archivo sin filas importables: aviso, no "error al importar" */}
+                                {errorMsg && (
+                                    <View
+                                        accessibilityRole="alert"
+                                        style={{
+                                            backgroundColor: c.status.warningLight,
+                                            borderRadius: 14,
+                                            padding: 12,
+                                            flexDirection: "row",
+                                            gap: 8,
+                                            alignItems: "center",
+                                        }}
+                                    >
+                                        <Feather name="alert-triangle" size={16} color={c.status.warning} />
+                                        <Text style={{ fontSize: 13, color: c.status.warning, flex: 1 }}>{errorMsg}</Text>
+                                    </View>
+                                )}
                                 {/* Zona de arrastre / botón */}
                                 <TouchableOpacity
                                     onPress={handlePickFile}
@@ -535,22 +570,14 @@ export default function ImportStudentsModal({
                                         width: 64,
                                         height: 64,
                                         borderRadius: 14,
-                                        backgroundColor: importResult.errors.length > 0
-                                            ? c.status.errorLight || c.status.error + "20"
-                                            : c.status.successLight,
+                                        backgroundColor: outcomeView.background,
                                         alignItems: "center",
                                         justifyContent: "center",
                                     }}>
-                                        <Feather
-                                            name={importResult.errors.length > 0 ? "alert-circle" : "check-circle"}
-                                            size={32}
-                                            color={importResult.errors.length > 0 ? c.status.error : c.status.success}
-                                        />
+                                        <Feather name={outcomeView.icon} size={32} color={outcomeView.color} />
                                     </View>
                                     <Text style={{ fontSize: 16, fontWeight: "700", color: c.text.primary }}>
-                                        {importResult.errors.length > 0
-                                            ? t("Importación completada con errores")
-                                            : t("¡Importación exitosa!")}
+                                        {outcomeView.title}
                                     </Text>
                                     <Text style={{ fontSize: 14, color: c.text.secondary, textAlign: "center" }}>
                                         {importResult.success} {t("estudiantes agregados al sistema")}

@@ -8,6 +8,7 @@ jest.mock("../../api/apiClient", () => ({
     clearToken: jest.fn().mockResolvedValue(undefined),
     saveToken: jest.fn().mockResolvedValue(true),
     setUnauthorizedHandler: jest.fn(),
+    isCookieMode: jest.fn(() => false),
 }));
 jest.mock("../../core/hooks/useSessionTimeout", () => ({
     useSessionTimeout: () => ({ resetTimer: jest.fn(), isActive: false }),

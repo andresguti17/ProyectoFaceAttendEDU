@@ -7,7 +7,7 @@
 //  - Plantilla real sin course/grade y con documentNumber/password
 // ============================================================
 
-import { parseFileContent } from "../importStudentsParser";
+import { importOutcome, parseFileContent, targetCourseItems } from "../importStudentsParser";
 import ExcelJS from "exceljs";
 
 /** A real .xlsx file with `rows` on its first sheet. */
@@ -147,5 +147,55 @@ describe("ImportStudentsModal — parseFileContent", () => {
         const result = await parseFileContent("estudiantes.csv", csv);
         expect(result.rows).toHaveLength(0);
         expect(result.errors).toBe(1);
+    });
+});
+
+// Un archivo sin filas importables no es una importación "con errores":
+// el modal se queda en la selección con un aviso (rows vacío) y el paso
+// final solo dice "con errores" si de verdad hubo filas fallidas.
+describe("ImportStudentsModal — CSV vacío o sin filas válidas", () => {
+    test("CSV vacío: sin filas y sin errores", async () => {
+        expect(await parseFileContent("vacio.csv", "")).toEqual({ rows: [], errors: 0 });
+    });
+
+    test("CSV solo con encabezados: sin filas y sin errores", async () => {
+        expect(await parseFileContent("encabezados.csv", HEADERS.join(","))).toEqual({ rows: [], errors: 0 });
+    });
+
+    test(".xlsx solo con encabezados: sin filas", async () => {
+        const result = await parseFileContent("encabezados.xlsx", await xlsxOf([HEADERS]));
+        expect(result.rows).toHaveLength(0);
+    });
+
+    test("archivo sin filas válidas: cero filas, errores contados", async () => {
+        const csv = [HEADERS.join(","), ",,,,", "Sin correo,EST-1,,ADSI,3"].join("\n");
+        const result = await parseFileContent("invalidas.csv", csv);
+        expect(result.rows).toHaveLength(0);
+        expect(result.errors).toBe(2);
+    });
+});
+
+describe("importOutcome — mensaje final según el resultado real", () => {
+    test("nada creado y nada fallido no es 'con errores'", () => {
+        expect(importOutcome({ success: 0, errors: [] })).toBe("nothing");
+    });
+    test("todo creado", () => {
+        expect(importOutcome({ success: 3, errors: [] })).toBe("ok");
+    });
+    test("creados y fallidos", () => {
+        expect(importOutcome({ success: 2, errors: [{ student: "x", reason: "y" }] })).toBe("partial");
+    });
+    test("solo fallidos o sin respuesta", () => {
+        expect(importOutcome({ success: 0, errors: [{ student: "x", reason: "y" }] })).toBe("failed");
+        expect(importOutcome(undefined)).toBe("failed");
+    });
+});
+
+describe("targetCourseItems — el curso destino se puede deseleccionar", () => {
+    test("la primera opción vacía permite volver a 'sin curso destino'", () => {
+        const courses = [{ value: "MAT", label: "Matemáticas" }, { value: "ADSI", label: "ADSI" }];
+        const items = targetCourseItems(courses, "Sin curso destino");
+        expect(items[0]).toMatchObject({ value: "", label: "Sin curso destino" });
+        expect(items.slice(1)).toEqual(courses);
     });
 });

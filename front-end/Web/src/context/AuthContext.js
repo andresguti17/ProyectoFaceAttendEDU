@@ -17,12 +17,12 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { Platform } from "react-native";
 import { getInstitutionConfig } from "../core/config/institutionConfig";
 import { useSessionTimeout } from "../core/hooks/useSessionTimeout";
-import { clearToken, getToken, saveToken, setUnauthorizedHandler } from "../api/apiClient";
+import { clearToken, getToken, isCookieMode, saveToken, setUnauthorizedHandler } from "../api/apiClient";
 import { roleNamesFrom, toUiRole } from "../core/utils/backendRoles";
 import { authApi } from "../services/api/authApi";
 import { consentApi } from "../services/api/consentApi";
 import { termsApi } from "../services/api/termsApi";
-import { resolveTermsGate, TERMS_GATE } from "../core/utils/termsGate";
+import { fetchTermsGate, TERMS_GATE } from "../core/utils/termsGate";
 import { loginErrorMessage, loginCodeErrorMessage } from "../core/utils/authErrors";
 
 // ── Roles del backend → roles de la UI ────────────────────────
@@ -178,7 +178,8 @@ async function removeIntendedRoute() {
  */
 async function isSessionAlive(token) {
     try {
-        const session = await authApi.getSession(token);
+        // En modo cookie no se conoce el id: se pregunta por "la sesión en uso" (GET /auth/session).
+        const session = isCookieMode() ? await authApi.currentSession() : await authApi.getSession(token);
         return session?.sessionStatus === "Active";
     } catch (err) {
         return err?.status !== 401 && err?.status !== 404;
@@ -314,6 +315,23 @@ export function AuthProvider({ children }) {
                 saved = null;
             }
 
+            // El estado de términos guardado puede ser viejo (otra versión, o una sesión guardada
+            // antes de existir el aviso, sin termsGate, que AuthMiddleware dejaba pasar): se vuelve
+            // a pedir a identity. Si no responde, solo se conserva un estado ya verificado.
+            if (saved) {
+                try {
+                    const gate = await fetchTermsGate(termsApi.get, saved.personId);
+                    saved = { ...saved, termsGate: gate.gate, termsStep: gate.step, isMinor: gate.minor };
+                    await sessionSet(JSON.stringify(saved));
+                } catch {
+                    if (!Object.values(TERMS_GATE).includes(saved.termsGate)) {
+                        await clearToken();
+                        await sessionRemove();
+                        saved = null;
+                    }
+                }
+            }
+
             if (saved) setUser(saved);
 
             setIsLoadingAuth(false);
@@ -342,7 +360,10 @@ export function AuthProvider({ children }) {
 
     // Con la sesión ya emitida: roles, perfil, sede y estado de sesión del usuario.
     const finishLogin = useCallback(async (session, identifier) => {
-        const sessionId = session?.sessionId ?? session?.session_id ?? session?.id;
+        // En modo cookie el cuerpo trae sessionId nulo: la sesión ya quedó en la cookie HttpOnly.
+        const sessionId = isCookieMode()
+            ? "cookie"
+            : session?.sessionId ?? session?.session_id ?? session?.id;
         const userId = session?.userId ?? session?.user_id;
         if (!sessionId || !userId) {
             return "No se pudo crear la sesión";
@@ -403,15 +424,14 @@ export function AuthProvider({ children }) {
         }
 
         // Términos y condiciones: el adulto los firma una vez (y de nuevo si cambia la versión);
-        // al menor lo habilita el administrador de la sede con su acudiente. Si identity no
-        // responde no se bloquea el ingreso, el servidor sigue exigiéndolos en lo biométrico.
-        let termsGate = { gate: TERMS_GATE.NONE, step: "NONE", minor: false };
-        if (personId) {
-            try {
-                termsGate = resolveTermsGate(await termsApi.get(personId));
-            } catch {
-                termsGate = { gate: TERMS_GATE.NONE, step: "NONE", minor: false };
-            }
+        // al menor lo habilita el administrador de la sede con su acudiente. Igual que en la app
+        // móvil, si no se puede saber si ya firmó no se abre la sesión (antes entraba sin verlos).
+        let termsGate;
+        try {
+            termsGate = await fetchTermsGate(termsApi.get, personId);
+        } catch (err) {
+            await clearToken();
+            return err.message;
         }
 
         const sessionUser = {
@@ -559,7 +579,7 @@ export function AuthProvider({ children }) {
     const refreshTerms = useCallback(async () => {
         if (!user?.personId) return null;
         try {
-            const gate = resolveTermsGate(await termsApi.get(user.personId));
+            const gate = await fetchTermsGate(termsApi.get, user.personId);
             setUser((prev) => {
                 if (!prev) return prev;
                 const next = { ...prev, termsGate: gate.gate, termsStep: gate.step, isMinor: gate.minor };

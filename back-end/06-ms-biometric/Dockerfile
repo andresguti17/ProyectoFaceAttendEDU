@@ -1,4 +1,4 @@
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim@sha256:aa943ce411423c7582288f18707ff66eddcbaeb510502d747a72aeb34f30d159 AS builder
 WORKDIR /app
 # face-recognition (dlib) and opencv-python-headless compile native extensions.
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -11,7 +11,7 @@ RUN poetry install --no-root --only main --no-interaction --no-ansi \
     # does not ship pip/setuptools/wheel and their advisories.
     && .venv/bin/python -m pip uninstall -y -q pip setuptools wheel
 
-FROM python:3.12-slim
+FROM python:3.12-slim@sha256:aa943ce411423c7582288f18707ff66eddcbaeb510502d747a72aeb34f30d159
 # dlib (a face-recognition dependency) is linked against libopenblas/liblapack
 # at build time in the builder stage above — the runtime .so's must be present
 # here too, or `import dlib` fails with "libopenblas.so.0: cannot open shared

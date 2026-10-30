@@ -1,0 +1,29 @@
+#!/usr/bin/env node
+// Convierte e2e-resultados.json (del directorio actual) en una tabla Markdown para el
+// resumen del job de GitHub Actions. La ruta es fija a propósito: no lee archivos arbitrarios.
+//
+//   node tools/e2e/ci/resumen.mjs >> "$GITHUB_STEP_SUMMARY"
+
+import { existsSync, readFileSync } from "node:fs";
+
+const file = "e2e-resultados.json";
+if (!existsSync(file)) {
+  console.log(`## Flujos E2E del MVP\n\nNo hay \`${file}\`: los flujos no llegaron a correr (mira los pasos anteriores).`);
+  process.exit(0);
+}
+
+const r = JSON.parse(readFileSync(file, "utf8"));
+const icon = { "pasó": "✅", "falló": "❌", "omitido": "⏭️" };
+const cell = (s) => String(s ?? "").replaceAll("|", "\\|").replaceAll("\n", " ");
+const lines = [
+  "## Flujos E2E del MVP",
+  "",
+  `${r.pasaron} pasaron, ${r.fallaron} fallaron, ${r.omitidos} omitidos en ${Math.round(r.duracionMs / 1000)} s (corrida \`${r.corrida}\`).`,
+  "",
+  "| # | Flujo | Estado | Pasos comprobados | Tiempo | Error |",
+  "|---|---|---|---|---|---|",
+  ...r.flujos.map((f) => `| ${f.n} | ${cell(f.nombre)} | ${icon[f.estado] ?? ""} ${f.estado} | ${f.pasos.length} | ${(f.ms / 1000).toFixed(1)} s | ${cell(f.error)} |`),
+  "",
+  `Limpieza: ${cell(r.limpieza)}`,
+];
+console.log(lines.join("\n"));

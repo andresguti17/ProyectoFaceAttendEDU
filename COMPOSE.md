@@ -240,7 +240,18 @@ Para actualizar una, obtén el digest actual de su etiqueta y cámbialo en todos
 docker buildx imagetools inspect redis:7-alpine   # línea "Digest: sha256:…"
 ```
 
-Las imágenes propias (`faceattend/*:latest`) y las de los `Dockerfile` (`node`, `eclipse-temurin`, `maven`, `python`, `nginx`) siguen sin fijar.
+Las imágenes base de los `Dockerfile` (`node:24-slim`, `node:24-alpine`, `maven:3.9-eclipse-temurin-21-alpine`, `eclipse-temurin:21-jre-alpine`, `python:3.12-slim` y `nginxinc/nginx-unprivileged:1.27-alpine`) también van fijadas como `etiqueta@sha256:…` en los diez `Dockerfile` (`back-end/*/Dockerfile` y `front-end/Web/Dockerfile`). Se actualizan igual: `docker buildx imagetools inspect node:24-slim`, y se cambia el digest en todos los `Dockerfile` donde aparece. Node va en la 24 (LTS), la misma que usan el CI y el despliegue del frontend; la 20 terminó su soporte en abril de 2026.
+
+Para saber **cuáles** hay que actualizar, `tools/digests/check.sh` lee todas las referencias `imagen:etiqueta@sha256:…` de los `Dockerfile` y de los `docker-compose*.yml` (también el valor por defecto de `${VAR:-imagen@sha256:…}`), consulta con `docker buildx imagetools inspect` el digest que tiene hoy cada etiqueta e imprime una tabla con las que cambiaron, los archivos donde aparecen y el digest nuevo completo. No modifica ningún archivo:
+
+```bash
+tools/digests/check.sh                                # todo el repositorio
+tools/digests/check.sh back-end/06-ms-biometric/Dockerfile docker-compose.prod.yml   # solo esos archivos
+```
+
+Sale con 0 si nada cambió, 1 si alguna etiqueta apunta a otro digest y 2 si no pudo consultar alguna (sin red, registro caído o etiqueta borrada). Un digest fijado al manifiesto de una plataforma (y no al índice multiplataforma) cuenta como igual mientras siga dentro del índice actual. Las imágenes sin etiqueta (`cgr.dev/chainguard/minio@sha256:…`) solo se listan: no hay etiqueta con la que comparar. Necesita docker con buildx y acceso a los registros; tarda alrededor de un minuto. Con Dependabot pausado, conviene correrlo al menos una vez al mes y antes de cada entrega.
+
+Las imágenes propias (`faceattend/*`) se fijan con `FACEATTEND_IMAGE_TAG` (por defecto `latest`).
 
 ---
 

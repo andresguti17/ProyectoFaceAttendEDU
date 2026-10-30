@@ -119,3 +119,21 @@ function rowToStudent(headers, cells) {
 export function parseFileContent(name, buffer) {
     return parseFileRows(name, buffer, rowToStudent);
 }
+
+/** Opciones del "Curso destino": la primera ("") permite quitar la selección. */
+export function targetCourseItems(courses, noneLabel) {
+    return [{ value: "", label: noneLabel, icon: "x" }, ...(courses ?? [])];
+}
+
+/**
+ * Resultado real de una importación, para el mensaje final:
+ * "ok" (todo creado), "partial" (creados + fallidos), "failed" (solo
+ * fallidos o sin respuesta) y "nothing" (nada que crear ni fallos).
+ */
+export function importOutcome(result) {
+    if (!result) return "failed";
+    const success = Number(result.success) || 0;
+    const errors = result.errors?.length ?? 0;
+    if (success > 0) return errors > 0 ? "partial" : "ok";
+    return errors > 0 ? "failed" : "nothing";
+}

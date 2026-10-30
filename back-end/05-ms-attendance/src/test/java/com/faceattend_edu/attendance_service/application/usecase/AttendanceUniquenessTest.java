@@ -1,5 +1,6 @@
 package com.faceattend_edu.attendance_service.application.usecase;
 
+import com.faceattend_edu.attendance_service.application.policy.ArrivalStatusPolicy;
 import com.faceattend_edu.attendance_service.domain.exception.DuplicateEntityException;
 import com.faceattend_edu.attendance_service.domain.model.AttendanceRecord;
 import com.faceattend_edu.attendance_service.domain.port.out.AttendanceRecordRepository;
@@ -40,8 +41,10 @@ class AttendanceUniquenessTest {
 
     @BeforeEach
     void setUp() {
-        create = new CreateAttendanceRecordUseCaseImpl(repository, eventPublisher);
-        record = new RecordAttendanceUseCaseImpl(repository);
+        // Without timing data the policy keeps the status the caller sent, so these tests stay about uniqueness.
+        ArrivalStatusPolicy keepsStatus = new ArrivalStatusPolicy((session, actor) -> Optional.empty(), "America/Bogota");
+        create = new CreateAttendanceRecordUseCaseImpl(repository, eventPublisher, keepsStatus);
+        record = new RecordAttendanceUseCaseImpl(repository, keepsStatus);
         bulk = new BulkRecordAttendanceUseCaseImpl(record);
     }
 

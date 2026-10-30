@@ -1,0 +1,133 @@
+name: E2E flujos MVP
+
+# Corre en cada PR (menos los borradores y los que solo tocan documentación), a mano y cada lunes.
+# No debe ser un check obligatorio: tarda unos 17 min y un fallo del entorno de Actions no debe
+# bloquear la fusión. Guía: docs/E2E_FLUJOS_MVP.md
+on:
+  workflow_dispatch:
+    inputs:
+      sembrar:
+        description: "Correr también tools/seed-api-test-data después de los flujos"
+        type: boolean
+        default: true
+  schedule:
+    - cron: "0 9 * * 1" # lunes 04:00 hora de Colombia
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, develop]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".github/ISSUE_TEMPLATE/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flujos:
+    name: e2e / flujos MVP
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      API_URL: http://localhost:8000
+      WEB_ORIGIN: http://localhost:8090
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "24"
+
+      # El runner trae Compose 2.x, que rechaza que docker-compose.yml redefina servicios de sus
+      # `include` ("conflicts with imported resource"); Compose 5 los fusiona. Binario fijado por sha256.
+      - name: Docker Compose v5.3.1
+        env:
+          COMPOSE_VERSION: v5.3.1
+          COMPOSE_SHA256: f9ebc6ebdb19d769b793c245a736caaeb198c62587f13b25c660c13b4987f959
+        run: |
+          mkdir -p ~/.docker/cli-plugins
+          curl --proto '=https' --tlsv1.2 -fsSL -o ~/.docker/cli-plugins/docker-compose \
+            "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64"
+          echo "${COMPOSE_SHA256}  $HOME/.docker/cli-plugins/docker-compose" | sha256sum -c -
+          chmod +x ~/.docker/cli-plugins/docker-compose
+          docker compose version
+
+      - name: .env desechable con secretos aleatorios
+        run: bash tools/e2e/ci/generar-env.sh .env
+
+      - name: construir y levantar el stack
+        run: docker compose up -d --build
+
+      - name: esperar los healthchecks
+        run: bash tools/e2e/ci/esperar-stack.sh 900
+
+      # Las cuentas de servicio solo se leen al arrancar: se recrean los dos servicios que las usan.
+      - name: cuentas de prueba (bootstrap-admin.sh)
+        run: |
+          bash tools/e2e/ci/cuentas.sh .env .env.e2e
+          while IFS='=' read -r key value; do
+            [[ "$key" == *PASSWORD ]] && echo "::add-mask::$value"
+            echo "$key=$value" >> "$GITHUB_ENV"
+          done < .env.e2e
+          docker compose up -d --no-deps --no-build ms-identity ms-notification
+          bash tools/e2e/ci/esperar-stack.sh 300
+
+      - name: flujos críticos
+        id: flujos
+        env:
+          E2E_ALLOW_ADMIN_PASSWORD_CHANGE: "1"
+        run: node tools/e2e/mvp-flujos.mjs
+
+      # Después de los flujos: sus ~1.200 cierres de sesión encolarían el cálculo de ausentes
+      # delante del cierre del flujo 4. Corre aunque algún flujo falle, no si el stack no arrancó.
+      # No decide el resultado del job (mide la herramienta de siembra, no la plataforma): su
+      # estado sale en el resumen y, si falla, se suben los logs.
+      - name: siembra (tools/seed-api-test-data)
+        id: siembra
+        continue-on-error: true
+        if: >-
+          !cancelled() && steps.flujos.outcome != 'skipped' &&
+          (github.event_name != 'workflow_dispatch' || inputs.sembrar)
+        working-directory: tools/seed-api-test-data
+        run: |
+          for v in SEED_PASSWORD INSTRUCTOR_PASSWORD STUDENT_PASSWORD TEACHER_PASSWORD SCHOOL_ADMIN_PASSWORD; do
+            value="Sd$(openssl rand -hex 6)#1"
+            echo "::add-mask::$value"
+            export "$v=$value"
+          done
+          node seed.mjs
+
+      - name: resumen
+        if: always()
+        env:
+          SIEMBRA: ${{ steps.siembra.outcome }}
+        run: |
+          node tools/e2e/ci/resumen.mjs >> "$GITHUB_STEP_SUMMARY"
+          echo "Siembra: ${SIEMBRA:-no corrió}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: logs de los contenedores
+        if: failure() || steps.siembra.outcome == 'failure'
+        run: |
+          mkdir -p e2e-logs
+          docker compose ps -a > e2e-logs/ps.txt
+          for s in $(docker compose config --services); do
+            docker compose logs --no-color --timestamps "$s" > "e2e-logs/$s.log" 2>&1 || true
+          done
+
+      - uses: actions/upload-artifact@v4.6.2
+        if: always()
+        with:
+          name: e2e-resultados
+          path: |
+            e2e-resultados.json
+            e2e-logs/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: bajar el stack
+        if: always()
+        run: docker compose down -v --remove-orphans
