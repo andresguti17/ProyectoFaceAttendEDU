@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// Convierte e2e-resultados.json en una tabla Markdown (resumen del job de GitHub Actions).
+// Convierte e2e-resultados.json (del directorio actual) en una tabla Markdown para el
+// resumen del job de GitHub Actions. La ruta es fija a propósito: no lee archivos arbitrarios.
 //
-//   node tools/e2e/ci/resumen.mjs [e2e-resultados.json] >> "$GITHUB_STEP_SUMMARY"
+//   node tools/e2e/ci/resumen.mjs >> "$GITHUB_STEP_SUMMARY"
 
 import { existsSync, readFileSync } from "node:fs";
 
-const file = process.argv[2] || "e2e-resultados.json";
+const file = "e2e-resultados.json";
 if (!existsSync(file)) {
   console.log(`## Flujos E2E del MVP\n\nNo hay \`${file}\`: los flujos no llegaron a correr (mira los pasos anteriores).`);
   process.exit(0);

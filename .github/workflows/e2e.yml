@@ -31,7 +31,6 @@ jobs:
     env:
       API_URL: http://localhost:8000
       WEB_ORIGIN: http://localhost:8090
-      E2E_RESULTADOS: e2e-resultados.json
     steps:
       - uses: actions/checkout@v4.2.2
       - uses: actions/setup-node@v4.4.0
@@ -97,7 +96,7 @@ jobs:
       - name: resumen
         if: always()
         run: |
-          node tools/e2e/ci/resumen.mjs "$E2E_RESULTADOS" >> "$GITHUB_STEP_SUMMARY"
+          node tools/e2e/ci/resumen.mjs >> "$GITHUB_STEP_SUMMARY"
           echo "Siembra: ${{ steps.siembra.outcome }}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: logs de los contenedores
