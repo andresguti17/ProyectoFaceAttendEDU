@@ -21,6 +21,12 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class AttendanceRecordPersistenceAdapter implements AttendanceRecordRepository {
+    /**
+     * Relleno del filtro de estado apagado. Con ?stringtype=unspecified PostgreSQL convierte
+     * el parámetro al ENUM attendance_status aunque la bandera lo descarte, así que debe ser
+     * un valor válido del enum: "" hacía fallar todo listado sin filtro de estado.
+     */
+    static final String STATUS_PLACEHOLDER = "Present";
     private final AttendanceRecordJpaRepository jpaRepository;
     private final AttendanceRecordPersistenceMapper mapper;
     @Override public AttendanceRecord save(AttendanceRecord d){ return mapper.toDomain(jpaRepository.save(mapper.toEntity(d))); }
@@ -36,7 +42,7 @@ public class AttendanceRecordPersistenceAdapter implements AttendanceRecordRepos
         Page<AttendanceRecordJpaEntity> rows = jpaRepository.search(
                 f.classSessionId() != null, f.classSessionId() == null ? 0L : f.classSessionId(),
                 f.academicActorId() != null, f.academicActorId() == null ? 0L : f.academicActorId(),
-                f.attendanceStatus() != null, f.attendanceStatus() == null ? "" : f.attendanceStatus(),
+                f.attendanceStatus() != null, f.attendanceStatus() == null ? STATUS_PLACEHOLDER : f.attendanceStatus(),
                 scope != null, scope == null ? Set.of(0L) : scope,
                 page);
         return new AttendanceRecordSlice(rows.getContent().stream().map(mapper::toDomain).collect(Collectors.toList()), rows.getTotalElements());
