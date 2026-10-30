@@ -1,7 +1,8 @@
 name: E2E flujos MVP
 
-# Opcional: no bloquea los PR. Corre a mano, cada lunes, o en un PR con la etiqueta `run-e2e`
-# (y en cada push a ese PR mientras la tenga). Guía: docs/E2E_FLUJOS_MVP.md
+# Corre en cada PR (menos los borradores y los que solo tocan documentación), a mano y cada lunes.
+# No debe ser un check obligatorio: tarda unos 17 min y un fallo del entorno de Actions no debe
+# bloquear la fusión. Guía: docs/E2E_FLUJOS_MVP.md
 on:
   workflow_dispatch:
     inputs:
@@ -12,8 +13,12 @@ on:
   schedule:
     - cron: "0 9 * * 1" # lunes 04:00 hora de Colombia
   pull_request:
-    types: [labeled, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
     branches: [main, develop]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".github/ISSUE_TEMPLATE/**"
 
 permissions:
   contents: read
@@ -25,7 +30,7 @@ concurrency:
 jobs:
   flujos:
     name: e2e / flujos MVP
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-e2e')
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 75
     env:

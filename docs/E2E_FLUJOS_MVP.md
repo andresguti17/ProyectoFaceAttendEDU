@@ -28,12 +28,12 @@ con borrado lógico, así que no depende de datos sembrados ni choca con corrida
 
 ## En el CI
 
-El workflow `.github/workflows/e2e.yml` es **opcional**: no corre en cada PR ni bloquea la fusión.
+El workflow `.github/workflows/e2e.yml` corre en cada PR, pero **no debe ser un check obligatorio**: tarda unos 17 minutos y un fallo del entorno de Actions no debe bloquear la fusión (si falla, mira el resultado antes de fusionar).
 Se dispara:
 
 - a mano: *Actions → E2E flujos MVP → Run workflow* (casilla `sembrar` para correr también la siembra);
 - cada lunes a las 04:00 (hora de Colombia), sobre la rama por defecto;
-- en un PR con la etiqueta `run-e2e`, y en cada push a ese PR mientras la tenga.
+- en cada PR hacia `main` o `develop` y en cada push a él, salvo los borradores y los PR que solo tocan documentación (`**.md`, `docs/**`).
 
 Pasos: genera un `.env` desechable con secretos aleatorios (`tools/e2e/ci/generar-env.sh`), construye
 y levanta el stack con `docker compose up -d --build`, espera los healthchecks

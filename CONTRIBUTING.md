@@ -90,7 +90,7 @@ para que pasen.
 ## Flujos E2E del MVP
 
 `tools/e2e/mvp-flujos.mjs` recorre los 6 flujos críticos contra el stack de docker compose. En el CI
-es el workflow opcional **E2E flujos MVP** (a mano, los lunes o con la etiqueta `run-e2e` en el PR).
+es el workflow **E2E flujos MVP** (en cada PR que no sea borrador ni solo documentación, a mano y los lunes; no es un check obligatorio).
 Cómo correrlo y leer el resultado: [docs/E2E_FLUJOS_MVP.md](docs/E2E_FLUJOS_MVP.md).
 
 ## Contratos OpenAPI (`docs/openapi`)
