@@ -143,8 +143,14 @@ class AttendanceRelationsAndUseCasesTest {
             assertThatThrownBy(() -> controller.documentsByJustification(99L)).isInstanceOf(EntityNotFoundException.class);
 
             scope(null);
-            assertThat(controller.byAttendance(2L).getBody()).isNull();
-            verify(getRecord, org.mockito.Mockito.times(1)).getById(2L); // only the restricted call above looked it up
+            // Un registro que existe y no tiene justificación no es un error: 204 y sin cuerpo (N-17), no un 200 vacío.
+            when(getRecord.getById(3L)).thenReturn(record(3, 7));
+            var withoutJustification = controller.byAttendance(3L);
+            assertThat(withoutJustification.getStatusCode().value()).isEqualTo(204);
+            assertThat(withoutJustification.getBody()).isNull();
+            // Uno que no existe sigue siendo un 404, también para quien no tiene alcance restringido.
+            assertThatThrownBy(() -> controller.byAttendance(2L)).isInstanceOf(EntityNotFoundException.class);
+            verify(getRecord, org.mockito.Mockito.times(2)).getById(2L); // la llamada restringida de arriba y esta
         }
     }
 
