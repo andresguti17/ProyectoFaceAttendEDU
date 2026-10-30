@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.Instant;
 import java.time.LocalTime;
@@ -20,6 +22,11 @@ import java.util.UUID;
                 @Index(name = "idx_block_cohort", columnList = "cohort_id"),
                 @Index(name = "idx_block_course", columnList = "course_id")
         })
+// Borrado logico (AGENTS.md 2.2): deleteById marca la fila en vez de quitarla y las lecturas la ocultan.
+// Identificadores entre comillas: valen igual en PostgreSQL (minusculas) y en el H2 de los tests.
+// Los indices uq_block_*_slot son parciales (deleted_at IS NULL): el horario queda libre.
+@SQLDelete(sql = "update {h-schema}\"schedule_block\" set \"deleted_at\" = now(), \"row_version\" = \"row_version\" + 1 where \"schedule_block_id\" = ? and \"row_version\" = ?")
+@SQLRestriction("\"deleted_at\" is null")
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
 public class ScheduleBlockJpaEntity {
     @Id
