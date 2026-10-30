@@ -89,7 +89,7 @@ son una propuesta técnica; **jurídica y la institución deben validarlas** `TO
 | R8 | Conservación excesiva | Media | Medio | Registros de verificación se eliminan a los 90 días (índice TTL de MongoDB); la revocación borra todo. | **No hay plazo para las plantillas** (se conservan mientras exista autorización) ni para los datos de asistencia. `TODO`: definir y automatizar (L-NEW-03). |
 | R9 | Incidente de seguridad sin detección ni aviso a tiempo | Media | Alto | Procedimiento técnico en [INCIDENTES.md](INCIDENTES.md). | Roles, plazos y canal a la SIC sin definir `TODO`. No hay monitoreo con alertas (OPS-02). |
 | R10 | Uso para fines distintos (p. ej. vigilancia o control disciplinario) | Baja | Alto | Las plantillas solo se consultan desde el kiosco de la sede; el registro de verificaciones permite auditar quién consultó. | Falta una política escrita que prohíba otros usos `TODO`. |
-| R11 | Transferencia internacional | Baja | Medio | La biometría no sale del servidor (AWS, en la región que se configure `TODO`). | Neon (Brasil) y otros proveedores guardan datos de identidad: contratos de transmisión pendientes (L-06). |
+| R11 | Transferencia internacional | Alta (ya ocurre) | Medio | La biometría no sale del servidor, pero el servidor (AWS) está en Estados Unidos (`us-east-2`, Ohio), así que sale de Colombia. | Neon (Estados Unidos, `us-east-2`) y otros proveedores guardan datos de identidad: contratos de transmisión y nivel adecuado de protección pendientes (L-06). |
 
 ## 5. Derechos de los titulares y su ejercicio
 

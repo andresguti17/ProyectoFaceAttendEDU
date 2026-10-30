@@ -30,7 +30,7 @@ El modelo usa borrado lógico (`deleted_at`): el borrado definitivo al vencer ca
 
 | Proveedor | Qué guarda | Falta |
 |---|---|---|
-| Neon | PostgreSQL (identidad, académico, asistencia) | Confirmar la región (la configuración usa `sa-east-1`, Brasil) y firmar el contrato de transmisión |
+| Neon | PostgreSQL (identidad, académico, asistencia) | Región verificada el 30 de octubre de 2026: `aws-us-east-2` (Ohio, **Estados Unidos**), no Brasil. Falta firmar el contrato de transmisión y confirmar el nivel adecuado de protección para Estados Unidos |
 | AWS | Servidor, MongoDB (biometría) y archivos | Región y contrato |
 | Vercel | Aplicación web | Contrato; no guarda datos de la base, pero proxea las peticiones de la API (S-10) |
 | Expo | Notificaciones móviles | Contrato |

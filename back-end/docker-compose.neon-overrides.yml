@@ -5,7 +5,7 @@
 # Cada servicio entra con su propio usuario (<servicio>_app), que solo puede
 # tocar su esquema; los crea database/scripts/create-service-logins.sh.
 # Requiere NEON_HOST: host completo de Neon, con region (p. ej.
-# ep-xxxx-pooler.c-2.sa-east-1.aws.neon.tech). Sin la region el nombre no resuelve.
+# ep-xxxx-pooler.c-6.us-east-2.aws.neon.tech). Sin la region el nombre no resuelve.
 #
 # Los microservicios NO publican puertos en el host en producción (hallazgo S-04): Caddy -> Kong
 # los alcanza por la red Docker y el health gate del despliegue usa `docker inspect` y Kong :8000.
