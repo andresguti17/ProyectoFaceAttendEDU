@@ -25,6 +25,10 @@ docs/superpowers/
 # Logs
 *.log
 
+# Resultados de tools/e2e/mvp-flujos.mjs (docs/E2E_FLUJOS_MVP.md)
+e2e-resultados.json
+e2e-logs/
+
 # Python specific
 __pycache__/
 *.pyc
