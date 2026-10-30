@@ -19,6 +19,8 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class JustificationPersistenceAdapter implements JustificationRepository {
+    /** Relleno del filtro de estado apagado: valor válido del ENUM review_status (ver AttendanceRecordPersistenceAdapter). */
+    static final String STATUS_PLACEHOLDER = "Pending";
     private final JustificationJpaRepository jpaRepository;
     private final JustificationPersistenceMapper mapper;
     @Override public Justification save(Justification d){ return mapper.toDomain(jpaRepository.save(mapper.toEntity(d))); }
@@ -30,7 +32,7 @@ public class JustificationPersistenceAdapter implements JustificationRepository 
         if (scope != null && scope.isEmpty()) return new JustificationSlice(List.of(), 0);
         Pageable page = limit == null ? Pageable.unpaged() : new AttendanceRecordPersistenceAdapter.OffsetPageRequest(offset, limit);
         Page<JustificationJpaEntity> rows = jpaRepository.search(
-                f.reviewStatus() != null, f.reviewStatus() == null ? "" : f.reviewStatus(),
+                f.reviewStatus() != null, f.reviewStatus() == null ? STATUS_PLACEHOLDER : f.reviewStatus(),
                 f.attendanceRecordId() != null, f.attendanceRecordId() == null ? 0L : f.attendanceRecordId(),
                 scope != null, scope == null ? Set.of(0L) : scope,
                 page);
