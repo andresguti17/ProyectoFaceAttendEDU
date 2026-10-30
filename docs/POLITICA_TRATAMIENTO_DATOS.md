@@ -83,8 +83,8 @@ La institución usa proveedores que tratan los datos solo por su encargo:
 
 | Proveedor | Para qué | Ubicación |
 |---|---|---|
-| Neon | Base de datos PostgreSQL (identidad, académico, asistencia) | `TODO`: confirmar región (la configuración de despliegue usa `sa-east-1`, Brasil) |
-| AWS | Servidor de la aplicación, MongoDB (biometría) y archivos (MinIO) | `TODO`: región |
+| Neon | Base de datos PostgreSQL (identidad, académico, asistencia) | Estados Unidos (AWS `us-east-2`, Ohio). Verificado el 30 de octubre de 2026 en el proyecto de Neon y en la conexión que usan los servicios |
+| AWS | Servidor de la aplicación, MongoDB (biometría) y archivos (MinIO) | Estados Unidos (`us-east-2`, Ohio). Verificado el 30 de octubre de 2026 en el nombre del host de la instancia |
 | Vercel | Aplicación web | `TODO` |
 | Expo | Notificaciones al celular | Estados Unidos |
 | Gmail | Envío de correos | `TODO` |
