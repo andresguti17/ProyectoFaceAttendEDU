@@ -13,4 +13,7 @@ public interface JustificationTypeRepository {
     List<JustificationType> findAll();
     void deleteById(Integer id);
     boolean existsById(Integer id);
+
+    /** Whether the type demands an attachment; answers for deleted types too (empty only if the id never existed). */
+    Optional<Boolean> requiresAttachmentOf(Integer id);
 }

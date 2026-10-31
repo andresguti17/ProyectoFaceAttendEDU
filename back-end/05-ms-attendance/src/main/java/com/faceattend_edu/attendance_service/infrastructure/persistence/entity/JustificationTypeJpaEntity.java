@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -13,6 +15,11 @@ import java.util.UUID;
 @Table(name = "justification_type", schema = "attendance",
         uniqueConstraints = @UniqueConstraint(name = "uq_justification_type_school_name", columnNames = {"school_id", "name"}),
         indexes = @Index(name = "idx_justification_type_school", columnList = "school_id"))
+// Borrado logico (AGENTS.md 2.2): deleteById marca la fila en vez de quitarla y las lecturas la ocultan.
+// Identificadores entre comillas: valen igual en PostgreSQL (minusculas) y en el H2 de los tests.
+// Los indices uq_justification_type_* son parciales (deleted_at IS NULL): el nombre queda libre.
+@SQLDelete(sql = "update {h-schema}\"justification_type\" set \"deleted_at\" = now(), \"status\" = false, \"row_version\" = \"row_version\" + 1 where \"justification_type_id\" = ? and \"row_version\" = ?")
+@SQLRestriction("\"deleted_at\" is null")
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
 public class JustificationTypeJpaEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

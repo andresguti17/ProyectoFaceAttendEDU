@@ -212,7 +212,7 @@ class JustificationReviewTest {
     @Test
     void approvingNeedsADocumentWhenTheTypeRequiresOne() {
         when(repository.findById(ID)).thenReturn(Optional.of(pending()));
-        when(typeRepository.findById(1)).thenReturn(Optional.of(typeRequiringAttachment(true)));
+        when(typeRepository.requiresAttachmentOf(1)).thenReturn(Optional.of(true));
         when(documentRepository.findByJustificationId(ID)).thenReturn(List.of());
 
         assertThrows(ValidationException.class, () -> review.review(ID, "Approved", UUID.randomUUID(), null));
@@ -222,7 +222,7 @@ class JustificationReviewTest {
     @Test
     void approvingWorksOnceTheRequiredDocumentIsThere() {
         when(repository.findById(ID)).thenReturn(Optional.of(pending()));
-        when(typeRepository.findById(1)).thenReturn(Optional.of(typeRequiringAttachment(true)));
+        when(typeRepository.requiresAttachmentOf(1)).thenReturn(Optional.of(true));
         when(documentRepository.findByJustificationId(ID)).thenReturn(List.of(new SupportingDocument()));
 
         assertEquals("Approved", review.review(ID, "Approved", UUID.randomUUID(), "ok").getReviewStatus());
@@ -239,7 +239,7 @@ class JustificationReviewTest {
     @Test
     void aTypeWithoutAttachmentRequirementApprovesWithoutDocuments() {
         when(repository.findById(ID)).thenReturn(Optional.of(pending()));
-        when(typeRepository.findById(1)).thenReturn(Optional.of(typeRequiringAttachment(false)));
+        when(typeRepository.requiresAttachmentOf(1)).thenReturn(Optional.of(false));
 
         assertEquals("Approved", review.review(ID, "Approved", UUID.randomUUID(), null).getReviewStatus());
     }
@@ -286,7 +286,7 @@ class JustificationReviewTest {
     @Test
     void approvingTurnsTheAttendanceRecordIntoJustified() {
         when(repository.findById(ID)).thenReturn(Optional.of(pending()));
-        when(typeRepository.findById(1)).thenReturn(Optional.empty());
+        when(typeRepository.requiresAttachmentOf(1)).thenReturn(Optional.empty());
         ArgumentCaptor<AttendanceRecord> saved = ArgumentCaptor.forClass(AttendanceRecord.class);
 
         review.review(ID, "Approved", UUID.randomUUID(), "ok");
@@ -308,7 +308,7 @@ class JustificationReviewTest {
     @Test
     void approvingAJustificationWhoseRecordIsGoneFailsInsteadOfApprovingHalfway() {
         when(repository.findById(ID)).thenReturn(Optional.of(pending()));
-        when(typeRepository.findById(1)).thenReturn(Optional.empty());
+        when(typeRepository.requiresAttachmentOf(1)).thenReturn(Optional.empty());
         when(recordRepository.findById(RECORD)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> review.review(ID, "Approved", UUID.randomUUID(), "ok"));
