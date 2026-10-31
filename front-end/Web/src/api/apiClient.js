@@ -246,8 +246,10 @@ async function performRequest(path, opts, method) {
     const token = await getToken();
     // FormData (archivos) viaja tal cual: el navegador pone el Content-Type multipart con su boundary.
     const isForm = typeof FormData !== "undefined" && opts.body instanceof FormData;
+    // Sin cuerpo no se declara JSON: Fastify responde 400 "Body cannot be empty" a un DELETE vacío.
+    const hasJsonBody = !isForm && opts.body !== undefined && method !== "GET";
     const headers = {
-        ...(isForm ? {} : { "Content-Type": "application/json" }),
+        ...(hasJsonBody ? { "Content-Type": "application/json" } : {}),
         ...(opts.headers ?? {}),
     };
     if (isCookieMode()) {

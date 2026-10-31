@@ -182,3 +182,23 @@ describe('request()', () => {
         expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 });
+
+describe('Content-Type solo viaja con cuerpo', () => {
+    const okEmpty = () => ({ status: 204, ok: true, text: async () => '' });
+
+    it('un DELETE sin cuerpo no manda Content-Type (Fastify rechaza JSON vacío con 400)', async () => {
+        global.fetch.mockResolvedValue(okEmpty());
+        await request('/api/v1/schools/7', { method: 'DELETE' });
+        const init = global.fetch.mock.calls[0][1];
+        expect(init.body).toBeUndefined();
+        expect(init.headers['Content-Type']).toBeUndefined();
+    });
+
+    it('un POST con cuerpo sigue mandando application/json', async () => {
+        global.fetch.mockResolvedValue({ status: 201, ok: true, text: async () => '{}' });
+        await request('/api/v1/schools', { method: 'POST', body: { name: 'x' } });
+        const init = global.fetch.mock.calls[0][1];
+        expect(init.headers['Content-Type']).toBe('application/json');
+        expect(init.body).toBe('{"name":"x"}');
+    });
+});

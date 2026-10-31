@@ -195,11 +195,22 @@ class SchedulingRulesTest {
         }
 
         @Test
+        void deleteRefusesAnEnvironmentThatStillHasLiveBlocks() {
+            ScheduleBlockRepository blocks = mock(ScheduleBlockRepository.class);
+            when(repository.existsById(3)).thenReturn(true);
+            when(blocks.existsByEnvironmentId(3)).thenReturn(true);
+            assertThatThrownBy(() -> new DeleteEnvironmentUseCaseImpl(repository, blocks).delete(3))
+                    .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessageContaining("schedule blocks");
+            verify(repository, never()).deleteById(3);
+        }
+
+        @Test
         void deleteGetAndListAnswerForExistingEnvironmentsOnly() {
             when(repository.existsById(3)).thenReturn(true);
-            new DeleteEnvironmentUseCaseImpl(repository).delete(3);
+            new DeleteEnvironmentUseCaseImpl(repository, mock(ScheduleBlockRepository.class)).delete(3);
             verify(repository).deleteById(3);
-            assertThatThrownBy(() -> new DeleteEnvironmentUseCaseImpl(repository).delete(4)).isInstanceOf(EntityNotFoundException.class);
+            assertThatThrownBy(() -> new DeleteEnvironmentUseCaseImpl(repository, mock(ScheduleBlockRepository.class)).delete(4)).isInstanceOf(EntityNotFoundException.class);
 
             when(repository.findById(3)).thenReturn(Optional.of(environment()));
             assertThat(new GetEnvironmentUseCaseImpl(repository).getById(3).getCode()).isEqualTo("A-101");
