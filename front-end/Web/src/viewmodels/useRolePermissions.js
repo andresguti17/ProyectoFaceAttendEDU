@@ -112,15 +112,15 @@ function getVisibleTabs(role, isSuperAdmin) {
 
 // ── Cálculo de permisos ──────────────────────────────────────
 
-function buildPermissions(role, schoolId = null, roleNames = []) {
+export function buildPermissions(role, schoolId = null, roleNames = []) {
     const isAdmin = role === "admin";
     const isTeacher = role === "teacher";
     const isStudent = role === "student";
-    // La distinción es explícita en la DB: el rol "Super Administrador"
-    // (007-split-super-admin-role) marca al administrador global. El
-    // fallback por sede cubre cuentas con roles no reconocidos en la
-    // respuesta del backend.
-    const isSuperAdmin = isAdmin && (hasSuperAdminRole(roleNames) || schoolId == null);
+    // La distinción es explícita en la DB: solo el rol "Super Administrador"
+    // (007-split-super-admin-role) marca al administrador global. NO se deduce
+    // de la sede: un Administrador cuya sede no se resolvió (sin academic_actor,
+    // fallo de red) seguiría siendo Admin de sede, nunca vería Escuelas ni Roles.
+    const isSuperAdmin = isAdmin && hasSuperAdminRole(roleNames);
 
     return {
         // Estudiantes (HU-IAM-002/007/008/010)

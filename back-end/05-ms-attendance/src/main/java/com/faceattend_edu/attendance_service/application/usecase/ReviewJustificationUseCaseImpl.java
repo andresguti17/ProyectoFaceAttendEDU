@@ -85,8 +85,9 @@ public class ReviewJustificationUseCaseImpl implements ReviewJustificationUseCas
     }
 
     private boolean requiresAttachment(Justification j) {
-        return typeRepository.findById(j.getJustificationTypeId())
-                .map(type -> Boolean.TRUE.equals(type.getRequiresAttachment()))
+        // Aunque el tipo se haya borrado despues, la justificacion ya radicada conserva su exigencia de adjunto.
+        return typeRepository.requiresAttachmentOf(j.getJustificationTypeId())
+                .map(Boolean.TRUE::equals)
                 .orElse(false);
     }
 }

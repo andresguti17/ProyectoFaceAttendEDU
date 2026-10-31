@@ -28,6 +28,7 @@ public class ScheduleBlockPersistenceAdapter implements ScheduleBlockRepository 
     }
     @Override public void deleteById(Long id) { jpaRepository.deleteById(id); }
     @Override public boolean existsById(Long id) { return jpaRepository.existsById(id); }
+    @Override public boolean existsByEnvironmentId(Integer environmentId) { return jpaRepository.existsByEnvironmentId(environmentId); }
 
     // A new block has no id yet: -1 never matches a real primary key.
     @Override public boolean existsEnvironmentOverlap(Integer environmentId, Short dayOfWeek, LocalTime startsAt, LocalTime endsAt, Long excludeId) {

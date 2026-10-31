@@ -23,4 +23,5 @@ public class JustificationTypePersistenceAdapter implements JustificationTypeRep
     @Override public List<JustificationType> findAll(){ return jpaRepository.findAll().stream().map(mapper::toDomain).collect(Collectors.toList()); }
     @Override public void deleteById(Integer id){ jpaRepository.deleteById(id); }
     @Override public boolean existsById(Integer id){ return jpaRepository.existsById(id); }
+    @Override public Optional<Boolean> requiresAttachmentOf(Integer id){ return jpaRepository.findRequiresAttachmentIncludingDeleted(id); }
 }

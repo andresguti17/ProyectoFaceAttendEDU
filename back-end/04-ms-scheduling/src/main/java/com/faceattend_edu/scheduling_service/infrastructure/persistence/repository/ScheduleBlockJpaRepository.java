@@ -9,6 +9,9 @@ import java.time.LocalTime;
 
 public interface ScheduleBlockJpaRepository extends JpaRepository<ScheduleBlockJpaEntity, Long> {
 
+    /** Soft-deleted blocks are filtered out by the entity's @SQLRestriction. */
+    boolean existsByEnvironmentId(Integer environmentId);
+
     @Query("""
             select count(b) > 0 from ScheduleBlockJpaEntity b
             where b.deletedAt is null and b.environmentId = :environmentId and b.dayOfWeek = :dayOfWeek

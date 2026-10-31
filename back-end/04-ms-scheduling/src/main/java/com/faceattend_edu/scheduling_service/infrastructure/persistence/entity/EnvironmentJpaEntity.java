@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -12,6 +14,11 @@ import java.util.UUID;
 @Entity
 @Table(name = "environment", schema = "scheduling",
         uniqueConstraints = @UniqueConstraint(name = "uq_environment_code_school", columnNames = {"school_id", "code"}))
+// Borrado logico (AGENTS.md 2.2): deleteById marca la fila en vez de quitarla y las lecturas la ocultan.
+// Identificadores entre comillas: valen igual en PostgreSQL (minusculas) y en el H2 de los tests.
+// El indice uq_environment_code_school es parcial (deleted_at IS NULL): el codigo queda libre.
+@SQLDelete(sql = "update {h-schema}\"environment\" set \"deleted_at\" = now(), \"status\" = false, \"row_version\" = \"row_version\" + 1 where \"environment_id\" = ? and \"row_version\" = ?")
+@SQLRestriction("\"deleted_at\" is null")
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
 public class EnvironmentJpaEntity {
     @Id

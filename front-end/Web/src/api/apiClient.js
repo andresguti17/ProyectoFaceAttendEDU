@@ -246,8 +246,10 @@ async function performRequest(path, opts, method) {
     const token = await getToken();
     // FormData (archivos) viaja tal cual: el navegador pone el Content-Type multipart con su boundary.
     const isForm = typeof FormData !== "undefined" && opts.body instanceof FormData;
+    // Sin cuerpo no se declara JSON: Fastify responde 400 "Body cannot be empty" a un DELETE vacío.
+    const hasJsonBody = !isForm && opts.body !== undefined && method !== "GET";
     const headers = {
-        ...(isForm ? {} : { "Content-Type": "application/json" }),
+        ...(hasJsonBody ? { "Content-Type": "application/json" } : {}),
         ...(opts.headers ?? {}),
     };
     if (isCookieMode()) {
@@ -319,10 +321,20 @@ async function performRequest(path, opts, method) {
  * las páginas restantes de una vez; si llega un arreglo desnudo (ms-academic) se avanza
  * en ventanas de `concurrency` hasta dar con una página incompleta.
  *
- * Corta con una página incompleta, vacía o al llegar a maxPages.
+ * Corta con una página incompleta o vacía. Con el total conocido manda el total (hasta hardMaxPages,
+ * un tope absoluto de seguridad); sin total se detiene en maxPages. Si corta con filas por traer, NO lo
+ * hace en silencio: avisa por consola y marca el arreglo con `truncated = true` (propiedad no
+ * enumerable, no afecta a quien lo recorre), para que una pantalla no muestre una lista incompleta
+ * como si fuera toda.
  */
 export async function fetchAllPages(path, query = {}, opts = {}) {
-    const { by = "offset", pageSize = 100, maxPages = 50, concurrency = 6 } = opts;
+    const { by = "offset", pageSize = 100, maxPages = 100, hardMaxPages = 500, concurrency = 6 } = opts;
+
+    const truncatedAt = (rows, detail) => {
+        console.warn(`[FaceAttend] fetchAllPages(${path}): lista truncada en ${rows.length} filas (${detail}); faltan filas por mostrar.`);
+        Object.defineProperty(rows, "truncated", { value: true, enumerable: false });
+        return rows;
+    };
 
     const pagingFor = (index) =>
         by === "page"
@@ -356,14 +368,15 @@ export async function fetchAllPages(path, query = {}, opts = {}) {
     // Camino rápido: el backend dijo cuántas filas hay, así que se sabe exactamente
     // cuántas páginas faltan y se piden todas juntas (en tandas de `concurrency`).
     if (Number.isFinite(first.total)) {
-        const lastPage = Math.min(Math.ceil(first.total / pageSize), maxPages);
+        const wanted = Math.ceil(first.total / pageSize);
+        const lastPage = Math.min(wanted, hardMaxPages);
         for (let from = 1; from < lastPage; from += concurrency) {
             const indexes = [];
             for (let i = from; i < Math.min(from + concurrency, lastPage); i += 1) indexes.push(i);
             const pages = await Promise.all(indexes.map(fetchPage));
             for (const page of pages) all.push(...page.items);
         }
-        return all;
+        return wanted > lastPage ? truncatedAt(all, `el endpoint declara ${first.total}; tope de ${hardMaxPages} páginas`) : all;
     }
 
     // Sin total: ventanas en paralelo, cortando en la primera página incompleta.
@@ -376,7 +389,9 @@ export async function fetchAllPages(path, query = {}, opts = {}) {
             if (page.items.length < pageSize) return all;
         }
     }
-    return all;
+    // Se llegó a maxPages con la última página llena: solo es un corte si la siguiente trae filas.
+    const next = await fetchPage(maxPages);
+    return next.items.length > 0 ? truncatedAt(all, `sin total; tope de ${maxPages} páginas`) : all;
 }
 
 /** Atajo para saber si hay sesión guardada (usuario o token). */
