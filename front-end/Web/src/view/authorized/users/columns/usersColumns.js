@@ -113,7 +113,8 @@ export const COLUMNS = [
         render: (user, { c, courses, programMode, schoolNames }) => {
             let displayName = "—";
             if (programMode === "colegio") {
-                displayName = schoolNames?.get?.(String(user.schoolId)) ?? "—";
+                // Una cuenta sin actor académico no tiene sede: se ve como tal, no como un dato que falta.
+                displayName = user.schoolId == null ? "Sin sede" : schoolNames?.get?.(String(user.schoolId)) ?? "—";
             } else if (programMode === "ficha") {
                 displayName = user.ficha || "—";
             } else {
