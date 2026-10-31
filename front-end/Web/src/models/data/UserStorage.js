@@ -62,7 +62,7 @@ async function rolesOneByOne(users) {
     return roles;
 }
 
-async function usersFromApi() {
+async function usersFromApi({ includeUnassigned = false } = {}) {
     // La lista se arma desde academic_actor, no desde /users: el actor es lo que
     // ata una persona a una sede (app_user no tiene sede, MODELO §2.6), así que
     // recorrerlo es lo que hace que la vista respete la institución del usuario.
@@ -70,7 +70,9 @@ async function usersFromApi() {
     //
     // Consecuencia: una cuenta sin academic_actor no aparece — no pertenece a
     // ninguna institución — y un actor sin cuenta tampoco, porque no hay usuario
-    // que mostrar.
+    // que mostrar. Excepción: con includeUnassigned (el Super Administrador, que es
+    // global) también se listan las cuentas sin actor, sin sede, para que una base
+    // con cuentas pero sin actores no se vea vacía y se puedan revisar y asignar.
     const [actors, usersByPerson, persons] = await Promise.all([
         listActors(),
         userByPersonMap(),
@@ -91,6 +93,13 @@ async function usersFromApi() {
         seen.add(user.userId);
         users.push(user);
         actorByPerson.set(actor.personId, actor);
+    }
+    if (includeUnassigned) {
+        for (const user of usersByPerson.values()) {
+            if (seen.has(user.userId)) continue;
+            seen.add(user.userId);
+            users.push(user);
+        }
     }
 
     // Roles: una sola petición por lote a GET /user-roles. Antes se pedía uno por
@@ -141,11 +150,12 @@ async function usersFromApi() {
 /**
  * Carga todos los usuarios: API primero, mocks como respaldo,
  * fusionados con las altas hechas localmente en la UI.
+ * @param {{ includeUnassigned?: boolean }} [options] includeUnassigned: incluir las cuentas sin actor académico (Super Administrador).
  */
-export async function loadUsers() {
+export async function loadUsers({ includeUnassigned = false } = {}) {
     const local = await localUsers();
     try {
-        return [...(await usersFromApi()), ...local];
+        return [...(await usersFromApi({ includeUnassigned })), ...local];
     } catch (error) {
         if (API_MODE === "mock") {
             console.warn("[FaceAttend] loadUsers: API no disponible, uso mock —", error?.message);
