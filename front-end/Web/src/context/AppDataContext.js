@@ -62,6 +62,7 @@ import { calculateStudentCurrentPeriod } from "../core/utils/studentPeriodCalcul
 import { getConfiguredAcademicPeriodType } from "../core/constants/academicPeriods";
 import { getStudentPeriodFromData } from "../core/utils/studentPeriodCalculator";
 import { onInstitutionConfigChange } from "../core/config/institutionConfig";
+import { hasSuperAdminRole } from "../core/utils/backendRoles";
 
 // ── Filas de personal (docentes / administradores) ─────────
 // Los usuarios vienen de la API con role admin|teacher|student;
@@ -334,7 +335,7 @@ export function AppDataProvider({ children }) {
                   );
 
         void Promise.allSettled([
-            canListUsers ? loadUsers() : Promise.resolve([]),
+            canListUsers ? loadUsers({ includeUnassigned: hasSuperAdminRole(user?.roles) }) : Promise.resolve([]),
             loadEnvironments(),
             loadFichas(),
             loadCourses(),
@@ -542,10 +543,10 @@ export function AppDataProvider({ children }) {
     // para que la fila que aparece sea la real (mismo username que confirmó
     // el backend) y no un duplicado que persiste para siempre en AsyncStorage.
     const reloadUsersFn = useCallback(async () => {
-        const freshUsers = await loadUsers();
+        const freshUsers = await loadUsers({ includeUnassigned: hasSuperAdminRole(user?.roles) });
         setUsers(freshUsers);
         startProgressiveUserLoading(students, courses, freshUsers);
-    }, [students, courses, startProgressiveUserLoading]);
+    }, [students, courses, startProgressiveUserLoading, user?.roles]);
 
     const updateUserFn = useCallback(
         async (id, patch) => {
