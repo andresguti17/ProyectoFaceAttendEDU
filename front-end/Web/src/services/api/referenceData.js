@@ -10,7 +10,7 @@
 //
 //  Convenciones:
 //  - Solo lectura; las escrituras siguen en cada *Storage.
-//  - Todo se carga con fetchAllPages (sin truncar listas).
+//  - Todo se carga con fetchAllPages (sin truncar listas en silencio: si corta, avisa y marca el arreglo).
 //  - Las cargas "secundarias" (roles, bloques...) deben usarse
 //    con optional(): si fallan, el caller aplica sus defaults.
 // ============================================================
