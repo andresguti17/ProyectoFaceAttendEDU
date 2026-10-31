@@ -1,3 +1,4 @@
+/* global describe, test, expect, beforeAll */
 /**
  * Arnés de las pruebas de contrato web ⇄ endpoint ⇄ BD contra el stack local.
  *
@@ -123,12 +124,20 @@ export function bootWeb() {
     return installFetchSpy();
 }
 
+// Una sesión por cuenta y archivo de prueba: Kong limita los intentos de login por IP (60/min) y varios
+// bloques piden la misma cuenta.
+const sessions = new Map();
+
 /** Inicia sesión con el servicio de la web y guarda el token como lo hace AuthContext. */
 export async function loginAs(creds) {
     const { authApi } = require("../authApi");
     const { saveToken, clearToken } = require("../../../api/apiClient");
     await clearToken();
-    const session = await authApi.login({ email: creds.identifier, password: creds.password });
+    let session = sessions.get(creds.identifier);
+    if (!session) {
+        session = await authApi.login({ email: creds.identifier, password: creds.password });
+        sessions.set(creds.identifier, session);
+    }
     const sessionId = pick(session, "sessionId", "session_id", "id");
     if (!sessionId) throw new Error("login sin sessionId");
     await saveToken(String(sessionId), { email: creds.identifier });
